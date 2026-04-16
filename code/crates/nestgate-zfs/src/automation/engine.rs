@@ -371,6 +371,143 @@ impl DatasetAutomation {
     }
 }
 
+#[cfg(test)]
+impl DatasetAutomation {
+    /// Replace the policy map for unit tests covering [`DatasetAutomation::run_automation_cycle`].
+    pub(crate) async fn replace_policies_for_test(
+        &self,
+        policies: HashMap<String, AutomationPolicy>,
+    ) {
+        *self.policies.write().await = policies;
+    }
+}
+
+#[cfg(test)]
+mod internal_tests {
+    use super::DatasetAutomation;
+    use crate::automation::types::{
+        AutomationPolicy, LifecycleRule, LifecycleStage, PolicyConditions, PolicyPriority, TierRule,
+    };
+    use crate::config::{DatasetAutomationConfig, ZfsConfig};
+    use crate::dataset::ZfsDatasetManager;
+    use crate::pool::ZfsPoolManager;
+    use crate::types::StorageTier;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use std::time::SystemTime;
+
+    async fn test_engine() -> DatasetAutomation {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new(&config).await.expect("pool new"));
+        let dataset_manager =
+            Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
+        DatasetAutomation::new(
+            pool_manager,
+            dataset_manager,
+            DatasetAutomationConfig::default(),
+        )
+        .await
+        .expect("automation new")
+    }
+
+    #[tokio::test]
+    async fn migrate_dataset_to_tier_returns_not_implemented() {
+        let automation = test_engine().await;
+        let err = automation
+            .migrate_dataset_to_tier("pool/ds", StorageTier::Cold)
+            .await
+            .expect_err("expected not implemented");
+        let msg = err.to_string().to_lowercase();
+        assert!(msg.contains("not") && msg.contains("implement"), "{err}");
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_handles_tier_rules() {
+        let automation = test_engine().await;
+        let policy = AutomationPolicy {
+            policy_id: "tier_policy".into(),
+            name: "Tier policy".into(),
+            description: "test".into(),
+            priority: PolicyPriority::Normal,
+            enabled: true,
+            conditions: PolicyConditions {
+                tier_rules: vec![TierRule {
+                    condition: "tank/tier_rule_ds".into(),
+                    target_tier: StorageTier::Warm,
+                    priority: 1,
+                }],
+                migration_rules: vec![],
+                lifecycle_rules: vec![],
+            },
+            created: SystemTime::now(),
+            last_modified: SystemTime::now(),
+        };
+        let mut map = HashMap::new();
+        map.insert("tier_policy".into(), policy);
+        automation.replace_policies_for_test(map).await;
+        automation.run_automation_cycle().await.expect("cycle");
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_skips_when_policy_disabled() {
+        let automation = test_engine().await;
+        let policy = AutomationPolicy {
+            policy_id: "off".into(),
+            name: "Off".into(),
+            description: "test".into(),
+            priority: PolicyPriority::Normal,
+            enabled: false,
+            conditions: PolicyConditions {
+                tier_rules: vec![TierRule {
+                    condition: "tank/x".into(),
+                    target_tier: StorageTier::Hot,
+                    priority: 1,
+                }],
+                migration_rules: vec![],
+                lifecycle_rules: vec![],
+            },
+            created: SystemTime::now(),
+            last_modified: SystemTime::now(),
+        };
+        let mut map = HashMap::new();
+        map.insert("off".into(), policy);
+        automation.replace_policies_for_test(map).await;
+        automation.run_automation_cycle().await.expect("cycle");
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_runs_lifecycle_rule_actions() {
+        let automation = test_engine().await;
+        let policy = AutomationPolicy {
+            policy_id: "lc".into(),
+            name: "LC".into(),
+            description: "test".into(),
+            priority: PolicyPriority::Normal,
+            enabled: true,
+            conditions: PolicyConditions {
+                tier_rules: vec![TierRule {
+                    condition: "tank/lifecycle_ds".into(),
+                    target_tier: StorageTier::Cold,
+                    priority: 1,
+                }],
+                migration_rules: vec![],
+                lifecycle_rules: vec![LifecycleRule {
+                    stage: LifecycleStage::New,
+                    next_stage: None,
+                    conditions: vec!["always".into()],
+                    actions: vec!["unknown_action_for_test".into()],
+                }],
+            },
+            created: SystemTime::now(),
+            last_modified: SystemTime::now(),
+        };
+        let mut map = HashMap::new();
+        map.insert("lc".into(), policy);
+        automation.replace_policies_for_test(map).await;
+        automation.run_automation_cycle().await.expect("cycle");
+    }
+}
+
 // Enable cloning for background tasks using Arc patterns for zero-copy sharing
 impl Clone for DatasetAutomation {
     /// Clone

@@ -381,6 +381,12 @@ impl UniversalStorageBridge {
     ) -> bool {
         Self::should_include_filesystem(source, fstype, mount_point)
     }
+
+    /// Test-only hook to exercise [`Self::list_fallback_pools`] and non-default backends.
+    #[cfg(test)]
+    pub(crate) fn set_preferred_backend_for_test(&mut self, backend: Option<String>) {
+        self.preferred_backend = backend;
+    }
 }
 
 // Make it cloneable for the auto-detection logic
@@ -396,6 +402,7 @@ impl Clone for UniversalStorageBridge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::handlers::zfs::universal_zfs_types::UniversalZfsError;
 
     #[test]
     fn test_universal_storage_bridge_new() {
@@ -488,6 +495,23 @@ mod tests {
         assert!(!UniversalStorageBridge::test_should_include_filesystem(
             "tmpfs", "tmpfs", "/tmp"
         ));
+        assert!(!UniversalStorageBridge::test_should_include_filesystem(
+            "udev", "devtmpfs", "/dev"
+        ));
+        assert!(!UniversalStorageBridge::test_should_include_filesystem(
+            "devpts", "devpts", "/dev/pts"
+        ));
+        assert!(!UniversalStorageBridge::test_should_include_filesystem(
+            "sysfs", "sysfs", "/sys"
+        ));
+        assert!(!UniversalStorageBridge::test_should_include_filesystem(
+            "proc", "proc", "/proc"
+        ));
+        assert!(!UniversalStorageBridge::test_should_include_filesystem(
+            "cgroup",
+            "cgroup2",
+            "/sys/fs/cgroup"
+        ));
         assert!(UniversalStorageBridge::test_should_include_filesystem(
             "/dev/nvme0n1p2",
             "ext4",
@@ -498,5 +522,79 @@ mod tests {
             "ext4",
             "/"
         ));
+        assert!(UniversalStorageBridge::test_should_include_filesystem(
+            "/dev/sda1",
+            "ext4",
+            "/mnt/data"
+        ));
+        assert!(UniversalStorageBridge::test_should_include_filesystem(
+            "/dev/sdb1",
+            "xfs",
+            "/media/usb"
+        ));
+        assert!(UniversalStorageBridge::test_should_include_filesystem(
+            "/dev/vda1",
+            "ext4",
+            "/var/lib"
+        ));
+        assert!(UniversalStorageBridge::test_should_include_filesystem(
+            "/dev/vdb1",
+            "ext4",
+            "/opt/nestgate"
+        ));
+    }
+
+    #[test]
+    fn parse_size_to_bytes_plain_number_and_whitespace() {
+        assert_eq!(
+            UniversalStorageBridge::test_parse_size_to_bytes("512").unwrap(),
+            512
+        );
+        assert_eq!(
+            UniversalStorageBridge::test_parse_size_to_bytes("  3M  ").unwrap(),
+            3 * 1024 * 1024
+        );
+    }
+
+    #[test]
+    fn list_pools_unknown_backend_returns_fallback_pool() {
+        let mut bridge = UniversalStorageBridge::new().expect("bridge");
+        bridge.set_preferred_backend_for_test(Some("custom-backend".to_string()));
+        let pools = bridge.list_pools().expect("pools");
+        assert_eq!(pools.len(), 1);
+        assert_eq!(pools[0].name, "root-filesystem");
+        assert_eq!(
+            pools[0]
+                .properties
+                .get("preferred_backend")
+                .map(String::as_str),
+            Some("custom-backend")
+        );
+    }
+
+    #[test]
+    fn create_dataset_rejects_unknown_backend() {
+        let mut bridge = UniversalStorageBridge::new().expect("bridge");
+        bridge.set_preferred_backend_for_test(Some("custom-backend".to_string()));
+        let config = DatasetConfig {
+            name: "/tmp/nestgate_unknown_backend_ds".to_string(),
+            mountpoint: None,
+            compression: false,
+            quota: None,
+            reservation: None,
+            properties: HashMap::new(),
+        };
+        let err = bridge
+            .create_dataset(&config)
+            .expect_err("unknown backend should error");
+        match err {
+            UniversalZfsError::Internal { message } => {
+                assert!(
+                    message.contains("No suitable backend"),
+                    "unexpected message: {message}"
+                );
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
     }
 }

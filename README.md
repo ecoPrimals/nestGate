@@ -5,19 +5,19 @@
 **Verification (as of 2026-04-16)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,565 passing, 0 failures, 60 ignored  
+- **Tests**: `cargo test --workspace --lib` — 8,627 passing, 0 failures, 60 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,565 passing, 60 ignored, 0 failures  
-- **Coverage**: 82.94% line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
+- **Tests (last recorded)**: 8,627 passing, 60 ignored, 0 failures  
+- **Coverage**: 83.86% line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
 - **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
-- **Deprecated APIs**: 133 `#[deprecated]` markers for canonical-config migration; zero dead callers  
+- **Deprecated APIs**: 116 `#[deprecated]` markers for canonical-config migration; zero dead callers  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
@@ -261,7 +261,7 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 ## What's Active
 
 1. Push test coverage toward 90% target (currently 82.06%)
-2. Migrate remaining 133 deprecated APIs to canonical config
+2. Migrate remaining 116 deprecated APIs to canonical config
 3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Cross-gate replication (multi-node data orchestration)
 5. aarch64 musl cross-compile CI (config exists; pipeline not wired)

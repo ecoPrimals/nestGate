@@ -403,4 +403,49 @@ mod tests {
         assert_eq!(v["status"], "error");
         assert!(v["message"].as_str().unwrap_or("").contains("not found"));
     }
+
+    #[tokio::test]
+    async fn perform_copy_migration_local_fails_for_invalid_snapshot() {
+        let cfg = sample_migration_config(MigrationStrategy::Copy);
+        let r = perform_copy_migration(
+            "nonexistent_pool_zz/ds@migrate_bad",
+            "targetpool/workspaces/w-copy-local",
+            &cfg,
+        )
+        .await;
+        assert_eq!(r, Err(StatusCode::INTERNAL_SERVER_ERROR));
+    }
+
+    #[tokio::test]
+    async fn perform_copy_migration_remote_target_host_fails_without_working_pipe() {
+        let mut cfg = sample_migration_config(MigrationStrategy::Copy);
+        cfg.target_host = Some("127.0.0.1".to_string());
+        let r = perform_copy_migration(
+            "nonexistent_pool_zz/ds@migrate_bad",
+            "targetpool/workspaces/w-copy-remote",
+            &cfg,
+        )
+        .await;
+        assert!(matches!(r, Err(StatusCode::INTERNAL_SERVER_ERROR)));
+    }
+
+    #[tokio::test]
+    async fn perform_move_migration_propagates_copy_failure() {
+        let cfg = sample_migration_config(MigrationStrategy::Move);
+        let r = perform_move_migration(
+            "bad@snap",
+            "targetpool/workspaces/w-move",
+            "nestpool/workspaces/w-move-src",
+            &cfg,
+        )
+        .await;
+        assert_eq!(r, Err(StatusCode::INTERNAL_SERVER_ERROR));
+    }
+
+    #[tokio::test]
+    async fn perform_replicate_migration_propagates_copy_failure() {
+        let cfg = sample_migration_config(MigrationStrategy::Replicate);
+        let r = perform_replicate_migration("bad@snap", "targetpool/workspaces/w-repl", &cfg).await;
+        assert_eq!(r, Err(StatusCode::INTERNAL_SERVER_ERROR));
+    }
 }

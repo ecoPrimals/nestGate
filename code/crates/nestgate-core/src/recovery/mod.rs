@@ -13,7 +13,7 @@ pub mod retry_strategy;
 // Re-export main types
 pub use circuit_breaker::{CircuitBreaker, CircuitBreakerConfig, CircuitState};
 pub use graceful_degradation::{DegradationLevel, FallbackStrategy, GracefulDegradation};
-pub use health_monitoring::{ComponentHealth, HealthCheck, HealthMonitor};
+pub use health_monitoring::{ComponentHealth, HealthCheckDyn, HealthMonitor};
 pub use retry_strategy::{ExponentialBackoff, RetryConfig, RetryStrategy};
 
 #[cfg(test)]

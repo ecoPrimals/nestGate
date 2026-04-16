@@ -133,6 +133,7 @@ impl Default for NetworkEnvConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::hardcoding::runtime_fallback_ports;
 
     #[test]
     fn test_default_config() {
@@ -142,20 +143,30 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_builder_pattern() {
         let config = NetworkEnvConfig::new()
             .with_host("NESTGATE_API".to_string(), "api.example.com".to_string())
-            .with_port("NESTGATE_API".to_string(), 8080)
+            .with_port("NESTGATE_API".to_string(), runtime_fallback_ports::HTTP)
             .with_endpoint(
                 "NESTGATE_DB".to_string(),
                 Some("db.example.com".to_string()),
-                Some(5432),
+                Some(runtime_fallback_ports::POSTGRES),
             );
 
         assert_eq!(config.get_host("NESTGATE_API"), Some("api.example.com"));
-        assert_eq!(config.get_port("NESTGATE_API"), Some(8080));
+        assert_eq!(
+            config.get_port("NESTGATE_API"),
+            Some(runtime_fallback_ports::HTTP)
+        );
         assert_eq!(config.get_host("NESTGATE_DB"), Some("db.example.com"));
-        assert_eq!(config.get_port("NESTGATE_DB"), Some(5432));
+        assert_eq!(
+            config.get_port("NESTGATE_DB"),
+            Some(runtime_fallback_ports::POSTGRES)
+        );
     }
 
     #[test]
@@ -169,22 +180,34 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_partial_config() {
-        let config = NetworkEnvConfig::new().with_port("NESTGATE_REDIS".to_string(), 6379);
+        let config = NetworkEnvConfig::new()
+            .with_port("NESTGATE_REDIS".to_string(), runtime_fallback_ports::REDIS);
 
         assert!(config.has_port("NESTGATE_REDIS"));
         assert!(!config.has_host("NESTGATE_REDIS"));
-        assert_eq!(config.get_port("NESTGATE_REDIS"), Some(6379));
+        assert_eq!(
+            config.get_port("NESTGATE_REDIS"),
+            Some(runtime_fallback_ports::REDIS)
+        );
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     async fn test_concurrent_access() {
         let config = Arc::new(
             NetworkEnvConfig::new()
                 .with_host("NESTGATE_API".to_string(), "api.example.com".to_string())
-                .with_port("NESTGATE_API".to_string(), 8080)
+                .with_port("NESTGATE_API".to_string(), runtime_fallback_ports::HTTP)
                 .with_host("NESTGATE_DB".to_string(), "db.example.com".to_string())
-                .with_port("NESTGATE_DB".to_string(), 5432),
+                .with_port("NESTGATE_DB".to_string(), runtime_fallback_ports::POSTGRES),
         );
 
         let handles: Vec<_> = (0..100)
@@ -206,16 +229,20 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             NetworkEnvConfig::new()
                 .with_host("NESTGATE_API".to_string(), "api1.example.com".to_string())
-                .with_port("NESTGATE_API".to_string(), 8080),
+                .with_port("NESTGATE_API".to_string(), runtime_fallback_ports::HTTP),
         );
         let config2 = Arc::new(
             NetworkEnvConfig::new()
                 .with_host("NESTGATE_API".to_string(), "api2.example.com".to_string())
-                .with_port("NESTGATE_API".to_string(), 9090),
+                .with_port("NESTGATE_API".to_string(), runtime_fallback_ports::METRICS),
         );
 
         let handle1 = tokio::spawn({
@@ -243,8 +270,8 @@ mod tests {
             .expect("Second task should complete successfully");
 
         assert_eq!(host1, Some("api1.example.com".to_string()));
-        assert_eq!(port1, Some(8080));
+        assert_eq!(port1, Some(runtime_fallback_ports::HTTP));
         assert_eq!(host2, Some("api2.example.com".to_string()));
-        assert_eq!(port2, Some(9090));
+        assert_eq!(port2, Some(runtime_fallback_ports::METRICS));
     }
 }

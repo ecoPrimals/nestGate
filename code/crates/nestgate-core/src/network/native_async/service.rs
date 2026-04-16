@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::too_long_first_doc_paragraph,
-    reason = "Deprecated NetworkServiceConfig retains a long migration narrative in docs."
-)]
-
 //! Service module
 
 use crate::error::CanonicalResult as Result;
@@ -14,8 +9,11 @@ use std::future::Future;
 // CANONICAL MODERNIZATION: Migrated from deprecated ServiceRegistration
 use crate::canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceState};
 use crate::service_discovery::types::UniversalServiceRegistration as ServiceRegistration;
-use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
+
+/// Configuration for the native async network service (canonical unified network config).
+pub type NetworkServiceConfig =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 /// Native async network service implementation
 /// Native async network service implementation
@@ -27,37 +25,6 @@ pub struct NativeAsyncNetworkService {
     pub connections: HashMap<String, String>,
     service_id: String,
     _state: UnifiedServiceState,
-}
-/// Configuration for native async network service
-/// Configuration for native async network service
-/// Defines host, port, and operational parameters
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::NetworkServiceConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::NetworkServiceConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for NetworkService
-pub struct NetworkServiceConfig {
-    /// Host
-    pub host: String,
-    /// Port
-    pub port: u16,
-    /// Max Connections
-    pub max_connections: usize,
 }
 /// Health information for network service
 /// Health status information for network service
@@ -71,27 +38,6 @@ pub struct NetworkServiceHealth {
     pub active_connections: usize,
     /// Max Connections
     pub max_connections: usize,
-}
-impl Default for NetworkServiceConfig {
-    /// Returns the default instance
-    ///
-    /// Loads configuration from environment variables with fallback defaults:
-    /// - `NESTGATE_API_HOST`: API host (default: localhost)
-    /// - `NESTGATE_API_PORT`: API port (default: 8080)
-    /// - `NESTGATE_MAX_CONNECTIONS`: Max connections (default: 1000)
-    fn default() -> Self {
-        use crate::config::environment::EnvironmentConfig;
-
-        // Load from environment with proper defaults
-        let env_config =
-            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
-
-        Self {
-            host: env_config.network.host.clone(),
-            port: env_config.network.port.get(),
-            max_connections: env_config.network.max_connections,
-        }
-    }
 }
 
 impl NativeAsyncNetworkService {
@@ -240,9 +186,9 @@ impl NativeAsyncNetworkService {
     /// Register service for discovery (utility method)
     pub fn register(&self) -> impl Future<Output = Result<ServiceRegistration>> + Send {
         let service_id = self.service_id.clone();
-        // Use config values from environment
-        let _host = self.config.host.clone();
-        let _ = self.config.port;
+        // Use config values from canonical API settings
+        let _host = self.config.api.bind_address.to_string();
+        let _ = self.config.api.port;
 
         async move {
             // CANONICAL MODERNIZATION: Use canonical service registration structure
@@ -274,18 +220,70 @@ impl NativeAsyncNetworkService {
     }
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
+#[cfg(test)]
+mod tests {
+    use super::{NativeAsyncNetworkService, NetworkServiceHealth};
+    use crate::canonical_modernization::unified_enums::UnifiedHealthStatus;
+    use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    use crate::service_discovery::types::ServiceCategory;
+    use crate::traits::canonical::CanonicalService;
+    use crate::unified_enums::service_types::UnifiedServiceType;
 
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Networkserviceconfigcanonical
-pub type NetworkServiceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    #[test]
+    fn new_stores_config_and_exposes_service_id_and_type() {
+        let config = CanonicalNetworkConfig::development_optimized();
+        let svc = NativeAsyncNetworkService::new(config.clone());
+        assert!(!svc.service_id().is_empty());
+        assert_eq!(svc.service_type(), UnifiedServiceType::Network);
+        assert!(svc.connections.is_empty());
+        assert_eq!(svc.config.api.port, config.api.port);
+    }
 
-// Note: Keep using NetworkServiceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+    #[test]
+    fn network_service_health_holds_status_and_counts() {
+        let h = NetworkServiceHealth {
+            status: UnifiedHealthStatus::Healthy,
+            active_connections: 2,
+            max_connections: 10,
+        };
+        assert_eq!(h.active_connections, 2);
+        assert_eq!(h.max_connections, 10);
+    }
+
+    #[tokio::test]
+    async fn canonical_service_lifecycle_and_health() {
+        let config = CanonicalNetworkConfig::development_optimized();
+        let svc = NativeAsyncNetworkService::new(config.clone());
+
+        assert!(svc.initialize(config.clone()).await.is_ok());
+        assert!(svc.start().await.is_ok());
+
+        let health = svc.health_check().await.expect("health_check");
+        assert!(health.is_healthy);
+
+        let metrics = svc.get_metrics().await.expect("get_metrics");
+        assert!(metrics.can_scale);
+
+        let caps = svc.capabilities().await.expect("capabilities");
+        assert!(caps.can_migrate);
+
+        let issues = svc.validate_config(&config).await.expect("validate_config");
+        assert!(issues.is_empty());
+
+        let h2 = svc.is_healthy().await.expect("is_healthy");
+        assert!(h2.is_healthy);
+
+        assert!(svc.stop().await.is_ok());
+        assert!(svc.restart().await.is_ok());
+        assert!(svc.update_config(config.clone()).await.is_ok());
+        assert!(svc.shutdown().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn register_returns_service_registration() {
+        let config = CanonicalNetworkConfig::development_optimized();
+        let svc = NativeAsyncNetworkService::new(config);
+        let reg = svc.register().await.expect("register");
+        assert_eq!(reg.metadata.category, ServiceCategory::Network);
+    }
+}

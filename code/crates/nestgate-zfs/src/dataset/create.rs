@@ -286,4 +286,44 @@ mod create_dataset_tests {
             "{msg}"
         );
     }
+
+    #[tokio::test]
+    async fn create_with_fallback_returns_synthetic_dataset_when_zfs_missing() {
+        let mgr = crate::dataset::ZfsDatasetManager::new_for_testing();
+        let info = mgr
+            .create_with_fallback("nf_fallback_ds", "no_such_pool_zzzz", CoreStorageTier::Cold)
+            .await
+            .expect("fallback dataset");
+        assert_eq!(info.tier, CoreStorageTier::Cold);
+        assert_eq!(info.compression_ratio, Some(1.0));
+        assert!(info.available_space >= 1024 * 1024);
+    }
+
+    #[tokio::test]
+    async fn create_dataset_with_config_errors_when_zfs_fails() {
+        let mgr = crate::dataset::ZfsDatasetManager::new_for_testing();
+        let err = mgr
+            .create_dataset_with_config("nf_cfg_child", "invalid_pool_root_xyz")
+            .await
+            .expect_err("zfs create should fail without pool");
+        assert!(
+            err.to_string().to_lowercase().contains("zfs")
+                || err.to_string().to_lowercase().contains("create"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn destroy_dataset_delegates_to_delete() {
+        let mgr = crate::dataset::ZfsDatasetManager::new_for_testing();
+        let err = mgr
+            .destroy_dataset("nonexistent/destroy/path")
+            .await
+            .expect_err("destroy should fail");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("zfs destroy") || msg.contains("command"),
+            "{msg}"
+        );
+    }
 }

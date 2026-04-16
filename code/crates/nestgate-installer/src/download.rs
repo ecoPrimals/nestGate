@@ -313,6 +313,7 @@ mod download_url_tests {
     use super::{
         DownloadManager, latest_version_string_from_body, release_download_from_github_body,
     };
+    use nestgate_core::Result;
     use serde_json::json;
 
     #[test]
@@ -414,7 +415,7 @@ mod download_url_tests {
     }
 
     #[test]
-    fn release_download_prefers_archive_extension() {
+    fn release_download_prefers_archive_extension() -> Result<()> {
         let body = json!({
             "assets": [
                 {"name": "checksums.txt", "browser_download_url": "https://example.com/c"},
@@ -422,71 +423,77 @@ mod download_url_tests {
                 {"name": "other.zip", "browser_download_url": "https://example.com/z.zip"}
             ]
         });
-        let (url, name) = release_download_from_github_body(&body, "v1.0.0").expect("parse");
+        let (url, name) = release_download_from_github_body(&body, "v1.0.0")?;
         assert_eq!(url, "https://example.com/a.tgz");
         assert_eq!(name, "nestgate-linux.tar.gz");
+        Ok(())
     }
 
     #[test]
-    fn release_download_prefers_first_archive_asset_in_list_order() {
+    fn release_download_prefers_first_archive_asset_in_list_order() -> Result<()> {
         let body = json!({
             "assets": [
                 {"name": "a.zip", "browser_download_url": "https://example.com/first.zip"},
                 {"name": "b.tar.gz", "browser_download_url": "https://example.com/second.tgz"}
             ]
         });
-        let (url, name) = release_download_from_github_body(&body, "v1").expect("parse");
+        let (url, name) = release_download_from_github_body(&body, "v1")?;
         assert_eq!(name, "a.zip");
         assert_eq!(url, "https://example.com/first.zip");
+        Ok(())
     }
 
     #[test]
-    fn release_download_selects_tar_gz_after_skipping_non_archive() {
+    fn release_download_selects_tar_gz_after_skipping_non_archive() -> Result<()> {
         let body = json!({
             "assets": [
                 {"name": "notes.txt", "browser_download_url": "https://example.com/n"},
                 {"name": "app.tar.gz", "browser_download_url": "https://example.com/app.tgz"}
             ]
         });
-        let (url, name) = release_download_from_github_body(&body, "t").expect("parse");
+        let (url, name) = release_download_from_github_body(&body, "t")?;
         assert_eq!(name, "app.tar.gz");
         assert_eq!(url, "https://example.com/app.tgz");
+        Ok(())
     }
 
     #[test]
-    fn release_download_prefers_tar_xz_when_present() {
+    fn release_download_prefers_tar_xz_when_present() -> Result<()> {
         let body = json!({
             "assets": [
                 {"name": "readme.md", "browser_download_url": "https://example.com/r"},
                 {"name": "bundle.tar.xz", "browser_download_url": "https://example.com/x.xz"}
             ]
         });
-        let (url, name) = release_download_from_github_body(&body, "v2").expect("parse");
+        let (url, name) = release_download_from_github_body(&body, "v2")?;
         assert_eq!(name, "bundle.tar.xz");
         assert_eq!(url, "https://example.com/x.xz");
+        Ok(())
     }
 
     #[test]
-    fn release_download_falls_back_to_first_asset() {
+    fn release_download_falls_back_to_first_asset() -> Result<()> {
         let body = json!({
             "assets": [
                 {"name": "only-deb.deb", "browser_download_url": "https://example.com/pkg.deb"}
             ]
         });
-        let (url, name) = release_download_from_github_body(&body, "v1").expect("parse");
+        let (url, name) = release_download_from_github_body(&body, "v1")?;
         assert_eq!(name, "only-deb.deb");
         assert_eq!(url, "https://example.com/pkg.deb");
+        Ok(())
     }
 
     #[test]
-    fn release_download_default_name_when_asset_name_missing() {
+    fn release_download_default_name_when_asset_name_missing() -> Result<()> {
         let body = json!({
             "assets": [
                 {"browser_download_url": "https://example.com/anon"}
             ]
         });
-        let (_url, name) = release_download_from_github_body(&body, "v1").expect("parse");
+        let (_url, name) = release_download_from_github_body(&body, "v1")?;
         assert_eq!(name, "release-asset");
+        Ok(())
     }
 
     #[test]
@@ -515,15 +522,17 @@ mod download_url_tests {
     }
 
     #[test]
-    fn latest_version_strips_v_prefix() {
+    fn latest_version_strips_v_prefix() -> Result<()> {
         let body = json!({"tag_name": "v4.5.6"});
-        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "4.5.6");
+        assert_eq!(latest_version_string_from_body(&body)?, "4.5.6");
+        Ok(())
     }
 
     #[test]
-    fn latest_version_preserves_without_v_prefix() {
+    fn latest_version_preserves_without_v_prefix() -> Result<()> {
         let body = json!({"tag_name": "3.2.1"});
-        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "3.2.1");
+        assert_eq!(latest_version_string_from_body(&body)?, "3.2.1");
+        Ok(())
     }
 
     #[test]
@@ -534,15 +543,17 @@ mod download_url_tests {
     }
 
     #[test]
-    fn latest_version_strips_multiple_leading_v_chars() {
+    fn latest_version_strips_multiple_leading_v_chars() -> Result<()> {
         let body = json!({"tag_name": "vv1.0.0"});
-        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "1.0.0");
+        assert_eq!(latest_version_string_from_body(&body)?, "1.0.0");
+        Ok(())
     }
 
     #[test]
-    fn latest_version_empty_tag_name_is_ok() {
+    fn latest_version_empty_tag_name_is_ok() -> Result<()> {
         let body = json!({"tag_name": ""});
-        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "");
+        assert_eq!(latest_version_string_from_body(&body)?, "");
+        Ok(())
     }
 
     #[test]

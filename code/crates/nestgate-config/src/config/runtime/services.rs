@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
-
 //! Services configuration module  
 //!
 //! **CAPABILITY-BASED DISCOVERY**: Discovers services by WHAT THEY DO, not WHO THEY ARE.
@@ -169,50 +167,6 @@ impl ServicesConfig {
         let mut caps: Vec<String> = self.discovered_capabilities.keys().cloned().collect();
         caps.sort();
         caps
-    }
-
-    /// Get capability URL with local fallback.
-    ///
-    /// **CAPABILITY-BASED**: Returns URL for a capability type, falling back
-    /// to localhost discovery if not configured.
-    ///
-    /// This is useful for development where services may be running locally.
-    ///
-    /// # Primal Sovereignty
-    ///
-    /// Falls back to environment-configurable localhost endpoints. No hardcoded assumptions.
-    #[deprecated(
-        since = "0.4.0",
-        note = "use resolve_by_capability(); hardcoded port mapping to capabilities violates primal self-knowledge"
-    )]
-    #[must_use]
-    pub fn capability_url_or_local(&self, capability: &str) -> String {
-        use std::env;
-
-        use crate::constants::get_api_port;
-        use crate::constants::hardcoding::runtime_fallback_ports;
-
-        let port = match capability {
-            "security" => env::var("NESTGATE_SECURITY_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(runtime_fallback_ports::HTTP),
-            "networking" | "orchestration" => env::var("NESTGATE_ORCHESTRATION_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(runtime_fallback_ports::METRICS),
-            _ => env::var("NESTGATE_API_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or_else(get_api_port),
-        };
-
-        // ✅ SOVEREIGNTY: Environment-driven host with compile-time constant fallback
-        let host = env::var("NESTGATE_SERVICE_HOST")
-            .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string());
-
-        self.resolve_by_capability(capability)
-            .unwrap_or_else(|| format!("http://{host}:{port}"))
     }
 }
 

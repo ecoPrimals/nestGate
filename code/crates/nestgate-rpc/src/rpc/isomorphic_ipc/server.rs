@@ -531,7 +531,7 @@ mod tests {
         let sock = dir.path().join("nested").join("test.sock");
         IsomorphicIpcServer::prepare_socket_path(&sock).expect("prepare");
         assert!(sock.parent().expect("parent").is_dir());
-        std::fs::write(&sock, b"x").unwrap();
+        std::fs::write(&sock, b"x").expect("write stale socket file for test");
         IsomorphicIpcServer::prepare_socket_path(&sock).expect("prepare again");
         assert!(!sock.exists());
     }

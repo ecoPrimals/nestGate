@@ -126,18 +126,6 @@ pub trait HealthCheckDyn: Send + Sync + std::fmt::Debug {
     fn component_name(&self) -> &str;
 }
 
-// ==================== BACKWARD COMPATIBILITY ====================
-
-/// Backward compatibility alias - maps to dynamic version
-///
-/// **DEPRECATED**: Use `HealthCheckZeroCost` for zero-cost performance
-/// or `HealthCheckDyn` for dynamic dispatch explicitly.
-#[deprecated(
-    since = "0.11.0",
-    note = "Use HealthCheckZeroCost (zero-cost) or HealthCheckDyn (dynamic) explicitly"
-)]
-pub use HealthCheckDyn as HealthCheck;
-
 // ==================== HEALTH MONITOR ====================
 
 /// Health monitor with dynamic health checks (trait objects)

@@ -201,9 +201,9 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
             })
             .collect();
 
-        // Sort by score descending (highest score first)
-        scored_candidates
-            .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        // Sort by score descending (highest score first). `total_cmp` avoids `partial_cmp` `None`
+        // (e.g. NaN) without an extra fallback.
+        scored_candidates.sort_by(|a, b| b.1.total_cmp(&a.1));
 
         // Get services count before creating the error (DashMap: lock-free!)
         let _services_count = self.services.len();

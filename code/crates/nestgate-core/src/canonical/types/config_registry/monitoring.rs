@@ -247,24 +247,6 @@ impl CanonicalConfigTypeRegistry {
 // Backward-compatible aliases to `CanonicalNetworkConfig` while migrating from deprecated structs.
 #[expect(missing_docs, reason = "migration in progress")]
 mod deprecated_canonical_aliases {
-    pub type NetworkInterfaceConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkProtocolsConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkConnectionConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkSecurityConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkPerformanceConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkBufferConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkLoadBalancingConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkServiceDiscoveryConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-    pub type NetworkMonitoringConfigCanonical =
-        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
     pub type StorageConnectionConfigCanonical =
         crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
     pub type StoragePerformanceConfigCanonical =

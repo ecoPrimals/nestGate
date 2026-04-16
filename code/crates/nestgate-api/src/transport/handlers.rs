@@ -36,6 +36,13 @@ fn self_primal_name() -> String {
 /// - `health.*` - Health and status checks
 /// - `identity.*` - Primal identity and discovery
 /// - `system.*` - System information and capabilities
+///
+/// ## Storage type parameter
+///
+/// `S` defaults to [`NoopStorage`], the null-object [`StorageBackend`]: the type parameter can stay
+/// generic without naming a concrete store, while [`NestGateRpcHandler::new`] leaves the optional backend
+/// unset until [`NestGateRpcHandler::with_storage`] attaches a real backend. That default is intentional
+/// production behavior (not a unit-test mock); in-crate test doubles are behind `#[cfg(test)]` only.
 pub struct NestGateRpcHandler<S: StorageBackend = NoopStorage> {
     /// Optional storage backend
     storage: Option<Arc<S>>,
@@ -49,10 +56,12 @@ impl<S: StorageBackend> Clone for NestGateRpcHandler<S> {
     }
 }
 
-/// Null-object storage backend for `NestGateRpcHandler` when no real storage is configured.
+/// Null-object [`StorageBackend`] for [`NestGateRpcHandler`]: a deliberate stand-in type (null-object pattern)
+/// so the handler can be generic without selecting a concrete store at compile time.
 ///
-/// All operations return errors. This is NOT a mock — it is the production default
-/// that signals "storage not initialized" until a real backend is wired.
+/// Trait methods return errors so behavior is explicit when no backend is attached. This is the default type
+/// parameter for the handler and is intentional production design — not a unit-test mock; test doubles live
+/// under `#[cfg(test)]` (or dev-only features), consistent with the README note that production ships without mocks.
 pub struct NoopStorage;
 
 impl StorageBackend for NoopStorage {

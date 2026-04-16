@@ -10,7 +10,6 @@
 //! This module was refactored from a single 1571-line file into a clean modular structure:
 //!
 //! - **`storage`** - Storage backend, connection, replication, tiering configurations (340 lines)
-//! - **`network`** - Network interfaces, protocols, load balancing configurations (288 lines)
 //! - **`security`** - Authentication, encryption, audit configurations (215 lines)
 //! - **`monitoring`** - Metrics, logging, alerting configurations (557 lines)
 //!
@@ -30,7 +29,6 @@
 //!
 //! // Or import specific domains
 //! use nestgate_core::canonical::types::config_registry::storage::*;
-//! use nestgate_core::canonical::types::config_registry::network::*;
 //! ```
 //!
 //! ## Module Purpose
@@ -55,7 +53,6 @@ use std::collections::HashMap;
 // ==================== SUBMODULES ====================
 
 pub mod monitoring;
-pub mod network;
 pub mod security;
 pub mod storage;
 
@@ -64,7 +61,6 @@ mod storage_tests;
 
 // Re-export all types for convenience
 pub use monitoring::*;
-pub use network::*;
 pub use security::*;
 pub use storage::*;
 
@@ -150,15 +146,7 @@ impl CanonicalConfigTypeRegistry {
             "StorageProtocolsConfig",
             "StorageMonitoringConfig",
             "StorageResourceConfig",
-            // Network subtypes
-            "NetworkInterfaceConfig",
-            "NetworkProtocolsConfig",
-            "NetworkConnectionConfig",
-            "NetworkSecurityConfig",
-            "NetworkPerformanceConfig",
-            "NetworkLoadBalancingConfig",
-            "NetworkServiceDiscoveryConfig",
-            "NetworkMonitoringConfig",
+            "CanonicalNetworkConfig",
             // Security subtypes
             "SecurityAuthenticationConfig",
             "SecurityAuthorizationConfig",
@@ -209,7 +197,7 @@ mod tests {
     fn test_registry_all_types() {
         let types = CanonicalConfigTypeRegistry::all_types();
         assert!(!types.is_empty());
-        assert!(types.len() >= 30); // At least 30 config types
+        assert!(types.len() >= 25);
     }
 
     #[test]
@@ -232,7 +220,7 @@ mod tests {
             Some("storage")
         );
         assert_eq!(
-            CanonicalConfigTypeRegistry::get_category("NetworkInterfaceConfig"),
+            CanonicalConfigTypeRegistry::get_category("CanonicalNetworkConfig"),
             Some("network")
         );
         assert_eq!(

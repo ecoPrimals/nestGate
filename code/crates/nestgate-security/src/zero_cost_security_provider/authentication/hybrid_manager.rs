@@ -521,4 +521,104 @@ mod hybrid_manager_direct_tests {
             .expect("call");
         assert!(!ok);
     }
+
+    #[tokio::test]
+    async fn rate_limit_blocks_after_max_attempts() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        config.max_auth_attempts = 1;
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials::new_token("u-rate".into(), "secret".into());
+        mgr.authenticate(&creds).await.expect("first ok");
+        let err = mgr.authenticate(&creds).await.expect_err("rate limited");
+        assert!(
+            err.to_string().contains("Security") || err.to_string().contains("security"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn local_password_auth_without_env_hash_fails() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials {
+            username: "u".into(),
+            password: "pw".into(),
+            auth_method: AuthMethod::Password,
+            metadata: std::collections::HashMap::new(),
+        };
+        let err = mgr.authenticate(&creds).await.expect_err("no local hash");
+        assert!(
+            err.to_string().contains("NESTGATE_LOCAL_AUTH_HASH")
+                || err.to_string().contains("security primal"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn certificate_biometric_and_mfa_require_external() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        let mgr = HybridAuthenticationManager::new(config);
+        for method in [
+            AuthMethod::Certificate,
+            AuthMethod::Biometric,
+            AuthMethod::MultiFactor {
+                methods: vec!["totp".into()],
+            },
+        ] {
+            let creds = ZeroCostCredentials {
+                username: "x".into(),
+                password: "".into(),
+                auth_method: method,
+                metadata: std::collections::HashMap::new(),
+            };
+            let err = mgr.authenticate(&creds).await.expect_err("external only");
+            assert!(
+                err.to_string().contains("external") || err.to_string().contains("Security"),
+                "{err}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn refresh_token_fails_when_disabled() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        config.local_token_settings.enable_refresh = false;
+        let mgr = HybridAuthenticationManager::new(config);
+        let err = mgr
+            .refresh_token("any-token")
+            .await
+            .expect_err("refresh off");
+        assert!(
+            err.to_string().contains("Security") || err.to_string().contains("security"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn refresh_token_local_uses_cache_when_enabled() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        config.local_token_settings.enable_refresh = true;
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials::new_token("refresh-user".into(), "k".into());
+        let tok = mgr.authenticate(&creds).await.expect("auth");
+        let new_tok = mgr.refresh_token(&tok.token).await.expect("refresh");
+        assert!(new_tok.token.starts_with("refresh_"));
+    }
+
+    #[tokio::test]
+    async fn revoke_token_drops_cache_entry() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials::new_token("revoke-u".into(), "k".into());
+        let tok = mgr.authenticate(&creds).await.expect("auth");
+        assert!(mgr.validate_token(&tok.token).await.expect("valid"));
+        mgr.revoke_token(&tok.token).await.expect("revoke");
+        assert!(!mgr.validate_token(&tok.token).await.expect("after revoke"));
+    }
 }

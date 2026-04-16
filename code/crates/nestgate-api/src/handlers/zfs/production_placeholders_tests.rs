@@ -336,3 +336,170 @@ async fn get_dataset_returns_not_found_when_missing() {
         assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
     }
 }
+
+#[tokio::test]
+async fn list_datasets_delegates_or_unavailable() {
+    let (code, Json(v)) = list_datasets().await;
+    if is_zfs_available().await {
+        assert_eq!(code, StatusCode::OK);
+        assert_eq!(v["status"], "success");
+        assert!(v.get("datasets").is_some());
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(v["error"], "zfs_unavailable");
+    }
+}
+
+#[tokio::test]
+async fn delete_dataset_reports_operation_failed_when_missing() {
+    let (code, Json(v)) = delete_dataset(Path("no_such_dataset_delete_zzz".into())).await;
+    if is_zfs_available().await {
+        assert_eq!(code, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(v["error"], "zfs_operation_failed");
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn get_dataset_properties_reports_failure_for_missing_dataset() {
+    let (code, Json(v)) = get_dataset_properties(Path("no_such_props_zzz".into())).await;
+    if is_zfs_available().await {
+        assert_eq!(code, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(v["error"], "zfs_operation_failed");
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn set_dataset_properties_accepts_non_empty_body_shape() {
+    let mut body = HashMap::new();
+    body.insert("atime".to_owned(), json!("off"));
+    body.insert("compression".to_owned(), json!("lz4"));
+    let (code, Json(v)) =
+        set_dataset_properties(Path("no_such_for_props_zzz".into()), Json(body)).await;
+    if is_zfs_available().await {
+        assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
+        assert!(matches!(
+            code,
+            StatusCode::OK | StatusCode::MULTI_STATUS | StatusCode::INTERNAL_SERVER_ERROR
+        ));
+        if code == StatusCode::OK {
+            assert_eq!(v["status"], "success");
+            assert!(v.get("properties_set").is_some());
+        } else if code == StatusCode::MULTI_STATUS {
+            assert_eq!(v["status"], "partial");
+            assert!(v.get("errors").is_some());
+        } else {
+            assert_eq!(v["error"], "zfs_operation_failed");
+        }
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn create_dataset_name_only_body_shape() {
+    let mut body = HashMap::new();
+    body.insert(
+        "name".to_owned(),
+        json!("tank/nestgate_test_missing_dataset"),
+    );
+    let (code, Json(v)) = create_dataset(Json(body)).await;
+    if is_zfs_available().await {
+        assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
+        if code == StatusCode::CREATED {
+            assert_eq!(v["status"], "success");
+            assert_eq!(v["dataset"], "tank/nestgate_test_missing_dataset");
+        } else {
+            assert_eq!(v["error"], "zfs_operation_failed");
+        }
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn predict_tier_valid_dataset_field_exercises_handler() {
+    let mut body = HashMap::new();
+    body.insert("dataset".to_owned(), json!("tank"));
+    let (code, Json(v)) = predict_tier(Json(body)).await;
+    if is_zfs_available().await {
+        assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
+        if code == StatusCode::OK {
+            assert_eq!(v["status"], "success");
+            assert_eq!(v["dataset"], "tank");
+            assert!(v.get("predicted_tier").is_some());
+            assert!(v.get("properties").is_some());
+        } else {
+            assert_eq!(v["error"], "zfs_operation_failed");
+        }
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn get_universal_storage_health_json_includes_pool_counts() {
+    let (code, Json(v)) = get_universal_storage_health().await;
+    if is_zpool_available().await {
+        assert_eq!(code, StatusCode::OK);
+        assert_eq!(v["status"], "success");
+        assert!(v.get("pool_count").is_some());
+        assert!(v.get("pools_unhealthy").is_some());
+        assert!(v.get("pools").is_some());
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn create_snapshot_valid_pair_calls_handler() {
+    let mut body = HashMap::new();
+    body.insert("dataset".to_owned(), json!("tank/nestgate_snap_test_ds"));
+    body.insert("name".to_owned(), json!("snap1"));
+    let (code, Json(v)) = create_snapshot(Json(body)).await;
+    if is_zfs_available().await {
+        assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
+        if code == StatusCode::CREATED {
+            assert_eq!(v["status"], "success");
+            assert!(v.get("snapshot").is_some());
+        } else {
+            assert_eq!(v["error"], "zfs_operation_failed");
+        }
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[tokio::test]
+async fn create_pool_valid_json_shape_when_zpool_present() {
+    let mut body = HashMap::new();
+    body.insert("name".to_owned(), json!("nestgate_test_pool_should_fail"));
+    body.insert("devices".to_owned(), json!(["/dev/nonexistent_device_zzz"]));
+    let (code, Json(v)) = create_pool(Json(body)).await;
+    if is_zpool_available().await {
+        assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
+        assert!(matches!(
+            code,
+            StatusCode::CREATED | StatusCode::INTERNAL_SERVER_ERROR
+        ));
+        if code == StatusCode::CREATED {
+            assert_eq!(v["status"], "success");
+            assert!(v.get("pool").is_some());
+        } else {
+            assert_eq!(v["error"], "zfs_operation_failed");
+        }
+    } else {
+        assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
+
+#[test]
+fn zero_cost_zfs_operations_implements_default() {
+    assert_eq!(
+        format!("{:?}", ZeroCostZfsOperations::default()),
+        format!("{:?}", ZeroCostZfsOperations::new())
+    );
+}

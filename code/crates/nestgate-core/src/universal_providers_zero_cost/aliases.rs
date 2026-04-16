@@ -3,14 +3,7 @@
 
 use super::compute::ZeroCostUniversalComputeWrapper;
 use super::orchestration::ZeroCostUniversalOrchestrationWrapper;
-use super::security::ZeroCostUniversalSecurityWrapper;
 
-/// Common zero-cost provider configurations
-pub type StandardZeroCostSecurityWrapper<Provider> =
-    ZeroCostUniversalSecurityWrapper<Provider, 1000>;
-/// Type alias for Highperformancezerocostsecuritywrapper
-pub type HighPerformanceZeroCostSecurityWrapper<Provider> =
-    ZeroCostUniversalSecurityWrapper<Provider, 10000>;
 /// Type alias for Standardzerocostorchestrationwrapper
 pub type StandardZeroCostOrchestrationWrapper<Provider> =
     ZeroCostUniversalOrchestrationWrapper<Provider, 500>;

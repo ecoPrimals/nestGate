@@ -42,7 +42,7 @@ pub use types::{Capability, DiscoveredPrimal, DiscoveryMechanism, Endpoint, Prim
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_types::MapEnv;
+    use nestgate_types::{EnvSource, MapEnv};
     use std::sync::Arc;
 
     #[test]
@@ -167,5 +167,65 @@ mod tests {
         // Should succeed (may do nothing if mechanisms not configured)
         let result = primal.announce_self();
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn initialize_fails_on_invalid_api_port() {
+        let env: Arc<dyn EnvSource> = Arc::new(MapEnv::from([
+            ("NESTGATE_API_HOST", "127.0.0.1"),
+            ("NESTGATE_API_PORT", "not-a-port"),
+        ]));
+        let Err(err) = PrimalSelfKnowledge::initialize_with_env(env).await else {
+            panic!("expected invalid NESTGATE_API_PORT to fail initialization");
+        };
+        assert!(
+            err.to_string().contains("NESTGATE_API_PORT") || err.to_string().contains("Invalid"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn discover_primal_via_environment_host_port() {
+        let env: Arc<dyn EnvSource> = Arc::new(MapEnv::from([
+            ("ORCHESTRATION_PROVIDER_HOST", "127.0.0.1"),
+            ("ORCHESTRATION_PROVIDER_PORT", "9090"),
+        ]));
+        let mut primal = PrimalSelfKnowledge::initialize_with_env(Arc::clone(&env))
+            .await
+            .expect("init");
+        let p = primal
+            .discover_primal("orchestration_provider")
+            .await
+            .expect("discovered via env");
+        assert_eq!(p.primary_endpoint.port, 9090);
+        assert_eq!(p.discovery_method, super::DiscoveryMechanism::Environment);
+
+        let p2 = primal
+            .discover_primal("orchestration_provider")
+            .await
+            .expect("cached");
+        assert_eq!(p2.primary_endpoint.address, p.primary_endpoint.address);
+    }
+
+    #[tokio::test]
+    async fn discover_primal_invalid_env_port_is_skipped() {
+        let env: Arc<dyn EnvSource> = Arc::new(MapEnv::from([
+            ("FOO_HOST", "127.0.0.1"),
+            ("FOO_PORT", "not-a-port"),
+        ]));
+        let mut primal = PrimalSelfKnowledge::initialize_with_env(env)
+            .await
+            .expect("init");
+        let err = primal.discover_primal("foo").await.expect_err("no peer");
+        assert!(err.to_string().contains("not discovered"), "{err}");
+    }
+
+    #[tokio::test]
+    async fn initialize_with_mdns_flag_adds_mechanism() {
+        let env: Arc<dyn EnvSource> = Arc::new(MapEnv::from([("NESTGATE_MDNS_ENABLED", "true")]));
+        let primal = PrimalSelfKnowledge::initialize_with_env(env)
+            .await
+            .expect("init");
+        primal.announce_self().expect("announce with mdns in list");
     }
 }

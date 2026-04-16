@@ -12,6 +12,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::constants::hardcoding::runtime_fallback_ports;
+
 // ==================== ENVIRONMENT TYPES ====================
 
 /// **ENVIRONMENT ENUMERATION**
@@ -357,12 +359,17 @@ impl Environment {
 
     /// Get default port for this environment
     #[must_use]
+    #[expect(
+        deprecated,
+        reason = "Environment tier fallbacks align with runtime_fallback_ports until RuntimePortResolver"
+    )]
     pub const fn default_port(&self) -> u16 {
         match self {
+            // Standard IANA HTTPS port; not defined in `runtime_fallback_ports` (that module lists NestGate-style fallbacks).
             Self::Production => 443,
-            Self::Staging => 8443,
-            Self::Development => 8080,
-            Self::Testing => 3000,
+            Self::Staging => runtime_fallback_ports::HTTPS,
+            Self::Development => runtime_fallback_ports::HTTP,
+            Self::Testing => runtime_fallback_ports::API,
         }
     }
 
@@ -382,6 +389,7 @@ impl Environment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::hardcoding::runtime_fallback_ports;
 
     #[test]
     fn test_environment_from_str() {
@@ -412,11 +420,24 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "assertions reference runtime_fallback_ports parity with default_port()"
+    )]
     fn test_environment_default_port() {
         assert_eq!(Environment::Production.default_port(), 443);
-        assert_eq!(Environment::Development.default_port(), 8080);
-        assert_eq!(Environment::Staging.default_port(), 8443);
-        assert_eq!(Environment::Testing.default_port(), 3000);
+        assert_eq!(
+            Environment::Development.default_port(),
+            runtime_fallback_ports::HTTP
+        );
+        assert_eq!(
+            Environment::Staging.default_port(),
+            runtime_fallback_ports::HTTPS
+        );
+        assert_eq!(
+            Environment::Testing.default_port(),
+            runtime_fallback_ports::API
+        );
     }
 
     #[test]

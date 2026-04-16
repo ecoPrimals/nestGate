@@ -57,6 +57,26 @@ const DEFAULT_ZFS_COMMAND_TIMEOUT_SECS: u64 = 300;
 /// parsing ZFS property lists. Most datasets have 30-50 properties.
 const ZFS_TYPICAL_PROPERTY_COUNT: usize = 40;
 
+/// Parse one `zfs get -H -p all` line into property name and value.
+pub(crate) fn parse_zfs_property_tab_line(line: &str) -> Option<(String, String)> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() >= 4 {
+        Some((parts[1].to_string(), parts[2].to_string()))
+    } else {
+        None
+    }
+}
+
+/// Non-empty lines with leading and trailing whitespace removed (as in [`NativeZfsCommandExecutor::list_pools`]).
+pub(crate) fn trimmed_non_empty_lines(output: &str) -> Vec<String> {
+    output
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(str::trim)
+        .map(ToString::to_string)
+        .collect()
+}
+
 /// Native ZFS command executor
 ///
 /// Executes ZFS and zpool commands safely with timeout enforcement
@@ -251,11 +271,7 @@ impl NativeZfsCommandExecutor {
             .execute_command_expect_success(&["list", "-H", "-o", "name", "-t", "filesystem"])
             .await?;
 
-        Ok(output
-            .lines()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim().to_string())
-            .collect())
+        Ok(trimmed_non_empty_lines(&output))
     }
 
     /// Get ZFS dataset information
@@ -276,10 +292,7 @@ impl NativeZfsCommandExecutor {
         let mut properties = HashMap::with_capacity(ZFS_TYPICAL_PROPERTY_COUNT);
 
         for line in output.lines() {
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 4 {
-                let property = parts[1].to_string();
-                let value = parts[2].to_string();
+            if let Some((property, value)) = parse_zfs_property_tab_line(line) {
                 properties.insert(property, value);
             }
         }

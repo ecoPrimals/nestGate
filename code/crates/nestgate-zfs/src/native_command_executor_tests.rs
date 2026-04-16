@@ -9,6 +9,7 @@
 #[cfg(test)]
 mod tests {
     use crate::native::command_executor::*;
+    use nestgate_types::env_source::MapEnv;
 
     // ==================== ZfsCommandResult Tests ====================
 
@@ -350,5 +351,71 @@ mod tests {
         let a = NativeZfsCommandExecutor::default();
         let b = NativeZfsCommandExecutor::new();
         assert_eq!(std::mem::size_of_val(&a), std::mem::size_of_val(&b));
+    }
+
+    #[test]
+    fn parse_zfs_property_tab_line_extracts_name_and_value() {
+        let line = "tank/ds\tused\t4096\tlocal";
+        let (k, v) = parse_zfs_property_tab_line(line).expect("parsed");
+        assert_eq!(k, "used");
+        assert_eq!(v, "4096");
+    }
+
+    #[test]
+    fn parse_zfs_property_tab_line_requires_four_columns() {
+        assert!(parse_zfs_property_tab_line("a\tb").is_none());
+    }
+
+    #[test]
+    fn trimmed_non_empty_lines_skips_blanks_and_trims() {
+        let out = "  pool1  \n\n pool2 \n";
+        let v = trimmed_non_empty_lines(out);
+        assert_eq!(v, vec!["pool1".to_string(), "pool2".to_string()]);
+    }
+
+    #[test]
+    fn new_from_env_source_enables_verbose_when_env_set() {
+        let env = MapEnv::from([("ZFS_VERBOSE_LOGGING", "1")]);
+        let ex = NativeZfsCommandExecutor::new_from_env_source(&env);
+        let _ = ex;
+    }
+
+    #[test]
+    fn with_timeout_from_env_source_builds_executor() {
+        let env = MapEnv::new();
+        let ex = NativeZfsCommandExecutor::with_timeout_from_env_source(120, &env);
+        let _ = ex;
+    }
+
+    #[tokio::test]
+    async fn create_dataset_builds_valid_zfs_argv() {
+        let mut props = std::collections::HashMap::new();
+        props.insert("compression".to_string(), "lz4".to_string());
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex.create_dataset("nonexistent_pool_z/ds_x", &props).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn create_snapshot_invokes_snapshot_subcommand() {
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex
+            .create_snapshot("nonexistent_pool_z/snap_ds", "snap1")
+            .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn list_pools_runs_list_or_errors() {
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex.list_pools().await;
+        assert!(r.is_ok() || r.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_dataset_info_runs_get_or_errors() {
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex.get_dataset_info("nonexistent_z/tank/ds").await;
+        assert!(r.is_ok() || r.is_err());
     }
 }

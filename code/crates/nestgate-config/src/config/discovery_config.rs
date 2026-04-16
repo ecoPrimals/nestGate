@@ -19,7 +19,7 @@ use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use serde::{Deserialize, Serialize};
 
 use crate::constants::hardcoding::addresses;
-use crate::constants::port_defaults::DEFAULT_API_PORT;
+use crate::constants::hardcoding::runtime_fallback_ports;
 
 /// Central configuration for service discovery
 ///
@@ -56,19 +56,31 @@ impl Default for ServiceDiscoveryConfig {
 impl ServiceDiscoveryConfig {
     /// Build from an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests).
     #[must_use]
+    #[expect(
+        deprecated,
+        reason = "NESTGATE_DISCOVERY_BASE_PORT fallback uses runtime_fallback_ports until RuntimePortResolver wiring"
+    )]
     pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             endpoints: Self::load_endpoints_from_env_source(env),
             discovery_host: env
                 .get("NESTGATE_DISCOVERY_HOST")
                 .unwrap_or_else(|| addresses::LOCALHOST_IPV4.to_string()),
-            discovery_base_port: env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", DEFAULT_API_PORT),
+            discovery_base_port: env_parsed(
+                env,
+                "NESTGATE_DISCOVERY_BASE_PORT",
+                runtime_fallback_ports::HTTP,
+            ),
             discovery_port_range: env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 10),
             auto_discovery: env_parsed(env, "NESTGATE_AUTO_DISCOVERY", true),
             discovery_timeout_secs: env_parsed(env, "NESTGATE_DISCOVERY_TIMEOUT", 30),
         }
     }
 
+    #[expect(
+        deprecated,
+        reason = "NESTGATE_DISCOVERY_BASE_PORT fallback uses runtime_fallback_ports until RuntimePortResolver wiring"
+    )]
     fn load_endpoints_from_env_source(env: &(impl EnvSource + ?Sized)) -> Vec<String> {
         // Try NESTGATE_DISCOVERY_ENDPOINTS (comma-separated list)
         if let Some(endpoints_str) = env.get("NESTGATE_DISCOVERY_ENDPOINTS") {
@@ -83,7 +95,11 @@ impl ServiceDiscoveryConfig {
         let host = env
             .get("NESTGATE_DISCOVERY_HOST")
             .unwrap_or_else(|| addresses::LOCALHOST_IPV4.to_string());
-        let base_port: u16 = env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", DEFAULT_API_PORT);
+        let base_port: u16 = env_parsed(
+            env,
+            "NESTGATE_DISCOVERY_BASE_PORT",
+            runtime_fallback_ports::HTTP,
+        );
         let port_range: u16 = env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 3);
 
         (0..port_range)
@@ -134,26 +150,31 @@ impl ServiceDiscoveryConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::hardcoding::runtime_fallback_ports;
     use nestgate_types::MapEnv;
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_default_discovery_config_values() {
         // Test default values without relying on env var state
         let config = ServiceDiscoveryConfig {
             endpoints: vec![
-                "http://127.0.0.1:8080".to_string(),
-                "http://127.0.0.1:8081".to_string(),
-                "http://127.0.0.1:8082".to_string(),
+                format!("http://127.0.0.1:{}", runtime_fallback_ports::HTTP),
+                format!("http://127.0.0.1:{}", runtime_fallback_ports::HEALTH),
+                format!("http://127.0.0.1:{}", runtime_fallback_ports::WEBSOCKET),
             ],
             discovery_host: "127.0.0.1".to_string(),
-            discovery_base_port: 8080,
+            discovery_base_port: runtime_fallback_ports::HTTP,
             discovery_port_range: 10,
             auto_discovery: true,
             discovery_timeout_secs: 30,
         };
 
         assert_eq!(config.discovery_host, "127.0.0.1");
-        assert_eq!(config.discovery_base_port, 8080);
+        assert_eq!(config.discovery_base_port, runtime_fallback_ports::HTTP);
         assert_eq!(config.discovery_port_range, 10);
         assert!(config.auto_discovery);
         assert_eq!(config.discovery_timeout_secs, 30);
@@ -171,80 +192,109 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_endpoint_generation() {
         // Test build_endpoint method directly
         let config = ServiceDiscoveryConfig {
             endpoints: vec![],
             discovery_host: "127.0.0.1".to_string(),
-            discovery_base_port: 8080,
+            discovery_base_port: runtime_fallback_ports::HTTP,
             discovery_port_range: 3,
             auto_discovery: true,
             discovery_timeout_secs: 30,
         };
 
-        let endpoint = config.build_endpoint(8081);
-        assert_eq!(endpoint, "http://127.0.0.1:8081");
+        let endpoint = config.build_endpoint(runtime_fallback_ports::HEALTH);
+        assert_eq!(
+            endpoint,
+            format!("http://127.0.0.1:{}", runtime_fallback_ports::HEALTH)
+        );
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_port_range_generation() {
         // Test get_port_range method directly
         let config = ServiceDiscoveryConfig {
             endpoints: vec![],
             discovery_host: "127.0.0.1".to_string(),
-            discovery_base_port: 8080,
+            discovery_base_port: runtime_fallback_ports::HTTP,
             discovery_port_range: 5,
             auto_discovery: true,
             discovery_timeout_secs: 30,
         };
 
         let ports = config.get_port_range();
-        assert_eq!(ports, vec![8080, 8081, 8082, 8083, 8084]);
+        let base = runtime_fallback_ports::HTTP;
+        assert_eq!(
+            ports,
+            (0..5).map(|offset| base + offset).collect::<Vec<_>>()
+        );
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_endpoints_from_env() {
-        let env = MapEnv::from([(
-            "NESTGATE_DISCOVERY_ENDPOINTS",
-            "http://server1:8080,http://server2:8081,http://server3:8082",
-        )]);
+        let endpoints_csv = format!(
+            "http://server1:{},http://server2:{},http://server3:{}",
+            runtime_fallback_ports::HTTP,
+            runtime_fallback_ports::HEALTH,
+            runtime_fallback_ports::WEBSOCKET
+        );
+        let env = MapEnv::from([("NESTGATE_DISCOVERY_ENDPOINTS", endpoints_csv.as_str())]);
         let config = ServiceDiscoveryConfig::from_env_source(&env);
         assert_eq!(config.endpoints.len(), 3);
         assert!(
             config
                 .endpoints
-                .contains(&"http://server1:8080".to_string())
+                .contains(&format!("http://server1:{}", runtime_fallback_ports::HTTP))
         );
-        assert!(
-            config
-                .endpoints
-                .contains(&"http://server2:8081".to_string())
-        );
-        assert!(
-            config
-                .endpoints
-                .contains(&"http://server3:8082".to_string())
-        );
+        assert!(config.endpoints.contains(&format!(
+            "http://server2:{}",
+            runtime_fallback_ports::HEALTH
+        )));
+        assert!(config.endpoints.contains(&format!(
+            "http://server3:{}",
+            runtime_fallback_ports::WEBSOCKET
+        )));
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_endpoints_generated_logic() {
         // Test the endpoint generation logic without relying on env state
+        let base = runtime_fallback_ports::HTTP;
         let endpoints = (0..3)
-            .map(|offset| format!("http://127.0.0.1:{}", 8080 + offset))
+            .map(|offset| format!("http://127.0.0.1:{}", base + offset))
             .collect::<Vec<_>>();
 
         assert_eq!(endpoints.len(), 3);
-        assert!(endpoints.contains(&"http://127.0.0.1:8080".to_string()));
-        assert!(endpoints.contains(&"http://127.0.0.1:8081".to_string()));
-        assert!(endpoints.contains(&"http://127.0.0.1:8082".to_string()));
+        assert!(endpoints.contains(&format!("http://127.0.0.1:{}", base)));
+        assert!(endpoints.contains(&format!("http://127.0.0.1:{}", base + 1)));
+        assert!(endpoints.contains(&format!("http://127.0.0.1:{}", base + 2)));
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "test fixtures use runtime_fallback_ports for numeric parity"
+    )]
     fn test_with_endpoints_constructor() {
         let endpoints = vec![
-            "http://custom1:9090".to_string(),
-            "http://custom2:9091".to_string(),
+            format!("http://custom1:{}", runtime_fallback_ports::METRICS),
+            format!("http://custom2:{}", runtime_fallback_ports::METRICS + 1),
         ];
 
         let config = ServiceDiscoveryConfig::with_endpoints(endpoints.clone());

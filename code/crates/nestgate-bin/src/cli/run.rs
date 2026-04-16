@@ -7,6 +7,18 @@ use super::runtime::{print_banner, setup_logging};
 use super::{Cli, Commands};
 use crate::error::BinErrorHelper;
 
+/// Resolves multi-family socket ID: CLI `--family-id` wins over `NESTGATE_FAMILY_ID`.
+///
+/// Pass `env_family_id` as `std::env::var("NESTGATE_FAMILY_ID").ok()` at the call site; kept
+/// injectable for unit tests without mutating process environment.
+#[must_use]
+pub(super) fn resolve_family_id(
+    cli_family_id: Option<String>,
+    env_family_id: Option<String>,
+) -> Option<String> {
+    cli_family_id.or(env_family_id)
+}
+
 impl Cli {
     /// Run the CLI application
     pub async fn run(self) -> crate::error::BinResult<()> {
@@ -35,7 +47,7 @@ impl Cli {
             } => {
                 // Multi-family support: CLI flag > env var > default
                 let resolved_family_id =
-                    family_id.or_else(|| std::env::var("NESTGATE_FAMILY_ID").ok());
+                    resolve_family_id(family_id, std::env::var("NESTGATE_FAMILY_ID").ok());
 
                 if let Some(ref fid) = resolved_family_id {
                     tracing::info!("👪 Family ID: {} (creates nestgate-{}.sock)", fid, fid);
@@ -149,5 +161,31 @@ impl Cli {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_family_id;
+
+    #[test]
+    fn resolve_family_id_prefers_cli_over_env() {
+        assert_eq!(
+            resolve_family_id(Some("from-cli".into()), Some("from-env".into())).as_deref(),
+            Some("from-cli")
+        );
+    }
+
+    #[test]
+    fn resolve_family_id_falls_back_to_env_value() {
+        assert_eq!(
+            resolve_family_id(None, Some("env-only".into())).as_deref(),
+            Some("env-only")
+        );
+    }
+
+    #[test]
+    fn resolve_family_id_none_when_no_cli_and_no_env() {
+        assert!(resolve_family_id(None, None).is_none());
     }
 }

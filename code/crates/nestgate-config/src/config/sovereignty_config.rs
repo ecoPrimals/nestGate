@@ -53,13 +53,17 @@ impl SovereigntyRuntimeConfig {
     /// Creates a new `SovereigntyRuntimeConfig` by reading environment variables
     /// or using default values.
     #[must_use]
+    #[expect(
+        deprecated,
+        reason = "NESTGATE_API_PORT fallback uses runtime_fallback_ports until canonical env resolution"
+    )]
     pub fn from_env() -> Self {
         let api_endpoint = env::var("NESTGATE_API_ENDPOINT").ok();
         let api_host = env::var("NESTGATE_API_HOST").ok();
         let api_port = env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(8080); // Idiomatic: always provides safe default
+            .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::HTTP);
         let bind_address = env::var("NESTGATE_BIND_ADDRESS")
             .unwrap_or_else(|_| crate::constants::LOCALHOST.to_string()); // Idiomatic: computed default
         let ws_endpoint = env::var("NESTGATE_WS_ENDPOINT").ok();
@@ -229,26 +233,38 @@ impl Default for SovereigntyRuntimeConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::hardcoding::runtime_fallback_ports;
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "default API port aligns with runtime_fallback_ports when env matches"
+    )]
     fn test_default_config() {
         let config = SovereigntyRuntimeConfig::new();
-        assert_eq!(config.api_port(), 8080);
+        assert_eq!(config.api_port(), runtime_fallback_ports::HTTP);
         assert_eq!(config.bind_address(), crate::constants::LOCALHOST);
         assert!(config.api_endpoint().contains("127.0.0.1"));
         assert!(config.websocket_endpoint().starts_with("ws://"));
     }
 
     #[test]
+    #[expect(
+        deprecated,
+        reason = "builder tests use runtime_fallback_ports for numeric parity"
+    )]
     fn test_builder_pattern() {
         let config = SovereigntyRuntimeConfig::new()
-            .with_api_port(9090)
+            .with_api_port(runtime_fallback_ports::METRICS)
             .with_bind_address("0.0.0.0".to_string())
-            .with_api_endpoint("http://custom:9090".to_string());
+            .with_api_endpoint(format!("http://custom:{}", runtime_fallback_ports::METRICS));
 
-        assert_eq!(config.api_port(), 9090);
+        assert_eq!(config.api_port(), runtime_fallback_ports::METRICS);
         assert_eq!(config.bind_address(), "0.0.0.0");
-        assert_eq!(config.api_endpoint(), "http://custom:9090");
+        assert_eq!(
+            config.api_endpoint(),
+            format!("http://custom:{}", runtime_fallback_ports::METRICS)
+        );
     }
 
     #[test]
@@ -296,15 +312,19 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+    #[expect(
+        deprecated,
+        reason = "concurrent test uses runtime_fallback_ports for numeric parity"
+    )]
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             SovereigntyRuntimeConfig::new()
-                .with_api_port(8080)
+                .with_api_port(runtime_fallback_ports::HTTP)
                 .with_bind_address("127.0.0.1".to_string()),
         );
         let config2 = Arc::new(
             SovereigntyRuntimeConfig::new()
-                .with_api_port(9090)
+                .with_api_port(runtime_fallback_ports::METRICS)
                 .with_bind_address("0.0.0.0".to_string()),
         );
 
@@ -320,8 +340,8 @@ mod tests {
         let endpoint1 = handle1.await.unwrap();
         let endpoint2 = handle2.await.unwrap();
 
-        assert!(endpoint1.contains("127.0.0.1:8080"));
-        assert!(endpoint2.contains("0.0.0.0:9090"));
+        assert!(endpoint1.contains(&format!("127.0.0.1:{}", runtime_fallback_ports::HTTP)));
+        assert!(endpoint2.contains(&format!("0.0.0.0:{}", runtime_fallback_ports::METRICS)));
         assert_ne!(endpoint1, endpoint2);
     }
 }

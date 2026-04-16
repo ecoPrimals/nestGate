@@ -378,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(
+    #[expect(
         deprecated,
         reason = "ZfsService::default() uses deprecated ZfsServiceConfig; orchestrator integration is not yet migrated to nestgate_core::config::canonical_primary (see ZfsServiceConfig deprecation)."
     )]

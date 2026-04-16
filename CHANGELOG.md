@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43t: Deep debt — deprecated pruning, coverage, hardcoded ports, unwrap triage (April 16, 2026)
+
+- **Deprecated pruning wave 2**: 17 more items removed (133→116). Removed entire
+  `config_registry/network.rs` module (9 structs), `ApiPathsConfig` vertical (6 items),
+  `NetworkServiceConfig` struct, `SecurityPrimalProvider` trait, deprecated `ZeroCost*`
+  security providers, `HealthCheck` alias, and `ServicesConfig::capability_url_or_local`.
+- **Hardcoded ports evolved**: Literal port numbers in 5 nestgate-config files replaced
+  with `runtime_fallback_ports::*` named constants. `#[expect(deprecated)]` used for
+  intermediate migration path.
+- **Coverage 82.94% → 83.86%**: Tests added for 15+ files across 8 crates. New tests:
+  cli/run.rs (family_id resolution), commands/zfs.rs (handler construction),
+  production_placeholders (10 handler tests), migration (copy/move/replicate),
+  tier_metrics (14 parsing tests), engine (4 automation tests), command_executor (9),
+  unix_socket_server dispatch, nat_handlers roundtrips, hybrid auth mechanisms,
+  http_minimal integration, self-knowledge discovery.
+- **#[allow] in production**: Evolved last `#[allow(deprecated)]` to `#[expect(deprecated)]`.
+  Zero `#[allow]` in non-test production code.
+- **NoopStorage documented**: Null-object pattern documented on `NestGateRpcHandler` and
+  `NoopStorage` struct (confirmed: not a mock, aligns with README claim).
+- **Unwrap triage**: 2700+ `.unwrap()`/`.expect()` instances are overwhelmingly test-only.
+  Production paths already use `?`/`map_err`. Evolved `partial_cmp.unwrap_or` to
+  `total_cmp` in discovery scoring.
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery), doc PASS, deny PASS,
+  8,627 tests/0 failures, 0 files >800L, 83.86% line coverage.
+
 ### Session 43s: primalSpring audit response — deprecated pruning, coverage, file splits (April 16, 2026)
 
 - **25 deprecated items pruned**: federation.rs (3), primal_discovery.rs (5), config_registry

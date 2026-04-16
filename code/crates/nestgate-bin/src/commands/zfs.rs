@@ -91,9 +91,21 @@ impl ZfsHandler {
         let base_url = std::env::var("NESTGATE_API_URL")
             .unwrap_or_else(|_| format!("http://{LOCALHOST}:{DEFAULT_API_PORT}"));
 
+        Self::with_api_endpoint(base_url)
+    }
+
+    /// Build a handler with an explicit API base URL (embedding, tests; avoids `NESTGATE_API_URL`).
+    #[must_use]
+    pub fn with_api_endpoint(endpoint: impl Into<String>) -> Self {
         Self {
-            api_endpoint: base_url,
+            api_endpoint: endpoint.into(),
         }
+    }
+
+    /// Base URL for ZFS API calls (from `NESTGATE_API_URL` or localhost default).
+    #[must_use]
+    pub fn api_endpoint(&self) -> &str {
+        &self.api_endpoint
     }
 
     /// Execute ZFS command
@@ -221,5 +233,119 @@ impl ZfsHandler {
         println!("   {}/ui/zfs", self.api_endpoint);
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ZfsCommands, ZfsHandler};
+
+    #[test]
+    fn with_api_endpoint_round_trips_via_accessor() {
+        let h = ZfsHandler::with_api_endpoint("http://192.0.2.1:9999");
+        assert_eq!(h.api_endpoint(), "http://192.0.2.1:9999");
+    }
+
+    #[tokio::test]
+    async fn execute_create_snapshot_rejects_missing_at_separator() {
+        let mut h = ZfsHandler::with_api_endpoint("http://127.0.0.1:9");
+        let r = h
+            .execute(ZfsCommands::CreateSnapshot {
+                snapshot: "no-at-sign".into(),
+            })
+            .await;
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn execute_set_rejects_property_without_equals() {
+        let mut h = ZfsHandler::with_api_endpoint("http://127.0.0.1:9");
+        let r = h
+            .execute(ZfsCommands::Set {
+                property: "notkeyvalue".into(),
+                target: "tank/data".into(),
+            })
+            .await;
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn execute_create_dataset_and_list_commands_succeed() {
+        let mut h = ZfsHandler::with_api_endpoint("http://127.0.0.1:9");
+        assert!(
+            h.execute(ZfsCommands::CreateDataset {
+                dataset: "tank/data".into(),
+                backend: "zfs".into(),
+                path: None,
+                compression: true,
+                checksum: false,
+            })
+            .await
+            .is_ok()
+        );
+        assert!(h.execute(ZfsCommands::ListPools).await.is_ok());
+        assert!(h.execute(ZfsCommands::ListDatasets).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn execute_status_with_and_without_pool() {
+        let mut h = ZfsHandler::with_api_endpoint("http://127.0.0.1:9");
+        assert!(
+            h.execute(ZfsCommands::Status {
+                pool: Some("tank".into()),
+            })
+            .await
+            .is_ok()
+        );
+        assert!(h.execute(ZfsCommands::Status { pool: None }).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn execute_destroy_dataset_and_snapshot_paths() {
+        let mut h = ZfsHandler::with_api_endpoint("http://127.0.0.1:9");
+        assert!(
+            h.execute(ZfsCommands::Destroy {
+                target: "tank/data".into(),
+                force: false,
+            })
+            .await
+            .is_ok()
+        );
+        assert!(
+            h.execute(ZfsCommands::Destroy {
+                target: "tank/data@snap1".into(),
+                force: true,
+            })
+            .await
+            .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn execute_get_and_create_snapshot_happy_path() {
+        let mut h = ZfsHandler::with_api_endpoint("http://127.0.0.1:9");
+        assert!(
+            h.execute(ZfsCommands::Get {
+                property: "compression".into(),
+                target: "tank/data".into(),
+            })
+            .await
+            .is_ok()
+        );
+        assert!(
+            h.execute(ZfsCommands::CreateSnapshot {
+                snapshot: "tank/data@daily".into(),
+            })
+            .await
+            .is_ok()
+        );
+        assert!(
+            h.execute(ZfsCommands::Set {
+                property: "compression=on".into(),
+                target: "tank/data".into(),
+            })
+            .await
+            .is_ok()
+        );
     }
 }

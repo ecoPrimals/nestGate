@@ -9,6 +9,7 @@ use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
+#[derive(Debug)]
 struct ParsedUrl {
     host: String,
     port: u16,
@@ -203,4 +204,162 @@ pub fn list_url(endpoint: &str, prefix: &str) -> Result<String> {
         join_url_path(&parsed.path_query, p)
     };
     Ok(format!("http://{}:{}{}", parsed.host, parsed.port, path))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+    use tokio::io::AsyncWriteExt;
+    use tokio::net::TcpListener;
+
+    #[test]
+    fn parse_http_url_rejects_non_http() {
+        let Err(err) = parse_http_url("https://example.com/x") else {
+            panic!("expected https URL to be rejected");
+        };
+        assert!(
+            err.to_string().contains("http://") || err.to_string().contains("TLS"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn parse_http_url_host_default_port_and_path() {
+        let p = parse_http_url("http://127.0.0.1").expect("parse");
+        assert_eq!(p.host, "127.0.0.1");
+        assert_eq!(p.port, 80);
+        assert_eq!(p.path_query, "/");
+
+        let p2 = parse_http_url("http://example.org:9000/foo/bar?x=1").expect("parse2");
+        assert_eq!(p2.port, 9000);
+        assert_eq!(p2.path_query, "/foo/bar?x=1");
+    }
+
+    #[test]
+    fn join_url_path_edge_cases() {
+        assert_eq!(join_url_path("/", "k"), "/k");
+        assert_eq!(join_url_path("", "k"), "/k");
+        assert_eq!(join_url_path("/api/v1", "obj"), "/api/v1/obj");
+    }
+
+    #[test]
+    fn parse_http_response_ok_and_malformed() {
+        let raw = b"HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n";
+        let (code, body) = parse_http_response(raw).expect("ok");
+        assert_eq!(code, 201);
+        assert!(body.is_empty());
+
+        let err = parse_http_response(b"nope").expect_err("no header end");
+        assert!(
+            err.to_string().contains("malformed") || err.to_string().contains("Malformed"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn object_and_list_url_builders() {
+        let u = object_url("http://localhost:8080/prefix/", "my/key").expect("object_url");
+        assert_eq!(u, "http://localhost:8080/prefix/my/key");
+        let l = list_url("http://h:1/base/", "pre").expect("list_url");
+        assert_eq!(l, "http://h:1/base/pre");
+        let l2 = list_url("http://h:1/base/", "").expect("empty prefix");
+        assert_eq!(l2, "http://h:1/base/");
+    }
+
+    async fn read_http_request_head<R: tokio::io::AsyncReadExt + Unpin>(mut stream: R) -> Vec<u8> {
+        let mut buf = Vec::new();
+        let mut chunk = [0_u8; 256];
+        loop {
+            let n = tokio::io::AsyncReadExt::read(&mut stream, &mut chunk)
+                .await
+                .expect("read");
+            if n == 0 {
+                break;
+            }
+            buf.extend_from_slice(&chunk[..n]);
+            if buf.windows(4).any(|w| w == b"\r\n\r\n") {
+                break;
+            }
+        }
+        buf
+    }
+
+    #[tokio::test]
+    async fn http_get_put_delete_and_list_integration() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+
+        let server = tokio::spawn(async move {
+            for _ in 0..5 {
+                let (stream, _) = listener.accept().await.expect("accept");
+                let (read_h, mut write_h) = stream.into_split();
+                let buf = read_http_request_head(read_h).await;
+                let head = String::from_utf8_lossy(&buf);
+                let first = head.lines().next().unwrap_or("");
+
+                if first.starts_with("GET /keys") {
+                    let body = b"a\nb\n";
+                    let resp = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                        body.len()
+                    );
+                    write_h.write_all(resp.as_bytes()).await.expect("w");
+                    write_h.write_all(body).await.expect("wb");
+                } else if first.starts_with("GET /bin") {
+                    let resp = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\n";
+                    write_h.write_all(resp.as_bytes()).await.expect("w");
+                    write_h.write_all(&[0xFF, 0xFE]).await.expect("bad utf8");
+                } else if first.starts_with("DELETE ") {
+                    let resp =
+                        "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                    write_h.write_all(resp.as_bytes()).await.expect("w");
+                } else if first.starts_with("PUT ") {
+                    let resp =
+                        "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                    write_h.write_all(resp.as_bytes()).await.expect("w");
+                } else {
+                    let body = b"hello";
+                    let resp = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                        body.len()
+                    );
+                    write_h.write_all(resp.as_bytes()).await.expect("w");
+                    write_h.write_all(body).await.expect("wb");
+                }
+                let _ = write_h.shutdown().await;
+            }
+        });
+
+        let base = format!("http://127.0.0.1:{}/", addr.port());
+        let t = Duration::from_secs(2);
+
+        let body = http_get_object(&(base.clone() + "obj"), t)
+            .await
+            .expect("get");
+        assert_eq!(body, b"hello");
+
+        http_put_object(&(base.clone() + "put"), b"data", t)
+            .await
+            .expect("put");
+
+        http_delete_object(&(base.clone() + "gone"), t)
+            .await
+            .expect("delete 404");
+
+        let keys = http_list_prefix(&(base.clone() + "keys"), t)
+            .await
+            .expect("list");
+        assert_eq!(keys, vec!["a".to_string(), "b".to_string()]);
+
+        let err = http_list_prefix(&(base.clone() + "bin"), t)
+            .await
+            .expect_err("utf8");
+        assert!(
+            err.to_string().contains("UTF-8") || err.to_string().contains("utf"),
+            "{err}"
+        );
+
+        server.await.expect("server task");
+    }
 }

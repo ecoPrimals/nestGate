@@ -6,14 +6,14 @@ pub const ZERO_COST_MIGRATION_GUIDE: &str = r"
 🔄 UNIVERSAL PROVIDERS ZERO-COST MIGRATION GUIDE
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
-/// Universalsecuritywrapper
-pub struct UniversalSecurityWrapper {
-    client: Option<Arc<dyn SecurityPrimalProvider>>,
+/// Universal security wrapper using dynamic dispatch
+pub struct UniversalSecurityWrapper<D: ?Sized> {
+    client: Option<Arc<D>>,
 }
 
-impl UniversalSecurityWrapper {
+impl<D> UniversalSecurityWrapper<D> {
     #[must_use]
-    pub fn with_client(mut self, client: Arc<dyn SecurityPrimalProvider>) -> Self {
+    pub fn with_client(mut self, client: Arc<D>) -> Self {
         self.client = Some(client);
         self
     }
@@ -22,18 +22,12 @@ impl UniversalSecurityWrapper {
 
 ## After (Zero-Cost Direct Composition)
 ```rust
-/// Zerocostuniversalsecuritywrapper
-pub struct ZeroCostUniversalSecurityWrapper<Provider>
-where
-    Provider: ZeroCostSecurityProvider,
-{
-    provider: Provider,  // Direct composition - no Arc
+/// Zero-cost wrapper using concrete provider types
+pub struct ZeroCostWrapper<Provider> {
+    provider: Provider,
 }
 
-impl<Provider> ZeroCostUniversalSecurityWrapper<Provider>
-where
-    Provider: ZeroCostSecurityProvider,
-{
+impl<Provider> ZeroCostWrapper<Provider> {
     /// Creates a new instance
     pub fn new(provider: Provider) -> Self {
         Self { provider }
