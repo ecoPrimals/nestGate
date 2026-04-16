@@ -16,36 +16,6 @@ use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 #[cfg(test)]
 mod tests;
 
-// Cache Management Module
-// Advanced caching system with support for multiple storage tiers, configurable policies,
-// and comprehensive statistics tracking.
-// ## Module Structure
-// - `types` - Core types, enums, configuration, and statistics
-// - `manager` - Single-tier cache manager implementation
-// - `multi_tier` - Multi-tier cache with hot/warm/cold tiers
-// ## Usage
-// ### Basic Single-Tier Cache
-// ```rust
-// use crate::cache::{CacheManager, NestGateCanonicalConfig};
-// let config = nestgate_config::config::canonical_primary::NestGateCanonicalConfig::default();
-// let cache = CacheManager::new(config)?;
-// // Put data in cache
-// cache.put("key", b"data".to_vec()).await?;
-// // Get data from cache
-// if let Some(data) = cache.get("key").await? {
-//     println!("Cache hit: {data:?}");
-// }
-// ```
-// ### Multi-Tier Cache
-// ```rust
-// use crate::cache::{MultiTierCache, MultiTierCacheConfig};
-// let config = nestgate_config::config::canonical_primary::NestGateCanonicalConfig::default();
-// let cache = MultiTierCache::new(config)?;
-// // Data automatically starts in hot tier and may be promoted/demoted
-// cache.put("key", b"data".to_vec()).await?;
-// let data = cache.get("key").await?;
-// ```
-// MultiTierCacheConfig imported via pub use below
 pub mod manager;
 pub mod multi_tier;
 

@@ -32,15 +32,11 @@ mod zfs_manager_comprehensive_tests {
     #[ignore = "Requires real ZFS"]
     async fn test_manager_with_custom_config() {
         let config = ZfsConfig::default();
-        // config.enable_compression (field removed) = true;
-        // config.enable_deduplication (field removed) = false;
 
         let manager = ZfsManager::new(config.clone()).await;
         assert!(manager.is_ok());
 
         let _manager = manager.unwrap();
-        // assert_eq!(manager.config.enable_compression, true);  // Field removed
-        // assert_eq!(manager.config.enable_deduplication, false);  // Field removed
     }
 
     #[tokio::test]
@@ -253,12 +249,6 @@ mod zfs_manager_comprehensive_tests {
         let _manager = ZfsManager::new(config)
             .await
             .expect("Failed to create manager");
-
-        // Get AI tier recommendation
-        // let result = manager.get_ai_tier_recommendation("test-dataset").await;  // Method removed
-
-        // Should return valid result
-        // assert!(result.is_ok() || result.is_err());  // Test disabled - method removed
     }
 
     // ==================== SNAPSHOT MANAGEMENT TESTS ====================
@@ -380,28 +370,20 @@ mod zfs_manager_comprehensive_tests {
     #[ignore = "Requires real ZFS"]
     async fn test_config_accessibility() {
         let config = ZfsConfig::default();
-        // config.enable_compression (field removed) = true;
 
         let _manager = ZfsManager::new(config)
             .await
             .expect("Failed to create manager");
-
-        // Config should be accessible and match
-        // assert_eq!(manager.config.enable_compression, true);  // Field removed
     }
 
     #[tokio::test]
     #[ignore = "Requires real ZFS"]
     async fn test_config_immutability() {
         let config = ZfsConfig::default();
-        // let original_compression = config.enable_compression;  // Field removed
 
         let _manager = ZfsManager::new(config)
             .await
             .expect("Failed to create manager");
-
-        // Original config setting should be preserved
-        // assert_eq!(manager.config.enable_compression, original_compression);  // Field removed
     }
 
     // ==================== DEBUG IMPLEMENTATION TESTS ====================

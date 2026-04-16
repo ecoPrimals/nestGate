@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43r: Deep debt — deprecated ports migration, traits split, doc reconciliation (April 16, 2026)
+
+- **Deprecated ports.rs vertical migrated**: 21 items removed — entire `hardcoding/ports.rs`
+  module deleted, callers migrated to `runtime_fallback_ports`. 179 → 158 deprecated markers.
+- **STATUS doc drift reconciled**: UDS 51, HTTP 23, semantic 42 method counts now match
+  code constants (`UNIX_SOCKET_SUPPORTED_METHODS`, `JSON_RPC_CAPABILITIES_METHODS`,
+  `call_method` match arms). Wire Standard updated to 51 methods.
+- **`data.*` delegation removed**: Catch-all stub removed from semantic router and unix
+  socket server. Callers now get standard `-32601 Method not found`; data capability
+  providers discovered via `capabilities.list`.
+- **traits.rs smart split**: `native_async/traits.rs` (917L) → 5 focused domain modules:
+  `communication.rs`, `mcp.rs`, `automation.rs`, `service.rs`, `security.rs`.
+  Largest resulting file: 333 lines.
+- **ai_first_example_tests.rs split**: 811L → tests (507L) + handler_tests (213L).
+- **4 more dead deprecated items removed**: `AutoConfigRequest`, `AutoConfigInput`,
+  `AutoConfigResult`, `orchestrator_url()`.
+- **Coverage tests**: Added for 25+ lowest-coverage production files across Sessions 43q-43r.
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery), doc PASS, deny PASS,
+  8,534 tests/0 failures, 0 files > 800L, 82.06% line coverage.
+
 ### Session 43p: Deep debt execution — streaming storage, TCP, file refactoring, supply chain (April 15, 2026)
 
 - **Streaming storage protocol**: 4 new JSON-RPC methods for chunked large-tensor
