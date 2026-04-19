@@ -72,6 +72,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 
 ```
 nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz + root)
+│  default-members: root + nestgate-bin (cross-arch binary production)
 │
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums

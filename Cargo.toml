@@ -58,6 +58,7 @@ dev-stubs = ["nestgate-core/dev-stubs", "nestgate-zfs/dev-stubs"]
 
 [workspace]
 resolver = "2"
+default-members = [".", "code/crates/nestgate-bin"]
 members = [
     "code/crates/nestgate-types",
     "code/crates/nestgate-api",

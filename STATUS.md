@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 16, 2026 (Session 43w — deprecated 114→0, rand API migrated, coverage 84.12%)  
+**Last Updated**: April 19, 2026 (Session 43y — cross-arch binary fix, doc/debris cleanup)  
 **Version**: 4.7.0-dev
 
 ---
@@ -44,7 +44,7 @@ Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core d
 Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery (single import path)
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs in production code
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
-Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
+Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate); default-members: root + nestgate-bin (cross-arch binary production)
 Serial tests:       #[serial]: scoped to ZFS command stub tests (temp_env::with_vars elsewhere)
 Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
 Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12 vendored ring-free, rand 0.9.x, CDLA-Permissive-2.0 allowed)

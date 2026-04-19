@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43y: Cross-arch binary fix, doc/debris cleanup (April 19, 2026)
+
+- **Cross-arch binary fix**: Added `default-members = [".", "code/crates/nestgate-bin"]`
+  to workspace. `cargo build --manifest-path Cargo.toml --target <cross>` now produces
+  the `nestgate` binary instead of only `libnestgate.rlib`. Resolves genomeBin cross-arch
+  gap reported by primalSpring v0.9.17 handoff.
+- **Doc/debris cleanup** (Session 43x): Reconciled metrics across README/STATUS/CHANGELOG/
+  CONTEXT/CAPABILITY_MAPPINGS (8,695 tests, 84.12% coverage, 0 deprecated). Cleaned stale
+  mDNS/reqwest references in primal_discovery docs, outdated "381+ async_trait" metric in
+  native_async.rs, commented-out network-integration feature code from ZFS engine,
+  stale stub-test comment in handlers/mod.rs.
+
 ### Session 43w: Deprecated cleanup — 114→0 markers, rand API migration (April 16, 2026)
 
 - **Deprecated markers 114→0**: Comprehensive deprecated attribute cleanup. Most were
