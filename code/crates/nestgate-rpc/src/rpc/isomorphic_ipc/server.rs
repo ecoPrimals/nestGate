@@ -777,4 +777,62 @@ mod tests {
         )
         .await;
     }
+
+    #[test]
+    fn connection_idle_limit_matches_five_minute_policy() {
+        assert_eq!(
+            IsomorphicIpcServer::CONNECTION_IDLE_LIMIT.as_secs(),
+            300,
+            "idle policy is documented as 300s for abandoned connections"
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn json_rpc_keep_alive_loop_sends_idle_close_notification() {
+        use tokio::io::{AsyncBufReadExt, BufReader, split};
+
+        let (client_end, server_end) = tokio::io::duplex(16_384);
+        let (read_half, mut write_half) = split(server_end);
+        let mut buf_reader = BufReader::new(read_half);
+        let handler: Arc<dyn RpcHandler> = Arc::new(MockHandler);
+
+        let server = tokio::spawn(async move {
+            match IsomorphicIpcServer::json_rpc_keep_alive_loop(
+                &mut buf_reader,
+                &mut write_half,
+                &handler,
+            )
+            .await
+            {
+                Ok(()) => {}
+                Err(e) => panic!("keep-alive loop: {e}"),
+            }
+        });
+
+        tokio::time::advance(
+            IsomorphicIpcServer::CONNECTION_IDLE_LIMIT + std::time::Duration::from_secs(1),
+        )
+        .await;
+        tokio::task::yield_now().await;
+
+        let mut client_read = BufReader::new(client_end);
+        let mut line = String::new();
+        let n = match client_read.read_line(&mut line).await {
+            Ok(n) => n,
+            Err(e) => panic!("read_line: {e}"),
+        };
+        assert!(n > 0, "expected idle close notification");
+        let v: serde_json::Value = match serde_json::from_str(line.trim()) {
+            Ok(v) => v,
+            Err(e) => panic!("parse JSON: {e}"),
+        };
+        assert_eq!(v["method"], "connection.closing");
+        let params = match v["params"].as_object() {
+            Some(p) => p,
+            None => panic!("expected params object"),
+        };
+        assert_eq!(params.get("reason"), Some(&serde_json::json!("idle")));
+
+        server.abort();
+    }
 }

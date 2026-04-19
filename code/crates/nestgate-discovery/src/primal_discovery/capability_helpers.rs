@@ -336,11 +336,19 @@ mod tests {
     async fn test_discover_with_env_var() {
         let env = MapEnv::from([("NESTGATE_CAPABILITY_TEST", "http://test:1234")]);
         let result = discover_capability_from_env(&env, "test").await;
-        assert!(result.is_ok());
-
-        let service = result.unwrap();
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_capability_from_env: {e:?}"),
+        };
         assert_eq!(service.endpoint, "http://test:1234");
         assert_eq!(service.source, DiscoverySource::Environment);
+    }
+
+    #[tokio::test]
+    async fn discover_capability_missing_returns_network_error() {
+        let env = MapEnv::new();
+        let result = discover_capability_from_env(&env, "absent_capability").await;
+        assert!(result.is_err());
     }
 
     #[tokio::test]
@@ -348,19 +356,81 @@ mod tests {
         // Orchestration should fall back to default
         let env = MapEnv::new();
         let result = discover_orchestration_from_env(&env).await;
-        assert!(result.is_ok());
-
-        let service = result.unwrap();
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_orchestration_from_env: {e:?}"),
+        };
         assert_eq!(service.source, DiscoverySource::Default);
         assert!(service.endpoint.contains("127.0.0.1"));
+    }
+
+    #[tokio::test]
+    async fn discover_orchestration_uses_specific_capability_host_env() {
+        let env = MapEnv::from([("NESTGATE_ORCHESTRATION_HOST", "10.10.0.1")]);
+        let result = discover_orchestration_from_env(&env).await;
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_orchestration_from_env: {e:?}"),
+        };
+        assert_eq!(service.source, DiscoverySource::Default);
+        assert!(service.endpoint.contains("10.10.0.1"));
+    }
+
+    #[tokio::test]
+    async fn discover_orchestration_prefers_discovery_fallback_host() {
+        let env = MapEnv::from([("NESTGATE_DISCOVERY_FALLBACK_HOST", "192.168.0.5")]);
+        let result = discover_orchestration_from_env(&env).await;
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_orchestration_from_env: {e:?}"),
+        };
+        assert!(service.endpoint.contains("192.168.0.5"));
+    }
+
+    #[tokio::test]
+    async fn discover_compute_from_capability_env() {
+        let env = MapEnv::from([("NESTGATE_CAPABILITY_COMPUTE", "http://compute:9000")]);
+        let result = discover_compute_from_env(&env).await;
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_compute_from_env: {e:?}"),
+        };
+        assert_eq!(service.endpoint, "http://compute:9000");
+        assert_eq!(service.source, DiscoverySource::Environment);
+    }
+
+    #[tokio::test]
+    async fn discover_ai_respects_nestgate_ai_port() {
+        let env = MapEnv::from([("NESTGATE_AI_PORT", "7654")]);
+        let result = discover_ai_from_env(&env).await;
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_ai_from_env: {e:?}"),
+        };
+        assert_eq!(service.source, DiscoverySource::Default);
+        assert!(service.endpoint.ends_with(":7654"));
+    }
+
+    #[tokio::test]
+    async fn discover_ecosystem_fallback_has_default_shape() {
+        let env = MapEnv::new();
+        let result = discover_ecosystem_from_env(&env).await;
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_ecosystem_from_env: {e:?}"),
+        };
+        assert_eq!(service.source, DiscoverySource::Default);
+        assert!(service.endpoint.starts_with("http://"));
     }
 
     #[tokio::test]
     async fn test_primal_name_url_env_vars_are_not_used() {
         let env = MapEnv::from([("NESTGATE_LEGACY_PRIMAL_URL", "http://legacy:9999")]);
         let result = discover_security_from_env(&env).await;
-        assert!(result.is_ok());
-        let service = result.unwrap();
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_security_from_env: {e:?}"),
+        };
         assert_eq!(service.source, DiscoverySource::Default);
         assert!(service.endpoint.contains("127.0.0.1"));
     }
@@ -369,8 +439,10 @@ mod tests {
     async fn test_discover_security_from_capability_env() {
         let env = MapEnv::from([("NESTGATE_CAPABILITY_SECURITY", "http://sec:7777")]);
         let result = discover_security_from_env(&env).await;
-        assert!(result.is_ok());
-        let service = result.unwrap();
+        let service = match result {
+            Ok(s) => s,
+            Err(e) => panic!("discover_security_from_env: {e:?}"),
+        };
         assert_eq!(service.endpoint, "http://sec:7777");
         assert_eq!(service.source, DiscoverySource::Environment);
     }

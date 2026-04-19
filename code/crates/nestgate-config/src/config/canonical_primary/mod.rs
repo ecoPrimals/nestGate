@@ -615,4 +615,44 @@ mod tests {
         let c = StdCanonical::from_env_source(&env).expect("from_env_source");
         assert_eq!(c.environment, Environment::Development);
     }
+
+    #[test]
+    fn default_network_api_port_matches_top_level_api_port() {
+        let c = StdCanonical::default();
+        assert_eq!(c.api.port, c.network.api.port);
+        assert_eq!(c.api.port, c.domains.api.server.port);
+    }
+
+    #[test]
+    fn default_storage_config_shape() {
+        let c = StdCanonical::default();
+        assert!(c.storage.enabled);
+        assert_eq!(c.storage.default_backend.as_str(), "filesystem");
+        assert!(c.storage.backends.is_empty());
+        assert!(!c.storage.zfs.enabled);
+        assert!(c.storage.cache.enabled);
+        assert_eq!(c.storage.cache.size_bytes, 1024 * 1024 * 1024);
+        assert_eq!(c.storage.cache.cache_type, "lru");
+    }
+
+    #[test]
+    fn from_env_source_invalid_api_port_is_ignored() {
+        let env = MapEnv::from([("NESTGATE_API_PORT", "not-a-port")]);
+        let c = StdCanonical::from_env_source(&env).expect("from_env_source");
+        assert_eq!(c.network.api.port, c.api.port);
+    }
+
+    #[test]
+    fn from_env_source_empty_api_port_is_ignored() {
+        let env = MapEnv::from([("NESTGATE_API_PORT", "")]);
+        let c = StdCanonical::from_env_source(&env).expect("from_env_source");
+        assert_eq!(c.network.api.port, c.api.port);
+    }
+
+    #[test]
+    fn from_env_source_sets_staging_environment() {
+        let env = MapEnv::from([("NESTGATE_ENVIRONMENT", "staging")]);
+        let c = StdCanonical::from_env_source(&env).expect("from_env_source");
+        assert_eq!(c.environment, Environment::Staging);
+    }
 }

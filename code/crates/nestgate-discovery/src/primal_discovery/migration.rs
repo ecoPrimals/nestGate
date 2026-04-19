@@ -559,6 +559,48 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn migration_config_default_matches_documented_policy() {
+        let c = MigrationConfig::default();
+        assert_eq!(c.cache_ttl, Duration::from_secs(300));
+        assert!(!c.prefer_environment);
+        assert!(c.allow_defaults);
+    }
+
+    #[tokio::test]
+    async fn zero_cache_ttl_never_returns_stale_cached_endpoint() {
+        let env: Arc<dyn EnvSource> = Arc::new(MapEnv::from([("ZERO_TTL_PORT", "1111")]));
+        let mut config = MigrationConfig::default();
+        config.cache_ttl = Duration::ZERO;
+        let helper = DiscoveryOrEnv::with_config_and_env(create_test_discovery(), config, env);
+
+        let first = match helper.endpoint_for("zero_ttl", "ZERO_TTL_PORT", 9999).await {
+            Ok(u) => u,
+            Err(e) => panic!("endpoint_for: {e:?}"),
+        };
+        assert_eq!(first, "http://localhost:1111");
+
+        let second = match helper.endpoint_for("zero_ttl", "ZERO_TTL_PORT", 9999).await {
+            Ok(u) => u,
+            Err(e) => panic!("endpoint_for: {e:?}"),
+        };
+        assert_eq!(second, "http://localhost:1111");
+    }
+
+    #[tokio::test]
+    async fn endpoint_resolution_prefers_environment_when_configured() {
+        let env: Arc<dyn EnvSource> = Arc::new(MapEnv::new());
+        let mut config = MigrationConfig::default();
+        config.prefer_environment = true;
+        config.allow_defaults = false;
+        let helper = DiscoveryOrEnv::with_config_and_env(create_test_discovery(), config, env);
+
+        let result = helper
+            .endpoint_for("strict", "MISSING_ENV_FOR_STRICT", 8080)
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
     async fn test_concurrent_endpoint_resolution() {
         let mut h = HashMap::new();
         for i in 0..10 {

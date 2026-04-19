@@ -153,3 +153,69 @@ impl CacheConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_config_default_fields() {
+        let s = StorageConfig::default();
+        assert!(s.enabled);
+        assert_eq!(s.default_backend, "filesystem");
+        assert!(s.backends.is_empty());
+        assert!(s.zfs.pools.is_empty());
+        assert!(!s.zfs.enabled);
+        assert!(s.cache.enabled);
+        assert_eq!(s.cache.size_bytes, 1024 * 1024 * 1024);
+    }
+
+    #[test]
+    fn zfs_config_default_is_empty_disabled() {
+        let z = ZfsConfig::default();
+        assert!(!z.enabled);
+        assert!(z.pools.is_empty());
+        assert!(z.zfs_settings.is_empty());
+    }
+
+    #[test]
+    fn cache_config_development_sets_dir_and_tiers() {
+        let c = CacheConfig::development();
+        assert!(c.cache_dir.is_some());
+        assert_eq!(c.policy.as_deref(), Some("lru"));
+        assert_eq!(c.hot_tier_size, Some(64 * 1024 * 1024));
+    }
+
+    #[test]
+    fn cache_config_high_performance_enables_cold_unlimited() {
+        let c = CacheConfig::high_performance();
+        assert_eq!(c.cold_tier_unlimited, Some(true));
+        assert!(c.cache_dir.is_some());
+    }
+
+    #[test]
+    fn storage_config_serde_roundtrip() {
+        let original = StorageConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize StorageConfig");
+        let parsed: StorageConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.enabled, parsed.enabled);
+        assert_eq!(original.default_backend, parsed.default_backend);
+    }
+
+    #[test]
+    fn storage_backend_roundtrip() {
+        let mut backends = HashMap::new();
+        backends.insert(
+            "main".to_string(),
+            StorageBackend {
+                backend_type: "fs".to_string(),
+                config: HashMap::new(),
+            },
+        );
+        let s = StorageConfig {
+            backends,
+            ..StorageConfig::default()
+        };
+        assert!(s.backends.contains_key("main"));
+    }
+}

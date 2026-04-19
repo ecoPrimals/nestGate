@@ -47,7 +47,6 @@ tracing-subscriber = { workspace = true }
 
 # Configuration
 toml = { workspace = true }
-config = { workspace = true }
 regex = { workspace = true }
 
 # Async runtime

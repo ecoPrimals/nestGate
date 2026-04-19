@@ -175,3 +175,62 @@ impl StoragePaths {
         info!("═══════════════════════════════════════════════════════════");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::MapEnv;
+    use std::path::PathBuf;
+
+    #[test]
+    fn runtime_dir_used_for_pid_and_lock_paths() {
+        let env = MapEnv::from([("NESTGATE_RUNTIME_DIR", "/rt/nest")]);
+        let paths = StoragePaths::from_env_source(&env);
+        assert_eq!(paths.runtime_dir(), Path::new("/rt/nest"));
+        assert_eq!(
+            paths.pid_file_path(),
+            PathBuf::from("/rt/nest/nestgate.pid")
+        );
+        assert_eq!(
+            paths.lock_file_path(),
+            PathBuf::from("/rt/nest/nestgate.lock")
+        );
+    }
+
+    #[test]
+    fn xdg_runtime_dir_nested_nestgate_for_sockets_and_pid() {
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", "/run/user/1000")]);
+        let paths = StoragePaths::from_env_source(&env);
+        assert_eq!(paths.runtime_dir(), Path::new("/run/user/1000/nestgate"));
+        assert!(
+            paths
+                .pid_file_path()
+                .starts_with("/run/user/1000/nestgate/")
+        );
+    }
+
+    #[test]
+    fn storage_base_derived_from_data_dir() {
+        let env = MapEnv::from([("NESTGATE_DATA_DIR", "/data/ng")]);
+        let paths = StoragePaths::from_env_source(&env);
+        assert_eq!(paths.storage_base_path(), PathBuf::from("/data/ng/storage"));
+        assert_eq!(paths.database_dir(), PathBuf::from("/data/ng/db"));
+    }
+
+    #[test]
+    fn zfs_binary_path_respects_nestgate_zfs_binary_env() {
+        let paths =
+            StoragePaths::from_env_source(&MapEnv::from([("HOME", "/tmp/nestgate-test-home")]));
+        temp_env::with_vars([("NESTGATE_ZFS_BINARY", Some("/opt/zfs/bin/zfs"))], || {
+            assert_eq!(paths.zfs_binary_path(), PathBuf::from("/opt/zfs/bin/zfs"));
+        });
+    }
+
+    #[test]
+    fn zpool_binary_path_falls_back_when_env_unset() {
+        let paths = StoragePaths::from_env_source(&MapEnv::new());
+        temp_env::with_vars([("NESTGATE_ZPOOL_BINARY", None::<&str>)], || {
+            assert_eq!(paths.zpool_binary_path(), PathBuf::from("/usr/sbin/zpool"));
+        });
+    }
+}

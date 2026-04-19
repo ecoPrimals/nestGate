@@ -70,6 +70,8 @@ pub mod production_discovery_config;
 #[cfg(test)]
 mod production_discovery_core_tests;
 #[cfg(test)]
+mod production_discovery_coverage_tests;
+#[cfg(test)]
 mod production_discovery_extended_tests;
 /// Service registry and external discovery methods
 pub mod registry;

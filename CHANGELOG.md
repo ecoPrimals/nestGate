@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43z: Deep debt — dep cleanup, stub evolution, coverage push (April 19, 2026)
+
+- **Dependency cleanup**: Removed `config` (crates.io) from nestgate-api, nestgate-core,
+  nestgate-canonical — zero actual usage (all `config::` references were local modules).
+  Removed orphaned `urlencoding` workspace dep. 2 fewer crate graph nodes.
+- **Production stub evolution**: Removed `discovery_manager: ()` placeholder from
+  `ProductionServiceDiscovery` (was dead_code unit field). Cleaned stale deprecation
+  timeline and migration docs from `production_discovery.rs` — module now documents
+  its actual role (env+config fallback resolution).
+- **Coverage push (+112 tests, 8,695 → 8,807)**: 37 new tests in nestgate-discovery
+  (production_discovery env/config/fallback paths, capability bridge, migration cache),
+  27 new tests in nestgate-rpc (isomorphic IPC idle, capability/monitoring/storage
+  JSON-RPC methods, semantic router whitespace/offline, protocol normalization),
+  52 new tests in nestgate-config (canonical config defaults, network/storage config,
+  socket paths, runtime fallback port uniqueness, system constants).
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery, 0 warnings), check PASS,
+  8,807 lib tests / 0 failures, zero files >800L.
+
 ### Session 43y: Cross-arch binary fix, doc/debris cleanup (April 19, 2026)
 
 - **Cross-arch binary fix**: Added `default-members = [".", "code/crates/nestgate-bin"]`

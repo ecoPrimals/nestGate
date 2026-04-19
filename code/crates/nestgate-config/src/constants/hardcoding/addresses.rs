@@ -20,3 +20,46 @@ pub const BIND_ALL_IPV4: &str = "0.0.0.0";
 
 /// Bind to all IPv6 interfaces (`::`). Use only when public or multi-interface binding is intentional.
 pub const BIND_ALL_IPV6: &str = "::";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::IpAddr;
+    use std::str::FromStr;
+
+    #[test]
+    fn localhost_ipv4_parses_as_loopback() {
+        let ip = IpAddr::from_str(LOCALHOST_IPV4);
+        assert!(ip.is_ok_and(|a| a.is_loopback()));
+    }
+
+    #[test]
+    fn localhost_ipv6_parses_as_loopback() {
+        let ip = IpAddr::from_str(LOCALHOST_IPV6);
+        assert!(ip.is_ok_and(|a| a.is_loopback()));
+    }
+
+    #[test]
+    fn bind_all_ipv4_is_unspecified_v4() {
+        let ip = IpAddr::from_str(BIND_ALL_IPV4);
+        assert!(ip.is_ok_and(|a| match a {
+            IpAddr::V4(v4) => v4.is_unspecified(),
+            IpAddr::V6(_) => false,
+        }));
+    }
+
+    #[test]
+    fn bind_all_ipv6_is_unspecified_v6() {
+        let ip = IpAddr::from_str(BIND_ALL_IPV6);
+        assert!(ip.is_ok_and(|a| match a {
+            IpAddr::V6(v6) => v6.is_unspecified(),
+            IpAddr::V4(_) => false,
+        }));
+    }
+
+    #[test]
+    fn localhost_name_is_non_empty() {
+        assert!(!LOCALHOST_NAME.is_empty());
+        assert_ne!(LOCALHOST_NAME, BIND_ALL_IPV4);
+    }
+}

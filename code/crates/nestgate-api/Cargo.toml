@@ -34,7 +34,6 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 chrono = { workspace = true }
 dashmap = { workspace = true }
-config = { workspace = true }
 url = { workspace = true }
 async-stream = { workspace = true }
 fastrand = { workspace = true }

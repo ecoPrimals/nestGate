@@ -380,6 +380,7 @@ impl CapabilityAwareDiscovery {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
 
     fn test_config() -> NestGateCanonicalConfig {
         NestGateCanonicalConfig::default()
@@ -407,9 +408,10 @@ mod tests {
     #[tokio::test]
     async fn test_backend_setup() {
         let config = test_config();
-        let mut manager = CapabilityDiscoveryManager::initialize(vec![])
-            .await
-            .unwrap();
+        let mut manager = match CapabilityDiscoveryManager::initialize(vec![]).await {
+            Ok(m) => m,
+            Err(e) => panic!("CapabilityDiscoveryManager::initialize: {e:?}"),
+        };
 
         CapabilityAwareDiscovery::setup_backends(&mut manager, &config);
     }
@@ -417,7 +419,10 @@ mod tests {
     #[tokio::test]
     async fn test_find_nonexistent_service() {
         let config = test_config();
-        let discovery = CapabilityAwareDiscovery::initialize(&config).await.unwrap();
+        let discovery = match CapabilityAwareDiscovery::initialize(&config).await {
+            Ok(d) => d,
+            Err(e) => panic!("initialize: {e:?}"),
+        };
 
         // Should return empty or error (no hardcoded fallback)
         let result = discovery.find_service("nonexistent").await;
@@ -427,5 +432,75 @@ mod tests {
             Ok(services) => assert!(services.is_empty()),
             Err(_) => {} // Expected - no hardcoded fallback
         }
+    }
+
+    #[tokio::test]
+    async fn initialize_from_env_source_api_disabled_omits_api_gateway() {
+        let config = test_config();
+        let env = MapEnv::from([("NESTGATE_API_ENABLED", "false")]);
+        let caps = CapabilityAwareDiscovery::detect_own_capabilities(&config, &env);
+        assert!(!caps.contains(&PrimalCapability::ApiGateway));
+        assert!(caps.contains(&PrimalCapability::ServiceDiscovery));
+    }
+
+    #[tokio::test]
+    async fn initialize_from_env_source_observability_enabled_adds_capability() {
+        let config = test_config();
+        let env = MapEnv::from([("NESTGATE_OBSERVABILITY_ENABLED", "true")]);
+        let caps = CapabilityAwareDiscovery::detect_own_capabilities(&config, &env);
+        assert!(caps.contains(&PrimalCapability::Observability));
+    }
+
+    #[tokio::test]
+    async fn initialize_from_env_source_nfs_enabled_adds_nfs_capability() {
+        let config = test_config();
+        let env = MapEnv::from([("NESTGATE_NFS_ENABLED", "true")]);
+        let caps = CapabilityAwareDiscovery::detect_own_capabilities(&config, &env);
+        let has_nfs = caps.iter().any(|c| {
+            matches!(
+                c,
+                PrimalCapability::NetworkFileSystem(
+                    crate::universal_primal_discovery::capability_based_discovery::NfsVersion::V4
+                )
+            )
+        });
+        assert!(has_nfs);
+    }
+
+    #[tokio::test]
+    async fn get_best_endpoint_errors_when_no_peer_matches_custom_capability() {
+        let config = test_config();
+        let discovery = match CapabilityAwareDiscovery::initialize(&config).await {
+            Ok(d) => d,
+            Err(e) => panic!("initialize: {e:?}"),
+        };
+        // In-memory announce registers this primal for its detected capabilities; `api` resolves
+        // to `api_gateway` peers. Use a unique custom capability string with no registrants.
+        let result = discovery
+            .get_best_endpoint("bridge_test_no_peer_7a3f9c2e")
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn find_service_api_gateway_alias_sees_announced_peers() {
+        let config = test_config();
+        let discovery = match CapabilityAwareDiscovery::initialize(&config).await {
+            Ok(d) => d,
+            Err(e) => panic!("initialize: {e:?}"),
+        };
+        let result = match discovery.find_service("api-gateway").await {
+            Ok(s) => s,
+            Err(e) => panic!("find_service: {e:?}"),
+        };
+        assert!(!result.is_empty());
+    }
+
+    #[tokio::test]
+    async fn initialize_from_map_env_completes() {
+        let config = test_config();
+        let env = MapEnv::new();
+        let out = CapabilityAwareDiscovery::initialize_from_env_source(&config, &env).await;
+        assert!(out.is_ok());
     }
 }

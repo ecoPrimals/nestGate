@@ -162,3 +162,60 @@ pub fn resolve_runtime_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> P
     warn!("Runtime dir using fallback: /tmp/nestgate-runtime");
     PathBuf::from("/tmp/nestgate-runtime")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::MapEnv;
+
+    #[test]
+    fn nestgate_data_dir_wins_over_xdg() {
+        let env = MapEnv::from([
+            ("NESTGATE_DATA_DIR", "/explicit/data"),
+            ("XDG_DATA_HOME", "/xdg/data"),
+        ]);
+        let p = resolve_data_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/explicit/data"));
+    }
+
+    #[test]
+    fn xdg_data_home_used_when_nestgate_unset() {
+        let env = MapEnv::from([("XDG_DATA_HOME", "/xdg/data")]);
+        let p = resolve_data_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/xdg/data/nestgate"));
+    }
+
+    #[test]
+    fn nestgate_runtime_dir_wins_over_xdg_runtime() {
+        let env = MapEnv::from([
+            ("NESTGATE_RUNTIME_DIR", "/run/explicit"),
+            ("XDG_RUNTIME_DIR", "/run/user/1"),
+        ]);
+        let p = resolve_runtime_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/run/explicit"));
+    }
+
+    #[test]
+    fn runtime_dir_joins_nestgate_under_xdg_runtime() {
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", "/run/user/99")]);
+        let p = resolve_runtime_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/run/user/99/nestgate"));
+    }
+
+    #[test]
+    fn empty_nestgate_data_dir_is_honored() {
+        let env = MapEnv::from([("NESTGATE_DATA_DIR", "")]);
+        let p = resolve_data_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from(""));
+    }
+
+    #[test]
+    fn log_dir_prefers_explicit_over_xdg_state() {
+        let env = MapEnv::from([
+            ("NESTGATE_LOG_DIR", "/logs/here"),
+            ("XDG_STATE_HOME", "/state"),
+        ]);
+        let p = resolve_log_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/logs/here"));
+    }
+}

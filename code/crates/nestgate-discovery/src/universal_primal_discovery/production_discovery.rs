@@ -3,51 +3,19 @@
 
 #![expect(
     clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
+    reason = "Discovery APIs use Result for forward-compatible error propagation"
 )]
 
-//! **PRODUCTION DISCOVERY IMPLEMENTATION** - Legacy/Compatibility Module
+//! Production service discovery — environment and config-driven endpoint resolution.
 //!
-//! ⚠️ **DEPRECATED**: This module provides backward compatibility.
-//! New code should use [`production_capability_bridge`] for capability-based discovery.
+//! Provides a fallback strategy for resolving service endpoints when capability-based
+//! IPC discovery is not yet available:
+//! 1. Environment variables (`{SERVICE}_HOST`, `{SERVICE}_PORT`, `{SERVICE}_BIND`)
+//! 2. Canonical config (`NestGateCanonicalConfig`)
+//! 3. Network defaults from `nestgate_config::constants::canonical_defaults`
 //!
-//! ## ✅ EVOLUTION STATUS (Dec 4, 2025)
-//!
-//! **Phase 1 Complete**: Capability-based architecture is now operational!
-//!
-//! ### ❌ OLD WAY (This Module - Still Works)
-//! ```rust,ignore
-//! // Environment-driven with hardcoded fallbacks
-//! let discovery = ProductionServiceDiscovery::new(&config)?;
-//! let port = discovery.discover_port("api")?;  // Falls back to hardcoded 8080
-//! ```
-//!
-//! ### ✅ NEW WAY (Capability-Based - Recommended)
-//! ```rust,ignore
-//! use crate::universal_primal_discovery::production_capability_bridge::*;
-//!
-//! // Pure capability discovery - NO hardcoded fallbacks!
-//! let discovery = CapabilityAwareDiscovery::initialize(&config).await?;
-//! let services = discovery.find_service("api").await?;
-//! let best = services.first().ok_or_else(|| Error::not_found("api"))?;
-//! ```
-//!
-//! ## Migration Guide
-//!
-//! **Quick Migration**:
-//! 1. Replace `ProductionServiceDiscovery` with `CapabilityAwareDiscovery`
-//! 2. Replace `.discover_port("api")` with `.find_service("api").await?`
-//! 3. Handle errors properly (no more hardcoded fallbacks!)
-//!
-//! See [`production_capability_bridge`](crate::universal_primal_discovery::production_capability_bridge)
-//! for complete API and examples.
-//!
-//! ## Deprecation Timeline
-//! - **v0.12.0** (Current): Both APIs work, old API marked deprecated
-//! - **v0.13.0** (Q1 2026): Old API generates warnings  
-//! - **v0.14.0** (Q2 2026): Old API removed
-//!
-//! [`production_capability_bridge`]: crate::universal_primal_discovery::production_capability_bridge
+//! For full capability-based discovery, see
+//! [`production_capability_bridge`](crate::universal_primal_discovery::production_capability_bridge).
 
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_types::error::Result;
@@ -60,23 +28,9 @@ use tracing::{debug, warn};
 // Import config for environment variable lookups
 use super::production_discovery_config::ProductionDiscoveryConfig;
 
-/// Production service discovery configuration
-///
-/// **⚠️ DEPRECATED**: Use [`CapabilityAwareDiscovery`] instead for capability-based discovery without hardcoded fallbacks.
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::ServiceDiscoveryConfig;
-///
-/// // NEW (capability-based):
-/// use nestgate_core::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery;
-/// let discovery = CapabilityAwareDiscovery::initialize(&config).await?;
-/// ```
-///
-/// [`CapabilityAwareDiscovery`]: crate::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery
+/// Service discovery configuration — endpoints, limits, and timeouts
+/// resolved from environment and canonical config.
 #[derive(Debug, Clone)]
-/// Configuration for `ServiceDiscovery`
 pub struct ServiceDiscoveryConfig {
     /// Service endpoints discovered from environment/config
     pub services: HashMap<String, ServiceEndpoint>,
@@ -88,9 +42,8 @@ pub struct ServiceDiscoveryConfig {
     pub defaults: DiscoveryDefaults,
 }
 
-/// Individual service endpoint information
+/// Individual service endpoint information.
 #[derive(Debug, Clone)]
-/// Serviceendpoint
 pub struct ServiceEndpoint {
     /// Name
     pub name: String,
@@ -102,9 +55,8 @@ pub struct ServiceEndpoint {
     pub bind_address: IpAddr,
 }
 
-/// Default values for fallback when discovery fails
+/// Default values for fallback when discovery fails.
 #[derive(Debug, Clone)]
-/// Discoverydefaults
 pub struct DiscoveryDefaults {
     /// Default Host
     pub default_host: String,
@@ -342,14 +294,12 @@ impl ServiceDiscoveryConfig {
     }
 }
 
-/// Production service discovery implementation
+/// Production service discovery implementation.
+///
+/// Resolves endpoints, ports, resource limits, and timeouts from environment
+/// variables and canonical config, with documented defaults as fallback.
 pub struct ProductionServiceDiscovery {
     config: ServiceDiscoveryConfig,
-    #[expect(
-        dead_code,
-        reason = "Structural placeholder until capability registry replaces unit type"
-    )]
-    discovery_manager: (), // Placeholder for capability registry
 }
 
 impl ProductionServiceDiscovery {
@@ -361,10 +311,7 @@ impl ProductionServiceDiscovery {
     pub fn new(nestgate_config: &NestGateCanonicalConfig) -> Result<Self> {
         let config = ServiceDiscoveryConfig::from_environment(nestgate_config)?;
 
-        Ok(Self {
-            config,
-            discovery_manager: (), // Placeholder
-        })
+        Ok(Self { config })
     }
 
     /// Discover bind address for a service
@@ -564,18 +511,6 @@ pub fn discover_timeout_standalone(
     discovery.discover_timeout(operation)
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Servicediscoveryconfigcanonical
+/// Type alias to canonical network configuration for callers that import from this module.
 pub type ServiceDiscoveryConfigCanonical =
     nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ServiceDiscoveryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.

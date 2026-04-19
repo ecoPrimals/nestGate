@@ -182,3 +182,47 @@ pub type UnifiedNetworkConfig = CanonicalNetworkConfig;
 
 /// Backward compatibility alias for `MinimalNetworkConfig`
 pub type MinimalNetworkConfig = CanonicalNetworkConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_matches_development_optimized() {
+        let a = CanonicalNetworkConfig::default();
+        let b = CanonicalNetworkConfig::development_optimized();
+        assert_eq!(a.api.port, b.api.port);
+        assert_eq!(a.api.enabled, b.api.enabled);
+    }
+
+    #[test]
+    fn validate_succeeds_for_default() {
+        let net = CanonicalNetworkConfig::default();
+        assert!(net.validate().is_ok());
+    }
+
+    #[test]
+    fn production_hardened_has_https_api_port() {
+        let net = CanonicalNetworkConfig::production_hardened();
+        assert_eq!(
+            net.api.port,
+            crate::constants::hardcoding::runtime_fallback_ports::HTTPS
+        );
+    }
+
+    #[test]
+    fn merge_overwrites_from_other() {
+        let base = CanonicalNetworkConfig::default();
+        let other = CanonicalNetworkConfig::production_hardened();
+        let merged = base.merge(other.clone());
+        assert_eq!(merged.api.port, other.api.port);
+        assert_eq!(merged.api.bind_address, other.api.bind_address);
+    }
+
+    #[test]
+    fn development_and_production_constructors_differ() {
+        let dev = CanonicalNetworkConfig::development_optimized();
+        let prod = CanonicalNetworkConfig::production_hardened();
+        assert_ne!(dev.api.port, prod.api.port);
+    }
+}

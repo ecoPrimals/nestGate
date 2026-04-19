@@ -20,7 +20,6 @@ nestgate-types = { path = "../nestgate-types" }
 serde = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
-config = { workspace = true }
 toml = { workspace = true }
 serde_json = { workspace = true }
 etcetera = { workspace = true }

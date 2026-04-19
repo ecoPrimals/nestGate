@@ -214,6 +214,62 @@ mod tests {
     use super::*;
 
     #[test]
+    fn from_env_reads_service_host_port_bind_via_process_env() {
+        temp_env::with_vars(
+            [
+                ("STORAGE_HOST", Some("storage.internal")),
+                ("STORAGE_PORT", Some("6000")),
+                ("STORAGE_BIND", Some("::1")),
+            ],
+            || {
+                let c = ProductionDiscoveryConfig::from_env();
+                assert_eq!(c.get_service_host("STORAGE"), Some("storage.internal"));
+                assert_eq!(c.get_service_port("STORAGE"), Some(6000));
+                assert_eq!(c.get_service_bind("STORAGE"), Some("::1"));
+            },
+        );
+    }
+
+    #[test]
+    fn from_env_skips_non_numeric_port() {
+        temp_env::with_vars([("MCP_PORT", Some("not-a-u16"))], || {
+            let c = ProductionDiscoveryConfig::from_env();
+            assert!(c.get_service_port("MCP").is_none());
+        });
+    }
+
+    #[test]
+    fn from_env_reads_nestgate_limits_and_timeouts() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_MAX_DISK_GB", Some("42")),
+                ("NESTGATE_HEARTBEAT_TIMEOUT", Some("3")),
+            ],
+            || {
+                let c = ProductionDiscoveryConfig::from_env();
+                assert_eq!(c.get_resource_limit("max_disk"), Some(42));
+                assert_eq!(c.get_operation_timeout("heartbeat"), Some(3));
+                assert_eq!(c.get_all_resource_limits().get("max_disk"), Some(&42_usize));
+                assert_eq!(
+                    c.get_all_operation_timeouts().get("heartbeat"),
+                    Some(&3_u64)
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn from_env_missing_vars_yield_empty_maps() {
+        const NO_OVERRIDES: [(&str, Option<&str>); 0] = [];
+        temp_env::with_vars(NO_OVERRIDES, || {
+            let c = ProductionDiscoveryConfig::from_env();
+            assert!(c.get_service_host("API").is_none());
+            assert!(c.get_resource_limit("max_connections").is_none());
+            assert!(c.get_operation_timeout("connect").is_none());
+        });
+    }
+
+    #[test]
     fn test_default_config() {
         let config = ProductionDiscoveryConfig::new();
         assert!(config.get_service_host("API").is_none());

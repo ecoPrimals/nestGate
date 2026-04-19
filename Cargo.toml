@@ -136,7 +136,6 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 
 # Configuration and parsing
 toml = "0.8"
-config = "0.14"
 regex = "1.10"
 
 # Concurrency and performance
@@ -163,7 +162,6 @@ sha2 = "0.10"
 hmac = "0.12"
 hex = "0.4"
 x509-parser = "0.17"
-urlencoding = "2.0"
 getrandom = "0.3"
 
 # Compression and utilities

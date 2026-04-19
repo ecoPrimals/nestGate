@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 19, 2026 (Session 43y — cross-arch binary fix, doc/debris cleanup)  
+**Last Updated**: April 19, 2026 (Session 43z — deep debt: dep cleanup, stub evolution, coverage push)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-16
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-16
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-16
-Tests:              8,695 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-16
+Tests:              8,807 passing, 0 failures, 61 ignored (cargo test --workspace --lib), as of 2026-04-19
 Coverage:           84.12% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-16) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -47,7 +47,7 @@ Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate); default-members: root + nestgate-bin (cross-arch binary production)
 Serial tests:       #[serial]: scoped to ZFS command stub tests (temp_env::with_vars elsewhere)
 Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
-Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12 vendored ring-free, rand 0.9.x, CDLA-Permissive-2.0 allowed)
+Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12 vendored ring-free, rand 0.9.x, CDLA-Permissive-2.0 allowed); config (crates.io) + urlencoding removed (unused)
 ring:               ELIMINATED — zero stanzas in Cargo.lock (rustls-webpki vendored without ring optional dep)
 dyn audit:          317 matches: 154 test-only, 39 comments, ~65 dyn Error, ~22 std traits, ~37 intentional DI/strategy/plugin patterns — zero stadial debt
 async-trait:        ZERO #[async_trait] attrs, ZERO dep in Cargo.toml; 73 text matches are comments/docs/migration templates only

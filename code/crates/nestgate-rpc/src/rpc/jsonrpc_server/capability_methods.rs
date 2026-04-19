@@ -171,3 +171,114 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use jsonrpsee::core::params::{ArrayParams, ObjectParams};
+
+    use crate::rpc::jsonrpc_server::{JsonRpcServer, JsonRpcState};
+    use crate::rpc::tarpc_server::NestGateRpcService;
+
+    fn build_module_for_tests()
+    -> jsonrpsee::RpcModule<JsonRpcState<crate::rpc::storage_backend::InMemoryStorageBackend>> {
+        let service = match NestGateRpcService::new() {
+            Ok(s) => s,
+            Err(e) => panic!("NestGateRpcService::new: {e}"),
+        };
+        let state = JsonRpcState {
+            service,
+            start_time: std::time::Instant::now(),
+        };
+        match JsonRpcServer::build_module(state) {
+            Ok(m) => m,
+            Err(e) => panic!("build_module: {e}"),
+        }
+    }
+
+    #[test]
+    fn capabilities_method_table_is_non_empty() {
+        assert!(!super::JSON_RPC_CAPABILITIES_METHODS.is_empty());
+        assert!(
+            super::JSON_RPC_CAPABILITIES_METHODS
+                .iter()
+                .any(|m| *m == "capabilities.list")
+        );
+    }
+
+    #[tokio::test]
+    async fn capabilities_list_returns_primal_version_and_method_catalog() {
+        let module = build_module_for_tests();
+        let params = ArrayParams::new();
+        let v: serde_json::Value = match module.call("capabilities.list", params).await {
+            Ok(x) => x,
+            Err(e) => panic!("capabilities.list: {e}"),
+        };
+        assert!(v.get("primal").is_some());
+        assert!(v.get("version").is_some());
+        let methods = match v["methods"].as_array() {
+            Some(a) => a,
+            None => panic!("expected methods array"),
+        };
+        assert!(methods.iter().any(|m| m == "health.metrics"));
+        assert!(methods.iter().any(|m| m == "discovery.capability.query"));
+    }
+
+    #[tokio::test]
+    async fn identity_get_includes_license_and_domain() {
+        temp_env::async_with_vars([("NESTGATE_FAMILY_ID", None::<&str>)], async {
+            let module = build_module_for_tests();
+            let params = ArrayParams::new();
+            let v: serde_json::Value = match module.call("identity.get", params).await {
+                Ok(x) => x,
+                Err(e) => panic!("identity.get: {e}"),
+            };
+            assert_eq!(v["domain"], "storage");
+            assert_eq!(v["license"], "AGPL-3.0-or-later");
+            assert_eq!(v["family_id"], "default");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn identity_get_reflects_nestgate_family_id() {
+        temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some("fam-test-42"))], async {
+            let module = build_module_for_tests();
+            let params = ArrayParams::new();
+            let v: serde_json::Value = match module.call("identity.get", params).await {
+                Ok(x) => x,
+                Err(e) => panic!("identity.get: {e}"),
+            };
+            assert_eq!(v["family_id"], "fam-test-42");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn discovery_capability_register_requires_capability_and_endpoint() {
+        let module = build_module_for_tests();
+        let params = ObjectParams::new();
+        let err = module
+            .call::<_, serde_json::Value>("discovery.capability.register", params)
+            .await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn discovery_capability_query_accepts_capability_name() {
+        let module = build_module_for_tests();
+        let mut params = ArrayParams::new();
+        match params.insert("storage") {
+            Ok(()) => {}
+            Err(e) => panic!("insert param: {e}"),
+        }
+        let result: Vec<serde_json::Value> =
+            match module.call("discovery.capability.query", params).await {
+                Ok(x) => x,
+                Err(e) => panic!("discovery.capability.query: {e}"),
+            };
+        assert!(
+            result.is_empty() || result.iter().all(|v| v.is_object()),
+            "expected empty or object entries"
+        );
+    }
+}

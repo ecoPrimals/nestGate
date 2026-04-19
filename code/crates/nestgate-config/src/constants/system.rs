@@ -279,4 +279,56 @@ mod tests {
         assert_eq!(cfg.max_connections(), 500);
         assert_eq!(cfg.buffer_size(), 4096);
     }
+
+    #[test]
+    fn ecosystem_name_empty_ecosystem_name_is_preserved() {
+        let env = MapEnv::from([("ECOSYSTEM_NAME", "")]);
+        assert_eq!(ecosystem_name(&env).as_str(), "");
+    }
+
+    #[test]
+    fn ecosystem_name_missing_both_envs_uses_constant() {
+        let env = MapEnv::new();
+        assert_eq!(ecosystem_name(&env), ECOSYSTEM_NAME);
+    }
+
+    #[test]
+    fn ecosystem_path_segment_reads_ecosystem_name_from_process_env() {
+        temp_env::with_vars(
+            [
+                ("ECOSYSTEM_NAME", Some("scoped-eco")),
+                ("BIOMEOS_SERVICE_NAME", None::<&str>),
+            ],
+            || {
+                let seg = ecosystem_path_segment();
+                assert_eq!(seg.as_str(), "scoped-eco");
+            },
+        );
+    }
+
+    #[test]
+    fn ecosystem_path_segment_legacy_biomeos_when_ecosystem_unset() {
+        temp_env::with_vars(
+            [
+                ("ECOSYSTEM_NAME", None::<&str>),
+                ("BIOMEOS_SERVICE_NAME", Some("legacy-eco")),
+            ],
+            || {
+                assert_eq!(ecosystem_path_segment().as_str(), "legacy-eco");
+            },
+        );
+    }
+
+    #[test]
+    fn ecosystem_path_segment_defaults_when_no_env() {
+        temp_env::with_vars(
+            [
+                ("ECOSYSTEM_NAME", None::<&str>),
+                ("BIOMEOS_SERVICE_NAME", None::<&str>),
+            ],
+            || {
+                assert_eq!(ecosystem_path_segment(), ECOSYSTEM_NAME);
+            },
+        );
+    }
 }

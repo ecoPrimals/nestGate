@@ -51,3 +51,90 @@ pub const REDIS: u16 = 6379;
 pub const MONGODB: u16 = 27017;
 /// Fallback port for `MySQL` (external service, env-resolved).
 pub const MYSQL: u16 = 3306;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_declared_ports_are_nonzero() {
+        let ports = [
+            HTTP,
+            HTTPS,
+            API,
+            API_ALT,
+            METRICS,
+            PROMETHEUS,
+            HEALTH,
+            GRPC,
+            WEBSOCKET,
+            ADMIN,
+            STORAGE,
+            ORCHESTRATION,
+            COMPUTE,
+            EXTENDED_SERVICES,
+            ECOSYSTEM,
+            DISCOVERY_SERVICE,
+            ORCHESTRATOR_DEFAULT,
+            METRICS_ALT,
+            POSTGRES,
+            REDIS,
+            MONGODB,
+            MYSQL,
+        ];
+        for p in ports {
+            assert!(p > 0, "port must be non-zero, got {p}");
+        }
+    }
+
+    #[test]
+    fn metrics_and_prometheus_are_intentional_aliases() {
+        assert_eq!(METRICS, PROMETHEUS);
+        assert_eq!(METRICS, 9090);
+    }
+
+    #[test]
+    fn all_primary_service_ports_are_unique_except_known_aliases() {
+        use std::collections::HashMap;
+
+        let pairs: [(&str, u16); 22] = [
+            ("HTTP", HTTP),
+            ("HTTPS", HTTPS),
+            ("API", API),
+            ("API_ALT", API_ALT),
+            ("METRICS", METRICS),
+            ("PROMETHEUS", PROMETHEUS),
+            ("HEALTH", HEALTH),
+            ("GRPC", GRPC),
+            ("WEBSOCKET", WEBSOCKET),
+            ("ADMIN", ADMIN),
+            ("STORAGE", STORAGE),
+            ("ORCHESTRATION", ORCHESTRATION),
+            ("COMPUTE", COMPUTE),
+            ("EXTENDED_SERVICES", EXTENDED_SERVICES),
+            ("ECOSYSTEM", ECOSYSTEM),
+            ("DISCOVERY_SERVICE", DISCOVERY_SERVICE),
+            ("ORCHESTRATOR_DEFAULT", ORCHESTRATOR_DEFAULT),
+            ("METRICS_ALT", METRICS_ALT),
+            ("POSTGRES", POSTGRES),
+            ("REDIS", REDIS),
+            ("MONGODB", MONGODB),
+            ("MYSQL", MYSQL),
+        ];
+
+        let mut by_value: HashMap<u16, Vec<&str>> = HashMap::new();
+        for (name, port) in pairs {
+            by_value.entry(port).or_default().push(name);
+        }
+
+        for (port, names) in &by_value {
+            if names.len() > 1 {
+                assert!(
+                    *port == METRICS && names.len() == 2,
+                    "unexpected duplicate port {port}: {names:?}"
+                );
+                assert!(names.contains(&"METRICS") && names.contains(&"PROMETHEUS"));
+            }
+        }
+    }
+}

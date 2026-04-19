@@ -381,7 +381,8 @@ mod tests {
         let url = network::default_api_base_url();
         assert!(url.starts_with("http://"));
         assert!(url.contains("localhost"));
-        assert!(url.split(':').next_back().unwrap().parse::<u16>().is_ok());
+        let port_str = url.rsplit(':').next();
+        assert!(port_str.is_some_and(|p| p.parse::<u16>().is_ok()));
     }
 
     #[test]
@@ -446,6 +447,142 @@ mod tests {
         assert!(timeouts::DEFAULT_TIMEOUT_MS > 0);
         assert!(timeouts::CONNECTION_TIMEOUT_MS > 0);
         assert!(timeouts::REQUEST_TIMEOUT_MS > 0);
+    }
+
+    #[test]
+    fn discovery_default_host_prefers_nestgate_dev_host() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_DEV_HOST", "api.dev")]);
+        assert_eq!(
+            network::discovery_default_host_from_env_source(&env).as_str(),
+            "api.dev"
+        );
+    }
+
+    #[test]
+    fn discovery_default_host_uses_discovery_fallback_when_dev_unset() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_DISCOVERY_FALLBACK_HOST", "fallback")]);
+        assert_eq!(
+            network::discovery_default_host_from_env_source(&env).as_str(),
+            "fallback"
+        );
+    }
+
+    #[test]
+    fn discovery_default_host_prefers_dev_over_fallback() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([
+            ("NESTGATE_DEV_HOST", "primary"),
+            ("NESTGATE_DISCOVERY_FALLBACK_HOST", "ignored"),
+        ]);
+        assert_eq!(
+            network::discovery_default_host_from_env_source(&env).as_str(),
+            "primary"
+        );
+    }
+
+    #[test]
+    fn default_api_base_url_from_env_source_respects_port_and_host() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_DEV_HOST", "h"), ("NESTGATE_API_PORT", "7777")]);
+        let url = network::default_api_base_url_from_env_source(&env);
+        assert_eq!(url.as_str(), "http://h:7777");
+    }
+
+    #[test]
+    fn default_api_base_url_from_env_source_empty_port_segment() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_API_PORT", ""), ("NESTGATE_DEV_HOST", "h")]);
+        let url = network::default_api_base_url_from_env_source(&env);
+        assert_eq!(url.as_str(), "http://h:");
+    }
+
+    #[test]
+    fn build_api_url_from_env_source_uses_override() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_API_URL", "http://explicit:9")]);
+        assert_eq!(
+            network::build_api_url_from_env_source(&env).as_str(),
+            "http://explicit:9"
+        );
+    }
+
+    #[test]
+    fn build_websocket_url_from_env_source_uses_ws_url() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_WS_URL", "ws://explicit:1/ws")]);
+        assert_eq!(
+            network::build_websocket_url_from_env_source(&env).as_str(),
+            "ws://explicit:1/ws"
+        );
+    }
+
+    #[test]
+    fn build_metrics_url_from_env_source_uses_metrics_url() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_METRICS_URL", "http://m:2/m")]);
+        assert_eq!(
+            network::build_metrics_url_from_env_source(&env).as_str(),
+            "http://m:2/m"
+        );
+    }
+
+    #[test]
+    fn default_metrics_url_from_env_source_port_boundary() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([
+            ("NESTGATE_DEV_HOST", "127.0.0.1"),
+            ("NESTGATE_METRICS_PORT", "65535"),
+        ]);
+        let url = network::default_metrics_url_from_env_source(&env);
+        assert!(url.ends_with(":65535"));
+    }
+
+    #[test]
+    fn default_web_ui_url_from_env_source_uses_web_ui_port() {
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_DEV_HOST", "x"), ("NESTGATE_WEB_UI_PORT", "3000")]);
+        let url = network::default_web_ui_url_from_env_source(&env);
+        assert_eq!(url.as_str(), "http://x:3000");
+    }
+
+    #[test]
+    fn build_api_url_reads_process_env() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_API_URL", Some("http://process-override:7")),
+                ("NESTGATE_API_PORT", None::<&str>),
+            ],
+            || {
+                let url = network::build_api_url();
+                assert_eq!(url, "http://process-override:7");
+            },
+        );
+    }
+
+    #[test]
+    fn build_websocket_url_reads_process_env() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_WS_URL", Some("ws://process:8/ws")),
+                ("NESTGATE_WEBSOCKET_PORT", None::<&str>),
+            ],
+            || {
+                let url = network::build_websocket_url();
+                assert_eq!(url, "ws://process:8/ws");
+            },
+        );
     }
 }
 
