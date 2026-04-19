@@ -96,7 +96,7 @@ pub struct DiscoveredService {
 /// Source of service discovery
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DiscoverySource {
-    /// Discovered via mDNS/Consul/k8s
+    /// Discovered via capability IPC or orchestration provider
     Discovery,
     /// Found in environment variable
     Environment,

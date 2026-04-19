@@ -8,12 +8,12 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-16
-Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-16
-Format:             CLEAN (cargo fmt --check passes), as of 2026-04-16
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-16
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-19
+Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-19
+Format:             CLEAN (cargo fmt --check passes), as of 2026-04-19
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-19
 Tests:              8,807 passing, 0 failures, 61 ignored (cargo test --workspace --lib), as of 2026-04-19
-Coverage:           84.12% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-16) — wateringHole 80% met; 90% target pending
+Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +112 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
@@ -654,4 +654,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 16, 2026 (Session 43w)
+**Latest**: April 19, 2026 (Session 43z)

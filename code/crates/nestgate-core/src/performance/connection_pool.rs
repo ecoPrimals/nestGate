@@ -190,8 +190,7 @@ where
                 pooled_conn.mark_used();
                 debug!("Reusing existing connection from pool");
 
-                // For now, we'll create a new connection instead of trying to move/clone
-                // This is a temporary solution until we can redesign the pooling properly
+                // Connection handles are not Clone; create a fresh one from the factory.
                 drop(connections); // Release the lock
 
                 let new_connection = (self.connection_factory)().inspect_err(|_e| {

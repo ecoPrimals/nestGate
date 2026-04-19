@@ -112,10 +112,9 @@ impl CapabilityType {
 /// **IMPORTANT**: This describes what a service CAN DO, not who/what it is.
 /// Capability-based discovery only - no hardcoded implementation names.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Capabilityprovider
 pub struct CapabilityProvider {
     /// Endpoint to reach this capability provider
-    /// Example: "http://localhost:{port}" or discovered via mDNS
+    /// Example: "http://localhost:{port}" or discovered via capability IPC
     pub endpoint: String,
 
     /// Capabilities this provider offers
@@ -177,7 +176,7 @@ impl CapabilityDiscovery {
 
     /// Register a capability provider
     ///
-    /// **Called by discovery mechanisms** (mDNS, Consul, etc.), not hardcoded
+    /// **Called by discovery mechanisms** (env, capability IPC, orchestration), not hardcoded
     pub async fn register(&self, id: String, provider: CapabilityProvider) -> Result<()> {
         self.providers.write().await.insert(id, provider);
         Ok(())
@@ -185,28 +184,16 @@ impl CapabilityDiscovery {
 
     /// Discover providers via multiple mechanisms
     ///
-    /// **NO HARDCODING**: Uses environment, mDNS, service registry, etc.
-    /// Never hardcodes specific service endpoints - all discovered dynamically
-    ///
-    /// **Current Implementation**:
-    /// - ✅ Environment variable discovery (working)
-    ///
-    /// **Planned Enhancements** (deferred to v0.10.0+):
-    /// - mDNS/Bonjour for zero-config local discovery
-    /// - Service registry integration (Consul, etcd, etc.)
-    /// - DNS-SD (Service Discovery)
-    /// - Cloud-native service mesh integration
-    ///
-    /// **Why Deferred**: Current env-based discovery is sufficient for production.
-    /// Additional discovery mechanisms will be added based on real-world deployment needs.
+    /// **NO HARDCODING**: Uses environment variables and capability IPC.
+    /// Never hardcodes specific service endpoints — all discovered dynamically.
+    /// Additional discovery mechanisms (orchestration, service mesh) are delegated
+    /// to the orchestration capability provider.
     pub async fn discover_all(&self) -> Result<()> {
         // 1. Check environment variables for capability endpoints
         self.discover_from_env().await?;
 
-        // 2. Future: mDNS/Bonjour for local discovery
-        //    Status: Deferred to v0.10.0+ based on deployment requirements
-        //    Design: Zero-config local network discovery for development/edge deployments
-        //    Implementation: Will use `mdns` crate for multicast DNS service discovery
+        // Additional discovery backends (orchestration, service mesh) are delegated
+        // to the orchestration capability provider via capability IPC.
 
         // 3. Future: Service registry integration
         //    Status: Deferred to v0.10.0+ based on infrastructure needs

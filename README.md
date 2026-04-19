@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-16)**  
+**Verification (as of 2026-04-19)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace --lib` — 8,807 passing, 0 failures, 61 ignored  
@@ -18,11 +18,10 @@
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
 - **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
-- **External deps**: `config` (crates.io) and `urlencoding` removed — zero unused workspace deps  
+- **External deps**: Zero unused workspace deps; zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-- **External deps**: Zero C-FFI `-sys` crates in production; `reqwest`→`ureq`; `uzers`→`rustix::process`  
 - **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
@@ -32,7 +31,7 @@
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-**Last Updated**: April 16, 2026
+**Last Updated**: April 19, 2026
 
 ---
 

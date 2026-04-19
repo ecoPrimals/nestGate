@@ -56,7 +56,7 @@ impl CapabilityAwareDiscovery {
     ///
     /// This is the main entry point for modern capability-based service discovery.
     /// It automatically detects this primal's capabilities and sets up appropriate
-    /// discovery backends (mDNS, in-memory, etc.) based on the environment.
+    /// discovery backends (in-memory, env-based) per the environment.
     ///
     /// # Self-Knowledge Pattern
     ///

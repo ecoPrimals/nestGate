@@ -32,8 +32,8 @@ const SELF_CAPABILITIES: &[&str] = &[
 
 /// Route `discovery.announce` — register service metadata with discovery backend.
 ///
-/// Requires a discovery backend (mDNS, Consul, Kubernetes, or orchestration
-/// capability provider). Returns a structured response when no backend is configured.
+/// Requires a discovery backend (orchestration capability provider or env-based).
+/// Returns a structured response when no backend is configured.
 #[expect(
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
