@@ -3,6 +3,7 @@
 
 use super::*;
 use serde_json::{Value, json};
+use tokio::io::BufReader;
 
 #[test]
 fn is_btsp_required_no_family() {
@@ -331,12 +332,11 @@ async fn handshake_fails_verification_writes_error_frame() {
         let mut found_family_err = false;
         while cursor.position() < writer.len() as u64 {
             let frame = read_frame(&mut cursor).await.ok();
-            if let Some(bytes) = frame {
-                if let Ok(v) = serde_json::from_slice::<Value>(&bytes) {
-                    if v["reason"] == "family_verification" {
-                        found_family_err = true;
-                    }
-                }
+            if let Some(bytes) = frame
+                && let Ok(v) = serde_json::from_slice::<Value>(&bytes)
+                && v["reason"] == "family_verification"
+            {
+                found_family_err = true;
             }
         }
         assert!(found_family_err, "expected family_verification error frame");
@@ -480,4 +480,107 @@ fn handshake_fails_when_security_provider_unavailable() {
             );
         },
     );
+}
+
+// ── JSON-line framing tests ─────────────────────────────────────────────────
+
+#[tokio::test]
+async fn json_line_roundtrip() {
+    let payload = br#"{"hello":"world"}"#;
+    let mut buf = Vec::new();
+    write_json_line(&mut buf, payload).await.expect("write");
+    assert!(buf.ends_with(b"\n"));
+
+    let mut cursor = BufReader::new(std::io::Cursor::new(buf));
+    let read_back = read_json_line(&mut cursor).await.expect("read");
+    assert_eq!(read_back, payload);
+}
+
+#[tokio::test]
+async fn json_line_read_eof_returns_error() {
+    let mut cursor = BufReader::new(std::io::Cursor::new(Vec::<u8>::new()));
+    let err = read_json_line(&mut cursor)
+        .await
+        .expect_err("empty stream should fail");
+    assert!(
+        err.to_string().contains("closed") || err.to_string().contains("line"),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn handshake_json_line_framing_happy_path() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec-jl.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::Success).await;
+    });
+
+    let hello = json!({"version": 1, "client_ephemeral_pub": "Y2xpZW50LWtleQ=="});
+    let cr = json!({"response": "c2ln", "preferred_cipher": "chacha20_poly1305"});
+    let mut input = Vec::new();
+    input.extend_from_slice(serde_json::to_string(&hello).unwrap().as_bytes());
+    input.push(b'\n');
+    input.extend_from_slice(serde_json::to_string(&cr).unwrap().as_bytes());
+    input.push(b'\n');
+
+    temp_env::async_with_vars(
+        [("SECURITY_SOCKET", Some(sock.to_str().expect("utf8")))],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let session = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect("json-line handshake ok");
+            assert_eq!(session.session_id, "sid-mock");
+            assert_eq!(session.cipher, "chacha20_poly1305");
+            assert!(session.encrypted);
+            let output = String::from_utf8_lossy(&writer);
+            assert!(
+                output.contains("server_ephemeral_pub"),
+                "ServerHello should appear in JSON-line output"
+            );
+        },
+    )
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_json_line_with_session_token() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec-st.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::Success).await;
+    });
+
+    let hello = json!({"version": 1, "client_ephemeral_pub": "Y2xpZW50"});
+    let cr = json!({
+        "response": "c2ln",
+        "preferred_cipher": "chacha20_poly1305",
+        "session_token": "tok-from-beardog"
+    });
+    let mut input = Vec::new();
+    input.extend_from_slice(serde_json::to_string(&hello).unwrap().as_bytes());
+    input.push(b'\n');
+    input.extend_from_slice(serde_json::to_string(&cr).unwrap().as_bytes());
+    input.push(b'\n');
+
+    temp_env::async_with_vars(
+        [("SECURITY_SOCKET", Some(sock.to_str().expect("utf8")))],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let session = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect("session_token handshake ok");
+            assert_eq!(session.session_id, "sid-mock");
+        },
+    )
+    .await;
+    server.abort();
 }

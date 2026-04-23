@@ -269,17 +269,26 @@ impl IsomorphicIpcServer {
         let mut raw_reader = BufReader::new(reader);
 
         if crate::rpc::btsp_server_handshake::is_btsp_required() {
-            // Peek the first byte via BufReader: `{` (0x7B) means plain
-            // JSON-RPC from biomeOS composition; anything else triggers
-            // BTSP handshake.
+            // Peek buffered data. `{` may be plain JSON-RPC (biomeOS
+            // composition) *or* a JSON-line BTSP ClientHello. Disambiguate:
+            //   - `"jsonrpc"` / `"method"` → plain JSON-RPC, skip handshake
+            //   - `"client_ephemeral_pub"` → JSON-line BTSP
+            //   - non-`{` first byte → length-prefixed BTSP
             use tokio::io::AsyncBufReadExt;
-            let is_json_rpc = match raw_reader.fill_buf().await {
-                Ok(buf) if !buf.is_empty() => buf[0] == b'{',
-                _ => false,
+            let peek = raw_reader
+                .fill_buf()
+                .await
+                .map_or_else(|_| vec![], <[u8]>::to_vec);
+
+            let is_plain_json_rpc = if peek.first() == Some(&b'{') {
+                let s = String::from_utf8_lossy(&peek);
+                s.contains("\"jsonrpc\"") || s.contains("\"method\"")
+            } else {
+                false
             };
 
-            if is_json_rpc {
-                tracing::debug!("BTSP: first byte is '{{', bypassing handshake (JSON-RPC)");
+            if is_plain_json_rpc {
+                tracing::debug!("BTSP: peeked JSON-RPC request, bypassing handshake");
                 return Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler)
                     .await;
             }

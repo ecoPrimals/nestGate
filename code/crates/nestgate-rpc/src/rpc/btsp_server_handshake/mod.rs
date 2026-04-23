@@ -31,7 +31,7 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, error, info, warn};
 
 use super::btsp_client::resolve_security_socket_path;
@@ -99,6 +99,47 @@ async fn write_error_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, reason: &st
     let _ = write_frame(writer, &payload).await;
 }
 
+// ── JSON-line framing (newline-delimited) ───────────────────────────────────
+
+/// Read a single newline-delimited JSON message from a buffered reader.
+async fn read_json_line<R: AsyncBufReadExt + Unpin>(reader: &mut R) -> Result<Vec<u8>> {
+    let mut line = String::new();
+    let n = reader.read_line(&mut line).await.map_err(|e| {
+        NestGateError::io_error(format!("BTSP JSON-line: failed to read line: {e}"))
+    })?;
+    if n == 0 {
+        return Err(NestGateError::io_error(
+            "BTSP JSON-line: connection closed before complete line",
+        ));
+    }
+    Ok(line.trim_end().as_bytes().to_vec())
+}
+
+/// Write a JSON value as a newline-delimited line.
+async fn write_json_line<W: AsyncWriteExt + Unpin>(writer: &mut W, payload: &[u8]) -> Result<()> {
+    writer
+        .write_all(payload)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("BTSP JSON-line: failed to write: {e}")))?;
+    writer.write_all(b"\n").await.map_err(|e| {
+        NestGateError::io_error(format!("BTSP JSON-line: failed to write newline: {e}"))
+    })?;
+    writer
+        .flush()
+        .await
+        .map_err(|e| NestGateError::io_error(format!("BTSP JSON-line: flush failed: {e}")))?;
+    Ok(())
+}
+
+/// Framing mode detected from the first byte of the client's message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FrameMode {
+    /// 4-byte BE length prefix (standard BTSP)
+    LengthPrefixed,
+    /// Newline-delimited JSON lines
+    JsonLine,
+}
+
 // ── Handshake messages ──────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
@@ -122,6 +163,8 @@ struct ServerHello {
 struct ChallengeResponse {
     response: String,
     preferred_cipher: Option<String>,
+    /// BearDog-style field; used as session token when present.
+    session_token: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -161,15 +204,14 @@ pub fn is_btsp_required() -> bool {
 
 /// Perform the BTSP server-side handshake on an accepted connection.
 ///
-/// Delegates all cryptographic operations to the security capability provider via JSON-RPC.
-/// On success, the stream is ready for (optionally encrypted) JSON-RPC frames.
-/// On failure, an error frame is written and the error is returned (caller
-/// should close the connection).
+/// Automatically detects framing from the first byte: `{` (0x7B) means
+/// JSON-line mode (newline-delimited); anything else is standard
+/// length-prefixed framing (4-byte BE header).
 ///
-/// # Arguments
-///
-/// * `reader` / `writer` — split halves of the accepted socket
-/// * `family_id` — the primal's family identifier for bond-type resolution
+/// Delegates all cryptographic operations to the security capability provider
+/// via JSON-RPC. On success, the stream is ready for (optionally encrypted)
+/// JSON-RPC frames. On failure, an error frame is written and the error is
+/// returned (caller should close the connection).
 ///
 /// # Errors
 ///
@@ -190,11 +232,33 @@ where
 {
     info!("BTSP: starting server-side handshake");
 
+    // Wrap in BufReader so we can peek without consuming.
+    let mut buf_reader = BufReader::new(reader);
+
+    // Detect framing: peek the first byte.
+    let first = buf_reader
+        .fill_buf()
+        .await
+        .map_err(|e| NestGateError::io_error(format!("BTSP: failed to peek first byte: {e}")))?;
+    let mode = if first.first() == Some(&b'{') {
+        debug!("BTSP: detected JSON-line framing");
+        FrameMode::JsonLine
+    } else {
+        debug!("BTSP: detected length-prefixed framing");
+        FrameMode::LengthPrefixed
+    };
+
     // 1. Read ClientHello
-    let hello_bytes = read_frame(reader).await.map_err(|e| {
-        error!("BTSP: failed to read ClientHello: {e}");
-        e
-    })?;
+    let hello_bytes = match mode {
+        FrameMode::LengthPrefixed => read_frame(&mut buf_reader).await.map_err(|e| {
+            error!("BTSP: failed to read ClientHello: {e}");
+            e
+        })?,
+        FrameMode::JsonLine => read_json_line(&mut buf_reader).await.map_err(|e| {
+            error!("BTSP: failed to read ClientHello JSON-line: {e}");
+            e
+        })?,
+    };
     let client_hello: ClientHello = match serde_json::from_slice(&hello_bytes) {
         Ok(h) => h,
         Err(e) => {
@@ -262,25 +326,40 @@ where
         })?
         .to_string();
 
+    // BearDog may return a challenge in its create response.
+    let bd_challenge = create_result
+        .get("challenge")
+        .and_then(Value::as_str)
+        .unwrap_or(&challenge_b64);
+
     debug!("BTSP: session created (id={session_id})");
 
-    // 4. Write ServerHello
+    // 4. Write ServerHello — match framing mode
     let server_hello = ServerHello {
         version: BTSP_VERSION,
         server_ephemeral_pub: server_ephemeral_pub.clone(),
-        challenge: challenge_b64.clone(),
+        challenge: bd_challenge.to_string(),
     };
     let server_hello_bytes = serde_json::to_vec(&server_hello).map_err(|e| {
         NestGateError::api_internal_error(format!("BTSP: failed to serialize ServerHello: {e}"))
     })?;
-    write_frame(writer, &server_hello_bytes).await?;
+    match mode {
+        FrameMode::LengthPrefixed => write_frame(writer, &server_hello_bytes).await?,
+        FrameMode::JsonLine => write_json_line(writer, &server_hello_bytes).await?,
+    }
     debug!("BTSP: sent ServerHello");
 
     // 5. Read ChallengeResponse
-    let cr_bytes = read_frame(reader).await.map_err(|e| {
-        error!("BTSP: failed to read ChallengeResponse: {e}");
-        e
-    })?;
+    let cr_bytes = match mode {
+        FrameMode::LengthPrefixed => read_frame(&mut buf_reader).await.map_err(|e| {
+            error!("BTSP: failed to read ChallengeResponse: {e}");
+            e
+        })?,
+        FrameMode::JsonLine => read_json_line(&mut buf_reader).await.map_err(|e| {
+            error!("BTSP: failed to read ChallengeResponse JSON-line: {e}");
+            e
+        })?,
+    };
     let challenge_response: ChallengeResponse = serde_json::from_slice(&cr_bytes).map_err(|e| {
         NestGateError::validation_error(format!("BTSP: malformed ChallengeResponse: {e}"))
     })?;
@@ -303,7 +382,7 @@ where
                 "client_response": challenge_response.response,
                 "client_ephemeral_pub": client_hello.client_ephemeral_pub,
                 "server_ephemeral_pub": server_ephemeral_pub,
-                "challenge": challenge_b64,
+                "challenge": bd_challenge,
             }),
         )
         .await
@@ -333,6 +412,11 @@ where
         .as_deref()
         .unwrap_or("chacha20_poly1305");
 
+    let session_token = challenge_response
+        .session_token
+        .as_deref()
+        .unwrap_or(&session_id);
+
     let mut bd_negotiate = JsonRpcClient::connect_unix(security_path_str)
         .await
         .map_err(|e| {
@@ -346,6 +430,7 @@ where
             "btsp.negotiate",
             json!({
                 "session_id": session_id,
+                "session_token": session_token,
                 "preferred_cipher": preferred,
                 "bond_type": "Covalent",
             }),
@@ -363,7 +448,7 @@ where
         .unwrap_or("null")
         .to_string();
 
-    // 8. Write HandshakeComplete
+    // 8. Write HandshakeComplete — match framing mode
     let complete = HandshakeComplete {
         cipher: cipher.clone(),
         session_id: session_id.clone(),
@@ -373,11 +458,14 @@ where
             "BTSP: failed to serialize HandshakeComplete: {e}"
         ))
     })?;
-    write_frame(writer, &complete_bytes).await?;
+    match mode {
+        FrameMode::LengthPrefixed => write_frame(writer, &complete_bytes).await?,
+        FrameMode::JsonLine => write_json_line(writer, &complete_bytes).await?,
+    }
 
     let encrypted = cipher != "null";
     info!(
-        "BTSP: handshake complete (session={session_id}, cipher={cipher}, encrypted={encrypted})"
+        "BTSP: handshake complete (session={session_id}, cipher={cipher}, encrypted={encrypted}, framing={mode:?})"
     );
 
     Ok(BtspSession {

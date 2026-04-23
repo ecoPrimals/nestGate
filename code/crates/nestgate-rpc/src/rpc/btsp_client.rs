@@ -62,19 +62,51 @@ pub fn is_btsp_required() -> bool {
 
 /// Resolves the security capability provider's Unix socket path.
 ///
-/// Precedence: `SECURITY_SOCKET` env, then `SECURITY_ENDPOINT` if it is a local
-/// filesystem path (not a `scheme://` URL), else [`DEFAULT_SECURITY_SOCKET_PATH`].
+/// Precedence:
+/// 1. `SECURITY_PROVIDER_SOCKET` env
+/// 2. `CRYPTO_PROVIDER_SOCKET` env
+/// 3. `SECURITY_SOCKET` env
+/// 4. `SECURITY_ENDPOINT` if it is a local filesystem path (not a `scheme://` URL)
+/// 5. Family-scoped discovery: `$XDG_RUNTIME_DIR/biomeos/security.sock`
+/// 6. [`DEFAULT_SECURITY_SOCKET_PATH`]
 #[must_use]
 pub fn resolve_security_socket_path() -> PathBuf {
-    if let Ok(p) = std::env::var("SECURITY_SOCKET") {
-        return PathBuf::from(p);
+    for var in [
+        "SECURITY_PROVIDER_SOCKET",
+        "CRYPTO_PROVIDER_SOCKET",
+        "SECURITY_SOCKET",
+    ] {
+        if let Ok(p) = std::env::var(var)
+            && !p.is_empty()
+        {
+            return PathBuf::from(p);
+        }
     }
     if let Ok(p) = std::env::var("SECURITY_ENDPOINT")
         && !p.contains("://")
+        && !p.is_empty()
     {
         return PathBuf::from(p);
     }
+    if let Some(path) = discover_security_socket_xdg() {
+        return path;
+    }
     PathBuf::from(DEFAULT_SECURITY_SOCKET_PATH)
+}
+
+/// Scans `$XDG_RUNTIME_DIR/biomeos/` for a security provider socket.
+///
+/// Checks `security.sock`, `beardog.sock`, and `crypto.sock` (in order).
+fn discover_security_socket_xdg() -> Option<PathBuf> {
+    let runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok()?;
+    let base = PathBuf::from(runtime_dir).join("biomeos");
+    for name in ["security.sock", "beardog.sock", "crypto.sock"] {
+        let candidate = base.join(name);
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+    None
 }
 
 impl BtspClient {
@@ -234,33 +266,105 @@ mod tests {
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixListener;
 
+    fn clear_all_security_vars() -> Vec<(&'static str, Option<&'static str>)> {
+        vec![
+            ("SECURITY_PROVIDER_SOCKET", None),
+            ("CRYPTO_PROVIDER_SOCKET", None),
+            ("SECURITY_SOCKET", None),
+            ("SECURITY_ENDPOINT", None),
+            ("XDG_RUNTIME_DIR", None),
+        ]
+    }
+
+    #[test]
+    fn resolve_security_provider_socket_wins() {
+        let mut vars = clear_all_security_vars();
+        vars.push(("SECURITY_PROVIDER_SOCKET", Some("/provider/sec.sock")));
+        vars.push(("SECURITY_SOCKET", Some("/old/sec.sock")));
+        temp_env::with_vars(vars, || {
+            assert_eq!(
+                resolve_security_socket_path(),
+                PathBuf::from("/provider/sec.sock")
+            );
+        });
+    }
+
+    #[test]
+    fn resolve_crypto_provider_socket_second() {
+        let mut vars = clear_all_security_vars();
+        vars.push(("CRYPTO_PROVIDER_SOCKET", Some("/crypto/sec.sock")));
+        vars.push(("SECURITY_SOCKET", Some("/old/sec.sock")));
+        temp_env::with_vars(vars, || {
+            assert_eq!(
+                resolve_security_socket_path(),
+                PathBuf::from("/crypto/sec.sock")
+            );
+        });
+    }
+
     #[test]
     fn resolve_security_socket_env_order() {
-        temp_env::with_vars(
-            [
-                ("SECURITY_SOCKET", Some("/sock/a")),
-                ("SECURITY_ENDPOINT", Some("/sock/b")),
-            ],
-            || {
-                assert_eq!(resolve_security_socket_path(), PathBuf::from("/sock/a"));
-            },
-        );
+        let mut vars = clear_all_security_vars();
+        vars.push(("SECURITY_SOCKET", Some("/sock/a")));
+        vars.push(("SECURITY_ENDPOINT", Some("/sock/b")));
+        temp_env::with_vars(vars, || {
+            assert_eq!(resolve_security_socket_path(), PathBuf::from("/sock/a"));
+        });
     }
 
     #[test]
     fn resolve_security_endpoint_skips_url() {
-        temp_env::with_vars(
-            [
-                ("SECURITY_SOCKET", None::<&str>),
-                ("SECURITY_ENDPOINT", Some("http://127.0.0.1:9")),
-            ],
-            || {
-                assert_eq!(
-                    resolve_security_socket_path(),
-                    std::path::Path::new(DEFAULT_SECURITY_SOCKET_PATH)
-                );
-            },
-        );
+        let mut vars = clear_all_security_vars();
+        vars.push(("SECURITY_ENDPOINT", Some("http://127.0.0.1:9")));
+        temp_env::with_vars(vars, || {
+            assert_eq!(
+                resolve_security_socket_path(),
+                std::path::Path::new(DEFAULT_SECURITY_SOCKET_PATH)
+            );
+        });
+    }
+
+    #[test]
+    fn resolve_xdg_discovery_finds_security_sock() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let biomeos = dir.path().join("biomeos");
+        std::fs::create_dir_all(&biomeos).unwrap();
+        std::fs::write(biomeos.join("security.sock"), "").unwrap();
+
+        let xdg_str = dir.path().to_str().unwrap().to_string();
+        let mut vars = clear_all_security_vars();
+        vars.push(("XDG_RUNTIME_DIR", Some(xdg_str.as_str())));
+        temp_env::with_vars(vars, || {
+            assert_eq!(
+                resolve_security_socket_path(),
+                biomeos.join("security.sock")
+            );
+        });
+    }
+
+    #[test]
+    fn resolve_xdg_discovery_finds_beardog_sock() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let biomeos = dir.path().join("biomeos");
+        std::fs::create_dir_all(&biomeos).unwrap();
+        std::fs::write(biomeos.join("beardog.sock"), "").unwrap();
+
+        let xdg_str = dir.path().to_str().unwrap().to_string();
+        let mut vars = clear_all_security_vars();
+        vars.push(("XDG_RUNTIME_DIR", Some(xdg_str.as_str())));
+        temp_env::with_vars(vars, || {
+            assert_eq!(resolve_security_socket_path(), biomeos.join("beardog.sock"));
+        });
+    }
+
+    #[test]
+    fn resolve_empty_env_skipped() {
+        let mut vars = clear_all_security_vars();
+        vars.push(("SECURITY_PROVIDER_SOCKET", Some("")));
+        vars.push(("SECURITY_SOCKET", Some("/real.sock")));
+        temp_env::with_vars(vars, || {
+            assert_eq!(resolve_security_socket_path(), PathBuf::from("/real.sock"));
+        });
     }
 
     #[test]
