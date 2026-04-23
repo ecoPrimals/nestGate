@@ -2,16 +2,16 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-19)**  
+**Verification (as of 2026-04-15, Session 44a)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,807 passing, 0 failures, 61 ignored  
+- **Tests**: `cargo test --workspace --lib` — 8,816 passing, 0 failures, 53 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,807 passing, 61 ignored, 0 failures  
+- **Tests (last recorded)**: 8,816 passing, 53 ignored, 0 failures  
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -25,13 +25,13 @@
 - **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
-- **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate)  
+- **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate); JSON-line + length-prefixed dual framing (Session 44a); 6-tier security socket discovery  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`  
 - **Primal sovereignty**: zero hardcoded other-primal names in production; `DEFAULT_SERVICE_NAME` for self-references  
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-**Last Updated**: April 19, 2026
+**Last Updated**: April 2026 (Session 44a)
 
 ---
 
@@ -127,21 +127,21 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-14 (Session 43m).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-15 (Session 44a).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace --lib` — 8,534 passing, 0 failures, 60 ignored |
-| Coverage | 82.06% line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| Tests | `cargo test --workspace --lib` — 8,816 passing, 0 failures, 53 ignored |
+| Coverage | 84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
-| Deprecated | 187 `#[deprecated]` for canonical migration; zero dead callers |
+| Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
 | unwrap/expect | Zero in production library code; tests may use |
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots |
 | TLS/crypto | `ureq` + `rustls-rustcrypto` (pure Rust); zero C-FFI `-sys` in production |
-| File size | All production modules under 750 LOC (wateringHole limit 1000) |
+| File size | All `.rs` files under 800 LOC (wateringHole limit 1000) |
 | Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests |
 
 ### Compliance (wateringHole)
@@ -154,8 +154,8 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-14 (Se
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
-| Coverage (80%+) | Pass — 82.06% line (wateringHole 80% met; 90% target pending) |
-| File size (<1000 production) | Pass — all under 750 LOC (4 largest files refactored Session 43) |
+| Coverage (80%+) | Pass — 84.12%+ line (wateringHole 80% met; 90% target pending) |
+| File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
 | BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
@@ -261,8 +261,8 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 82.06%)
-2. Migrate remaining 116 deprecated APIs to canonical config
+1. Push test coverage toward 90% target (currently 84.12%+)
+2. Track vendored `rustls-rustcrypto` + `rustls-webpki` upstream for drop opportunity
 3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Cross-gate replication (multi-node data orchestration)
 5. aarch64 musl cross-compile CI (config exists; pipeline not wired)
@@ -283,4 +283,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 16, 2026 (Session 43r)
+**Latest**: April 2026 (Session 44a)

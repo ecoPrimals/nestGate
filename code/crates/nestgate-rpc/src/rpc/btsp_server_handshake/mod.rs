@@ -11,8 +11,12 @@
 //!
 //! ## Wire Framing
 //!
-//! All handshake messages use length-prefixed JSON frames:
-//! `[4-byte BE length][JSON payload]`. Maximum frame size: 16 MiB.
+//! Two encodings are supported (auto-detected from the first byte):
+//! - **Length-prefixed**: `[4-byte BE u32 length][JSON payload]` (max 16 MiB)
+//! - **JSON-line**: newline-delimited JSON (`{...}\n`)
+//!
+//! The server detects which mode the client uses from the first byte (`{` →
+//! JSON-line, otherwise → length-prefixed) and responds in the same mode.
 //!
 //! ## Flow (server perspective)
 //!

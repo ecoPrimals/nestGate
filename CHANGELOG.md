@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 44a: BTSP JSON-line framing + security socket discovery (April 2026)
+
+- **Security socket discovery evolved**: `resolve_security_socket_path()` expanded from
+  2-var lookup + hardcoded default to 6-tier resolution: `SECURITY_PROVIDER_SOCKET` →
+  `CRYPTO_PROVIDER_SOCKET` → `SECURITY_SOCKET` → `SECURITY_ENDPOINT` (local path) →
+  `$XDG_RUNTIME_DIR/biomeos/{security,beardog,crypto}.sock` → default. Empty vars skipped.
+  Enables BearDog discovery in live NUCLEUS without manual config.
+- **JSON-line framing**: `perform_handshake()` auto-detects framing from first byte:
+  `{` = JSON-line (newline-delimited), else = length-prefixed (4-byte BE). New
+  `read_json_line()`/`write_json_line()` helpers. Server responds in same framing mode.
+- **BearDog field alignment**: `ChallengeResponse` accepts `session_token` field;
+  `btsp.negotiate` forwards it. Challenge extracted from BearDog `btsp.session.create`
+  response when provider returns one.
+- **Server wiring**: `isomorphic_ipc/server.rs` now peeks for `"jsonrpc"`/`"method"` to
+  disambiguate plain JSON-RPC from JSON-line BTSP ClientHello (was just checking `{`).
+- **9 new tests (8,807 → 8,816)**: XDG discovery, env precedence, JSON-line framing
+  happy path, session_token, EOF handling.
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery, 0 own-code warnings),
+  check PASS, 8,816 lib tests / 0 failures.
+
 ### Session 43z: Deep debt — dep cleanup, stub evolution, coverage push (April 19, 2026)
 
 - **Dependency cleanup**: Removed `config` (crates.io) from nestgate-api, nestgate-core,

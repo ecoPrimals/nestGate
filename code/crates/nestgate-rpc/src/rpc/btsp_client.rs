@@ -17,7 +17,8 @@ use serde_json::{Value, json};
 use super::jsonrpc_client::JsonRpcClient;
 use nestgate_types::error::{NestGateError, Result};
 
-/// Default Unix socket when no `SECURITY_SOCKET` / `SECURITY_ENDPOINT` env is set.
+/// Final fallback path when [`resolve_security_socket_path`] exhausts all 5 higher-priority
+/// tiers (env vars and `$XDG_RUNTIME_DIR/biomeos/` discovery).
 pub const DEFAULT_SECURITY_SOCKET_PATH: &str = "/run/capability/security.sock";
 
 /// Session lifecycle as reported by the security capability provider.

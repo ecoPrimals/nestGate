@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 19, 2026 (Session 43z — deep debt: dep cleanup, stub evolution, coverage push)  
+**Last Updated**: April 2026 (Session 44a — BTSP JSON-line framing + security socket discovery)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-19
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-19
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-19
-Tests:              8,807 passing, 0 failures, 61 ignored (cargo test --workspace --lib), as of 2026-04-19
+Tests:              8,816 passing, 0 failures, 53 ignored (cargo test --workspace --lib), as of Session 44a
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +112 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -25,7 +25,7 @@ async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml
 Mocks in prod:      ZERO — all mocks test-only (#[cfg(test)]) or feature-gated (dev-stubs)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED from dep tree AND lockfile; installer uses system curl
-Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
+Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery (Session 44a)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
@@ -36,6 +36,7 @@ Emoji in logs:      ZERO in library tracing — professional structured logging 
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
+BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, session_token field alignment (Session 44a)
 TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS
 UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
@@ -550,8 +551,8 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 ### Coverage
 
 ```
-Current:  84.12% line coverage (llvm-cov, Apr 16 2026)
-          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7% → 82.06% → 82.94% → 83.86% → 84.12%)
+Current:  84.12%+ line coverage (llvm-cov, last measured Apr 16 2026; +9 tests since)
+          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7% → 82.06% → 82.94% → 83.86% → 84.12%+)
 Target:   90% line coverage
 Gap:      ~5.9 percentage points
 Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary entrypoints
@@ -654,4 +655,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 19, 2026 (Session 43z)
+**Latest**: April 2026 (Session 44a)
