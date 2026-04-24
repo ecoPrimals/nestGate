@@ -293,6 +293,8 @@ impl IsomorphicIpcServer {
                     .await;
             }
 
+            debug!("BTSP: non-JSON-RPC first line detected, starting handshake");
+
             let family_id = std::env::var("FAMILY_ID")
                 .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
                 .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))

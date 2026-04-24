@@ -5,7 +5,7 @@
 //!
 //! Implements the listener side of the BTSP handshake protocol per
 //! `BTSP_PROTOCOL_STANDARD.md` §Handshake Protocol. `NestGate` delegates all
-//! cryptographic operations to the security capability provider (BearDog) via
+//! cryptographic operations to the security capability provider (`BearDog`) via
 //! JSON-RPC calls to `btsp.session.create` and `btsp.session.verify`.
 //!
 //! ## Wire Framing
@@ -21,11 +21,11 @@
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
 //! 2. Resolve `FAMILY_SEED` from environment (base64)
-//! 3. Delegate to BearDog: `btsp.session.create({family_seed})` → get
+//! 3. Delegate to `BearDog`: `btsp.session.create({family_seed})` → get
 //!    `session_token`, `server_ephemeral_pub`, `challenge`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
 //! 5. Read `ChallengeResponse` frame → extract `response`, `preferred_cipher`
-//! 6. Delegate to BearDog: `btsp.session.verify({session_token, response,
+//! 6. Delegate to `BearDog`: `btsp.session.verify({session_token, response,
 //!    client_ephemeral_pub, preferred_cipher})` → get `verified`, `session_id`,
 //!    `cipher`
 //! 7. Write `HandshakeComplete` frame → `{cipher, session_id}`
@@ -97,10 +97,19 @@ async fn write_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, payload: &[u8]) -
     Ok(())
 }
 
-async fn write_error_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, reason: &str) {
+/// Mode-aware error frame: responds in the same framing the client used so a
+/// JSON-line client never receives a length-prefixed error (and vice versa).
+async fn write_handshake_error<W: AsyncWriteExt + Unpin>(
+    writer: &mut W,
+    mode: FrameMode,
+    reason: &str,
+) {
     let payload = serde_json::to_vec(&json!({"error": "handshake_failed", "reason": reason}))
         .unwrap_or_default();
-    let _ = write_frame(writer, &payload).await;
+    let _ = match mode {
+        FrameMode::LengthPrefixed => write_frame(writer, &payload).await,
+        FrameMode::JsonLine => write_json_line(writer, &payload).await,
+    };
 }
 
 // ── JSON-line framing (newline-delimited) ───────────────────────────────────
@@ -187,17 +196,24 @@ fn generate_challenge() -> [u8; 32] {
 
 // ── Seed resolution ─────────────────────────────────────────────────────────
 
-/// Reads `FAMILY_SEED` (base64) from the environment.
+/// Reads the family seed (base64) from the environment.
 ///
-/// BearDog's `btsp.session.create` requires the actual seed bytes, not a
-/// reference. Returns an error when BTSP is required but no seed is set.
+/// Checks `FAMILY_SEED`, `BEARDOG_FAMILY_SEED`, and `BIOMEOS_FAMILY_SEED`
+/// in order. `BearDog`'s `btsp.session.create` requires the actual seed
+/// bytes, not a reference.
 fn resolve_family_seed() -> Result<String> {
-    std::env::var("FAMILY_SEED").map_err(|_| {
-        NestGateError::validation_error(
-            "BTSP: FAMILY_SEED env var is required for btsp.session.create \
-             (base64-encoded family seed)",
-        )
-    })
+    for var in ["FAMILY_SEED", "BEARDOG_FAMILY_SEED", "BIOMEOS_FAMILY_SEED"] {
+        if let Ok(val) = std::env::var(var)
+            && !val.is_empty()
+        {
+            debug!("BTSP: resolved family seed from {var}");
+            return Ok(val);
+        }
+    }
+    Err(NestGateError::validation_error(
+        "BTSP: FAMILY_SEED env var is required for btsp.session.create \
+         (base64-encoded family seed). Also checked: BEARDOG_FAMILY_SEED, BIOMEOS_FAMILY_SEED",
+    ))
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -226,23 +242,19 @@ pub fn is_btsp_required() -> bool {
 /// JSON-line mode (newline-delimited); anything else is standard
 /// length-prefixed framing (4-byte BE header).
 ///
-/// Delegates all cryptographic operations to the security capability provider
-/// via JSON-RPC. On success, the stream is ready for (optionally encrypted)
-/// JSON-RPC frames. On failure, an error frame is written and the error is
-/// returned (caller should close the connection).
+/// On failure, a **mode-aware** error frame is written to the client before
+/// the error is returned, so the client always sees an error message instead
+/// of bare EOF.  This eliminates the "zero bytes / silent close" symptom
+/// reported by `primalSpring` guidestone.
 ///
 /// # Errors
 ///
 /// Returns an error if any handshake step fails (frame read/write, JSON
-/// parsing, or security-provider IPC delegation for session/verify/negotiate).
-#[expect(
-    clippy::too_many_lines,
-    reason = "BTSP handshake is a single linear protocol sequence"
-)]
+/// parsing, or security-provider IPC delegation for session/verify).
 pub async fn perform_handshake<R, W>(
     reader: &mut R,
     writer: &mut W,
-    _family_id: &str,
+    family_id: &str,
 ) -> Result<BtspSession>
 where
     R: AsyncReadExt + Unpin,
@@ -250,10 +262,8 @@ where
 {
     info!("BTSP: starting server-side handshake");
 
-    // Wrap in BufReader so we can peek without consuming.
     let mut buf_reader = BufReader::new(reader);
 
-    // Detect framing: peek the first byte.
     let first = buf_reader
         .fill_buf()
         .await
@@ -266,26 +276,43 @@ where
         FrameMode::LengthPrefixed
     };
 
+    let result = run_handshake_protocol(&mut buf_reader, writer, family_id, mode).await;
+    if let Err(ref e) = result {
+        write_handshake_error(writer, mode, &e.to_string()).await;
+    }
+    result
+}
+
+/// Inner handshake protocol: separated so that ANY error propagated via `?` is
+/// caught by [`perform_handshake`], which writes a mode-aware error frame.
+#[expect(
+    clippy::too_many_lines,
+    reason = "BTSP handshake is a single linear protocol sequence"
+)]
+async fn run_handshake_protocol<R, W>(
+    buf_reader: &mut BufReader<&mut R>,
+    writer: &mut W,
+    _family_id: &str,
+    mode: FrameMode,
+) -> Result<BtspSession>
+where
+    R: AsyncReadExt + Unpin,
+    W: AsyncWriteExt + Unpin,
+{
     // 1. Read ClientHello
     let hello_bytes = match mode {
-        FrameMode::LengthPrefixed => read_frame(&mut buf_reader).await.map_err(|e| {
+        FrameMode::LengthPrefixed => read_frame(buf_reader).await.map_err(|e| {
             error!("BTSP: failed to read ClientHello: {e}");
             e
         })?,
-        FrameMode::JsonLine => read_json_line(&mut buf_reader).await.map_err(|e| {
+        FrameMode::JsonLine => read_json_line(buf_reader).await.map_err(|e| {
             error!("BTSP: failed to read ClientHello JSON-line: {e}");
             e
         })?,
     };
-    let client_hello: ClientHello = match serde_json::from_slice(&hello_bytes) {
-        Ok(h) => h,
-        Err(e) => {
-            write_error_frame(writer, "invalid_client_hello").await;
-            return Err(NestGateError::validation_error(format!(
-                "BTSP: malformed ClientHello: {e}"
-            )));
-        }
-    };
+    let client_hello: ClientHello = serde_json::from_slice(&hello_bytes).map_err(|e| {
+        NestGateError::validation_error(format!("BTSP: malformed ClientHello: {e}"))
+    })?;
     debug!("BTSP: received ClientHello");
 
     // 2. Resolve family seed for BearDog
@@ -293,6 +320,10 @@ where
 
     // 3. Delegate to security provider: btsp.session.create
     let security_path = resolve_security_socket_path();
+    debug!(
+        "BTSP: connecting to security provider at {}",
+        security_path.display()
+    );
     let security_path_str = security_path.to_str().ok_or_else(|| {
         NestGateError::validation_error("BTSP: security socket path is not valid UTF-8")
     })?;
@@ -309,6 +340,7 @@ where
                 security_path.display()
             ))
         })?;
+    debug!("BTSP: connected to security provider");
 
     let create_result = bd_client
         .call(
@@ -322,12 +354,19 @@ where
             error!("BTSP: btsp.session.create failed: {e}");
             NestGateError::api_internal_error(format!("BTSP: session create failed: {e}"))
         })?;
+    debug!("BTSP: btsp.session.create response received");
 
+    // Accept both `session_token` (BTSP convergence doc) and `session_id`
+    // (some BearDog versions return this field name).
     let session_token = create_result
         .get("session_token")
+        .or_else(|| create_result.get("session_id"))
         .and_then(Value::as_str)
         .ok_or_else(|| {
-            NestGateError::api_internal_error("BTSP: missing session_token from security provider")
+            error!("BTSP: create response missing session_token/session_id: {create_result}");
+            NestGateError::api_internal_error(
+                "BTSP: missing session_token/session_id from security provider",
+            )
         })?
         .to_string();
 
@@ -335,6 +374,7 @@ where
         .get("server_ephemeral_pub")
         .and_then(Value::as_str)
         .ok_or_else(|| {
+            error!("BTSP: create response missing server_ephemeral_pub: {create_result}");
             NestGateError::api_internal_error(
                 "BTSP: missing server_ephemeral_pub from security provider",
             )
@@ -345,6 +385,7 @@ where
         .get("challenge")
         .and_then(Value::as_str)
         .ok_or_else(|| {
+            error!("BTSP: create response missing challenge: {create_result}");
             NestGateError::api_internal_error("BTSP: missing challenge from security provider")
         })?
         .to_string();
@@ -368,11 +409,11 @@ where
 
     // 5. Read ChallengeResponse
     let cr_bytes = match mode {
-        FrameMode::LengthPrefixed => read_frame(&mut buf_reader).await.map_err(|e| {
+        FrameMode::LengthPrefixed => read_frame(buf_reader).await.map_err(|e| {
             error!("BTSP: failed to read ChallengeResponse: {e}");
             e
         })?,
-        FrameMode::JsonLine => read_json_line(&mut buf_reader).await.map_err(|e| {
+        FrameMode::JsonLine => read_json_line(buf_reader).await.map_err(|e| {
             error!("BTSP: failed to read ChallengeResponse JSON-line: {e}");
             e
         })?,
@@ -391,6 +432,7 @@ where
     let mut bd_verify = JsonRpcClient::connect_unix(security_path_str)
         .await
         .map_err(|e| {
+            error!("BTSP: security provider reconnect for verify failed: {e}");
             NestGateError::api_internal_error(format!(
                 "BTSP: security provider reconnect failed: {e}"
             ))
@@ -423,7 +465,6 @@ where
             .and_then(Value::as_str)
             .unwrap_or("unknown");
         warn!("BTSP: handshake FAILED — family verification rejected: {reason}");
-        write_error_frame(writer, "family_verification").await;
         return Err(NestGateError::api_internal_error(
             "BTSP: handshake failed — client could not prove family membership",
         ));
@@ -431,7 +472,6 @@ where
 
     debug!("BTSP: challenge-response verified");
 
-    // BearDog returns session_id and cipher directly from verify.
     let session_id = verify_result
         .get("session_id")
         .and_then(Value::as_str)
@@ -444,7 +484,7 @@ where
         .unwrap_or("null")
         .to_string();
 
-    // 8. Write HandshakeComplete — match framing mode
+    // 7. Write HandshakeComplete — match framing mode
     let complete = HandshakeComplete {
         cipher: cipher.clone(),
         session_id: session_id.clone(),

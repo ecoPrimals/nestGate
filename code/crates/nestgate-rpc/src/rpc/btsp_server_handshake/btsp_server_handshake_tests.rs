@@ -189,15 +189,29 @@ async fn read_frame_errors_on_truncated_length_prefix() {
 }
 
 #[tokio::test]
-async fn write_error_frame_produces_json_error_object() {
+async fn write_handshake_error_length_prefixed() {
     let mut out = Vec::new();
-    write_error_frame(&mut out, "unit_test_reason").await;
+    write_handshake_error(&mut out, FrameMode::LengthPrefixed, "unit_test_reason").await;
     assert!(!out.is_empty());
     let mut cursor = std::io::Cursor::new(out);
     let payload = read_frame(&mut cursor).await.expect("read error frame");
     let v: Value = serde_json::from_slice(&payload).expect("valid JSON");
     assert_eq!(v["error"], "handshake_failed");
     assert_eq!(v["reason"], "unit_test_reason");
+}
+
+#[tokio::test]
+async fn write_handshake_error_json_line() {
+    let mut out = Vec::new();
+    write_handshake_error(&mut out, FrameMode::JsonLine, "test_reason").await;
+    assert!(!out.is_empty());
+    let mut cursor = BufReader::new(std::io::Cursor::new(out));
+    let payload = read_json_line(&mut cursor)
+        .await
+        .expect("read json-line error");
+    let v: Value = serde_json::from_slice(&payload).expect("valid JSON");
+    assert_eq!(v["error"], "handshake_failed");
+    assert_eq!(v["reason"], "test_reason");
 }
 
 fn framed_json_bytes(value: &Value) -> Vec<u8> {
@@ -230,6 +244,13 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
             ("btsp.session.create", MockSecurityScenario::CreateMissingServerPub) => {
                 json!({"session_token": "tok-1", "challenge": "Y2hhbA=="})
             }
+            ("btsp.session.create", MockSecurityScenario::SuccessWithSessionId) => {
+                json!({
+                    "session_id": "sid-alt",
+                    "server_ephemeral_pub": "c2VydmVyLWVwaGVtZXJhbA==",
+                    "challenge": "Y2hhbGxlbmdlLWZyb20tYmVhcmRvZw==",
+                })
+            }
             ("btsp.session.create", _) => {
                 json!({
                     "session_token": "tok-mock",
@@ -255,6 +276,7 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
 #[derive(Clone, Copy)]
 enum MockSecurityScenario {
     Success,
+    SuccessWithSessionId,
     VerifyRejected,
     CreateMissingSessionToken,
     CreateMissingServerPub,
@@ -332,7 +354,7 @@ async fn handshake_fails_verification_writes_error_frame() {
                 let frame = read_frame(&mut cursor).await.ok();
                 if let Some(bytes) = frame
                     && let Ok(v) = serde_json::from_slice::<Value>(&bytes)
-                    && v["reason"] == "family_verification"
+                    && v["reason"].as_str().is_some_and(|r| r.contains("family"))
                 {
                     found_family_err = true;
                 }
@@ -367,9 +389,9 @@ async fn handshake_create_missing_session_token_returns_internal_error() {
             let mut writer = Vec::new();
             let err = perform_handshake(&mut reader, &mut writer, "fam")
                 .await
-                .expect_err("missing session_token");
+                .expect_err("missing session_token/session_id");
             assert!(
-                err.to_string().contains("session_token"),
+                err.to_string().contains("session_token") || err.to_string().contains("session_id"),
                 "unexpected: {err}"
             );
         },
@@ -489,6 +511,8 @@ fn handshake_fails_without_family_seed() {
     temp_env::with_vars(
         [
             ("FAMILY_SEED", None::<&str>),
+            ("BEARDOG_FAMILY_SEED", None),
+            ("BIOMEOS_FAMILY_SEED", None),
             ("SECURITY_SOCKET", Some("/nonexistent/btsp.sock")),
         ],
         || {
@@ -608,6 +632,75 @@ async fn handshake_json_line_with_session_token() {
             let session = perform_handshake(&mut reader, &mut writer, "fam")
                 .await
                 .expect("session_token handshake ok");
+            assert_eq!(session.session_id, "sid-mock");
+        },
+    )
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_accepts_session_id_instead_of_session_token() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec-sid.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::SuccessWithSessionId).await;
+    });
+
+    let hello = json!({"version": 1, "client_ephemeral_pub": "Y2xpZW50LWtleQ=="});
+    let mut input = framed_json_bytes(&hello);
+    let cr = json!({"response": "c2ln", "preferred_cipher": "chacha20_poly1305"});
+    input.extend(framed_json_bytes(&cr));
+
+    temp_env::async_with_vars(
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().expect("utf8"))),
+            ("FAMILY_SEED", Some("dGVzdC1mYW1pbHktc2VlZA==")),
+        ],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let session = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect("session_id fallback handshake ok");
+            assert_eq!(session.session_id, "sid-mock");
+            assert!(session.encrypted);
+        },
+    )
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_uses_beardog_family_seed_fallback() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec-bdseed.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::Success).await;
+    });
+
+    let hello = json!({"version": 1, "client_ephemeral_pub": "Y2xpZW50LWtleQ=="});
+    let mut input = framed_json_bytes(&hello);
+    let cr = json!({"response": "c2ln", "preferred_cipher": null});
+    input.extend(framed_json_bytes(&cr));
+
+    temp_env::async_with_vars(
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().expect("utf8"))),
+            ("FAMILY_SEED", None),
+            ("BEARDOG_FAMILY_SEED", Some("YmVhcmRvZy1mYWxsYmFjaw==")),
+            ("BIOMEOS_FAMILY_SEED", None),
+        ],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let session = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect("BEARDOG_FAMILY_SEED fallback should work");
             assert_eq!(session.session_id, "sid-mock");
         },
     )
