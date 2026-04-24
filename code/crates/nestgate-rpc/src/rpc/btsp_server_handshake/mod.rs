@@ -20,7 +20,7 @@
 //! ## Flow (server perspective)
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
-//! 2. Resolve `FAMILY_SEED` from environment (raw hex string, trimmed)
+//! 2. Resolve `FAMILY_SEED` from environment, base64-encode for transport
 //! 3. Delegate to security provider: `btsp.session.create({family_seed})` → get
 //!    `session_token`, `server_ephemeral_pub`, `challenge`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
@@ -32,6 +32,7 @@
 //!
 //! On failure at any step, write an error frame and close the connection.
 
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -197,13 +198,13 @@ fn generate_challenge() -> [u8; 32] {
 
 // ── Seed resolution ─────────────────────────────────────────────────────────
 
-/// Reads the family seed (raw hex string) from the environment.
+/// Reads the family seed from the environment (typically a hex string).
 ///
 /// Checks canonical `FAMILY_SEED` first, then capability-scoped
 /// `SECURITY_FAMILY_SEED`, then backward-compat `BEARDOG_FAMILY_SEED` and
 /// `BIOMEOS_FAMILY_SEED`. The value is trimmed to strip trailing newlines
-/// that `xxd -p` or similar tools may leave. The security provider's
-/// `btsp.session.create` expects the raw hex string as-is.
+/// that `xxd -p` or similar tools may leave. The caller is responsible for
+/// base64-encoding the result before sending to the security provider.
 fn resolve_family_seed() -> Result<String> {
     for var in [
         "FAMILY_SEED",
@@ -221,7 +222,7 @@ fn resolve_family_seed() -> Result<String> {
     }
     Err(NestGateError::validation_error(
         "BTSP: FAMILY_SEED (or SECURITY_FAMILY_SEED) env var is required \
-         for btsp.session.create (raw hex string from environment)",
+         for btsp.session.create",
     ))
 }
 
@@ -324,8 +325,13 @@ where
     })?;
     debug!("BTSP: received ClientHello");
 
-    // 2. Resolve family seed for security provider
-    let family_seed = resolve_family_seed()?;
+    // 2. Resolve family seed and base64-encode for transport.
+    //    BearDog's handler base64-decodes the param before HKDF key
+    //    derivation.  primalSpring's client uses the raw hex bytes.
+    //    All converged primals base64-encode the raw env string so that
+    //    BearDog recovers the original hex for key agreement.
+    let raw_seed = resolve_family_seed()?;
+    let family_seed_b64 = STANDARD.encode(raw_seed.as_bytes());
 
     // 3. Delegate to security provider: btsp.session.create
     let security_path = resolve_security_socket_path();
@@ -355,7 +361,7 @@ where
         .call(
             "btsp.session.create",
             json!({
-                "family_seed": family_seed,
+                "family_seed": family_seed_b64,
             }),
         )
         .await
