@@ -227,13 +227,15 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
     use tokio::net::UnixListener;
 
     let listener = UnixListener::bind(&sock_path).expect("bind mock security socket");
+    let (stream, _) = listener.accept().await.expect("accept");
+    let mut br = BufReader::new(stream);
+
     for _ in 0..2 {
-        let (mut stream, _) = listener.accept().await.expect("accept");
         let mut line = String::new();
-        BufReader::new(&mut stream)
-            .read_line(&mut line)
-            .await
-            .expect("read jsonrpc");
+        br.read_line(&mut line).await.expect("read jsonrpc");
+        if line.trim().is_empty() {
+            break;
+        }
         let req: Value = serde_json::from_str(line.trim()).expect("request json");
         let method = req["method"].as_str().expect("method");
         let id = req["id"].as_u64().expect("id");
@@ -268,8 +270,11 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
         };
         let body = json!({"jsonrpc":"2.0","id": id, "result": result});
         let line_out = format!("{}\n", serde_json::to_string(&body).unwrap());
-        stream.write_all(line_out.as_bytes()).await.expect("write");
-        stream.flush().await.expect("flush");
+        br.get_mut()
+            .write_all(line_out.as_bytes())
+            .await
+            .expect("write");
+        br.get_mut().flush().await.expect("flush");
     }
 }
 

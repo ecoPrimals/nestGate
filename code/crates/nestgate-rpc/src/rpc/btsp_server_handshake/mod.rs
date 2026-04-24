@@ -20,7 +20,7 @@
 //! ## Flow (server perspective)
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
-//! 2. Resolve `FAMILY_SEED` from environment (base64)
+//! 2. Resolve `FAMILY_SEED` from environment (raw hex string, trimmed)
 //! 3. Delegate to security provider: `btsp.session.create({family_seed})` → get
 //!    `session_token`, `server_ephemeral_pub`, `challenge`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
@@ -180,6 +180,7 @@ struct ChallengeResponse {
 
 #[derive(Debug, Serialize)]
 struct HandshakeComplete {
+    status: &'static str,
     cipher: String,
     session_id: String,
 }
@@ -196,12 +197,13 @@ fn generate_challenge() -> [u8; 32] {
 
 // ── Seed resolution ─────────────────────────────────────────────────────────
 
-/// Reads the family seed (base64) from the environment.
+/// Reads the family seed (raw hex string) from the environment.
 ///
 /// Checks canonical `FAMILY_SEED` first, then capability-scoped
 /// `SECURITY_FAMILY_SEED`, then backward-compat `BEARDOG_FAMILY_SEED` and
-/// `BIOMEOS_FAMILY_SEED`. The security provider's `btsp.session.create`
-/// requires the actual seed bytes, not a reference.
+/// `BIOMEOS_FAMILY_SEED`. The value is trimmed to strip trailing newlines
+/// that `xxd -p` or similar tools may leave. The security provider's
+/// `btsp.session.create` expects the raw hex string as-is.
 fn resolve_family_seed() -> Result<String> {
     for var in [
         "FAMILY_SEED",
@@ -209,16 +211,17 @@ fn resolve_family_seed() -> Result<String> {
         "BEARDOG_FAMILY_SEED",
         "BIOMEOS_FAMILY_SEED",
     ] {
-        if let Ok(val) = std::env::var(var)
-            && !val.is_empty()
-        {
-            debug!("BTSP: resolved family seed from {var}");
-            return Ok(val);
+        if let Ok(val) = std::env::var(var) {
+            let trimmed = val.trim().to_string();
+            if !trimmed.is_empty() {
+                debug!("BTSP: resolved family seed from {var}");
+                return Ok(trimmed);
+            }
         }
     }
     Err(NestGateError::validation_error(
         "BTSP: FAMILY_SEED (or SECURITY_FAMILY_SEED) env var is required \
-         for btsp.session.create (base64-encoded family seed)",
+         for btsp.session.create (raw hex string from environment)",
     ))
 }
 
@@ -430,21 +433,14 @@ where
     debug!("BTSP: received ChallengeResponse");
 
     // 6. Delegate to security provider: btsp.session.verify
+    //    Reuse the SAME connection from btsp.session.create — the security
+    //    provider keeps sockets open and sessions may be connection-scoped.
     let preferred = challenge_response
         .preferred_cipher
         .as_deref()
         .unwrap_or("null");
 
-    let mut bd_verify = JsonRpcClient::connect_unix(security_path_str)
-        .await
-        .map_err(|e| {
-            error!("BTSP: security provider reconnect for verify failed: {e}");
-            NestGateError::api_internal_error(format!(
-                "BTSP: security provider reconnect failed: {e}"
-            ))
-        })?;
-
-    let verify_result = bd_verify
+    let verify_result = bd_client
         .call(
             "btsp.session.verify",
             json!({
@@ -492,6 +488,7 @@ where
 
     // 7. Write HandshakeComplete — match framing mode
     let complete = HandshakeComplete {
+        status: "ok",
         cipher: cipher.clone(),
         session_id: session_id.clone(),
     };
