@@ -9,13 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 44b: BTSP wire fix + deep debt (April 24, 2026)
+
+- **BTSP wire fix (primalSpring Phase 45c)**: `btsp_server_handshake/mod.rs` was sending
+  `"family_seed_ref": "env:FAMILY_SEED"` to BearDog — BearDog silently failed because it
+  expects the actual base64 seed. Fixed: `resolve_family_seed()` reads `FAMILY_SEED` from
+  env; `btsp.session.create` now sends only `{ "family_seed": "<base64>" }`. Removed extra
+  `client_ephemeral_pub` and `challenge` params (BearDog generates those server-side).
+- **`btsp.session.verify` aligned to BearDog wire contract**: params now use `session_token`,
+  `response`, `client_ephemeral_pub`, `preferred_cipher` (was sending wrong field names
+  `session_id`, `client_response` plus extra `server_ephemeral_pub`/`challenge`).
+- **`btsp.negotiate` eliminated**: BearDog returns `session_id` and `cipher` directly from
+  `btsp.session.verify` — separate negotiate call was unnecessary. Reduces BTSP round trips
+  from 3 to 2 IPC connections.
+- **File size compliance**: `isomorphic_ipc/server.rs` (847L → 469L) — extracted 370L of
+  tests into `server/server_tests.rs` directory-based module. Zero files >800L remain.
+- **Mock isolation**: `ZfsBackendType::Mock` removed from production enum (dead code, never
+  referenced). Dev `DevelopmentLoadBalancer` mock terminology cleaned.
+- **Capability-based discovery**: hardcoded `"beardog.sock"` removed from XDG discovery;
+  now probes `SECURITY_SOCKET_CANDIDATES = ["security.sock", "crypto.sock"]` — capability
+  names only, zero primal-specific names in runtime paths.
+- **Stale alias noise pruned**: 47 lines of duplicate canonical type alias comments → 6 lines.
+- **New test**: `handshake_fails_without_family_seed` (FAMILY_SEED env required gate).
+- **Vendor debris**: `Cargo.toml.orig` files removed from vendor/{rustls-rustcrypto,rustls-webpki}.
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery, 0 own-code warnings),
+  check PASS, 8,816 lib tests / 0 failures.
+- **Ref**: `infra/wateringHole/handoffs/BTSP_WIRE_CONVERGENCE_APR24_2026.md`
+
 ### Session 44a: BTSP JSON-line framing + security socket discovery (April 2026)
 
 - **Security socket discovery evolved**: `resolve_security_socket_path()` expanded from
   2-var lookup + hardcoded default to 6-tier resolution: `SECURITY_PROVIDER_SOCKET` →
   `CRYPTO_PROVIDER_SOCKET` → `SECURITY_SOCKET` → `SECURITY_ENDPOINT` (local path) →
-  `$XDG_RUNTIME_DIR/biomeos/{security,beardog,crypto}.sock` → default. Empty vars skipped.
-  Enables BearDog discovery in live NUCLEUS without manual config.
+  `$XDG_RUNTIME_DIR/biomeos/{security,crypto}.sock` → default. Empty vars skipped.
+  Enables security provider discovery in live NUCLEUS without manual config.
 - **JSON-line framing**: `perform_handshake()` auto-detects framing from first byte:
   `{` = JSON-line (newline-delimited), else = length-prefixed (4-byte BE). New
   `read_json_line()`/`write_json_line()` helpers. Server responds in same framing mode.
