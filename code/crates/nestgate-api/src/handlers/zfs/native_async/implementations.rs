@@ -415,7 +415,7 @@ fn snapshot_full_name(config: &SnapshotConfig) -> String {
     }
 }
 
-/// Fast mock service for local development (no `zpool`/`zfs` calls).
+/// Development ZFS service for local use (no `zpool`/`zfs` calls).
 pub struct DevelopmentZfsService {
     service_name: String,
 }

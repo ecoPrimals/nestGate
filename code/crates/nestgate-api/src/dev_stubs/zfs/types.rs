@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! **ZFS Mock Data Types (Development Stubs)**
+//! **ZFS Development Stub Types**
 //!
 //! Type definitions for ZFS stub operations.
 //!
@@ -266,7 +266,7 @@ impl ZeroCostZfsOperations {
 ///
 /// ZFS performance optimization service.
 ///
-/// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
+/// ⚠️ **DEV STUB**: Shared type — used by production handlers.
 #[derive(Debug, Clone)]
 pub struct PerformanceOptimizer;
 
@@ -302,7 +302,7 @@ impl PerformanceOptimizer {
 ///
 /// Calculates confidence scores for ZFS operations and predictions.
 ///
-/// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
+/// ⚠️ **DEV STUB**: Shared type — used by production handlers.
 #[derive(Debug, Clone)]
 /// Confidencecalculator
 pub struct ConfidenceCalculator;

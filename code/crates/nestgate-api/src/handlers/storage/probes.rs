@@ -153,7 +153,7 @@ pub(super) fn parse_size_string(size_str: &str) -> Option<u64> {
 
 /// Collect real storage datasets (important directories) from system
 fn collect_real_storage_datasets() -> Vec<StorageDataset> {
-    // Mock implementation for datasets
+    // Probe local filesystem directories as logical datasets
     let mut datasets = Vec::new();
     // Important directories to monitor as "datasets"
     let important_dirs = vec![

@@ -511,6 +511,7 @@ fn handshake_fails_without_family_seed() {
     temp_env::with_vars(
         [
             ("FAMILY_SEED", None::<&str>),
+            ("SECURITY_FAMILY_SEED", None),
             ("BEARDOG_FAMILY_SEED", None),
             ("BIOMEOS_FAMILY_SEED", None),
             ("SECURITY_SOCKET", Some("/nonexistent/btsp.sock")),

@@ -259,7 +259,7 @@ impl ZfsServiceFactory {
 
 /// Helper trait for service configuration
 pub trait ServiceConfigBuilder {
-    /// Configure the ZFS backend type (native, remote, mock)
+    /// Configure the ZFS backend type (native, remote)
     #[must_use]
     fn with_backend(self, backend: ZfsBackend) -> Self;
     /// Enable or disable fail-safe mechanisms

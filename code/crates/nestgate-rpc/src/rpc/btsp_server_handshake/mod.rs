@@ -5,8 +5,8 @@
 //!
 //! Implements the listener side of the BTSP handshake protocol per
 //! `BTSP_PROTOCOL_STANDARD.md` §Handshake Protocol. `NestGate` delegates all
-//! cryptographic operations to the security capability provider (`BearDog`) via
-//! JSON-RPC calls to `btsp.session.create` and `btsp.session.verify`.
+//! cryptographic operations to the security capability provider via JSON-RPC
+//! calls to `btsp.session.create` and `btsp.session.verify`.
 //!
 //! ## Wire Framing
 //!
@@ -21,11 +21,11 @@
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
 //! 2. Resolve `FAMILY_SEED` from environment (base64)
-//! 3. Delegate to `BearDog`: `btsp.session.create({family_seed})` → get
+//! 3. Delegate to security provider: `btsp.session.create({family_seed})` → get
 //!    `session_token`, `server_ephemeral_pub`, `challenge`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
 //! 5. Read `ChallengeResponse` frame → extract `response`, `preferred_cipher`
-//! 6. Delegate to `BearDog`: `btsp.session.verify({session_token, response,
+//! 6. Delegate to security provider: `btsp.session.verify({session_token, response,
 //!    client_ephemeral_pub, preferred_cipher})` → get `verified`, `session_id`,
 //!    `cipher`
 //! 7. Write `HandshakeComplete` frame → `{cipher, session_id}`
@@ -198,11 +198,17 @@ fn generate_challenge() -> [u8; 32] {
 
 /// Reads the family seed (base64) from the environment.
 ///
-/// Checks `FAMILY_SEED`, `BEARDOG_FAMILY_SEED`, and `BIOMEOS_FAMILY_SEED`
-/// in order. `BearDog`'s `btsp.session.create` requires the actual seed
-/// bytes, not a reference.
+/// Checks canonical `FAMILY_SEED` first, then capability-scoped
+/// `SECURITY_FAMILY_SEED`, then backward-compat `BEARDOG_FAMILY_SEED` and
+/// `BIOMEOS_FAMILY_SEED`. The security provider's `btsp.session.create`
+/// requires the actual seed bytes, not a reference.
 fn resolve_family_seed() -> Result<String> {
-    for var in ["FAMILY_SEED", "BEARDOG_FAMILY_SEED", "BIOMEOS_FAMILY_SEED"] {
+    for var in [
+        "FAMILY_SEED",
+        "SECURITY_FAMILY_SEED",
+        "BEARDOG_FAMILY_SEED",
+        "BIOMEOS_FAMILY_SEED",
+    ] {
         if let Ok(val) = std::env::var(var)
             && !val.is_empty()
         {
@@ -211,8 +217,8 @@ fn resolve_family_seed() -> Result<String> {
         }
     }
     Err(NestGateError::validation_error(
-        "BTSP: FAMILY_SEED env var is required for btsp.session.create \
-         (base64-encoded family seed). Also checked: BEARDOG_FAMILY_SEED, BIOMEOS_FAMILY_SEED",
+        "BTSP: FAMILY_SEED (or SECURITY_FAMILY_SEED) env var is required \
+         for btsp.session.create (base64-encoded family seed)",
     ))
 }
 
@@ -315,7 +321,7 @@ where
     })?;
     debug!("BTSP: received ClientHello");
 
-    // 2. Resolve family seed for BearDog
+    // 2. Resolve family seed for security provider
     let family_seed = resolve_family_seed()?;
 
     // 3. Delegate to security provider: btsp.session.create
@@ -357,7 +363,7 @@ where
     debug!("BTSP: btsp.session.create response received");
 
     // Accept both `session_token` (BTSP convergence doc) and `session_id`
-    // (some BearDog versions return this field name).
+    // (some security provider versions return this field name).
     let session_token = create_result
         .get("session_token")
         .or_else(|| create_result.get("session_id"))

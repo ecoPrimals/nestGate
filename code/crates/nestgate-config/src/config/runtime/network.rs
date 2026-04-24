@@ -83,12 +83,12 @@ impl NetworkConfig {
             https_port: env::var("NESTGATE_HTTPS_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8443), // HTTPS standard (no dedicated getter yet)
+                .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::HTTPS),
 
             tarpc_port: env::var("NESTGATE_TARPC_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8091), // tarpc standard (no dedicated getter yet)
+                .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::TARPC),
 
             internal_port: env::var("NESTGATE_INTERNAL_PORT")
                 .ok()
@@ -158,7 +158,7 @@ impl Default for NetworkConfig {
             api_host,
             api_port: runtime_fallback_ports::HTTP,
             https_port: runtime_fallback_ports::HTTPS,
-            tarpc_port: 8091, // tarpc default port
+            tarpc_port: runtime_fallback_ports::TARPC,
             internal_port: runtime_fallback_ports::API,
             bind_all: false,
             timeout_seconds: 30,

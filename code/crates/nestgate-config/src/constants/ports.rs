@@ -145,7 +145,11 @@ pub fn get_rpc_server_addr() -> String {
 #[must_use]
 pub fn get_rpc_server_addr_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     let host = env_var_or_default(env, "NESTGATE_RPC_HOST", "0.0.0.0");
-    let port = env_parsed(env, "NESTGATE_RPC_PORT", 8091u16);
+    let port = env_parsed(
+        env,
+        "NESTGATE_RPC_PORT",
+        super::hardcoding::runtime_fallback_ports::TARPC,
+    );
     format!("{host}:{port}")
 }
 
@@ -181,7 +185,11 @@ pub fn default_tarpc_client_endpoint_from_env_source(env: &(impl EnvSource + ?Si
         }
     }
     let host = env_var_or_default(env, "NESTGATE_RPC_CONNECT_HOST", "127.0.0.1");
-    let port = env_parsed(env, "NESTGATE_RPC_PORT", 8091u16);
+    let port = env_parsed(
+        env,
+        "NESTGATE_RPC_PORT",
+        super::hardcoding::runtime_fallback_ports::TARPC,
+    );
     format!("tarpc://{host}:{port}")
 }
 

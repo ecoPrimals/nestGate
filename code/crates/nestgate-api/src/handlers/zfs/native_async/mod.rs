@@ -16,7 +16,7 @@ pub fn create_production_zfs_service() -> ProductionZfsService {
     ProductionZfsService::new()
 }
 
-/// Builds a fast mock ZFS service for local development.
+/// Builds a development ZFS service for local use (no real ZFS calls).
 #[must_use]
 pub fn create_development_zfs_service() -> DevelopmentZfsService {
     DevelopmentZfsService::default()
