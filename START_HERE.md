@@ -3,15 +3,15 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-07)
-Tests:       PASS — cargo test --workspace --all-features, 0 failures (~11,834 passing, 461 ignored — STATUS.md)
-Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-07)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 45c)
+Tests:       PASS — cargo test --workspace --lib, 0 failures (8,819 passing, 60 ignored — STATUS.md)
+Coverage:    84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
+Clippy:      PASS — cargo clippy --workspace -- -D warnings (as of Session 45c)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
 sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
-Serial:      #[serial]: 1 — CLI argument tests in nestgate-bin/src/cli/tests.rs
+Serial:      #[serial]: scoped to ZFS stub tests; temp_env elsewhere
 Debt markers: none in production library sources (wateringHole; see STATUS.md)
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -72,7 +72,7 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem. It p
 - **Universal storage** — Works on 6+ platforms out of the box
 - **Capability-based discovery** — Discovers other primals at runtime by capability (storage.sock symlink)
 - **Isomorphic IPC** — Auto-adapts Unix sockets or TCP based on platform
-- **JSON-RPC 2.0 + tarpc** — Dual IPC with semantic method naming (storage.*, data.*, nat.*, beacon.*)
+- **JSON-RPC 2.0 + tarpc** — Dual IPC with semantic method naming (storage.*, session.*, nat.*, beacon.*, zfs.*, bonding.*)
 - **ZFS integration** — Adaptive backend, graceful fallback to standard filesystem
 
 ### NEST Atomic Composition

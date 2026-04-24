@@ -27,7 +27,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 {
   "primal": "nestgate",
   "version": "<semver>",
-  "methods": ["<47 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
+  "methods": ["<51 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
   "provided_capabilities": [
     {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external"]},
     {"type": "model", "methods": ["register", "exists", "locate", "metadata"]},
@@ -518,4 +518,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: April 2026 (Session 44a)
+**Last Updated**: April 2026 (Session 45c)

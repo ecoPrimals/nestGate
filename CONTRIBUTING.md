@@ -5,11 +5,11 @@
 NestGate is in active development. Current metrics:
 
 - **Build**: 23/23 workspace members, 0 errors (`cargo check --workspace --all-features --all-targets`)
-- **Tests**: `cargo test --workspace --all-features` — ~11,834 passing, 461 ignored, 0 failures (see STATUS.md)
-- **Coverage**: ~80% line (llvm-cov); 90% org target not yet
-- **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
+- **Tests**: `cargo test --workspace --lib` — 8,819 passing, 60 ignored, 0 failures (see STATUS.md)
+- **Coverage**: 84.12%+ line (llvm-cov); 90% org target pending
+- **Clippy**: `cargo clippy --workspace -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
 - **Safety**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)
-- **Serial tests**: Some `#[serial]` remain for env-mutation tests; prefer `EnvSource` / `MapEnv`; `temp_env` + `#[serial]` only for code that still reads process env directly
+- **Serial tests**: Scoped to ZFS stub tests; prefer `EnvSource` / `MapEnv`; `temp_env` elsewhere for code that reads process env
 
 See [STATUS.md](./STATUS.md) for full metrics.
 
