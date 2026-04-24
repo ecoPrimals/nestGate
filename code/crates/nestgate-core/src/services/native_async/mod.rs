@@ -142,7 +142,7 @@ mod tests {
             );
             std::io::Error::other(format!("{} - Error: {:?}", "Failed to get stats", e))
         })?;
-        assert_eq!(stats_data.algorithm, "dev_mock");
+        assert_eq!(stats_data.algorithm, "dev_round_robin");
 
         // Test health check
         let health = balancer.health_check_all().await;

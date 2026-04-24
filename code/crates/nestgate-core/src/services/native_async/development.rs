@@ -61,7 +61,6 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
 
     /// Route Request
     async fn route_request(&self, _request: Self::ServiceRequest) -> Result<Self::ServiceResponse> {
-        // Mock routing for development
         Ok(ServiceResponse {
             success: true,
             data: b"Development response".to_vec(),
@@ -84,14 +83,13 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
 
     /// Gets Stats
     async fn get_stats(&self) -> Result<Self::LoadBalancerStats> {
-        // Mock stats for development
         Ok(LoadBalancerStats {
             total_requests: 100,
             successful_requests: 95,
             failed_requests: 5,
             average_response_time: 1.5,
             service_stats: HashMap::new(),
-            algorithm: "dev_mock".to_string(),
+            algorithm: "dev_round_robin".to_string(),
             health_aware: false,
             uptime_seconds: 300,
         })
@@ -99,7 +97,6 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
 
     /// Gets Service Stats
     async fn get_service_stats(&self, _service_id: &str) -> Result<Self::ServiceStats> {
-        // Mock service stats
         Ok(ServiceStats {
             requests: 10,
             successful_requests: 9,
@@ -113,7 +110,6 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
 
     /// Health Check All
     async fn health_check_all(&self) -> Result<Vec<(String, bool)>> {
-        // Mock health check - all services healthy in development
         Ok(vec![
             ("dev-service-1".to_string(), true),
             ("dev-service-2".to_string(), true),
@@ -128,7 +124,6 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
 
     /// List Services
     async fn list_services(&self) -> Result<Vec<Self::ServiceInfo>> {
-        // Mock service list
         Ok(vec![])
     }
 

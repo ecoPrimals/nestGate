@@ -179,65 +179,26 @@ impl Default for RetryPolicy {
     }
 }
 
-/// ZFS backend type for configuration
+/// Types of ZFS backend for configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of `ZfsBackend`
 pub enum ZfsBackendType {
     /// Native ZFS backend (local system commands)
     Native,
     /// Remote ZFS backend (network connections)
     Remote(RemoteConfig),
-    /// Mock backend for testing
-    Mock,
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Remoteconfigcanonical
+/// Migration alias: `RemoteConfig` → canonical network configuration.
 pub type RemoteConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using RemoteConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Circuitbreakerconfigcanonical
+/// Migration alias: `CircuitBreakerConfig` → canonical network configuration.
 pub type CircuitBreakerConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using CircuitBreakerConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Timeoutconfigcanonical
+/// Migration alias: `TimeoutConfig` → canonical network configuration.
 pub type TimeoutConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using TimeoutConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {

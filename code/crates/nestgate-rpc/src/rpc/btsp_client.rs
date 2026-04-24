@@ -68,7 +68,7 @@ pub fn is_btsp_required() -> bool {
 /// 2. `CRYPTO_PROVIDER_SOCKET` env
 /// 3. `SECURITY_SOCKET` env
 /// 4. `SECURITY_ENDPOINT` if it is a local filesystem path (not a `scheme://` URL)
-/// 5. Family-scoped discovery: `$XDG_RUNTIME_DIR/biomeos/security.sock`
+/// 5. Capability-scoped discovery: `$XDG_RUNTIME_DIR/biomeos/{security,crypto}.sock`
 /// 6. [`DEFAULT_SECURITY_SOCKET_PATH`]
 #[must_use]
 pub fn resolve_security_socket_path() -> PathBuf {
@@ -95,13 +95,17 @@ pub fn resolve_security_socket_path() -> PathBuf {
     PathBuf::from(DEFAULT_SECURITY_SOCKET_PATH)
 }
 
-/// Scans `$XDG_RUNTIME_DIR/biomeos/` for a security provider socket.
+/// Capability socket names probed during XDG runtime directory discovery.
 ///
-/// Checks `security.sock`, `beardog.sock`, and `crypto.sock` (in order).
+/// Names are capability-based (not primal-specific): `security.sock` is the
+/// canonical name, `crypto.sock` is an alias accepted by some providers.
+const SECURITY_SOCKET_CANDIDATES: &[&str] = &["security.sock", "crypto.sock"];
+
+/// Scans `$XDG_RUNTIME_DIR/biomeos/` for a security capability provider socket.
 fn discover_security_socket_xdg() -> Option<PathBuf> {
     let runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok()?;
     let base = PathBuf::from(runtime_dir).join("biomeos");
-    for name in ["security.sock", "beardog.sock", "crypto.sock"] {
+    for name in SECURITY_SOCKET_CANDIDATES {
         let candidate = base.join(name);
         if candidate.exists() {
             return Some(candidate);
@@ -344,17 +348,17 @@ mod tests {
     }
 
     #[test]
-    fn resolve_xdg_discovery_finds_beardog_sock() {
+    fn resolve_xdg_discovery_finds_crypto_sock() {
         let dir = tempfile::tempdir().expect("tempdir");
         let biomeos = dir.path().join("biomeos");
         std::fs::create_dir_all(&biomeos).unwrap();
-        std::fs::write(biomeos.join("beardog.sock"), "").unwrap();
+        std::fs::write(biomeos.join("crypto.sock"), "").unwrap();
 
         let xdg_str = dir.path().to_str().unwrap().to_string();
         let mut vars = clear_all_security_vars();
         vars.push(("XDG_RUNTIME_DIR", Some(xdg_str.as_str())));
         temp_env::with_vars(vars, || {
-            assert_eq!(resolve_security_socket_path(), biomeos.join("beardog.sock"));
+            assert_eq!(resolve_security_socket_path(), biomeos.join("crypto.sock"));
         });
     }
 
