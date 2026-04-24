@@ -213,7 +213,7 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
     use tokio::net::UnixListener;
 
     let listener = UnixListener::bind(&sock_path).expect("bind mock security socket");
-    for _ in 0..3 {
+    for _ in 0..2 {
         let (mut stream, _) = listener.accept().await.expect("accept");
         let mut line = String::new();
         BufReader::new(&mut stream)
@@ -224,34 +224,25 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
         let method = req["method"].as_str().expect("method");
         let id = req["id"].as_u64().expect("id");
         let result = match (method, &scenario) {
-            ("btsp.session.create", MockSecurityScenario::CreateMissingSessionId) => {
-                json!({"server_ephemeral_pub": "c2VydmVy"})
+            ("btsp.session.create", MockSecurityScenario::CreateMissingSessionToken) => {
+                json!({"server_ephemeral_pub": "c2VydmVy", "challenge": "Y2hhbA=="})
             }
             ("btsp.session.create", MockSecurityScenario::CreateMissingServerPub) => {
-                json!({"session_id": "s1"})
+                json!({"session_token": "tok-1", "challenge": "Y2hhbA=="})
             }
             ("btsp.session.create", _) => {
                 json!({
-                    "session_id": "sid-mock",
+                    "session_token": "tok-mock",
                     "server_ephemeral_pub": "c2VydmVyLWVwaGVtZXJhbA==",
+                    "challenge": "Y2hhbGxlbmdlLWZyb20tYmVhcmRvZw==",
                 })
             }
             ("btsp.session.verify", MockSecurityScenario::VerifyRejected) => {
-                json!({"verified": false})
+                json!({"verified": false, "error": "bad response"})
             }
-            ("btsp.session.verify", _) => json!({"verified": true}),
-            ("btsp.negotiate", MockSecurityScenario::NegotiateRpcError) => {
-                let body = format!(
-                    r#"{{"jsonrpc":"2.0","id":{id},"error":{{"code":-32000,"message":"no cipher"}}}}"#
-                );
-                stream
-                    .write_all(format!("{body}\n").as_bytes())
-                    .await
-                    .expect("write err response");
-                stream.flush().await.expect("flush");
-                continue;
+            ("btsp.session.verify", _) => {
+                json!({"verified": true, "session_id": "sid-mock", "cipher": "chacha20_poly1305"})
             }
-            ("btsp.negotiate", _) => json!({"cipher": "chacha20_poly1305"}),
             _ => panic!("unexpected method {method}"),
         };
         let body = json!({"jsonrpc":"2.0","id": id, "result": result});
@@ -265,9 +256,8 @@ async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockS
 enum MockSecurityScenario {
     Success,
     VerifyRejected,
-    CreateMissingSessionId,
+    CreateMissingSessionToken,
     CreateMissingServerPub,
-    NegotiateRpcError,
 }
 
 #[tokio::test]
@@ -285,7 +275,10 @@ async fn handshake_happy_path_with_mock_security_provider() {
     input.extend(framed_json_bytes(&cr));
 
     temp_env::async_with_vars(
-        [("SECURITY_SOCKET", Some(sock.to_str().expect("utf8 path")))],
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().expect("utf8 path"))),
+            ("FAMILY_SEED", Some("dGVzdC1mYW1pbHktc2VlZA==")),
+        ],
         async {
             tokio::task::yield_now().await;
             let mut reader = std::io::Cursor::new(input);
@@ -317,55 +310,70 @@ async fn handshake_fails_verification_writes_error_frame() {
     let cr = json!({"response": "c2ln", "preferred_cipher": null});
     input.extend(framed_json_bytes(&cr));
 
-    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
-        tokio::task::yield_now().await;
-        let mut reader = std::io::Cursor::new(input);
-        let mut writer = Vec::new();
-        let err = perform_handshake(&mut reader, &mut writer, "fam")
-            .await
-            .expect_err("verify rejected");
-        assert!(
-            err.to_string().contains("family") || err.to_string().contains("verification"),
-            "{err}"
-        );
-        let mut cursor = std::io::Cursor::new(&writer);
-        let mut found_family_err = false;
-        while cursor.position() < writer.len() as u64 {
-            let frame = read_frame(&mut cursor).await.ok();
-            if let Some(bytes) = frame
-                && let Ok(v) = serde_json::from_slice::<Value>(&bytes)
-                && v["reason"] == "family_verification"
-            {
-                found_family_err = true;
+    temp_env::async_with_vars(
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().unwrap())),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let err = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect_err("verify rejected");
+            assert!(
+                err.to_string().contains("family") || err.to_string().contains("verification"),
+                "{err}"
+            );
+            let mut cursor = std::io::Cursor::new(&writer);
+            let mut found_family_err = false;
+            while cursor.position() < writer.len() as u64 {
+                let frame = read_frame(&mut cursor).await.ok();
+                if let Some(bytes) = frame
+                    && let Ok(v) = serde_json::from_slice::<Value>(&bytes)
+                    && v["reason"] == "family_verification"
+                {
+                    found_family_err = true;
+                }
             }
-        }
-        assert!(found_family_err, "expected family_verification error frame");
-    })
+            assert!(found_family_err, "expected family_verification error frame");
+        },
+    )
     .await;
     server.abort();
 }
 
 #[tokio::test]
-async fn handshake_create_missing_session_id_returns_internal_error() {
+async fn handshake_create_missing_session_token_returns_internal_error() {
     let dir = tempfile::tempdir().expect("tempdir");
     let sock = dir.path().join("sec3.sock");
     let sock_clone = sock.clone();
     let server = tokio::spawn(async move {
-        run_mock_security_server(sock_clone, MockSecurityScenario::CreateMissingSessionId).await;
+        run_mock_security_server(sock_clone, MockSecurityScenario::CreateMissingSessionToken).await;
     });
 
     let hello = json!({"client_ephemeral_pub": "YQ=="});
     let input = framed_json_bytes(&hello);
 
-    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
-        tokio::task::yield_now().await;
-        let mut reader = std::io::Cursor::new(input);
-        let mut writer = Vec::new();
-        let err = perform_handshake(&mut reader, &mut writer, "fam")
-            .await
-            .expect_err("missing session_id");
-        assert!(err.to_string().contains("session_id"), "unexpected: {err}");
-    })
+    temp_env::async_with_vars(
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().unwrap())),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let err = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect_err("missing session_token");
+            assert!(
+                err.to_string().contains("session_token"),
+                "unexpected: {err}"
+            );
+        },
+    )
     .await;
     server.abort();
 }
@@ -382,46 +390,24 @@ async fn handshake_create_missing_server_pub_returns_internal_error() {
     let hello = json!({"client_ephemeral_pub": "YQ=="});
     let input = framed_json_bytes(&hello);
 
-    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
-        tokio::task::yield_now().await;
-        let mut reader = std::io::Cursor::new(input);
-        let mut writer = Vec::new();
-        let err = perform_handshake(&mut reader, &mut writer, "fam")
-            .await
-            .expect_err("missing server_ephemeral_pub");
-        assert!(
-            err.to_string().contains("server_ephemeral_pub"),
-            "unexpected: {err}"
-        );
-    })
-    .await;
-    server.abort();
-}
-
-#[tokio::test]
-async fn handshake_negotiate_error_defaults_cipher_null() {
-    let dir = tempfile::tempdir().expect("tempdir");
-    let sock = dir.path().join("sec5.sock");
-    let sock_clone = sock.clone();
-    let server = tokio::spawn(async move {
-        run_mock_security_server(sock_clone, MockSecurityScenario::NegotiateRpcError).await;
-    });
-
-    let hello = json!({"client_ephemeral_pub": "YQ=="});
-    let mut input = framed_json_bytes(&hello);
-    let cr = json!({"response": "c2ln"});
-    input.extend(framed_json_bytes(&cr));
-
-    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
-        tokio::task::yield_now().await;
-        let mut reader = std::io::Cursor::new(input);
-        let mut writer = Vec::new();
-        let session = perform_handshake(&mut reader, &mut writer, "fam")
-            .await
-            .expect("handshake completes with null cipher");
-        assert_eq!(session.cipher, "null");
-        assert!(!session.encrypted);
-    })
+    temp_env::async_with_vars(
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().unwrap())),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let err = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect_err("missing server_ephemeral_pub");
+            assert!(
+                err.to_string().contains("server_ephemeral_pub"),
+                "unexpected: {err}"
+            );
+        },
+    )
     .await;
     server.abort();
 }
@@ -441,18 +427,25 @@ async fn handshake_rejects_malformed_challenge_response_json() {
     input.extend_from_slice(&(bad.len() as u32).to_be_bytes());
     input.extend_from_slice(bad);
 
-    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
-        tokio::task::yield_now().await;
-        let mut reader = std::io::Cursor::new(input);
-        let mut writer = Vec::new();
-        let err = perform_handshake(&mut reader, &mut writer, "fam")
-            .await
-            .expect_err("bad challenge response");
-        assert!(
-            err.to_string().contains("ChallengeResponse") || err.to_string().contains("malformed"),
-            "{err}"
-        );
-    })
+    temp_env::async_with_vars(
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().unwrap())),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let err = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect_err("bad challenge response");
+            assert!(
+                err.to_string().contains("ChallengeResponse")
+                    || err.to_string().contains("malformed"),
+                "{err}"
+            );
+        },
+    )
     .await;
     server.abort();
 }
@@ -466,7 +459,10 @@ fn handshake_fails_when_security_provider_unavailable() {
     input.extend_from_slice(&hello_bytes);
 
     temp_env::with_vars(
-        [("SECURITY_SOCKET", Some("/nonexistent/btsp-test.sock"))],
+        [
+            ("SECURITY_SOCKET", Some("/nonexistent/btsp-test.sock")),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
         || {
             let rt = tokio::runtime::Runtime::new().expect("runtime");
             let mut reader = std::io::Cursor::new(&input);
@@ -477,6 +473,34 @@ fn handshake_fails_when_security_provider_unavailable() {
             assert!(
                 msg.contains("security provider"),
                 "error should mention security provider: {msg}"
+            );
+        },
+    );
+}
+
+#[test]
+fn handshake_fails_without_family_seed() {
+    let hello = json!({"version": 1, "client_ephemeral_pub": "AAAA"});
+    let hello_bytes = serde_json::to_vec(&hello).unwrap();
+    let mut input = Vec::new();
+    input.extend_from_slice(&(hello_bytes.len() as u32).to_be_bytes());
+    input.extend_from_slice(&hello_bytes);
+
+    temp_env::with_vars(
+        [
+            ("FAMILY_SEED", None::<&str>),
+            ("SECURITY_SOCKET", Some("/nonexistent/btsp.sock")),
+        ],
+        || {
+            let rt = tokio::runtime::Runtime::new().expect("runtime");
+            let mut reader = std::io::Cursor::new(&input);
+            let mut writer = Vec::new();
+            let result = rt.block_on(perform_handshake(&mut reader, &mut writer, "fam"));
+            assert!(result.is_err());
+            let msg = result.unwrap_err().to_string();
+            assert!(
+                msg.contains("FAMILY_SEED"),
+                "error should mention FAMILY_SEED: {msg}"
             );
         },
     );
@@ -526,7 +550,10 @@ async fn handshake_json_line_framing_happy_path() {
     input.push(b'\n');
 
     temp_env::async_with_vars(
-        [("SECURITY_SOCKET", Some(sock.to_str().expect("utf8")))],
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().expect("utf8"))),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
         async {
             tokio::task::yield_now().await;
             let mut reader = std::io::Cursor::new(input);
@@ -570,7 +597,10 @@ async fn handshake_json_line_with_session_token() {
     input.push(b'\n');
 
     temp_env::async_with_vars(
-        [("SECURITY_SOCKET", Some(sock.to_str().expect("utf8")))],
+        [
+            ("SECURITY_SOCKET", Some(sock.to_str().expect("utf8"))),
+            ("FAMILY_SEED", Some("dGVzdA==")),
+        ],
         async {
             tokio::task::yield_now().await;
             let mut reader = std::io::Cursor::new(input);

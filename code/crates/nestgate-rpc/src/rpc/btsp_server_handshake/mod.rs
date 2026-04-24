@@ -5,9 +5,8 @@
 //!
 //! Implements the listener side of the BTSP handshake protocol per
 //! `BTSP_PROTOCOL_STANDARD.md` §Handshake Protocol. `NestGate` delegates all
-//! cryptographic operations to the security capability provider via JSON-RPC
-//! calls to `btsp.session.create`, `btsp.session.verify`, and
-//! `btsp.negotiate`.
+//! cryptographic operations to the security capability provider (BearDog) via
+//! JSON-RPC calls to `btsp.session.create` and `btsp.session.verify`.
 //!
 //! ## Wire Framing
 //!
@@ -21,17 +20,18 @@
 //! ## Flow (server perspective)
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
-//! 2. Generate 32-byte random challenge
-//! 3. Delegate to security provider: `btsp.session.create` → get `session_id`, `server_ephemeral_pub`
+//! 2. Resolve `FAMILY_SEED` from environment (base64)
+//! 3. Delegate to BearDog: `btsp.session.create({family_seed})` → get
+//!    `session_token`, `server_ephemeral_pub`, `challenge`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
 //! 5. Read `ChallengeResponse` frame → extract `response`, `preferred_cipher`
-//! 6. Delegate to security provider: `btsp.session.verify` → get `verified`
-//! 7. On success: `btsp.negotiate` → get negotiated `cipher`
-//! 8. Write `HandshakeComplete` frame → `{cipher, session_id}`
+//! 6. Delegate to BearDog: `btsp.session.verify({session_token, response,
+//!    client_ephemeral_pub, preferred_cipher})` → get `verified`, `session_id`,
+//!    `cipher`
+//! 7. Write `HandshakeComplete` frame → `{cipher, session_id}`
 //!
 //! On failure at any step, write an error frame and close the connection.
 
-use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -167,8 +167,6 @@ struct ServerHello {
 struct ChallengeResponse {
     response: String,
     preferred_cipher: Option<String>,
-    /// BearDog-style field; used as session token when present.
-    session_token: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -177,13 +175,29 @@ struct HandshakeComplete {
     session_id: String,
 }
 
-// ── Challenge generation ────────────────────────────────────────────────────
+// ── Challenge generation (test-only) ────────────────────────────────────────
 
+#[cfg(test)]
 fn generate_challenge() -> [u8; 32] {
     let mut buf = [0u8; 32];
     buf[..16].copy_from_slice(&uuid::Uuid::new_v4().into_bytes());
     buf[16..].copy_from_slice(&uuid::Uuid::new_v4().into_bytes());
     buf
+}
+
+// ── Seed resolution ─────────────────────────────────────────────────────────
+
+/// Reads `FAMILY_SEED` (base64) from the environment.
+///
+/// BearDog's `btsp.session.create` requires the actual seed bytes, not a
+/// reference. Returns an error when BTSP is required but no seed is set.
+fn resolve_family_seed() -> Result<String> {
+    std::env::var("FAMILY_SEED").map_err(|_| {
+        NestGateError::validation_error(
+            "BTSP: FAMILY_SEED env var is required for btsp.session.create \
+             (base64-encoded family seed)",
+        )
+    })
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -274,9 +288,8 @@ where
     };
     debug!("BTSP: received ClientHello");
 
-    // 2. Generate challenge
-    let challenge_bytes = generate_challenge();
-    let challenge_b64 = B64.encode(challenge_bytes);
+    // 2. Resolve family seed for BearDog
+    let family_seed = resolve_family_seed()?;
 
     // 3. Delegate to security provider: btsp.session.create
     let security_path = resolve_security_socket_path();
@@ -301,9 +314,7 @@ where
         .call(
             "btsp.session.create",
             json!({
-                "family_seed_ref": "env:FAMILY_SEED",
-                "client_ephemeral_pub": client_hello.client_ephemeral_pub,
-                "challenge": challenge_b64,
+                "family_seed": family_seed,
             }),
         )
         .await
@@ -312,11 +323,11 @@ where
             NestGateError::api_internal_error(format!("BTSP: session create failed: {e}"))
         })?;
 
-    let session_id = create_result
-        .get("session_id")
+    let session_token = create_result
+        .get("session_token")
         .and_then(Value::as_str)
         .ok_or_else(|| {
-            NestGateError::api_internal_error("BTSP: missing session_id from security provider")
+            NestGateError::api_internal_error("BTSP: missing session_token from security provider")
         })?
         .to_string();
 
@@ -330,19 +341,21 @@ where
         })?
         .to_string();
 
-    // BearDog may return a challenge in its create response.
     let bd_challenge = create_result
         .get("challenge")
         .and_then(Value::as_str)
-        .unwrap_or(&challenge_b64);
+        .ok_or_else(|| {
+            NestGateError::api_internal_error("BTSP: missing challenge from security provider")
+        })?
+        .to_string();
 
-    debug!("BTSP: session created (id={session_id})");
+    debug!("BTSP: session created (token={session_token})");
 
     // 4. Write ServerHello — match framing mode
     let server_hello = ServerHello {
         version: BTSP_VERSION,
         server_ephemeral_pub: server_ephemeral_pub.clone(),
-        challenge: bd_challenge.to_string(),
+        challenge: bd_challenge.clone(),
     };
     let server_hello_bytes = serde_json::to_vec(&server_hello).map_err(|e| {
         NestGateError::api_internal_error(format!("BTSP: failed to serialize ServerHello: {e}"))
@@ -370,6 +383,11 @@ where
     debug!("BTSP: received ChallengeResponse");
 
     // 6. Delegate to security provider: btsp.session.verify
+    let preferred = challenge_response
+        .preferred_cipher
+        .as_deref()
+        .unwrap_or("null");
+
     let mut bd_verify = JsonRpcClient::connect_unix(security_path_str)
         .await
         .map_err(|e| {
@@ -382,11 +400,10 @@ where
         .call(
             "btsp.session.verify",
             json!({
-                "session_id": session_id,
-                "client_response": challenge_response.response,
+                "session_token": session_token,
+                "response": challenge_response.response,
                 "client_ephemeral_pub": client_hello.client_ephemeral_pub,
-                "server_ephemeral_pub": server_ephemeral_pub,
-                "challenge": bd_challenge,
+                "preferred_cipher": preferred,
             }),
         )
         .await
@@ -401,7 +418,11 @@ where
         .unwrap_or(false);
 
     if !verified {
-        warn!("BTSP: handshake FAILED — family verification rejected");
+        let reason = verify_result
+            .get("error")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        warn!("BTSP: handshake FAILED — family verification rejected: {reason}");
         write_error_frame(writer, "family_verification").await;
         return Err(NestGateError::api_internal_error(
             "BTSP: handshake failed — client could not prove family membership",
@@ -410,43 +431,14 @@ where
 
     debug!("BTSP: challenge-response verified");
 
-    // 7. Negotiate cipher via btsp.negotiate
-    let preferred = challenge_response
-        .preferred_cipher
-        .as_deref()
-        .unwrap_or("chacha20_poly1305");
+    // BearDog returns session_id and cipher directly from verify.
+    let session_id = verify_result
+        .get("session_id")
+        .and_then(Value::as_str)
+        .unwrap_or(&session_token)
+        .to_string();
 
-    let session_token = challenge_response
-        .session_token
-        .as_deref()
-        .unwrap_or(&session_id);
-
-    let mut bd_negotiate = JsonRpcClient::connect_unix(security_path_str)
-        .await
-        .map_err(|e| {
-            NestGateError::api_internal_error(format!(
-                "BTSP: security provider reconnect failed: {e}"
-            ))
-        })?;
-
-    let negotiate_result = bd_negotiate
-        .call(
-            "btsp.negotiate",
-            json!({
-                "session_id": session_id,
-                "session_token": session_token,
-                "preferred_cipher": preferred,
-                "bond_type": "Covalent",
-            }),
-        )
-        .await
-        .map_err(|e| {
-            warn!("BTSP: cipher negotiation failed, defaulting to null: {e}");
-            e
-        })
-        .unwrap_or_else(|_| json!({"cipher": "null"}));
-
-    let cipher = negotiate_result
+    let cipher = verify_result
         .get("cipher")
         .and_then(Value::as_str)
         .unwrap_or("null")
