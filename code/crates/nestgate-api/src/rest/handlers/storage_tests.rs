@@ -37,22 +37,6 @@ fn create_test_state() -> ApiState {
 // Actual struct has: storage_config, benchmark_config, backend, test_size_mb
 // Tests disabled until updated to match current API
 
-// ==================== PERFORMANCE PROJECTION TESTS ====================
-// NOTE: project_performance handler not yet implemented
-// Tests disabled until handler is added
-
-// #[tokio::test]
-// async fn test_project_performance_growth() {
-//     let state = create_test_state();
-//     let projection = PerformanceProjection {
-//         expected_iops: 5000,
-//         expected_throughput_mbps: 500.0,
-//         expected_latency_ms: 5.0,
-//         confidence_percent: 85.0,
-//     };
-//     // Test implementation when handler is available
-// }
-
 // ==================== TYPE VALIDATION TESTS ====================
 
 #[test]
@@ -118,9 +102,3 @@ fn test_list_query_construction() {
     assert_eq!(query.per_page, Some(10));
     assert!(query.filter.is_some());
 }
-
-// #[test]
-// fn test_cost_query_construction() {
-//     // NOTE: CostQuery type no longer exists in current API
-//     // Test disabled until API is updated
-// }

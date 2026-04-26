@@ -101,7 +101,10 @@ impl Default for JsonRpcConfig {
     fn default() -> Self {
         use std::net::{IpAddr, Ipv6Addr};
         Self {
-            addr: SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 8092),
+            addr: SocketAddr::new(
+                IpAddr::V6(Ipv6Addr::UNSPECIFIED),
+                nestgate_config::constants::hardcoding::runtime_fallback_ports::JSONRPC,
+            ),
             log_requests: true,
             max_request_size: 100 * 1024 * 1024, // 100 MB for large objects
             max_response_size: 100 * 1024 * 1024, // 100 MB

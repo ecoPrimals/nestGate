@@ -19,7 +19,7 @@ use tokio::time::{timeout, Instant};
 use tracing::{debug, info, warn};
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_connection_timeout_modern() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Modern Chaos Test: Real timeout handling");
 
@@ -69,7 +69,7 @@ async fn test_chaos_connection_timeout_modern() -> Result<(), Box<dyn std::error
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_intermittent_connectivity_modern() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Modern Chaos Test: Real connectivity flapping");
 
@@ -120,7 +120,7 @@ async fn test_chaos_intermittent_connectivity_modern() -> Result<(), Box<dyn std
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_packet_loss_modern() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Modern Chaos Test: Real packet loss simulation");
 
@@ -176,7 +176,7 @@ async fn test_chaos_packet_loss_modern() -> Result<(), Box<dyn std::error::Error
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_network_partition_modern() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Modern Chaos Test: Real network partition simulation");
 
@@ -260,7 +260,7 @@ async fn test_chaos_network_partition_modern() -> Result<(), Box<dyn std::error:
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_connection_pool_exhaustion_modern() -> Result<(), Box<dyn std::error::Error>>
 {
     info!("🔥 Modern Chaos Test: Real connection pool exhaustion");
@@ -328,7 +328,7 @@ async fn test_chaos_connection_pool_exhaustion_modern() -> Result<(), Box<dyn st
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_cascading_failures_modern() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Modern Chaos Test: Real cascading failure with circuit breaker");
 
@@ -406,7 +406,7 @@ async fn test_chaos_cascading_failures_modern() -> Result<(), Box<dyn std::error
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly with --ignored"]
 async fn test_chaos_slow_network_response_modern() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Modern Chaos Test: Real slow response handling");
 

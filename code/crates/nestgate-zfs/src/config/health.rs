@@ -85,10 +85,11 @@ impl HealthMonitoringConfig {
                         // Development convenience: local endpoints
                         // In production, this code path should never execute
                         let dev_host = env_var_or_default(env, "NESTGATE_DEV_HOST", LOCALHOST_NAME);
+                        const DEV_HTTP_FALLBACK: u16 = 8080;
                         let dev_port = env
                             .get("NESTGATE_DEV_PORT")
                             .and_then(|s| s.parse().ok())
-                            .unwrap_or(8080);
+                            .unwrap_or(DEV_HTTP_FALLBACK);
 
                         vec![
                             format!("email:dev@{dev_host}"),

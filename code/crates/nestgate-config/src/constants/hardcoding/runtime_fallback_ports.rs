@@ -23,6 +23,8 @@ pub const PROMETHEUS: u16 = 9090;
 pub const HEALTH: u16 = 8081;
 /// Fallback port for tarpc RPC listeners.
 pub const TARPC: u16 = 8091;
+/// Fallback port for the jsonrpsee JSON-RPC HTTP server.
+pub const JSONRPC: u16 = 8092;
 /// Fallback port for gRPC listeners.
 pub const GRPC: u16 = 50051;
 /// Fallback port for `WebSocket` connections.
@@ -69,6 +71,7 @@ mod tests {
             PROMETHEUS,
             HEALTH,
             TARPC,
+            JSONRPC,
             GRPC,
             WEBSOCKET,
             ADMIN,
@@ -100,7 +103,7 @@ mod tests {
     fn all_primary_service_ports_are_unique_except_known_aliases() {
         use std::collections::HashMap;
 
-        let pairs: [(&str, u16); 23] = [
+        let pairs: [(&str, u16); 24] = [
             ("HTTP", HTTP),
             ("HTTPS", HTTPS),
             ("API", API),
@@ -109,6 +112,7 @@ mod tests {
             ("PROMETHEUS", PROMETHEUS),
             ("HEALTH", HEALTH),
             ("TARPC", TARPC),
+            ("JSONRPC", JSONRPC),
             ("GRPC", GRPC),
             ("WEBSOCKET", WEBSOCKET),
             ("ADMIN", ADMIN),
