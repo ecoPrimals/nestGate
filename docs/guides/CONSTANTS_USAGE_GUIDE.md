@@ -399,11 +399,11 @@ rg "pub const.*TIMEOUT" code/crates/nestgate-core/src/constants/canonical.rs
 
 ---
 
-## 📚 RELATED DOCUMENTS
+## RELATED DOCUMENTS
 
-- `PHASE_3_CONSTANTS_STATUS_NOV_7_FINAL.md` - Consolidation progress
-- `PHASE_3_EXECUTION_SESSION_NOV_7_EVENING.md` - Latest session work
-- `UNIFICATION_ANALYSIS_NOV_7_2025_COMPREHENSIVE.md` - Full analysis
+- [STATUS.md](../../STATUS.md) — current measured metrics and constants status
+- [CAPABILITY_MAPPINGS.md](../../CAPABILITY_MAPPINGS.md) — primal capability mappings
+- Historical Phase 3 docs preserved in `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`
 
 ---
 

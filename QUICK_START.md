@@ -12,7 +12,7 @@
 
 **Optional**: ZFS (for tiered storage features)
 
-**Current build status** (Session 45c): 23 workspace members; 8,819 tests passing (lib), 60 ignored, 0 failures; 84.12%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
+**Current build status** (Session 46): 23 workspace members; 8,822 tests passing (lib), 60 ignored, 0 failures; 84.12%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
 
 ---
 
@@ -116,4 +116,4 @@ RUST_LOG=info                    # Logging level
 ---
 
 **License**: AGPL-3.0-or-later  
-**Last Updated**: April 7, 2026
+**Last Updated**: April 26, 2026 (Session 46)

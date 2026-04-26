@@ -1,7 +1,7 @@
 # NestGate - Quick Reference
 
 **Version**: 4.7.0-dev  
-**Tests**: `cargo test --workspace --lib` — PASS, 0 failures (8,819 passing, 60 ignored — see STATUS.md)  
+**Tests**: `cargo test --workspace --lib` — PASS, 0 failures (8,822 passing, 60 ignored — see STATUS.md)  
 **Coverage**: 84.12%+ line (llvm-cov); target 90%  
 **Clippy**: PASS — `cargo clippy --workspace -- -D warnings` (as of Session 45c)  
 **Crates**: 23 workspace members (20 under `code/crates/` + `tools/unwrap-migrator` + `fuzz` + root)  
@@ -222,4 +222,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: April 7, 2026
+**Last Updated**: April 26, 2026 (Session 46)

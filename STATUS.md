@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 2026 (Session 45c — sovereignty, port constants, deep debt)  
+**Last Updated**: April 2026 (Session 46 — streaming storage, BTSP relay fixes, hardcoded port elimination, deep debt)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,8 +12,8 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of Session 45c
 Format:             CLEAN (cargo fmt --check passes), as of Session 45c
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 45c
-Tests:              8,819 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 45c
-Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +112 tests since) — wateringHole 80% met; 90% target pending
+Tests:              8,822 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 46
+Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
@@ -28,7 +28,7 @@ TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/n
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
-IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
+IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 22 methods (JSON_RPC_CAPABILITIES_METHODS const)
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 42 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol, transport
@@ -36,14 +36,14 @@ Emoji in logs:      ZERO in library tracing — professional structured logging 
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
-BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, security provider wire contract aligned: family_seed (not ref), session_token|session_id, btsp.session.verify params, btsp.negotiate eliminated; mode-aware error frames (Session 45c); SECURITY_FAMILY_SEED canonical env var (backward-compat BEARDOG_FAMILY_SEED)
+BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, security provider wire contract aligned: family_seed base64-encoded, session_token|session_id, btsp.session.verify on reused connection, btsp.negotiate eliminated; mode-aware error frames; persistent BufReader for multi-call relay; SECURITY_FAMILY_SEED canonical env var (backward-compat BEARDOG_FAMILY_SEED)
 TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS
 UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
 Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery (single import path)
-Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs in production code; XDG discovery uses capability names only (security.sock, crypto.sock); SECURITY_FAMILY_SEED canonical env var; runtime_fallback_ports named constants (zero inline magic numbers)
+Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs in production code; XDG discovery uses capability names only (security.sock, crypto.sock); SECURITY_FAMILY_SEED canonical env var; runtime_fallback_ports named constants (JSONRPC, HTTP, TARPC, etc. — zero inline magic numbers)
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate); default-members: root + nestgate-bin (cross-arch binary production)
 Serial tests:       #[serial]: scoped to ZFS command stub tests (temp_env::with_vars elsewhere)
@@ -551,7 +551,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 ### Coverage
 
 ```
-Current:  84.12%+ line coverage (llvm-cov, last measured Apr 16 2026; +9 tests since)
+Current:  84.12%+ line coverage (llvm-cov, last measured Apr 16 2026; +288 tests since)
           (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7% → 82.06% → 82.94% → 83.86% → 84.12%+)
 Target:   90% line coverage
 Gap:      ~5.9 percentage points
@@ -655,4 +655,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 2026 (Session 44b)
+**Latest**: April 2026 (Session 46)

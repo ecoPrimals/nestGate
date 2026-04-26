@@ -455,8 +455,7 @@ export SONGBIRD_FAMILY_ID=production
 
 - **Architecture**: `ARCHITECTURE_OVERVIEW.md`
 - **Deployment**: `DEPLOYMENT_VERIFICATION.md`
-- **Session Report**: `FINAL_SESSION_ALL_DEBT_SOLVED.md`
-- **Evolution Debt**: `BIOMEOS_EVOLUTION_DEBT_ANALYSIS.md`
+- **Session history**: preserved in `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`
 
 ---
 

@@ -158,9 +158,8 @@
 - ✅ START_HERE.md (updated status)
 
 ### **Archived Documentation**
-- 📦 Session reports moved to `../archive/`
-- 📦 Obsolete action plans archived
-- 📦 Historical debt analysis preserved
+- Session reports and historical docs preserved in `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`
+- Handoffs in `ecoPrimals/infra/wateringHole/handoffs/`
 
 ---
 
