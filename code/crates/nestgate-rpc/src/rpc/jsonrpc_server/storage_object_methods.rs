@@ -73,6 +73,8 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
     map_jsonrpc_registration(module.register_async_method(
         "storage.object.retrieve",
         |params, ctx, _ext| async move {
+            const MAX_INLINE: usize = 64 * 1024 * 1024;
+
             #[derive(serde::Deserialize)]
             struct Params {
                 dataset: String,
@@ -87,11 +89,25 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
             let data = service_clone
                 .retrieve_object(
                     tarpc::context::current(),
-                    Arc::from(p.dataset),
-                    Arc::from(p.key),
+                    Arc::from(p.dataset.clone()),
+                    Arc::from(p.key.clone()),
                 )
                 .await
                 .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+
+            if data.len() > MAX_INLINE {
+                return Err(ErrorObjectOwned::owned(
+                    -32603,
+                    format!(
+                        "Object {}/{} is {} bytes — exceeds inline limit ({MAX_INLINE}). \
+                         Use storage.retrieve_stream for large payloads.",
+                        p.dataset,
+                        p.key,
+                        data.len()
+                    ),
+                    None::<()>,
+                ));
+            }
 
             let encoded = base64::engine::general_purpose::STANDARD.encode(data.as_ref());
 

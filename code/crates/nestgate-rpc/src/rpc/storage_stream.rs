@@ -95,6 +95,17 @@ fn namespaced_blob_path(family_id: &str, dataset: &str, key: &str) -> PathBuf {
         .join(key)
 }
 
+/// Flat blob path used by `storage.store_blob` / `storage.retrieve_blob`.
+/// `retrieve_stream_begin` checks this as a fallback when the dataset-scoped
+/// path does not exist, so blobs stored via `store_blob` can be streamed.
+fn flat_blob_path(family_id: &str, key: &str) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join("_blobs")
+        .join(key)
+}
+
 fn resolve_family_id<'a>(params: &'a Value, fallback: Option<&'a str>) -> Result<&'a str> {
     if let Some(s) = params.get("family_id").and_then(Value::as_str) {
         return Ok(s);
@@ -379,12 +390,17 @@ pub async fn storage_retrieve_stream_begin(
         chunk_size = MAX_STREAM_CHUNK;
     }
 
-    let path = namespaced_blob_path(family_id, dataset, key);
-    if !path.exists() {
+    let ns_path = namespaced_blob_path(family_id, dataset, key);
+    let flat = flat_blob_path(family_id, key);
+    let path = if ns_path.exists() {
+        ns_path
+    } else if flat.exists() {
+        flat
+    } else {
         return Err(NestGateError::not_found(format!(
             "blob not found for {family_id}/{dataset}/{key}"
         )));
-    }
+    };
 
     let meta = tokio::fs::metadata(&path)
         .await
@@ -610,6 +626,45 @@ mod tests {
         let mut guard = maps().lock().await;
         let _ = guard.uploads.remove(sid);
         drop(guard);
+        cleanup_family(&family_id).await;
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_falls_back_to_flat_blob_path() {
+        let family_id = format!("stream-flat-{}", Uuid::new_v4());
+        let key = "legacy.bin";
+        let payload = vec![0xCA_u8; 256];
+
+        let flat = flat_blob_path(&family_id, key);
+        if let Some(parent) = flat.parent() {
+            tokio::fs::create_dir_all(parent).await.unwrap();
+        }
+        tokio::fs::write(&flat, &payload).await.unwrap();
+
+        let begin = storage_retrieve_stream_begin(
+            json!({
+                "family_id": family_id,
+                "key": key,
+                "dataset": "shared"
+            }),
+            Some("default"),
+        )
+        .await
+        .expect("should find via flat fallback");
+
+        assert_eq!(begin["total_size"], 256);
+        let stream_id = begin["stream_id"].as_str().unwrap();
+
+        let chunk = storage_retrieve_stream_chunk(json!({
+            "stream_id": stream_id,
+            "offset": 0
+        }))
+        .await
+        .expect("chunk");
+        let bytes = STANDARD.decode(chunk["data"].as_str().unwrap()).unwrap();
+        assert_eq!(bytes, payload);
+        assert_eq!(chunk["is_last"], true);
+
         cleanup_family(&family_id).await;
     }
 }

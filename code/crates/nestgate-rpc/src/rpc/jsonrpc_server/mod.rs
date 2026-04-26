@@ -34,6 +34,12 @@
 //! - `storage.object.list` - List objects in dataset
 //! - `storage.object.delete` - Delete object
 //!
+//! Streaming Storage Operations (4):
+//! - `storage.store_stream` - Begin chunked upload (returns `stream_id`)
+//! - `storage.store_stream_chunk` - Upload a base64 chunk
+//! - `storage.retrieve_stream` - Begin chunked download (returns `stream_id`)
+//! - `storage.retrieve_stream_chunk` - Download a base64 chunk
+//!
 //! Discovery Operations (2):
 //! - `discovery.capability.register` - Register service capability
 //! - `discovery.capability.query` - Discover services by capability
@@ -67,6 +73,7 @@ mod monitoring_methods;
 mod storage_dataset_methods;
 mod storage_methods;
 mod storage_object_methods;
+mod storage_stream_methods;
 
 /// Maps jsonrpsee method registration failures (`RegisterMethodError`) into [`NestGateError`].
 /// jsonrpsee does not use our error type for `RpcModule::register_*`; we normalize at this boundary.
@@ -174,7 +181,7 @@ impl<S: StorageBackend + 'static> JsonRpcServer<S> {
 
         info!("NestGate JSON-RPC 2.0 server listening on {}", addr);
         info!("   Endpoint: http://{}/jsonrpc", addr);
-        info!("   Methods: 18 registered");
+        info!("   Methods: 22 registered");
         info!("   Protocol: Primary=tarpc, Secondary=JSON-RPC");
 
         Ok((handle, addr))

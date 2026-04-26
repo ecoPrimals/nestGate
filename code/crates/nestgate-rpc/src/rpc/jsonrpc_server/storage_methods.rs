@@ -12,13 +12,15 @@ use crate::rpc::storage_backend::StorageBackend;
 use super::JsonRpcState;
 use super::storage_dataset_methods;
 use super::storage_object_methods;
+use super::storage_stream_methods;
 
-/// Register storage-related JSON-RPC methods (dataset + object)
+/// Register storage-related JSON-RPC methods (dataset + object + streaming)
 pub(super) fn register_storage_methods<S: StorageBackend + 'static>(
     module: &mut RpcModule<JsonRpcState<S>>,
 ) -> Result<(), NestGateError> {
     storage_dataset_methods::register_dataset_methods(module)?;
     storage_object_methods::register_object_methods(module)?;
+    storage_stream_methods::register_stream_methods(module)?;
     Ok(())
 }
 
@@ -89,5 +91,22 @@ mod tests {
             Err(e) => panic!("storage.dataset.list: {e}"),
         };
         assert!(list.iter().all(|v| v.is_object()));
+    }
+
+    #[tokio::test]
+    async fn storage_registration_exposes_streaming_methods() {
+        let module = build_module_via_storage_stack();
+        let names: Vec<_> = module.method_names().collect();
+        for expected in [
+            "storage.store_stream",
+            "storage.store_stream_chunk",
+            "storage.retrieve_stream",
+            "storage.retrieve_stream_chunk",
+        ] {
+            assert!(
+                names.iter().any(|n| *n == expected),
+                "missing streaming route {expected}"
+            );
+        }
     }
 }

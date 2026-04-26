@@ -111,7 +111,15 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
     Ok(json!({"status": "stored", "key": key, "family_id": family_id}))
 }
 
+/// Maximum payload size for in-memory `storage.retrieve` (64 MiB). Objects
+/// larger than this must be read via `storage.retrieve_stream` /
+/// `storage.retrieve_range` to avoid unbounded memory growth.
+const RETRIEVE_MAX_INLINE: u64 = 64 * 1024 * 1024;
+
 /// storage.retrieve - Retrieve data by key (filesystem-backed, durable)
+///
+/// Returns an error for objects exceeding [`RETRIEVE_MAX_INLINE`] with
+/// guidance to use `storage.retrieve_stream` or `storage.retrieve_range`.
 pub(super) async fn storage_retrieve(
     params: Option<&Value>,
     state: &StorageState,
@@ -129,6 +137,17 @@ pub(super) async fn storage_retrieve(
     let object_path = dataset_key_path(family_id, key);
     if !object_path.exists() {
         return Ok(json!({"value": null, "data": null, "key": key}));
+    }
+
+    let metadata = tokio::fs::metadata(&object_path)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("Failed to stat {family_id}/{key}: {e}")))?;
+    if metadata.len() > RETRIEVE_MAX_INLINE {
+        return Err(NestGateError::validation_error(format!(
+            "Object {key} is {} bytes — exceeds inline limit ({RETRIEVE_MAX_INLINE}). \
+             Use storage.retrieve_stream or storage.retrieve_range for large payloads.",
+            metadata.len()
+        )));
     }
 
     let bytes = tokio::fs::read(&object_path)
