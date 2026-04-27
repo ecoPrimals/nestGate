@@ -62,32 +62,66 @@ impl ServiceManager {
     ) -> BinResult<()> {
         info!("\n╔════════════════════════════════════════════════════════════╗");
         info!("║                                                            ║");
-        info!("║  🏠 NestGate v{:<47}║", env!("CARGO_PKG_VERSION"));
+        info!("║  NestGate v{:<50}║", env!("CARGO_PKG_VERSION"));
         info!("║     Universal ZFS & Storage Management                    ║");
         info!("║                                                            ║");
         info!("╚════════════════════════════════════════════════════════════╝\n");
 
-        // Check if Unix socket mode is requested (ecosystem Unix layout; `BIOMEOS_SOCKET_DIR` when set)
-        let socket_requested =
-            std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+        let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
+            || std::env::var("NESTGATE_FAMILY_ID").is_ok()
+            || std::env::var("FAMILY_ID").is_ok();
 
         if socket_requested {
-            // ✅ ECOSYSTEM MODE: Unix socket with JSON-RPC
-            self.start_unix_socket_mode().await
+            // Propagate FAMILY_ID → NESTGATE_FAMILY_ID so SocketConfig resolves consistently
+            if std::env::var("NESTGATE_FAMILY_ID").is_err()
+                && let Ok(fid) = std::env::var("FAMILY_ID")
+            {
+                nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", &fid);
+            }
+
+            let tcp_addr = Self::resolve_composition_tcp(port, bind, listen)?;
+            self.start_unix_socket_mode(tcp_addr).await
         } else {
-            // ✅ STANDALONE MODE: HTTP with JWT authentication
             self.start_http_mode(port, bind, listen, config).await
         }
     }
 
+    /// Derive an optional TCP JSON-RPC bind address from the `service start` flags so UDS mode
+    /// can run TCP alongside the Unix socket (same newline JSON-RPC, no HTTP).
+    fn resolve_composition_tcp(
+        port: Option<u16>,
+        bind: Option<&str>,
+        listen: Option<SocketAddr>,
+    ) -> BinResult<Option<SocketAddr>> {
+        if let Some(addr) = listen {
+            return Ok(Some(addr));
+        }
+        let Some(p) = port else {
+            return Ok(None);
+        };
+        let host = bind.unwrap_or("127.0.0.1");
+        let addr: SocketAddr = format!("{host}:{p}").parse().map_err(|e| {
+            NestGateBinError::service_init_error(
+                format!("Invalid TCP bind address: {e}"),
+                Some("tcp-addr".to_string()),
+            )
+        })?;
+        Ok(Some(addr))
+    }
+
     /// Unix socket JSON-RPC server via [`nestgate_core::rpc::IsomorphicIpcServer`] and the
     /// full ecosystem [`nestgate_core::rpc::legacy_ecosystem_rpc_handler`] dispatch table.
-    async fn start_unix_socket_mode(&self) -> BinResult<()> {
-        use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
+    ///
+    /// When `tcp_addr` is `Some`, a TCP JSON-RPC listener (same newline-delimited protocol)
+    /// runs alongside the Unix socket so `service start --port` in a composition still
+    /// provides UDS as the primary transport.
+    async fn start_unix_socket_mode(&self, tcp_addr: Option<SocketAddr>) -> BinResult<()> {
+        use nestgate_core::rpc::{
+            IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
+        };
 
         info!("Starting in ECOSYSTEM MODE (Unix socket)");
 
-        // Get socket configuration with 3-tier fallback
         let socket_config = SocketConfig::from_environment().map_err(|e| {
             crate::error::NestGateBinError::service_init_error(
                 format!("Failed to get socket configuration: {e}"),
@@ -95,15 +129,14 @@ impl ServiceManager {
             )
         })?;
 
-        // Log configuration
         socket_config.log_summary();
 
-        info!("✅ Configuration validated");
-        info!("🔌 Socket path: {}", socket_config.socket_path.display());
-        info!("👪 Family ID: {}", socket_config.family_id);
-        info!("🆔 Node ID: {}", socket_config.node_id);
+        info!("Configuration validated");
+        info!("Socket path: {}", socket_config.socket_path.display());
+        info!("Family ID: {}", socket_config.family_id);
+        info!("Node ID: {}", socket_config.node_id);
         info!(
-            "📍 Source: {}",
+            "Source: {}",
             match socket_config.source {
                 nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
                 nestgate_core::rpc::SocketConfigSource::BiomeOSDirectory =>
@@ -112,6 +145,9 @@ impl ServiceManager {
                 nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",
             }
         );
+        if let Some(addr) = tcp_addr {
+            info!("TCP JSON-RPC also listening on {addr}");
+        }
 
         let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
             crate::error::NestGateBinError::service_init_error(
@@ -121,37 +157,24 @@ impl ServiceManager {
         })?;
         let server = Arc::new(IsomorphicIpcServer::new(
             socket_config.family_id.clone(),
-            handler,
+            handler.clone(),
         ));
 
-        info!("\n✅ JSON-RPC Unix Socket Server ready (isomorphic IPC)");
-        info!("\n📊 Available RPC Methods:");
-        info!("  Health & Discovery:");
-        info!("    • health");
-        info!("    • discover_capabilities");
-        info!("  Storage:");
-        info!("    • storage.store(family_id, key, value)");
-        info!("    • storage.retrieve(family_id, key)");
-        info!("    • storage.delete(family_id, key)");
-        info!("    • storage.list(family_id, prefix?)");
-        info!("    • storage.store_blob(family_id, key, data_base64)");
-        info!("    • storage.retrieve_blob(family_id, key)");
-        info!("    • storage.exists(family_id, key)");
-        info!("  Model Cache:");
-        info!("    • model.register(model_id, metadata)");
-        info!("    • model.exists(model_id)");
-        info!("    • model.locate(model_id)");
-        info!("    • model.metadata(model_id)");
-        info!("  Templates:");
-        info!("    • templates.store(template)");
-        info!("    • templates.retrieve(template_id, version?)");
-        info!("    • templates.list(filters?)");
-        info!("    • templates.community_top(niche_type?, limit?)");
-        info!("  Audit:");
-        info!("    • audit.store_execution(audit)");
-        info!("\n🔐 Security: capability-based provider (when available)");
-        info!("🎯 Mode: Ecosystem (atomic architecture)");
-        info!("\nPress Ctrl+C to stop\n");
+        if let Some(addr) = tcp_addr {
+            let tcp = Arc::new(TcpFallbackServer::new(
+                socket_config.family_id.clone(),
+                handler,
+            ));
+            tokio::spawn(async move {
+                if let Err(e) = tcp.start_bound(addr).await {
+                    tracing::error!("TCP JSON-RPC listener exited: {e}");
+                }
+            });
+        }
+
+        info!("JSON-RPC Unix Socket Server ready (isomorphic IPC)");
+        info!("Mode: Ecosystem (atomic architecture)");
+        info!("Press Ctrl+C to stop\n");
 
         server.start().await.map_err(|e| {
             crate::error::NestGateBinError::runtime_error(
