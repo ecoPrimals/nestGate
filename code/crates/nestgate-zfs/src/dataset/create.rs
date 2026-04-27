@@ -244,16 +244,16 @@ mod create_dataset_tests {
         assert!(hot.contains(&"-o") && hot.contains(&"compression=off"));
 
         let warm = zfs_create_tier_property_args(&CoreStorageTier::Warm);
-        assert!(warm.iter().any(|s| *s == "compression=lz4"));
+        assert!(warm.contains(&"compression=lz4"));
 
         let cold = zfs_create_tier_property_args(&CoreStorageTier::Cold);
-        assert!(cold.iter().any(|s| *s == "compression=zstd"));
+        assert!(cold.contains(&"compression=zstd"));
 
         let cache = zfs_create_tier_property_args(&CoreStorageTier::Cache);
-        assert!(cache.iter().any(|s| *s == "recordsize=64K"));
+        assert!(cache.contains(&"recordsize=64K"));
 
         let arch = zfs_create_tier_property_args(&CoreStorageTier::Archive);
-        assert!(arch.iter().any(|s| *s == "compression=gzip-9"));
+        assert!(arch.contains(&"compression=gzip-9"));
     }
 
     #[tokio::test]

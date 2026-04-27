@@ -53,7 +53,7 @@ impl PlatformInfo {
         let service_manager = detector.detect();
 
         tracing::info!(
-            "✅ Platform detected: {} {} with {} service manager",
+            "Platform detected: {} {} with {} service manager",
             os,
             arch,
             service_manager.name()

@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Doctor command - System diagnostics and health checks
-//!
-//! ✅ EVOLVED: Real implementation replacing "not yet implemented" stub
-//! ✅ DEEP DEBT PRINCIPLE #6: Self-knowledge via capability detection
-//! ✅ MODERN IDIOMATIC RUST: Proper error handling, structured output
+//! Doctor command — system diagnostics and health checks.
 
 use crate::error::BinResult;
 use nestgate_core::services::storage::capabilities;
@@ -185,8 +181,7 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
 
         // Check 7: Rust/system info
         println!("System Info:");
-        println!("   Pure Rust: 100%");
-        println!("   Unsafe blocks: Minimal (justified, documented)");
+        println!("   Unsafe: forbidden (all crate roots)");
         println!("   Architecture: {}", std::env::consts::ARCH);
         println!("   OS: {}", std::env::consts::OS);
         println!();

@@ -172,7 +172,7 @@ fn infer_tier_from_properties_compressratio_without_suffix_uses_default_ratio() 
 #[test]
 fn zfs_handler_impl_default_matches_new() {
     assert_eq!(
-        format!("{:?}", ZfsHandlerImpl::default()),
+        format!("{:?}", ZfsHandlerImpl),
         format!("{:?}", ZfsHandlerImpl::new())
     );
 }
@@ -499,7 +499,7 @@ async fn create_pool_valid_json_shape_when_zpool_present() {
 #[test]
 fn zero_cost_zfs_operations_implements_default() {
     assert_eq!(
-        format!("{:?}", ZeroCostZfsOperations::default()),
+        format!("{:?}", ZeroCostZfsOperations),
         format!("{:?}", ZeroCostZfsOperations::new())
     );
 }

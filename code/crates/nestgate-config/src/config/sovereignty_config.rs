@@ -232,10 +232,6 @@ mod tests {
     use crate::constants::hardcoding::runtime_fallback_ports;
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "default API port aligns with runtime_fallback_ports when env matches"
-    )]
     fn test_default_config() {
         let config = SovereigntyRuntimeConfig::new();
         assert_eq!(config.api_port(), runtime_fallback_ports::HTTP);
@@ -245,10 +241,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "builder tests use runtime_fallback_ports for numeric parity"
-    )]
     fn test_builder_pattern() {
         let config = SovereigntyRuntimeConfig::new()
             .with_api_port(runtime_fallback_ports::METRICS)
@@ -308,10 +300,6 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
-    #[expect(
-        deprecated,
-        reason = "concurrent test uses runtime_fallback_ports for numeric parity"
-    )]
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             SovereigntyRuntimeConfig::new()

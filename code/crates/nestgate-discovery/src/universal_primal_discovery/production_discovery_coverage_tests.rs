@@ -82,9 +82,8 @@ fn from_environment_applies_canonical_network_api_to_api_service() {
         Err(e) => panic!("from_environment: {e:?}"),
     };
 
-    let api = match discovered.services.get("api") {
-        Some(s) => s,
-        None => panic!("api service missing"),
+    let Some(api) = discovered.services.get("api") else {
+        panic!("api service missing");
     };
     assert_eq!(api.port, expected_port);
     assert_eq!(api.bind_address, IpAddr::V4(Ipv4Addr::UNSPECIFIED));

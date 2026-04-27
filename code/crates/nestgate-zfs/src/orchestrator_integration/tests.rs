@@ -351,7 +351,6 @@ mod config_tests {
     use super::*;
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_service_config_default() {
         let config = ZfsServiceConfig::default();
 
@@ -363,7 +362,6 @@ mod config_tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_service_config_custom() {
         let config = ZfsServiceConfig {
             service_name: "custom-zfs".to_string(),
@@ -380,7 +378,6 @@ mod config_tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_service_config_capabilities() {
         let config = ZfsServiceConfig::default();
 
@@ -403,7 +400,6 @@ mod config_tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_service_config_add_orchestrator_endpoint() {
         let mut config = ZfsServiceConfig::default();
         config
@@ -418,7 +414,6 @@ mod config_tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_service_config_add_metadata() {
         let mut config = ZfsServiceConfig::default();
         config

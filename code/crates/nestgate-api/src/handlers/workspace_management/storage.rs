@@ -371,7 +371,7 @@ mod tests {
 
     #[tokio::test]
     async fn cleanup_workspace_rejects_invalid_id() {
-        let err = cleanup_workspace(Path("".into()))
+        let err = cleanup_workspace(Path(String::new()))
             .await
             .expect_err("test: invalid id");
         assert_eq!(err, StatusCode::BAD_REQUEST);

@@ -253,10 +253,7 @@ mod tests {
         let config = AdapterDiscoveryConfig::new();
         // Runtime config uses 127.0.0.1 (IpAddr format) instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
-        let expected_port = {
-            #[expect(deprecated)]
-            runtime_fallback_ports::HTTP.to_string()
-        };
+        let expected_port = runtime_fallback_ports::HTTP.to_string();
         assert_eq!(config.get_port(), &expected_port);
         assert!(config.get_adapter_endpoint().is_none());
         assert!(config.get_all_discovery_endpoints().is_empty());

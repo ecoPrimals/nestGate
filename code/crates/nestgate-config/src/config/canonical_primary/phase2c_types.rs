@@ -416,10 +416,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "assertions reference runtime_fallback_ports parity with default_port()"
-    )]
     fn test_environment_default_port() {
         assert_eq!(Environment::Production.default_port(), 443);
         assert_eq!(

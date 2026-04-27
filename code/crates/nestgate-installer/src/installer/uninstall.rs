@@ -24,7 +24,7 @@ impl NestGateInstaller {
         let red = Style::new().red().bold();
         let yellow = Style::new().yellow().bold();
 
-        info!("{}", red.apply_to("🗑️  NestGate Uninstallation"));
+        info!("{}", red.apply_to("NestGate Uninstallation"));
         info!("");
 
         let installation_info = self
@@ -99,10 +99,7 @@ impl NestGateInstaller {
             fs::remove_file(&info_path)?;
         }
 
-        info!(
-            "{}",
-            yellow.apply_to("✅ NestGate uninstalled successfully")
-        );
+        info!("{}", yellow.apply_to("NestGate uninstalled successfully"));
         Ok(())
     }
 }

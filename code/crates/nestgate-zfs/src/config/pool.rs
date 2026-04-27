@@ -86,7 +86,6 @@ pub type PoolDiscoveryConfigCanonical =
 mod tests {
     use super::*;
 
-    #[expect(deprecated)]
     #[test]
     fn pool_discovery_config_default_and_production() {
         let d = PoolDiscoveryConfig::default();

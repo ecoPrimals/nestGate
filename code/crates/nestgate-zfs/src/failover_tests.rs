@@ -285,7 +285,6 @@ fn canonical_failover_config_serde_with_notification() {
 }
 
 #[test]
-#[expect(deprecated)]
 fn deprecated_failover_notification_config_roundtrip() {
     let n = FailoverNotificationConfig {
         email_enabled: false,

@@ -535,9 +535,12 @@ mod tests {
         };
         assert!(cap.get("capabilities").is_some());
 
-        match router.call_method("discovery.query", json!({})).await {
-            Ok(_) => panic!("expected error for missing capability"),
-            Err(_) => {}
+        if router
+            .call_method("discovery.query", json!({}))
+            .await
+            .is_ok()
+        {
+            panic!("expected error for missing capability");
         }
         let query = match router
             .call_method("discovery.query", json!({"capability": "storage"}))
@@ -583,13 +586,19 @@ mod tests {
         };
         assert_eq!(searched["count"], 1);
 
-        match router.call_method("metadata.retrieve", json!({})).await {
-            Ok(_) => panic!("expected missing name error"),
-            Err(_) => {}
+        if router
+            .call_method("metadata.retrieve", json!({}))
+            .await
+            .is_ok()
+        {
+            panic!("expected missing name error");
         }
-        match router.call_method("metadata.search", json!({})).await {
-            Ok(_) => panic!("expected missing capability error"),
-            Err(_) => {}
+        if router
+            .call_method("metadata.search", json!({}))
+            .await
+            .is_ok()
+        {
+            panic!("expected missing capability error");
         }
     }
 

@@ -8,7 +8,6 @@ use super::types::{AlertSeverity, AlertType, PerformanceAlert};
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use std::sync::Arc;
 
-#[expect(deprecated)]
 use super::types::PerformanceEngineConfig;
 
 // ==================== HELPER FUNCTIONS ====================

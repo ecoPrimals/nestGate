@@ -120,7 +120,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_mcp_config_default() {
         let config = ZfsMcpConfig::default();
 
@@ -129,7 +128,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_mcp_config_validation() {
         let config = ZfsMcpConfig::default();
         let result = config.validate();
@@ -138,7 +136,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zfs_mcp_config_get_tier_config() {
         let config = ZfsMcpConfig::default();
         let tier_config = config.get_tier_config(&crate::types::StorageTier::Hot);
@@ -252,7 +249,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_config_tier_mappings() {
         let config = ZfsMcpConfig::default();
 
@@ -303,7 +299,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_config_customization() {
         let config = ZfsMcpConfig {
             enable_ai_optimization: false,
@@ -345,7 +340,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn zfs_mcp_config_validate_rejects_zero_concurrency() {
         let config = ZfsMcpConfig {
             max_concurrent_operations: 0,
@@ -355,7 +349,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn zfs_mcp_config_validate_rejects_too_high_concurrency() {
         let config = ZfsMcpConfig {
             max_concurrent_operations: 1001,
@@ -365,7 +358,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn get_tier_config_all_tiers() {
         let config = ZfsMcpConfig::default();
         for tier in [

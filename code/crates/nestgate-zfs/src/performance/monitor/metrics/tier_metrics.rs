@@ -273,25 +273,27 @@ mod tier_metrics_queue_depth_tests {
 
     #[test]
     fn queue_depth_defaults_cover_all_tiers() {
-        assert_eq!(
-            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Hot).unwrap(),
-            32.0
+        assert!(
+            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Hot).unwrap() - 32.0).abs()
+                < f64::EPSILON
         );
-        assert_eq!(
-            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Warm).unwrap(),
-            16.0
+        assert!(
+            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Warm).unwrap() - 16.0).abs()
+                < f64::EPSILON
         );
-        assert_eq!(
-            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cold).unwrap(),
-            8.0
+        assert!(
+            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cold).unwrap() - 8.0).abs()
+                < f64::EPSILON
         );
-        assert_eq!(
-            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cache).unwrap(),
-            64.0
+        assert!(
+            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cache).unwrap() - 64.0)
+                .abs()
+                < f64::EPSILON
         );
-        assert_eq!(
-            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Archive).unwrap(),
-            4.0
+        assert!(
+            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Archive).unwrap() - 4.0)
+                .abs()
+                < f64::EPSILON
         );
     }
 
@@ -318,17 +320,21 @@ mod tier_metrics_queue_depth_tests {
 
     #[test]
     fn merge_zpool_iostat_line_skips_non_matching_dataset() {
-        let mut s = DatasetPerformanceStats::default();
-        s.read_iops = 1.0;
+        let mut s = DatasetPerformanceStats {
+            read_iops: 1.0,
+            ..DatasetPerformanceStats::default()
+        };
         merge_zpool_iostat_line_into_stats("other 99 1 0 0 0 0", "tank/want", &mut s);
         assert!((s.read_iops - 1.0).abs() < f64::EPSILON);
     }
 
     #[test]
     fn finalize_stats_computes_utilization_and_latency() {
-        let mut s = DatasetPerformanceStats::default();
-        s.read_iops = 100.0;
-        s.write_iops = 100.0;
+        let mut s = DatasetPerformanceStats {
+            read_iops: 100.0,
+            write_iops: 100.0,
+            ..DatasetPerformanceStats::default()
+        };
         finalize_dataset_performance_stats(&mut s);
         assert!((s.utilization_percent - 2.0).abs() < 1e-9);
         assert!((s.read_latency_ms - 10.0).abs() < 1e-9);
@@ -339,9 +345,9 @@ mod tier_metrics_queue_depth_tests {
     fn finalize_stats_zero_iops_yields_zero_utilization() {
         let mut s = DatasetPerformanceStats::default();
         finalize_dataset_performance_stats(&mut s);
-        assert_eq!(s.utilization_percent, 0.0);
-        assert_eq!(s.read_latency_ms, 0.0);
-        assert_eq!(s.write_latency_ms, 0.0);
+        assert!((s.utilization_percent - 0.0).abs() < f64::EPSILON);
+        assert!((s.read_latency_ms - 0.0).abs() < f64::EPSILON);
+        assert!((s.write_latency_ms - 0.0).abs() < f64::EPSILON);
     }
 
     #[test]

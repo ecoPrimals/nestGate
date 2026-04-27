@@ -58,7 +58,7 @@ mod tests {
             "storage.dataset.delete",
         ] {
             assert!(
-                names.iter().any(|n| *n == expected),
+                names.contains(&expected),
                 "missing dataset route {expected}"
             );
         }
@@ -75,10 +75,7 @@ mod tests {
             "storage.object.list",
             "storage.object.delete",
         ] {
-            assert!(
-                names.iter().any(|n| *n == expected),
-                "missing object route {expected}"
-            );
+            assert!(names.contains(&expected), "missing object route {expected}");
         }
     }
 
@@ -104,7 +101,7 @@ mod tests {
             "storage.retrieve_stream_chunk",
         ] {
             assert!(
-                names.iter().any(|n| *n == expected),
+                names.contains(&expected),
                 "missing streaming route {expected}"
             );
         }

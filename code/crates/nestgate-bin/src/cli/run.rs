@@ -50,20 +50,18 @@ impl Cli {
                     resolve_family_id(family_id, std::env::var("NESTGATE_FAMILY_ID").ok());
 
                 if let Some(ref fid) = resolved_family_id {
-                    tracing::info!("👪 Family ID: {} (creates nestgate-{}.sock)", fid, fid);
+                    tracing::info!("Family ID: {fid} (creates nestgate-{fid}.sock)");
                 }
 
                 if r#abstract {
                     nestgate_core::env_process::set_var("NESTGATE_ABSTRACT_SOCKET", "1");
-                    tracing::info!("📱 Abstract socket mode enabled (Android/SELinux substrate)");
+                    tracing::info!("Abstract socket mode enabled (Android/SELinux substrate)");
                 }
 
                 if enable_http {
-                    tracing::info!("🌐 Starting NestGate with HTTP server enabled");
+                    tracing::info!("Starting NestGate with HTTP server enabled");
                 } else {
-                    tracing::info!(
-                        "🔌 Starting NestGate in socket-only mode (TRUE ecoBin - default)"
-                    );
+                    tracing::info!("Starting NestGate in socket-only mode (default)");
                 }
                 crate::commands::service::run_daemon(
                     port,

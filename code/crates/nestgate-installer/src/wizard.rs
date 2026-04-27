@@ -30,7 +30,7 @@ impl InstallationWizard {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn run(&mut self) -> Result<InstallerConfig> {
-        println!("🚀 NestGate Installation Wizard");
+        println!("NestGate Installation Wizard");
         println!("================================");
 
         self.configure_installation_path()?;
@@ -44,7 +44,7 @@ impl InstallationWizard {
 
     /// Configure Installation Path
     fn configure_installation_path(&mut self) -> Result<()> {
-        println!("📁 Installation Directory");
+        println!("Installation Directory");
 
         // Using canonical configuration - access working_directory instead of domains.installation
         let default_path = self
@@ -74,7 +74,7 @@ impl InstallationWizard {
         reason = "Wizard method: will use self for platform state"
     )]
     fn configure_system_integration(&mut self) -> Result<()> {
-        println!("🔧 System Integration");
+        println!("System Integration");
 
         let install_as_service = Confirm::new()
             .with_prompt("Install as system service?")
@@ -83,9 +83,9 @@ impl InstallationWizard {
             .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if install_as_service {
-            println!("✅ Will install as system service");
+            println!("Will install as system service");
         } else {
-            println!("⏭️  Skipping service installation");
+            println!("Skipping service installation");
         }
 
         let add_to_path = Confirm::new()
@@ -95,14 +95,14 @@ impl InstallationWizard {
             .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if add_to_path {
-            println!("✅ Will add to system PATH");
+            println!("Will add to system PATH");
         }
         Ok(())
     }
 
     /// Configure Components
     fn configure_components(&mut self) -> Result<()> {
-        println!("🔧 Component Selection");
+        println!("Component Selection");
 
         let install_zfs: bool = Confirm::new()
             .with_prompt("Install ZFS support?")
@@ -124,7 +124,7 @@ impl InstallationWizard {
         reason = "Wizard method: will use self for platform state"
     )]
     fn configure_advanced_features(&mut self) -> Result<()> {
-        println!("⚙️  Advanced Features");
+        println!("Advanced Features");
 
         let enable_monitoring = Confirm::new()
             .with_prompt("Enable performance monitoring?")
@@ -139,17 +139,17 @@ impl InstallationWizard {
             .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if enable_monitoring {
-            println!("✅ Performance monitoring enabled");
+            println!("Performance monitoring enabled");
         }
         if enable_security {
-            println!("✅ Security hardening enabled");
+            println!("Security hardening enabled");
         }
         Ok(())
     }
 
     /// Show Summary
     fn show_summary(&self) -> Result<()> {
-        println!("📋 Installation Summary");
+        println!("Installation Summary");
         println!("======================");
         println!(
             "Installation Path: {}",

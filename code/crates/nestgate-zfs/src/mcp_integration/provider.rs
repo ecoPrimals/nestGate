@@ -251,8 +251,6 @@ impl ZfsMcpStorageProvider {
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)]
-
     use std::sync::Arc;
 
     use super::{McpMountRequest, McpVolumeRequest, ZfsMcpConfig, ZfsMcpStorageProvider};

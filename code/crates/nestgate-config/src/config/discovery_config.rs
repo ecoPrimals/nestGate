@@ -146,10 +146,6 @@ mod tests {
     use nestgate_types::MapEnv;
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_default_discovery_config_values() {
         // Test default values without relying on env var state
         let config = ServiceDiscoveryConfig {
@@ -184,10 +180,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_endpoint_generation() {
         // Test build_endpoint method directly
         let config = ServiceDiscoveryConfig {
@@ -207,10 +199,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_port_range_generation() {
         // Test get_port_range method directly
         let config = ServiceDiscoveryConfig {
@@ -231,10 +219,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_endpoints_from_env() {
         let endpoints_csv = format!(
             "http://server1:{},http://server2:{},http://server3:{}",
@@ -261,10 +245,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_endpoints_generated_logic() {
         // Test the endpoint generation logic without relying on env state
         let base = runtime_fallback_ports::HTTP;
@@ -279,10 +259,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_with_endpoints_constructor() {
         let endpoints = vec![
             format!("http://custom1:{}", runtime_fallback_ports::METRICS),

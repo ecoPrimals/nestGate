@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Discovery command implementations
+//! Discovery command implementations.
 //!
-//! ✅ EVOLVED: Real implementations replacing "Coming soon" stubs
-//! ✅ DEEP DEBT PRINCIPLE #6: Primal Self-Knowledge via runtime discovery
-//! ✅ MODERN IDIOMATIC RUST: Proper error handling, no unwraps
+//! Primal self-knowledge via runtime discovery.
 
 use crate::cli::DiscoverTarget;
 use crate::error::BinResult;
@@ -21,9 +19,7 @@ pub async fn execute(target: DiscoverTarget) -> BinResult<()> {
     }
 }
 
-/// Discover primals in the local ecosystem
-///
-/// ✅ PRIMAL SELF-KNOWLEDGE: `NestGate` knows itself, discovers others at runtime
+/// Discover primals in the local ecosystem.
 async fn discover_primals_from_env_source(env: &(impl EnvSource + ?Sized)) -> BinResult<()> {
     println!("Primal Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -132,7 +128,6 @@ async fn discover_capabilities() -> BinResult<()> {
     println!("     • discover_capabilities     - List all capabilities");
     println!();
 
-    // Storage operations
     println!("   Storage:");
     println!("     • storage.store             - Store key-value data");
     println!("     • storage.retrieve          - Retrieve data by key");
@@ -142,6 +137,13 @@ async fn discover_capabilities() -> BinResult<()> {
     println!("     • storage.stats             - Storage statistics");
     println!("     • storage.store_blob        - Store binary data");
     println!("     • storage.retrieve_blob     - Retrieve binary data");
+    println!();
+
+    println!("   Streaming Storage:");
+    println!("     • storage.store_stream      - Begin chunked store");
+    println!("     • storage.store_stream_chunk - Upload chunk");
+    println!("     • storage.retrieve_stream   - Begin chunked retrieve");
+    println!("     • storage.retrieve_stream_chunk - Download chunk");
     println!();
 
     // Model cache
@@ -165,10 +167,8 @@ async fn discover_capabilities() -> BinResult<()> {
     println!("     • audit.store_execution     - Store execution audit");
     println!();
 
-    // Backend info
     let caps = capabilities::detect_backend();
     println!("   Backend: {:?}", caps.backend_type);
-    println!("   Total methods: 19");
     println!();
 
     Ok(())

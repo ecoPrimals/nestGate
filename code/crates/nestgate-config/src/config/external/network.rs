@@ -277,10 +277,6 @@ mod tests {
     use crate::constants::hardcoding::runtime_fallback_ports;
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "dev defaults align with runtime_fallback_ports until RuntimePortResolver"
-    )]
     fn test_default_dev_network() {
         let config = NetworkConfig::default_dev();
         assert_eq!(config.api_port(), runtime_fallback_ports::HTTP);
@@ -288,10 +284,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "dev defaults align with runtime_fallback_ports until RuntimePortResolver"
-    )]
     fn test_database_url() {
         let config = NetworkConfig::default_dev();
         let url = config.database_url("nestgate");
@@ -305,10 +297,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "dev defaults align with runtime_fallback_ports until RuntimePortResolver"
-    )]
     fn test_redis_url() {
         let config = NetworkConfig::default_dev();
         assert_eq!(

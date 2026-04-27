@@ -143,10 +143,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_builder_pattern() {
         let config = NetworkEnvConfig::new()
             .with_host("NESTGATE_API".to_string(), "api.example.com".to_string())
@@ -180,10 +176,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     fn test_partial_config() {
         let config = NetworkEnvConfig::new()
             .with_port("NESTGATE_REDIS".to_string(), runtime_fallback_ports::REDIS);
@@ -197,10 +189,6 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     async fn test_concurrent_access() {
         let config = Arc::new(
             NetworkEnvConfig::new()
@@ -229,10 +217,6 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
-    #[expect(
-        deprecated,
-        reason = "test fixtures use runtime_fallback_ports for numeric parity"
-    )]
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             NetworkEnvConfig::new()

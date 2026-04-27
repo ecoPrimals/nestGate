@@ -129,7 +129,6 @@ pub type HealthMonitoringConfigCanonical =
 mod tests {
     use super::*;
 
-    #[expect(deprecated)]
     #[test]
     fn health_monitoring_config_default_roundtrip_json() {
         let c = HealthMonitoringConfig::default();
@@ -140,7 +139,6 @@ mod tests {
         assert_eq!(back.alert_endpoints, c.alert_endpoints);
     }
 
-    #[expect(deprecated)]
     #[test]
     fn health_monitoring_config_production_sets_alerting() {
         let p = HealthMonitoringConfig::production();

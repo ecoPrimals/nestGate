@@ -40,8 +40,8 @@ async fn main() -> BinResult<()> {
 
     // Backward compatibility: Auto-daemon mode for 'nestgate-server' symlink
     if bin_name == "nestgate-server" {
-        info!("🏰 NestGate invoked as 'nestgate-server' (legacy symlink detected)");
-        info!("💡 RECOMMENDED: Use 'nestgate server' for the modern UniBin interface");
+        info!("NestGate invoked as 'nestgate-server' (legacy symlink detected)");
+        info!("Recommended: use 'nestgate server' for the modern UniBin interface");
 
         // Setup basic logging for daemon mode
         tracing_subscriber::fmt()
@@ -65,8 +65,8 @@ async fn main() -> BinResult<()> {
 
     // Backward compatibility: 'nestgate-client' symlink -> just use normal CLI
     if bin_name == "nestgate-client" {
-        info!("🔧 NestGate invoked as 'nestgate-client' (legacy symlink detected)");
-        info!("💡 RECOMMENDED: Use 'nestgate <command>' directly for the modern UniBin interface");
+        info!("NestGate invoked as 'nestgate-client' (legacy symlink detected)");
+        info!("Recommended: use 'nestgate <command>' directly for the modern UniBin interface");
     }
 
     // Modern UniBin: Parse CLI and execute subcommand

@@ -60,12 +60,10 @@ impl ServiceManager {
         listen: Option<SocketAddr>,
         config: Option<&str>,
     ) -> BinResult<()> {
-        info!("\n╔════════════════════════════════════════════════════════════╗");
-        info!("║                                                            ║");
-        info!("║  NestGate v{:<50}║", env!("CARGO_PKG_VERSION"));
-        info!("║     Universal ZFS & Storage Management                    ║");
-        info!("║                                                            ║");
-        info!("╚════════════════════════════════════════════════════════════╝\n");
+        info!(
+            "NestGate v{} — storage & discovery primal",
+            env!("CARGO_PKG_VERSION")
+        );
 
         let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
             || std::env::var("NESTGATE_FAMILY_ID").is_ok()
@@ -270,34 +268,23 @@ impl ServiceManager {
             );
         }
 
-        info!("✅ Service started successfully");
-        // ✅ MIGRATED: Display actual bind address (was hardcoded 127.0.0.1)
+        info!("Service started successfully");
         let display_host = if bind_host == bind_all_ipv4 {
-            "localhost".to_string() // User-friendly display for 0.0.0.0
+            "localhost".to_string()
         } else {
             bind_host.clone()
         };
-        info!("🌐 HTTP API: http://{display_host}:{http_port}");
-        info!("🔍 Health check: http://{display_host}:{http_port}/health");
-        info!("\nHTTP Endpoints:");
-        info!("  GET  /health - Service health check");
-        info!("  POST /jsonrpc - JSON-RPC endpoint");
-        info!("  GET  /api/v1/protocol/capabilities - Protocol discovery");
-        info!("  GET  /api/v1/storage/pools - List storage pools");
-        info!("  GET  /api/v1/storage/datasets - List datasets");
-        info!("  GET  /api/v1/storage/metrics - Storage metrics");
-        info!("\nRPC Protocols:");
-        info!("  HTTP/REST  - Port {http_port} (~5ms latency) ✅");
-        info!("  JSON-RPC   - Port {http_port} (~2ms latency) ✅");
+        info!("HTTP API: http://{display_host}:{http_port}");
+        info!("Health check: http://{display_host}:{http_port}/health");
+        info!("Endpoints: GET /health, POST /jsonrpc, GET /api/v1/protocol/capabilities");
+        info!("Protocols: HTTP/REST port {http_port}, JSON-RPC port {http_port}");
         #[cfg(feature = "tarpc-server")]
-        info!("  tarpc      - Port {tarpc_port} (~50μs latency) ✅ tarpc service active");
+        info!("tarpc: port {tarpc_port} (active)");
         #[cfg(not(feature = "tarpc-server"))]
-        info!(
-            "  tarpc      - Port {tarpc_port} (~50μs latency) — build with `tarpc-server` to run"
-        );
-        info!("🔐 Security: JWT authentication");
-        info!("🎯 Mode: Standalone (development/testing)");
-        info!("\nPress Ctrl+C to stop\n");
+        info!("tarpc: port {tarpc_port} (build with `tarpc-server` feature to activate)");
+        info!("Security: JWT authentication");
+        info!("Mode: Standalone (development/testing)");
+        info!("Press Ctrl+C to stop");
 
         // Start the HTTP server
         axum::serve(listener, app).await.map_err(|e| {
@@ -363,45 +350,42 @@ impl ServiceManager {
 
         let runtime_config = nestgate_core::config::runtime::get_config();
 
-        info!("🔍 NestGate Service Status:");
+        info!("NestGate Service Status:");
         info!("  Version: {}", env!("CARGO_PKG_VERSION"));
         info!("  Port: {}", runtime_config.network.api_port);
 
-        // ✅ REAL: Check if socket is alive
         let socket_alive = if let Ok(config) = nestgate_core::rpc::SocketConfig::from_environment()
         {
             let path = &config.socket_path;
             if path.exists() {
                 if tokio::net::UnixStream::connect(path).await.is_ok() {
-                    info!("  Socket: ✅ ALIVE ({})", path.display());
+                    info!("  Socket: ALIVE ({})", path.display());
                     true
                 } else {
-                    info!("  Socket: ❌ STALE ({})", path.display());
+                    info!("  Socket: STALE ({})", path.display());
                     false
                 }
             } else {
-                info!("  Socket: ℹ️  Not found (daemon not running?)");
+                info!("  Socket: not found (daemon not running?)");
                 false
             }
         } else {
-            info!("  Socket: ℹ️  Not configured");
+            info!("  Socket: not configured");
             false
         };
 
-        // ✅ REAL: CPU count via std (no external dependency needed)
         let cpu_count = std::thread::available_parallelism()
             .map(std::num::NonZero::get)
             .unwrap_or(1);
         info!("  CPU Cores: {cpu_count}");
 
-        // ✅ REAL: Storage backend detection
         let caps = nestgate_core::services::storage::capabilities::detect_backend();
         info!("  Backend: {:?}", caps.backend_type);
 
         if socket_alive {
-            info!("  Status: ✅ Running");
+            info!("  Status: Running");
         } else {
-            info!("  Status: ⏸️  Stopped");
+            info!("  Status: Stopped");
         }
 
         Ok(())
@@ -465,9 +449,7 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
         IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
     };
 
-    info!("\n╔══════════════════════════════════════════════════════════════════════╗");
-    info!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
-    info!("╚══════════════════════════════════════════════════════════════════════╝\n");
+    info!("NestGate socket-only mode (NUCLEUS integration)");
 
     // Get socket configuration with 4-tier fallback (ecosystem socket layout; BIOMEOS_SOCKET_DIR tier)
     let socket_config = SocketConfig::from_environment().map_err(|e| {
@@ -477,19 +459,16 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
         )
     })?;
 
-    info!("✅ Socket-only mode activated");
-    info!("   • No HTTP REST server (avoids REST port conflicts)");
-    info!("   • No external dependencies (DB, Redis, etc.)");
-    info!("   • Primary: Unix socket JSON-RPC");
+    info!("Socket-only mode activated (no HTTP REST)");
+    info!("  Primary: Unix socket JSON-RPC");
     if let Some(addr) = tcp_jsonrpc_addr {
-        info!("   • Also: TCP JSON-RPC on {addr} (newline-delimited JSON-RPC 2.0)");
+        info!("  Also: TCP JSON-RPC on {addr} (newline-delimited)");
     }
-    info!("   • Perfect for atomic patterns (Tower + NestGate)");
 
     // Log socket configuration
     socket_config.log_summary();
 
-    info!("📦 Initializing persistent storage backend...");
+    info!("Initializing persistent storage backend");
     let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
         crate::error::NestGateBinError::service_init_error(
             format!("Failed to create JSON-RPC handler: {e}"),
@@ -500,7 +479,7 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
         socket_config.family_id.clone(),
         handler.clone(),
     ));
-    info!("✅ Storage backend initialized");
+    info!("Storage backend initialized");
 
     if let Some(addr) = tcp_jsonrpc_addr {
         let tcp = Arc::new(TcpFallbackServer::new(
@@ -514,38 +493,16 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
         });
     }
 
-    info!("📊 Available JSON-RPC Methods:");
-    info!("   Health & Discovery:");
-    info!("     • health");
-    info!("     • discover_capabilities");
-    info!("   Storage:");
-    info!("     • storage.store(family_id, key, value)");
-    info!("     • storage.retrieve(family_id, key)");
-    info!("     • storage.delete(family_id, key)");
-    info!("     • storage.list(family_id, prefix?)");
-    info!("     • storage.exists(family_id, key)");
-    info!("   Blob Storage:");
-    info!("     • storage.store_blob(family_id, key, data_base64)");
-    info!("     • storage.retrieve_blob(family_id, key)");
-    info!("   Model Cache:");
-    info!("     • model.register(model_id, metadata)");
-    info!("     • model.exists(model_id)");
-    info!("     • model.locate(model_id)");
-    info!("     • model.metadata(model_id)");
-    info!("🎯 Mode: NUCLEUS Integration (socket-only + optional TCP JSON-RPC)");
+    info!("Mode: NUCLEUS integration (socket-only + optional TCP JSON-RPC)");
+    info!(
+        "Methods: storage.*, model.*, templates.*, audit.*, health.*, capabilities.*, session.*, discovery.*"
+    );
     if tcp_jsonrpc_addr.is_some() {
-        info!("🔐 Security: Unix socket + TCP JSON-RPC on configured bind (see logs above)");
+        info!("Security: Unix socket + TCP JSON-RPC");
     } else {
-        info!("🔐 Security: Local Unix socket (no TCP listener unless --port / --listen)");
+        info!("Security: Local Unix socket only");
     }
-    if tcp_jsonrpc_addr.is_some() {
-        info!(
-            "⚡ Performance: Unix socket primary; TCP JSON-RPC available for remote-friendly clients"
-        );
-    } else {
-        info!("⚡ Performance: Zero-copy Unix path; no TCP listener");
-    }
-    info!("Press Ctrl+C to stop\n");
+    info!("Press Ctrl+C to stop");
 
     server.start().await.map_err(|e| {
         crate::error::NestGateBinError::runtime_error(
@@ -559,50 +516,44 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
 
 /// Show daemon status (`UniBin` CLI command)
 pub async fn show_status() -> BinResult<()> {
-    println!("🏰 NestGate Status");
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("   Version:    {}", env!("CARGO_PKG_VERSION"));
-    println!("   Grade:      A+ (99/100)");
-    println!("   Pure Rust:  100%");
-    println!("   HTTP-free:  ✅");
-    println!("   Status:     (connect to daemon for live status)");
+    println!("NestGate Status");
+    println!("---");
+    println!("  Version:  {}", env!("CARGO_PKG_VERSION"));
+    println!("  Rust:     100% application code");
+    println!("  Unsafe:   forbidden (all crate roots)");
+    println!("  Status:   (connect to daemon for live status)");
     println!();
     Ok(())
 }
 
 /// Show health check (`UniBin` CLI command)
 pub async fn show_health() -> BinResult<()> {
-    println!("🏥 NestGate Health Check");
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("   Overall:    ✅ Healthy");
-    println!("   Storage:    ✅ OK");
-    println!("   Network:    ✅ OK");
-    println!("   Discovery:  ✅ OK");
-    println!("   Metrics:    ✅ OK");
-    println!();
-    println!("   (Connect to daemon for detailed health status)");
+    println!("NestGate Health Check");
+    println!("---");
+    println!("  (Connect to running daemon for live health status)");
+    println!(
+        "  Use: echo '{{\"jsonrpc\":\"2.0\",\"method\":\"health.check\",\"id\":1}}' | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/nestgate.sock"
+    );
     println!();
     Ok(())
 }
 
 /// Show version information (`UniBin` CLI command)
 pub async fn show_version() -> BinResult<()> {
-    println!("🏰 NestGate");
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("   Version:       {}", env!("CARGO_PKG_VERSION"));
+    println!("NestGate");
+    println!("---");
+    println!("  Version:       {}", env!("CARGO_PKG_VERSION"));
     println!(
-        "   Build:         {}",
+        "  Build:         {}",
         if cfg!(debug_assertions) {
             "debug"
         } else {
             "release"
         }
     );
-    println!("   Pure Rust:     100%");
-    println!("   HTTP-free:     ✅ (Concentrated Gap compliant)");
-    println!("   Lock-free:     10.6% (43/406 files, DashMap)");
-    println!("   Grade:         A+ (99/100)");
-    println!("   Architecture:  UniBin (one binary, multiple modes)");
+    println!("  Architecture:  UniBin (one binary, multiple modes)");
+    println!("  Unsafe:        forbidden (all crate roots)");
+    println!("  IPC:           UDS JSON-RPC (default), TCP fallback, optional HTTP");
     println!();
     Ok(())
 }

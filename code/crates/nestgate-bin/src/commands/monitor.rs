@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Performance monitoring commands
+//! Performance monitoring commands.
 //!
-//! ✅ EVOLVED: Real implementation replacing println stub
 //! Provides real-time system and storage monitoring with periodic sampling.
 
 use anyhow::Result;
@@ -11,8 +10,8 @@ use std::path::PathBuf;
 
 /// Execute the performance monitoring command
 pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u64>) -> Result<()> {
-    println!("📊 NestGate Performance Monitor");
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("NestGate Performance Monitor");
+    println!("---");
     println!("  Interval:  {interval}s");
     if let Some(ref path) = output {
         println!("  Output:    {}", path.display());
@@ -45,7 +44,7 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
             && start.elapsed().as_secs() >= dur
         {
             println!(
-                "\n⏱️  Duration limit reached ({:.0}s)",
+                "\nDuration limit reached ({:.0}s)",
                 start.elapsed().as_secs_f64()
             );
             break;
@@ -57,12 +56,10 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
             .unwrap_or_default()
             .as_secs();
 
-        // ✅ REAL: Gather system metrics
         let cpu_count = std::thread::available_parallelism()
             .map(std::num::NonZero::get)
             .unwrap_or(1);
 
-        // ✅ REAL: Check socket liveness
         let socket_alive = match nestgate_core::rpc::SocketConfig::from_environment() {
             Ok(config) => {
                 if config.socket_path.exists() {
@@ -76,10 +73,8 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
             Err(_) => false,
         };
 
-        // ✅ REAL: Backend detection
         let caps = nestgate_core::services::storage::capabilities::detect_backend();
 
-        // ✅ REAL: Storage path check
         let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
             .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
         let storage_exists = std::path::Path::new(&storage_path).exists();
@@ -89,11 +84,7 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
         println!("  CPU Cores:  {cpu_count}");
         println!(
             "  Socket:     {}",
-            if socket_alive {
-                "✅ ALIVE"
-            } else {
-                "⏸️  DOWN"
-            }
+            if socket_alive { "ALIVE" } else { "DOWN" }
         );
         println!("  Backend:    {:?}", caps.backend_type);
         println!(
@@ -117,9 +108,9 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
     }
 
     if let Some(ref path) = output {
-        println!("📝 Metrics written to: {}", path.display());
+        println!("Metrics written to: {}", path.display());
     }
-    println!("📊 Total samples: {sample_count}");
+    println!("Total samples: {sample_count}");
 
     Ok(())
 }

@@ -110,8 +110,8 @@ impl ZfsHandler {
 
     /// Execute ZFS command
     pub async fn execute(&mut self, command: ZfsCommands) -> Result<()> {
-        println!("🚀 NestGate ZFS Management (API-based)");
-        println!("📡 API Endpoint: {}", self.api_endpoint);
+        println!("NestGate ZFS Management (API-based)");
+        println!("API Endpoint: {}", self.api_endpoint);
         println!();
 
         match command {
@@ -144,7 +144,7 @@ impl ZfsHandler {
                         &format!(r#"{{"name": "{snapshot_name}"}}"#),
                     )
                 } else {
-                    println!("❌ Invalid snapshot format. Use: dataset@snapshot_name");
+                    println!("Invalid snapshot format. Use: dataset@snapshot_name");
                     Ok(())
                 }
             }
@@ -217,8 +217,8 @@ impl ZfsHandler {
 
     /// Show Api Usage
     fn show_api_usage(&self, operation: &str, endpoint: &str, body: &str) -> Result<()> {
-        println!("📋 Operation: {operation}");
-        println!("🔗 API Call:");
+        println!("Operation: {operation}");
+        println!("API Call:");
 
         if body.is_empty() {
             println!("   curl {endpoint}");
@@ -227,10 +227,6 @@ impl ZfsHandler {
             println!("     -H 'Content-Type: application/json' \\");
             println!("     -d '{body}'");
         }
-
-        println!();
-        println!("💡 For interactive management, visit:");
-        println!("   {}/ui/zfs", self.api_endpoint);
 
         Ok(())
     }

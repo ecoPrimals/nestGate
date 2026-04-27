@@ -371,6 +371,20 @@ impl DatasetAutomation {
     }
 }
 
+// Enable cloning for background tasks using Arc patterns for zero-copy sharing
+impl Clone for DatasetAutomation {
+    /// Clone
+    fn clone(&self) -> Self {
+        Self {
+            pool_manager: Arc::clone(&self.pool_manager),
+            dataset_manager: Arc::clone(&self.dataset_manager),
+            policies: self.policies.clone(),
+            lifecycle_tracker: self.lifecycle_tracker.clone(),
+            config: self.config.clone(),
+        }
+    }
+}
+
 #[cfg(test)]
 impl DatasetAutomation {
     /// Replace the policy map for unit tests covering [`DatasetAutomation::run_automation_cycle`].
@@ -606,19 +620,5 @@ mod internal_tests {
         map.insert("compress_lc".into(), policy);
         automation.replace_policies_for_test(map).await;
         automation.run_automation_cycle().await.expect("cycle");
-    }
-}
-
-// Enable cloning for background tasks using Arc patterns for zero-copy sharing
-impl Clone for DatasetAutomation {
-    /// Clone
-    fn clone(&self) -> Self {
-        Self {
-            pool_manager: Arc::clone(&self.pool_manager),
-            dataset_manager: Arc::clone(&self.dataset_manager),
-            policies: self.policies.clone(),
-            lifecycle_tracker: self.lifecycle_tracker.clone(),
-            config: self.config.clone(),
-        }
     }
 }

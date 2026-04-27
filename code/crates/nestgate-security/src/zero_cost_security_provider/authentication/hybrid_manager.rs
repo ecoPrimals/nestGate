@@ -465,13 +465,16 @@ impl HybridAuthenticationManager {
 mod hybrid_manager_direct_tests {
     use std::time::Duration;
 
+    use super::super::config::{AuthenticationConfig, LocalTokenConfig};
     use super::HybridAuthenticationManager;
     use crate::zero_cost_security_provider::types::{AuthMethod, ZeroCostCredentials};
 
     #[tokio::test]
     async fn token_auth_with_empty_secret_fails() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials {
             username: "api".into(),
@@ -488,9 +491,14 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn validate_token_expired_cache_entry_falls_through() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
-        config.local_token_settings.token_expiry = Duration::from_nanos(1);
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            local_token_settings: LocalTokenConfig {
+                token_expiry: Duration::from_nanos(1),
+                ..LocalTokenConfig::default()
+            },
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("slow".into(), "k".into());
         let tok = mgr.authenticate(&creds).await.expect("auth");
@@ -501,8 +509,10 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn external_auth_disabled_skips_discovery() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("u".into(), "secret".into());
         let t = mgr.authenticate(&creds).await.expect("local token ok");
@@ -511,9 +521,14 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn validate_token_rejects_unknown_string() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
-        config.local_token_settings.token_expiry = Duration::from_secs(0);
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            local_token_settings: LocalTokenConfig {
+                token_expiry: Duration::from_secs(0),
+                ..LocalTokenConfig::default()
+            },
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let ok = mgr
             .validate_token("not-a-issued-token")
@@ -524,9 +539,11 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn rate_limit_blocks_after_max_attempts() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
-        config.max_auth_attempts = 1;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            max_auth_attempts: 1,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("u-rate".into(), "secret".into());
         mgr.authenticate(&creds).await.expect("first ok");
@@ -539,8 +556,10 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn local_password_auth_without_env_hash_fails() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials {
             username: "u".into(),
@@ -558,8 +577,10 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn certificate_biometric_and_mfa_require_external() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         for method in [
             AuthMethod::Certificate,
@@ -570,7 +591,7 @@ mod hybrid_manager_direct_tests {
         ] {
             let creds = ZeroCostCredentials {
                 username: "x".into(),
-                password: "".into(),
+                password: String::new(),
                 auth_method: method,
                 metadata: std::collections::HashMap::new(),
             };
@@ -584,9 +605,14 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn refresh_token_fails_when_disabled() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
-        config.local_token_settings.enable_refresh = false;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            local_token_settings: LocalTokenConfig {
+                enable_refresh: false,
+                ..LocalTokenConfig::default()
+            },
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let err = mgr
             .refresh_token("any-token")
@@ -600,9 +626,10 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn refresh_token_local_uses_cache_when_enabled() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
-        config.local_token_settings.enable_refresh = true;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("refresh-user".into(), "k".into());
         let tok = mgr.authenticate(&creds).await.expect("auth");
@@ -612,8 +639,10 @@ mod hybrid_manager_direct_tests {
 
     #[tokio::test]
     async fn revoke_token_drops_cache_entry() {
-        let mut config = super::super::config::AuthenticationConfig::default();
-        config.use_external_auth = false;
+        let config = AuthenticationConfig {
+            use_external_auth: false,
+            ..AuthenticationConfig::default()
+        };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("revoke-u".into(), "k".into());
         let tok = mgr.authenticate(&creds).await.expect("auth");

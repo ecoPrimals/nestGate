@@ -91,7 +91,7 @@ impl NestGateInstaller {
         fs::remove_dir_all(&temp_dir)?;
 
         info!(
-            "✅ Update completed successfully to version {}",
+            "Update completed successfully to version {}",
             updated_info.version
         );
         Ok(())

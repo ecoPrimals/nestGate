@@ -106,8 +106,6 @@ pub type DatasetAutomationConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)]
-
     use super::*;
 
     #[test]

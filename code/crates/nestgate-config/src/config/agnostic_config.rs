@@ -301,30 +301,6 @@ impl AgnosticConfig {
         })
     }
 
-    /// Get API endpoint or default for development
-    ///
-    /// **Development only**: This method provides a localhost fallback for local development.
-    /// Production code should use `api_endpoint()` and handle the None case explicitly.
-    #[cfg_attr(
-        not(debug_assertions),
-        deprecated(note = "Use api_endpoint() in production and handle None explicitly")
-    )]
-    #[must_use]
-    pub fn api_endpoint_or_dev_default(&self) -> String {
-        use crate::constants::hardcoding::addresses;
-
-        self.api_endpoint().unwrap_or_else(|| {
-            #[cfg(debug_assertions)]
-            tracing::debug!(
-                "Using development default API endpoint: {}:{}",
-                addresses::LOCALHOST_NAME,
-                self.api_port()
-            );
-
-            format!("http://{}:{}", addresses::LOCALHOST_NAME, self.api_port())
-        })
-    }
-
     /// Get API port
     ///
     /// ✅ MIGRATED: Now uses centralized `get_api_port()` function

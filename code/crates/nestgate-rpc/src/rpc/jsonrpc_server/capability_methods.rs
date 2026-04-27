@@ -198,11 +198,7 @@ mod tests {
     #[test]
     fn capabilities_method_table_is_non_empty() {
         assert!(!super::JSON_RPC_CAPABILITIES_METHODS.is_empty());
-        assert!(
-            super::JSON_RPC_CAPABILITIES_METHODS
-                .iter()
-                .any(|m| *m == "capabilities.list")
-        );
+        assert!(super::JSON_RPC_CAPABILITIES_METHODS.contains(&"capabilities.list"));
     }
 
     #[tokio::test]

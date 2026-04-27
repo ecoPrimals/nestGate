@@ -57,7 +57,7 @@ impl NestGateInstaller {
         fs::write(&installation_info.config_path, config_toml)?;
 
         info!(
-            "✅ Configuration updated: {}",
+            "Configuration updated: {}",
             installation_info.config_path.display()
         );
         Ok(())

@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-
 use super::NestGateInstaller;
 use super::types::InstallationInfo;
 use crate::config::InstallerConfig;
@@ -13,21 +8,22 @@ use anyhow::Result;
 use chrono::Utc;
 use std::fs;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 
 /// Serializes tests that repoint `HOME` so parallel runs do not race.
-static INSTALLER_HOME_MUTEX: Mutex<()> = Mutex::new(());
+static INSTALLER_HOME_MUTEX: Mutex<()> = Mutex::const_new(());
 
 fn install_info_json_path() -> PathBuf {
     use etcetera::BaseStrategy;
-    etcetera::base_strategy::choose_base_strategy()
-        .map(|strategy| {
+    etcetera::base_strategy::choose_base_strategy().map_or_else(
+        |_| PathBuf::from(".nestgate-install-info.json"),
+        |strategy| {
             strategy
                 .data_dir()
                 .join("nestgate")
                 .join("install-info.json")
-        })
-        .unwrap_or_else(|_| PathBuf::from(".nestgate-install-info.json"))
+        },
+    )
 }
 
 /// Creates  Test Installation Info
@@ -248,7 +244,7 @@ fn install_with_default_config_ok() {
 
 #[test]
 fn configure_errors_when_install_metadata_missing() {
-    let _guard = INSTALLER_HOME_MUTEX.lock().expect("home test lock");
+    let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
     let old_home = std::env::var("HOME").ok();
     nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
@@ -269,7 +265,7 @@ fn configure_errors_when_install_metadata_missing() {
 
 #[test]
 fn configure_prints_when_config_file_missing_but_installed() {
-    let _guard = INSTALLER_HOME_MUTEX.lock().expect("home test lock");
+    let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
     let old_home = std::env::var("HOME").ok();
     nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
@@ -284,7 +280,7 @@ fn configure_prints_when_config_file_missing_but_installed() {
     let info = InstallationInfo {
         version: "1.0.0".into(),
         install_date: Utc::now(),
-        install_path: install_root.clone(),
+        install_path: install_root,
         config_path: config_path.clone(),
         data_path,
         service_installed: false,
@@ -320,7 +316,7 @@ fn configure_prints_when_config_file_missing_but_installed() {
 
 #[test]
 fn uninstall_with_force_removes_paths_and_metadata() {
-    let _guard = INSTALLER_HOME_MUTEX.lock().expect("home test lock");
+    let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
     let old_home = std::env::var("HOME").ok();
     nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
@@ -371,7 +367,7 @@ fn uninstall_with_force_removes_paths_and_metadata() {
 
 #[tokio::test]
 async fn doctor_runs_with_isolated_home() {
-    let _guard = INSTALLER_HOME_MUTEX.lock().expect("home test lock");
+    let _guard = INSTALLER_HOME_MUTEX.lock().await;
     let tmp = tempfile::tempdir().expect("tempdir");
     let old_home = std::env::var("HOME").ok();
     nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());

@@ -20,7 +20,7 @@ impl NestGateInstaller {
         let red = Style::new().red();
         let yellow = Style::new().yellow();
 
-        info!("🔍 NestGate System Check");
+        info!("NestGate System Check");
         info!("");
 
         let mut issues = 0;
@@ -73,9 +73,9 @@ impl NestGateInstaller {
 
         info!("");
         if issues == 0 {
-            info!("{} All checks passed", green.apply_to("✅"));
+            info!("{} All checks passed", green.apply_to("OK"));
         } else {
-            warn!("{} {} issues found", red.apply_to("❌"), issues);
+            warn!("{} {} issues found", red.apply_to("FAIL"), issues);
         }
         Ok(())
     }

@@ -110,7 +110,7 @@ impl ServiceDetector for SystemdDetector {
     fn detect(&self) -> bool {
         // Check for systemd runtime directory (indicates systemd is running)
         if Path::new("/run/systemd/system").exists() {
-            tracing::debug!("✅ Detected systemd (runtime directory exists)");
+            tracing::debug!("Detected systemd (runtime directory exists)");
             return true;
         }
 
@@ -121,11 +121,11 @@ impl ServiceDetector for SystemdDetector {
             .map(|o| o.status.success())
             .unwrap_or(false)
         {
-            tracing::debug!("✅ Detected systemd (systemctl available)");
+            tracing::debug!("Detected systemd (systemctl available)");
             return true;
         }
 
-        tracing::debug!("❌ Systemd not detected");
+        tracing::debug!("Systemd not detected");
         false
     }
 
@@ -147,7 +147,7 @@ impl ServiceDetector for LaunchdDetector {
     fn detect(&self) -> bool {
         // Check for launchd socket
         if Path::new("/var/run/launchd.socket").exists() {
-            tracing::debug!("✅ Detected launchd (socket exists)");
+            tracing::debug!("Detected launchd (socket exists)");
             return true;
         }
 
@@ -158,11 +158,11 @@ impl ServiceDetector for LaunchdDetector {
             .map(|o| o.status.success())
             .unwrap_or(false)
         {
-            tracing::debug!("✅ Detected launchd (launchctl available)");
+            tracing::debug!("Detected launchd (launchctl available)");
             return true;
         }
 
-        tracing::debug!("❌ Launchd not detected");
+        tracing::debug!("Launchd not detected");
         false
     }
 
@@ -191,12 +191,12 @@ impl ServiceDetector for WindowsServiceDetector {
                 .map(|o| o.status.success())
                 .unwrap_or(false)
             {
-                tracing::debug!("✅ Detected Windows Service Manager");
+                tracing::debug!("Detected Windows Service Manager");
                 return true;
             }
         }
 
-        tracing::debug!("❌ Windows Service Manager not detected");
+        tracing::debug!("Windows Service Manager not detected");
         false
     }
 
@@ -227,7 +227,7 @@ impl UniversalServiceDetector {
     ///
     /// **UNIVERSAL**: Works on all platforms, detects at runtime
     pub fn new() -> Self {
-        tracing::info!("🔍 Initializing universal service manager detector");
+        tracing::info!("Initializing universal service manager detector");
 
         let detectors: Vec<Box<dyn ServiceDetector>> = vec![
             Box::new(SystemdDetector),
@@ -242,19 +242,19 @@ impl UniversalServiceDetector {
     ///
     /// **RUNTIME DETECTION**: Checks actual capability, not compile-time OS
     pub fn detect(&self) -> ServiceManager {
-        tracing::info!("🔍 Detecting available service manager...");
+        tracing::info!("Detecting available service manager");
 
         // Try each detector in order
         for detector in &self.detectors {
             tracing::debug!("Trying detector: {}", detector.name());
             if detector.detect() {
                 let manager = detector.manager_type();
-                tracing::info!("✅ Detected service manager: {}", manager.name());
+                tracing::info!("Detected service manager: {}", manager.name());
                 return manager;
             }
         }
 
-        tracing::warn!("⚠️  No service manager detected, will use manual service");
+        tracing::warn!("No service manager detected, will use manual service");
         ServiceManager::Manual
     }
 
@@ -272,9 +272,9 @@ impl UniversalServiceDetector {
         for detector in &self.detectors {
             let detected = detector.detect();
             let msg = if detected {
-                format!("✅ {}: Available", detector.name())
+                format!("{}: available", detector.name())
             } else {
-                format!("❌ {}: Not available", detector.name())
+                format!("{}: not available", detector.name())
             };
             messages.push(msg);
         }

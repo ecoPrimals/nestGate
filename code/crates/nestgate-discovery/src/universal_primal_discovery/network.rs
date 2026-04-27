@@ -420,7 +420,6 @@ pub use deprecated_canonical_aliases::NetworkDiscoveryConfigCanonical;
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)] // Tests construct deprecated `NetworkDiscoveryConfig` until migration completes
 
     use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};

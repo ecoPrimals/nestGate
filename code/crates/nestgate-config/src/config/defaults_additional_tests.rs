@@ -7,8 +7,6 @@
 //! Focus: Configuration defaults, serialization, environment overrides
 //! Goal: Expand coverage from 48.28% toward 90%
 
-#![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
-
 #[cfg(test)]
 mod network_config_comprehensive_tests {
     use crate::constants::network_hardcoded;

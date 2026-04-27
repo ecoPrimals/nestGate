@@ -18,13 +18,7 @@ pub fn setup_logging(verbose: bool) {
 /// Print welcome banner
 pub fn print_banner() {
     println!(
-        "🏠 NestGate v{} - Universal ZFS & Storage Management",
+        "NestGate v{} — storage & discovery primal",
         env!("CARGO_PKG_VERSION")
     );
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("🌟 ZFS features on ANY storage backend");
-    println!("📦 Local, Cloud, Network, Memory support");
-    println!("⚡ Production-ready performance");
-    println!("🔒 Enterprise-grade data integrity");
-    println!();
 }
