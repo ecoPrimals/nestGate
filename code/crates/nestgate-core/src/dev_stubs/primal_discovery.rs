@@ -3,9 +3,9 @@
 
 //! **PRIMAL DISCOVERY STUBS** - Development/Testing Only
 //!
-//! ⚠️ **WARNING**: This module contains hardcoded values and should NEVER be used in production!
+//! **WARNING**: This module contains hardcoded values and should NEVER be used in production!
 //!
-//! ## ⛔ DO NOT USE IN PRODUCTION
+//! ## DO NOT USE IN PRODUCTION
 //!
 //! This module provides stub implementations with **hardcoded fallbacks** for testing only.
 //! Production code MUST use [`CapabilityAwareDiscovery`] which has zero hardcoding.

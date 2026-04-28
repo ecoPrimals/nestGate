@@ -74,6 +74,7 @@ pub mod protocol;
 pub mod semantic_router;
 pub mod socket_config;
 pub mod storage_backend;
+pub mod storage_encryption;
 pub(crate) mod storage_stream;
 // Legacy primal-specific registration removed in v2.3.0; use capability-based IPC
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)

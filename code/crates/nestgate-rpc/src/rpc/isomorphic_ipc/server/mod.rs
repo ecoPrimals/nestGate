@@ -6,7 +6,7 @@
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
 
-//! # 🔌 Isomorphic IPC Server
+//! # Isomorphic IPC Server
 //!
 //! **UNIVERSAL**: Automatically adapts to platform constraints\
 //! **PATTERN**: Try→Detect→Adapt→Succeed\
@@ -48,7 +48,7 @@
 //!
 //! **Linux (Unix sockets work)**:
 //! ```text
-//! [INFO] 🔌 Starting IPC server (isomorphic mode)...
+//! [INFO] Starting IPC server (isomorphic mode)...
 //! [INFO]    Service: nestgate
 //! [INFO]    Trying Unix socket IPC (optimal)...
 //! [INFO] Unix socket IPC active (optimal path)
@@ -56,12 +56,12 @@
 //!
 //! **Android (Unix sockets blocked by `SELinux`)**:
 //! ```text
-//! [INFO] 🔌 Starting IPC server (isomorphic mode)...
+//! [INFO] Starting IPC server (isomorphic mode)...
 //! [INFO]    Service: nestgate
 //! [INFO]    Trying Unix socket IPC (optimal)...
-//! [WARN] ⚠️  Unix sockets unavailable: Permission denied
+//! [WARN] Unix sockets unavailable: Permission denied
 //! [WARN]    Detected platform constraint, adapting...
-//! [INFO] 🌐 Starting TCP IPC fallback (isomorphic mode)
+//! [INFO] Starting TCP IPC fallback (isomorphic mode)
 //! [INFO] TCP IPC listening on 127.0.0.1:45763
 //! ```
 //!

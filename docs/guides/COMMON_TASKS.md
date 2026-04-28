@@ -1,10 +1,10 @@
-# 📖 Common Tasks Cookbook
+# Common Tasks Cookbook
 
 **Quick recipes for everyday NestGate operations**
 
 ---
 
-## 🏗️ Storage Operations
+## Storage Operations
 
 ### **Create and Use a Dataset**
 
@@ -57,15 +57,15 @@ LOCAL_CHECKSUM=$(sha256sum file.bin | cut -d' ' -f1)
 
 # Compare
 if [ "$REMOTE_CHECKSUM" == "$LOCAL_CHECKSUM" ]; then
-  echo "✅ Checksums match - data is intact"
+  echo "OK: Checksums match - data is intact"
 else
-  echo "❌ Checksums differ - data corrupted!"
+  echo "FAIL: Checksums differ - data corrupted!"
 fi
 ```
 
 ---
 
-## 🔍 Discovery Operations
+## Discovery Operations
 
 ### **Find a Service by Capability**
 
@@ -104,7 +104,7 @@ async fn main() -> Result<()> {
 
 ---
 
-## 🔧 Configuration Tasks
+## Configuration Tasks
 
 ### **Environment-Based Configuration**
 
@@ -166,7 +166,7 @@ upstream nestgate_cluster {
 
 ---
 
-## 🐳 Docker Tasks
+## Docker Tasks
 
 ### **Run in Docker**
 
@@ -217,7 +217,7 @@ volumes:
 
 ---
 
-## 🔐 Security Tasks
+## Security Tasks
 
 ### **Enable TLS**
 
@@ -255,7 +255,7 @@ curl -H "X-API-Key: $NESTGATE_API_KEY" \
 
 ---
 
-## 📊 Monitoring Tasks
+## Monitoring Tasks
 
 ### **Prometheus Integration**
 
@@ -285,9 +285,9 @@ while true; do
   STATUS=$(curl -s http://localhost:8080/health | jq -r '.status')
   
   if [ "$STATUS" == "healthy" ]; then
-    echo "✅ NestGate is healthy"
+    echo "OK: NestGate is healthy"
   else
-    echo "❌ NestGate is unhealthy: $STATUS"
+    echo "FAIL: NestGate is unhealthy: $STATUS"
     # Send alert
     notify-send "NestGate Alert" "Service is $STATUS"
   fi
@@ -298,7 +298,7 @@ done
 
 ---
 
-## 🛠️ Development Tasks
+## Development Tasks
 
 ### **Local Development Setup**
 
@@ -342,7 +342,7 @@ async fn create_custom_dataset(name: &str) -> Result<DatasetInfo> {
 
 ---
 
-## 🐛 Troubleshooting Tasks
+## Troubleshooting Tasks
 
 ### **Debug Connection Issues**
 
@@ -383,7 +383,7 @@ rm -rf ~/.cache/nestgate/*
 
 ---
 
-## 📚 More Resources
+## More Resources
 
 - **API Reference**: `docs/api/REST_API.md`
 - **Architecture**: `docs/architecture/COMPONENT_INTERACTIONS.md`
@@ -392,4 +392,4 @@ rm -rf ~/.cache/nestgate/*
 
 ---
 
-**NestGate Cookbook** · Practical Examples · Production-Ready 🦀
+**NestGate Cookbook** · Practical Examples · Production-Ready

@@ -18,7 +18,7 @@ pub use nestgate_core::config::canonical_primary::{
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -78,7 +78,7 @@ pub type SecurityConfig = ZfsSecurityConfig;
 
 /// Circuit breaker configuration for fail-safe operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -118,7 +118,7 @@ impl Default for CircuitBreakerConfig {
 
 /// Timeout configuration for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

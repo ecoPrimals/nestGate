@@ -34,16 +34,21 @@ pub(super) async fn storage_store_blob(
         NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {e}"))
     })?;
 
+    let original_size = blob_data.len();
     debug!(
         "storage.store_blob: family_id='{}', key='{}', blob_size={} bytes",
-        family_id,
-        key,
-        blob_data.len()
+        family_id, key, original_size
     );
+
+    let write_data = if let Some(ref enc) = state.encryption {
+        enc.encrypt(&blob_data)?
+    } else {
+        blob_data
+    };
 
     let blob_path = blob_key_path(family_id, key);
     ensure_parent_dirs(&blob_path).await?;
-    tokio::fs::write(&blob_path, &blob_data)
+    tokio::fs::write(&blob_path, &write_data)
         .await
         .map_err(|e| {
             NestGateError::io_error(format!("Failed to write blob {family_id}/{key}: {e}"))
@@ -53,7 +58,7 @@ pub(super) async fn storage_store_blob(
         "status": "stored",
         "key": key,
         "family_id": family_id,
-        "size": blob_data.len()
+        "size": original_size
     }))
 }
 
@@ -75,9 +80,20 @@ pub(super) async fn storage_retrieve_blob(
         return Ok(json!({"blob": null, "key": key}));
     }
 
-    let blob_data = tokio::fs::read(&blob_path).await.map_err(|e| {
+    let raw_data = tokio::fs::read(&blob_path).await.map_err(|e| {
         NestGateError::io_error(format!("Failed to read blob {family_id}/{key}: {e}"))
     })?;
+
+    let blob_data =
+        if crate::rpc::storage_encryption::StorageEncryption::is_encrypted_envelope(&raw_data) {
+            if let Some(ref enc) = state.encryption {
+                enc.decrypt(&raw_data)?
+            } else {
+                raw_data
+            }
+        } else {
+            raw_data
+        };
 
     Ok(json!({
         "blob": STANDARD.encode(&blob_data),
@@ -168,6 +184,7 @@ mod tests {
             audits: crate::rpc::audit_storage::AuditStorage::new(),
             family_id: family_id.map(String::from),
             storage_initialized: true,
+            encryption: None,
         }
     }
 

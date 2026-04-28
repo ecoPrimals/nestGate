@@ -3,7 +3,7 @@
 
 /// Migration guide from `Arc<dyn>` to zero-cost patterns
 pub const ZERO_COST_MIGRATION_GUIDE: &str = r"
-🔄 UNIVERSAL PROVIDERS ZERO-COST MIGRATION GUIDE
+UNIVERSAL PROVIDERS ZERO-COST MIGRATION GUIDE
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
 /// Universal security wrapper using dynamic dispatch

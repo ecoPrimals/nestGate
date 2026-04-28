@@ -6,7 +6,7 @@
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
 
-//! # 🔍 IPC Endpoint Discovery
+//! # IPC Endpoint Discovery
 //!
 //! **UNIVERSAL**: Discovers Unix socket OR TCP endpoints automatically\
 //! **ZERO CONFIG**: No environment variables or flags required\

@@ -180,6 +180,7 @@ mod tests {
             audits: crate::rpc::audit_storage::AuditStorage::new(),
             family_id: family_id.map(String::from),
             storage_initialized: true,
+            encryption: None,
         }
     }
 

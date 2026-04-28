@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 27, 2026 (Session 47 — emoji/marketing purge, unfulfilled lint cleanup, clippy compliance, comment hygiene)  
+**Last Updated**: April 28, 2026 (Session 48 — encrypt-at-rest, auth mode bypass, emoji doc purge)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,11 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 47
-Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of Session 47
-Format:             CLEAN (cargo fmt --check passes), as of Session 47
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 47
-Tests:              8,822 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 47
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 48
+Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of Session 48
+Format:             CLEAN (cargo fmt --check passes), as of Session 48
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 48
+Tests:              8,840 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 48
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -25,6 +25,8 @@ async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml
 Mocks in prod:      ZERO — all mocks test-only (#[cfg(test)]) or feature-gated (dev-stubs)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED from dep tree AND lockfile; installer uses system curl
+Encrypt-at-rest:    ChaCha20-Poly1305 — implemented Session 48
+Auth mode bypass:   NESTGATE_AUTH_MODE=beardog — implemented Session 48
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
@@ -32,7 +34,7 @@ IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, disc
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 42 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol, transport
-Emoji in logs/code: ZERO in production sources — professional structured logging, no emoji in comments or log output (Session 47)
+Emoji in logs/code: ZERO in production sources, module docs, and installer output — professional structured logging (Session 48)
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
@@ -655,4 +657,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 2026 (Session 46)
+**Latest**: April 2026 (Session 48)

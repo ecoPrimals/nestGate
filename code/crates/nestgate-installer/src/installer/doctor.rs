@@ -27,7 +27,7 @@ impl NestGateInstaller {
 
         // Check if installed
         if let Ok(info) = self.get_installation_info() {
-            info!("{} NestGate is installed", green.apply_to("✓"));
+            info!("{} NestGate is installed", green.apply_to("OK"));
             info!("   Version: {}", info.version);
             info!("   Path: {}", info.install_path.display());
             info!(
@@ -35,40 +35,40 @@ impl NestGateInstaller {
                 if info.service_installed { "Yes" } else { "No" }
             );
         } else {
-            warn!("{} NestGate is not installed", red.apply_to("✗"));
+            warn!("{} NestGate is not installed", red.apply_to("MISSING"));
             issues += 1;
         }
 
         // Check platform support
         info!(
             "{} Platform: {}-{}",
-            green.apply_to("✓"),
+            green.apply_to("PASS"),
             self.platform.os,
             self.platform.arch
         );
         if self.platform.service_install_supported() {
-            info!("{} Service installation supported", green.apply_to("✓"));
+            info!("{} Service installation supported", green.apply_to("OK"));
         } else {
             warn!(
                 "{} Service installation not supported",
-                yellow.apply_to("⚠")
+                yellow.apply_to("WARN")
             );
         }
 
         // Check system requirements
         let requirements_ok = self.check_system_requirements_silent();
         if requirements_ok {
-            info!("{} System requirements met", green.apply_to("✓"));
+            info!("{} System requirements met", green.apply_to("PASS"));
         } else {
-            warn!("{} System requirements not met", red.apply_to("✗"));
+            warn!("{} System requirements not met", red.apply_to("FAIL"));
             issues += 1;
         }
 
         // Check ZFS availability
         if self.check_zfs_availability() {
-            info!("{} ZFS available", green.apply_to("✓"));
+            info!("{} ZFS available", green.apply_to("OK"));
         } else {
-            warn!("{} ZFS not available", yellow.apply_to("⚠"));
+            warn!("{} ZFS not available", yellow.apply_to("WARN"));
         }
 
         info!("");

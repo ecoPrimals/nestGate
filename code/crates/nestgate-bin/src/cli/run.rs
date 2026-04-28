@@ -25,8 +25,15 @@ impl Cli {
         // Setup logging
         setup_logging(self.verbose);
 
-        // Validate JWT secret before starting (reject insecure defaults).
-        nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
+        let auth_mode = std::env::var("NESTGATE_AUTH_MODE").unwrap_or_default();
+        if auth_mode.eq_ignore_ascii_case("beardog") {
+            tracing::info!(
+                "Auth mode: beardog — JWT validation skipped, \
+                 auth delegated to security capability provider"
+            );
+        } else {
+            nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
+        }
 
         // Print banner
         print_banner();

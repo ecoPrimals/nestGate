@@ -40,7 +40,7 @@ pub struct ServiceRegistration {
 ///
 /// # Migration Note
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

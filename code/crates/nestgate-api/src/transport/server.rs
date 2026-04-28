@@ -3,7 +3,7 @@
 
 //! **TRANSPORT SERVER**
 //!
-//! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
+//! **DEPRECATED**: This module is deprecated as of v2.3.0
 //!
 //! ## Migration to Universal IPC Architecture
 //!
@@ -51,7 +51,7 @@ use tracing::{error, info, warn};
 
 /// **TRANSPORT SERVER**
 ///
-/// **⚠️ DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
+/// **DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
 ///
 /// Dual-mode server supporting Unix sockets (primary) and HTTP (optional fallback).
 ///

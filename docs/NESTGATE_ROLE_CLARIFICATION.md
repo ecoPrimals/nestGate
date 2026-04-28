@@ -1,42 +1,47 @@
 > **Historical**: This document was written in November 11, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 🎯 **NestGate Role Clarification**
+# **NestGate Role Clarification**
 
 **TL;DR**: NestGate is a **DATA HUB**, not a compute service.
 
 ---
 
-## 🏗️ **What NestGate IS**
+## **What NestGate IS**
 
 ### **Primary Role: Universal Data Hub**
 
 NestGate is a **storage and data management system** that:
 
-✅ **Ingests Data**
+**Ingests Data**
+
 - Fetches from external sources (NCBI, APIs, file systems)
 - Imports datasets, models, files
 - Receives results from compute services
 
-✅ **Stores Efficiently**
+**Stores Efficiently**
+
 - Compresses data (LZ4/ZSTD, 29-65% savings)
 - Checksums for integrity (Blake3/SHA-256)
 - Deduplicates (37-55% space saved)
 - Snapshots for versioning
 
-✅ **Serves Data**
+**Serves Data**
+
 - Provides data to compute services (Toadstool, external APIs)
 - Streams large files efficiently (450+ MB/s)
 - Caches hot data for fast access
 - Tiers data (hot/warm/cold)
 
-✅ **Manages Workflows**
+**Manages Workflows**
+
 - Tracks provenance (who, when, what, why)
 - Coordinates multi-tower operations (via Songbird)
 - Maintains metadata and annotations
 - Enables reproducibility
 
-✅ **Orchestrates I/O**
+**Orchestrates I/O**
+
 - Smart data placement (right tower, right tier)
 - Load balancing across storage backends
 - Fault tolerance and redundancy
@@ -44,18 +49,18 @@ NestGate is a **storage and data management system** that:
 
 ---
 
-## ❌ **What NestGate is NOT**
+## **What NestGate is NOT**
 
 ### **Not a Compute Service**
 
 NestGate does NOT:
 
-❌ Run AI model inference  
-❌ Predict protein structures  
-❌ Execute molecular dynamics simulations  
-❌ Train machine learning models  
-❌ Perform data analysis  
-❌ Run user compute workloads  
+- Run AI model inference  
+- Predict protein structures  
+- Execute molecular dynamics simulations  
+- Train machine learning models  
+- Perform data analysis  
+- Run user compute workloads  
 
 **These are done by:**
 - **Toadstool** (ecosystem mode) - AI/ML compute service
@@ -65,7 +70,7 @@ NestGate does NOT:
 
 ---
 
-## 🌐 **Architecture: Data Hub + Compute**
+## **Architecture: Data Hub + Compute**
 
 ### **Correct Architecture**
 
@@ -75,56 +80,56 @@ NestGate does NOT:
 │                  (Storage & Management)                 │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  📥 INGEST                                              │
+│   INGEST                                              │
 │    • Fetch from APIs (NCBI, HuggingFace, etc.)         │
 │    • Import files (datasets, models, media)            │
 │    • Receive compute results                           │
 │                                                         │
-│  💾 STORE                                               │
+│   STORE                                               │
 │    • Compress (LZ4/ZSTD)                               │
 │    • Checksum (Blake3)                                 │
 │    • Deduplicate                                       │
 │    • Snapshot                                          │
 │                                                         │
-│  🚀 SERVE                                               │
+│   SERVE                                               │
 │    • Stream to compute services                        │
 │    • Cache hot data                                    │
 │    • Tier intelligently (hot/warm/cold)                │
 │    • Load balance                                      │
 │                                                         │
-│  📊 MANAGE                                              │
+│   MANAGE                                              │
 │    • Track provenance                                  │
 │    • Maintain metadata                                 │
 │    • Coordinate workflows                              │
 │    • Enable reproducibility                            │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-              │                          ▲
+              │                          ^
               │ Serve data               │ Store results
-              ▼                          │
+              v                          │
 ┌─────────────────────────────────────────────────────────┐
 │                   COMPUTE SERVICES                      │
 │                (AI, HPC, Analysis)                      │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  🤖 TOADSTOOL (ecosystem)                               │
+│   TOADSTOOL (ecosystem)                               │
 │    • GPU-accelerated AI/ML                             │
 │    • Model inference                                   │
 │    • Protein structure prediction                      │
 │    • Image processing                                  │
 │                                                         │
-│  ⚡ SQUIRREL (ecosystem)                                │
+│   SQUIRREL (ecosystem)                                │
 │    • CPU-intensive tasks                               │
 │    • Parallel processing                               │
 │    • Batch jobs                                        │
 │                                                         │
-│  🌐 EXTERNAL APIs (standalone)                          │
+│   EXTERNAL APIs (standalone)                          │
 │    • ESMFold API (protein prediction)                  │
 │    • AlphaFold                                         │
 │    • OpenAI/Anthropic (LLM inference)                  │
 │    • Other cloud services                              │
 │                                                         │
-│  👤 USER SCRIPTS                                        │
+│   USER SCRIPTS                                        │
 │    • Python analysis                                   │
 │    • R statistics                                      │
 │    • Visualization                                     │
@@ -135,15 +140,15 @@ NestGate does NOT:
 
 ---
 
-## 📋 **Real-World Examples**
+## **Real-World Examples**
 
 ### **Example 1: Bioinformatics Pipeline**
 
 ```
-INCORRECT ❌:
+INCORRECT:
   "NestGate predicts protein structures"
 
-CORRECT ✅:
+CORRECT:
   1. NestGate: Fetch TP53 gene from NCBI → Store
   2. NestGate: Serve sequence to ESMFold API (or Toadstool)
   3. ESMFold/Toadstool: Run prediction (COMPUTE HAPPENS HERE)
@@ -157,10 +162,10 @@ CORRECT ✅:
 ### **Example 2: ML Model Serving**
 
 ```
-INCORRECT ❌:
+INCORRECT:
   "NestGate runs inference on Llama models"
 
-CORRECT ✅:
+CORRECT:
   1. NestGate: Download Llama 140GB from HuggingFace → Store compressed
   2. NestGate: Serve model to Toadstool inference service
   3. Toadstool: Load model into GPU, run inference (COMPUTE HAPPENS HERE)
@@ -173,10 +178,10 @@ CORRECT ✅:
 ### **Example 3: Molecular Dynamics**
 
 ```
-INCORRECT ❌:
+INCORRECT:
   "NestGate runs GROMACS simulations"
 
-CORRECT ✅:
+CORRECT:
   1. NestGate: Store initial protein structure and parameters
   2. NestGate: Serve input files to Strandgate (64 CPU cores)
   3. GROMACS on Strandgate: Run simulation (COMPUTE HAPPENS HERE)
@@ -189,7 +194,7 @@ CORRECT ✅:
 
 ---
 
-## 🎯 **Why This Matters**
+## **Why This Matters**
 
 ### **Clarity**
 - Users understand what NestGate does vs what they need separately
@@ -208,9 +213,9 @@ CORRECT ✅:
 
 ---
 
-## 💡 **How to Talk About NestGate**
+## **How to Talk About NestGate**
 
-### **Good Phrases** ✅
+### **Good Phrases** 
 
 - "NestGate manages data for..."
 - "NestGate stores and serves..."
@@ -218,7 +223,7 @@ CORRECT ✅:
 - "NestGate enables compute workflows by..."
 - "Data flows through NestGate to..."
 
-### **Avoid Phrases** ❌
+### **Avoid Phrases** 
 
 - "NestGate predicts..." (unless followed by "coordinates prediction via...")
 - "NestGate runs inference..." (NestGate serves models TO inference)
@@ -227,7 +232,7 @@ CORRECT ✅:
 
 ---
 
-## 🌟 **NestGate's Superpowers**
+## **NestGate's Superpowers**
 
 NestGate is EXTREMELY powerful at what it does:
 
@@ -240,20 +245,18 @@ NestGate is EXTREMELY powerful at what it does:
 
 **It's a world-class DATA HUB!**
 
-Just not a compute service. And that's perfect! 🎯
+Just not a compute service. And that's perfect! 
 
 ---
 
-## 📊 **Summary**
+## **Summary**
 
 | What | NestGate | Toadstool/APIs |
 |------|----------|----------------|
 | **Role** | Data Hub | Compute Service |
 | **Does** | Store, serve, manage data | Run predictions, inference, simulations |
 | **Examples** | Compress, checksum, snapshot | ESMFold, Llama inference, GROMACS |
-| **Strength** | I/O performance, data integrity | GPU/CPU compute power |
-
-**Together, they're unstoppable!** 🚀
+| **Strength** | I/O performance, data integrity | GPU/CPU compute power | **Together, they're unstoppable!** 
 
 But separately, their roles are clear. NestGate manages the data pipeline, compute services do the computation.
 

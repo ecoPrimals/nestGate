@@ -20,7 +20,7 @@ impl NestGateInstaller {
     pub async fn update(&mut self, version: Option<String>, yes: bool) -> Result<()> {
         let blue = Style::new().blue().bold();
 
-        info!("{}", blue.apply_to("🔄 NestGate Update"));
+        info!("{}", blue.apply_to("NestGate Update"));
         info!("");
 
         let installation_info = self

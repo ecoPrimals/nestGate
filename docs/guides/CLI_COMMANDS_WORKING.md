@@ -1,10 +1,10 @@
-# ✅ **CLI COMMANDS NOW WORKING!**
+# **CLI COMMANDS NOW WORKING!**
 
 **All NestGate CLI commands are fully implemented and functional.**
 
 ---
 
-## 🎯 **WORKING COMMANDS**
+## **WORKING COMMANDS**
 
 ### **Service Management**
 
@@ -107,7 +107,7 @@
 
 ---
 
-## 🚀 **QUICK START**
+## **QUICK START**
 
 ### **1. Run NestGate Locally**
 
@@ -142,17 +142,17 @@ export SONGBIRD_URL="http://localhost:9090"
 
 ---
 
-## 📊 **EXAMPLE SESSION**
+## **EXAMPLE SESSION**
 
 ```bash
 $ ./target/release/nestgate service start
-✅ NestGate service started successfully
-🌐 API available at: http://127.0.0.1:8080
-🔍 Health check: http://127.0.0.1:8080/health
-📍 Mode: Interactive
+NestGate service started successfully
+API available at: http://127.0.0.1:8080
+Health check: http://127.0.0.1:8080/health
+Mode: Interactive
 
 $ ./target/release/nestgate service status
-🔍 NestGate Service Status:
+NestGate Service Status:
   Status: Running
   Port: 8080
   Uptime: 1h 23m
@@ -161,7 +161,7 @@ $ ./target/release/nestgate service status
   CPU: 2.3%
 
 $ ./target/release/nestgate storage list
-💾 NestGate Storage Backends:
+NestGate Storage Backends:
   Name        Type    Size      Status
   ────────────────────────────────────
   main        ZFS     500GB     Online
@@ -170,17 +170,17 @@ $ ./target/release/nestgate storage list
   archive     ZFS     2TB       Offline
 
 $ ./target/release/nestgate doctor
-🩺 NestGate System Diagnostics
+NestGate System Diagnostics
   Mode: Basic
   Auto-fix: Disabled
 
-🔍 Basic System Checks:
-  ✅ Configuration files readable
-  ✅ Required ports available
-  ✅ Storage backends accessible
-  ✅ Memory usage normal (45MB)
+Basic System Checks:
+  Configuration files readable
+  Required ports available
+  Storage backends accessible
+  Memory usage normal (45MB)
 
-📊 Diagnostic Summary:
+Diagnostic Summary:
   Status: Healthy
   Issues Found: 0
   Issues Fixed: 0
@@ -188,7 +188,7 @@ $ ./target/release/nestgate doctor
 
 ---
 
-## 🌐 **CONNECT TO SONGBIRD**
+## **CONNECT TO SONGBIRD**
 
 NestGate can integrate with Songbird for service mesh and discovery.
 
@@ -209,15 +209,15 @@ curl http://localhost:9090/health
 ### **Benefits**
 
 With Songbird integration:
-- ✅ Automatic service discovery across Metal Matrix
-- ✅ Load balancing between NestGate instances
-- ✅ Health monitoring and failover
-- ✅ Secure inter-node communication
-- ✅ Central logging and metrics
+- Automatic service discovery across Metal Matrix
+- Load balancing between NestGate instances
+- Health monitoring and failover
+- Secure inter-node communication
+- Central logging and metrics
 
 ---
 
-## 📝 **CONFIGURATION FILE**
+## **CONFIGURATION FILE**
 
 Create `~/.nestgate/config.toml`:
 
@@ -251,9 +251,9 @@ Then start with:
 
 ---
 
-## 🎯 **NEXT STEPS**
+## **NEXT STEPS**
 
-1. **Local Testing** ✅ COMPLETE
+1. **Local Testing** COMPLETE
    - Build succeeded
    - All CLI commands working
    - Ready for local use
@@ -275,7 +275,7 @@ Then start with:
 
 ---
 
-## 🔧 **DEVELOPMENT**
+## **DEVELOPMENT**
 
 ### **Make Changes**
 
@@ -305,13 +305,13 @@ cargo clean && cargo build --release && cargo test
 
 ---
 
-## ✅ **STATUS: READY FOR USE!**
+## **STATUS: READY FOR USE!**
 
 **All CLI commands are implemented and working correctly.**
 
 **Next: Deploy to your Metal Matrix towers!**
 
-🏠 **Local Dev** → ✅ WORKING
-🌐 **Songbird Integration** → Ready when you are
-🚀 **Tower Deployment** → Ready to go!
+**Local Dev** → WORKING
+**Songbird Integration** → Ready when you are
+**Tower Deployment** → Ready to go!
 

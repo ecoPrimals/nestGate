@@ -27,7 +27,7 @@ pub struct RpcExtensions {
 /// Comprehensive RPC system configuration including connection pooling,
 /// security, load balancing, health monitoring, metrics, and streaming.
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -58,7 +58,7 @@ pub struct NestGateRpcConfig {
 }
 /// Connection pool configuration
 #[derive(Debug, Clone, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -87,7 +87,7 @@ pub struct ConnectionPoolConfig {
 }
 /// RPC security configuration
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -101,7 +101,7 @@ pub struct ConnectionPoolConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -138,7 +138,7 @@ pub struct RpcSecurityConfig {
 }
 /// Load balancing configuration
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -152,7 +152,7 @@ pub struct RpcSecurityConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -193,7 +193,7 @@ impl Default for LoadBalancingConfig {
 }
 /// Health monitoring configuration
 #[derive(Debug, Clone, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -226,7 +226,7 @@ pub struct HealthMonitoringConfig {
 // ==================== SECTION ====================
 /// Stream configuration
 #[derive(Debug, Clone, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

@@ -24,7 +24,7 @@ pub struct SecurityConfig {
 }
 /// Key management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -49,7 +49,7 @@ pub struct KeyManagementConfig {
 }
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

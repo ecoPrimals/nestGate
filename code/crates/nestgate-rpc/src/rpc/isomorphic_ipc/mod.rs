@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🔌 Isomorphic IPC Module
+//! # Isomorphic IPC Module
 //!
 //! **UNIVERSAL**: Same binary works on ALL platforms\
 //! **ADAPTIVE**: Automatic TCP fallback when Unix sockets unavailable\
@@ -31,7 +31,7 @@
 //!           │     │
 //!           │     ├─→ Success? Use Unix
 //!           │     │
-//!           │     └─→ Platform Constraint? ⚠️
+//!           │     └─→ Platform Constraint?
 //!           │              │
 //!           └─────────────→ Adapt: TCP Fallback
 //!                          │
@@ -46,7 +46,7 @@
 //!           │     │
 //!           │     ├─→ Exists? Use Unix
 //!           │     │
-//!           │     └─→ Not found? ⚠️
+//!           │     └─→ Not found?
 //!           │              │
 //!           └─────────────→ Try TCP Discovery File
 //!                          │
@@ -120,7 +120,7 @@
 //! ### Linux (Unix sockets work)
 //!
 //! ```text
-//! [INFO] 🔌 Starting IPC server (isomorphic mode)...
+//! [INFO] Starting IPC server (isomorphic mode)...
 //! [INFO]    Trying Unix socket IPC (optimal)...
 //! [INFO] Unix socket IPC active (optimal path)
 //! ```
@@ -128,11 +128,11 @@
 //! ### Android (Unix sockets blocked by `SELinux`)
 //!
 //! ```text
-//! [INFO] 🔌 Starting IPC server (isomorphic mode)...
+//! [INFO] Starting IPC server (isomorphic mode)...
 //! [INFO]    Trying Unix socket IPC (optimal)...
-//! [WARN] ⚠️  Unix sockets unavailable: Permission denied
+//! [WARN] Unix sockets unavailable: Permission denied
 //! [WARN]    Detected platform constraint, adapting...
-//! [INFO] 🌐 Starting TCP IPC fallback (isomorphic mode)
+//! [INFO] Starting TCP IPC fallback (isomorphic mode)
 //! [INFO] TCP IPC listening on 127.0.0.1:45763
 //! ```
 //!

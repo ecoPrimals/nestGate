@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! ⚠️ **DEPRECATED**: This module is being phased out in favor of capability-based configuration
+//! **DEPRECATED**: This module is being phased out in favor of capability-based configuration
 //!
 //! # Primal model: self-knowledge vs peers
 //!

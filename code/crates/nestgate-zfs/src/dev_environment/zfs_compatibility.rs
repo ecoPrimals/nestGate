@@ -10,7 +10,7 @@
 // - **CI/CD Systems**: Automated testing without storage hardware
 // - **Staging Environments**: Non-production testing environments
 //
-// ## ⚠️ Important: This is Production-Ready Code
+// ## Important: This is Production-Ready Code
 // This is NOT a "mock" - it's a sophisticated hardware abstraction layer
 // that provides real functionality through filesystem operations, system calls,
 // and compatibility shims. It allows the full NestGate system to run in
@@ -41,7 +41,7 @@ pub struct DevEnvironmentZfsService {
 }
 /// Configuration for development environment ZFS compatibility
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

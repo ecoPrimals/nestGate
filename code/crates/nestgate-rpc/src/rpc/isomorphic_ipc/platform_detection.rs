@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🔍 Platform Constraint Detection
+//! # Platform Constraint Detection
 //!
 //! **RUNTIME DETECTION**: Determines if errors are platform constraints vs real errors
 //!

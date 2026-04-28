@@ -16,6 +16,8 @@ nestgate-config = { path = "../nestgate-config" }
 anyhow = { workspace = true }
 base64 = { workspace = true }
 blake3 = { workspace = true }
+chacha20poly1305 = { workspace = true }
+rand = { workspace = true }
 ureq = { workspace = true }
 rustls-rustcrypto = { workspace = true }
 bytes = { workspace = true, features = ["serde"] }

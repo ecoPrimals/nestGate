@@ -6,7 +6,7 @@
 //! This module provides comprehensive ZFS (ZFS File System) integration
 //! including basic operations, universal pools, and zero-cost factory patterns.
 //!
-//! **⚠️ DEVELOPMENT STUB HANDLERS ⚠️**
+//! **DEVELOPMENT STUB HANDLERS**
 //!
 //! These handlers were designed for the stub ZFS API and are **development-only**.
 //! For production ZFS operations, use `nestgate_zfs` crate directly.

@@ -1,11 +1,11 @@
-# 🌍 Environment Variables Reference
+# Environment Variables Reference
 
 **Last Updated**: January 30, 2026  
 **Status**: Comprehensive reference for all NestGate environment variables
 
 ---
 
-## 📋 Quick Reference
+## Quick Reference
 
 ### **Network Configuration**
 
@@ -62,7 +62,7 @@
 
 ---
 
-## 🎯 Usage Examples
+## Usage Examples
 
 ### **Basic Configuration**
 
@@ -127,7 +127,7 @@ nestgate daemon &
 
 ---
 
-## 🔧 Advanced Configuration
+## Advanced Configuration
 
 ### **XDG Base Directory Support**
 
@@ -169,7 +169,7 @@ NestGate uses a multi-tier fallback system:
 
 ---
 
-## 🚀 Platform-Specific Configuration
+## Platform-Specific Configuration
 
 ### **Linux** (Recommended)
 
@@ -217,7 +217,7 @@ stringData:
 
 ---
 
-## 📚 Configuration Priority
+## Configuration Priority
 
 NestGate uses this priority order for all configuration:
 
@@ -228,18 +228,18 @@ NestGate uses this priority order for all configuration:
 
 ---
 
-## 🔐 Security Best Practices
+## Security Best Practices
 
 ### **JWT Secret**
 
 ```bash
-# ❌ NEVER use default or weak secrets
+# NEVER use default or weak secrets
 export NESTGATE_JWT_SECRET="secret123"  # BAD!
 
-# ✅ Generate secure random secret
+# Generate secure random secret
 export NESTGATE_JWT_SECRET="$(openssl rand -base64 48)"
 
-# ✅ Use secret management
+# Use secret management
 export NESTGATE_JWT_SECRET="$(kubectl get secret nestgate-jwt -o jsonpath='{.data.secret}' | base64 -d)"
 ```
 
@@ -257,7 +257,7 @@ export NESTGATE_TLS_KEY=/etc/letsencrypt/live/nestgate.example.com/privkey.pem
 
 ---
 
-## 🧪 Testing Configuration
+## Testing Configuration
 
 ### **Development**
 
@@ -290,7 +290,7 @@ export NESTGATE_STORAGE_PATH=$GITHUB_WORKSPACE/data
 
 ---
 
-## 📖 Related Documentation
+## Related Documentation
 
 - [Socket-Only Mode](../integration/biomeos/SOCKET_ONLY_MODE_JAN_30_2026.md)
 - [Socket Standardization](../integration/biomeos/SOCKET_STANDARDIZATION_JAN_30_2026.md)
@@ -299,8 +299,8 @@ export NESTGATE_STORAGE_PATH=$GITHUB_WORKSPACE/data
 
 ---
 
-**Status**: Comprehensive reference ✅  
+**Status**: Comprehensive reference  
 **Coverage**: All NESTGATE_* variables documented  
 **Examples**: Development, production, container, multi-instance
 
-🦀 **Environment-Driven · Configurable · Production Ready** 🦀
+**Environment-Driven · Configurable · Production Ready**

@@ -2,16 +2,16 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-27, Session 47)**  
+**Verification (as of 2026-04-28, Session 48)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,822 passing, 0 failures, 60 ignored  
+- **Tests**: `cargo test --workspace --lib` — 8,840 passing, 0 failures, 60 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,822 passing, 60 ignored, 0 failures  
+- **Tests (last recorded)**: 8,840 passing, 60 ignored, 0 failures  
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -31,7 +31,7 @@
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-**Last Updated**: April 27, 2026 (Session 47)
+**Last Updated**: April 28, 2026 (Session 48)
 
 ---
 
@@ -127,14 +127,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-27 (Session 47).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-28 (Session 48).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace --lib` — 8,822 passing, 0 failures, 60 ignored |
+| Tests | `cargo test --workspace --lib` — 8,840 passing, 0 failures, 60 ignored |
 | Coverage | 84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -283,4 +283,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 2026 (Session 46)
+**Latest**: April 2026 (Session 48)

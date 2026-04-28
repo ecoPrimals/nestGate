@@ -18,7 +18,7 @@ use tracing::{debug, info};
 
 /// Configuration for connection pooling
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -210,7 +210,7 @@ where
         }
 
         // No idle connection available, create a new one
-        debug!("🆕 Creating new connection for pool");
+        debug!("Creating new connection for pool");
         let new_connection = (self.connection_factory)().inspect_err(|_e| {
             let stats = self.stats.clone();
             tokio::spawn(async move {

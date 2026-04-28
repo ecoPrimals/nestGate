@@ -120,7 +120,7 @@ async fn handle_request_readiness_not_initialized() {
 
 #[tokio::test]
 async fn legacy_ecosystem_rpc_handler_dispatches_health_check() {
-    let handler = legacy_ecosystem_rpc_handler("cov-family").expect("handler");
+    let handler = legacy_ecosystem_rpc_handler("cov-family", None).expect("handler");
     let v = handler
         .handle_request(json!({
             "jsonrpc": "2.0",
@@ -141,7 +141,7 @@ async fn isomorphic_keep_alive_multiple_requests_one_connection() {
     use tokio::net::UnixStream;
 
     let family_id = format!("test-iso-keepalive-{}", uuid::Uuid::new_v4());
-    let handler = legacy_ecosystem_rpc_handler(&family_id).expect("handler");
+    let handler = legacy_ecosystem_rpc_handler(&family_id, None).expect("handler");
 
     let (client, server) = UnixStream::pair().expect("unix pair");
     let h = tokio::spawn(IsomorphicIpcServer::handle_unix_connection(server, handler));

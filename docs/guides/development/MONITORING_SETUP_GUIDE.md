@@ -1,15 +1,17 @@
 > **Historical**: This document was written in November 20, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 📊 MONITORING & OBSERVABILITY SETUP GUIDE
+# MONITORING AND OBSERVABILITY SETUP GUIDE
 
 **Version**: 2.0.0  
+
 **Date**: November 20, 2025  
+
 **For**: NestGate Production Deployment
 
 ---
 
-## ⚡ QUICK SETUP
+## QUICK SETUP
 
 ```bash
 # 1. Start monitoring stack
@@ -30,7 +32,7 @@ export SENTRY_DSN="your-sentry-dsn"
 
 ---
 
-## 📊 MONITORING STACK
+## MONITORING STACK
 
 ### Core Components:
 
@@ -49,7 +51,7 @@ Prometheus (port 9090)
     ↓ scrapes metrics
     → AlertManager (port 9093) → Slack/PagerDuty
     → Grafana (port 3000) → Dashboards
-    
+
 NestGate Logs
     ↓ structured JSON logs
 Loki (port 3100)
@@ -63,7 +65,7 @@ Sentry → Error tracking & alerts
 
 ---
 
-## 🔧 PROMETHEUS SETUP
+## PROMETHEUS SETUP
 
 ### Configuration:
 
@@ -95,18 +97,18 @@ scrape_configs:
       - targets: ['localhost:8080']
     metrics_path: '/metrics'
     scrape_interval: 10s
-    
+
   # NestGate Core Services
   - job_name: 'nestgate-core'
     static_configs:
       - targets: ['localhost:8081']
     metrics_path: '/metrics'
-    
+
   # System Metrics
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['localhost:9100']
-      
+
   # Prometheus itself
   - job_name: 'prometheus'
     static_configs:
@@ -131,7 +133,7 @@ groups:
         annotations:
           summary: "High error rate detected"
           description: "Error rate is {{ $value }}% over last 5 minutes"
-          
+
       # High latency
       - alert: HighLatency
         expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
@@ -141,7 +143,7 @@ groups:
         annotations:
           summary: "High API latency"
           description: "P95 latency is {{ $value }}s"
-          
+
       # Service down
       - alert: ServiceDown
         expr: up{job="nestgate-api"} == 0
@@ -151,7 +153,7 @@ groups:
         annotations:
           summary: "NestGate API is down"
           description: "{{ $labels.instance }} is unreachable"
-          
+
       # High CPU usage
       - alert: HighCPUUsage
         expr: (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
@@ -161,7 +163,7 @@ groups:
         annotations:
           summary: "High CPU usage"
           description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
-          
+
       # High memory usage
       - alert: HighMemoryUsage
         expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
@@ -171,7 +173,7 @@ groups:
         annotations:
           summary: "High memory usage"
           description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
-          
+
       # Disk space low
       - alert: DiskSpaceLow
         expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes * 100) < 20
@@ -185,7 +187,7 @@ groups:
 
 ---
 
-## 📈 GRAFANA DASHBOARDS
+## GRAFANA DASHBOARDS
 
 ### Dashboard 1: System Overview
 
@@ -243,7 +245,7 @@ histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
 
 ---
 
-## 📝 LOKI LOG AGGREGATION
+## LOKI LOG AGGREGATION
 
 ### Configuration:
 
@@ -329,7 +331,7 @@ scrape_configs:
 
 ---
 
-## 🔔 ALERTMANAGER SETUP
+## ALERTMANAGER SETUP
 
 ### Configuration:
 
@@ -361,13 +363,13 @@ receivers:
       - channel: '#nestgate-alerts'
         title: 'Alert: {{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-        
+
   - name: 'slack'
     slack_configs:
       - channel: '#nestgate-alerts'
         title: 'Warning: {{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-        
+
   - name: 'pagerduty'
     pagerduty_configs:
       - service_key: 'YOUR_PAGERDUTY_KEY'
@@ -383,7 +385,7 @@ inhibit_rules:
 
 ---
 
-## 🐛 SENTRY ERROR TRACKING
+## SENTRY ERROR TRACKING
 
 ### Setup:
 
@@ -424,7 +426,7 @@ if let Ok(dsn) = std::env::var("SENTRY_DSN") {
 
 ---
 
-## 🎯 KEY METRICS TO MONITOR
+## KEY METRICS TO MONITOR
 
 ### RED Metrics (Request-Error-Duration):
 
@@ -432,16 +434,16 @@ if let Ok(dsn) = std::env::var("SENTRY_DSN") {
 metrics:
   request_rate:
     query: rate(http_requests_total[5m])
-    threshold: 
+    threshold:
       min: 10  # req/s
       max: 10000  # req/s
-      
+
   error_rate:
     query: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])
     threshold:
       warning: 0.01  # 1%
       critical: 0.05  # 5%
-      
+
   duration:
     query: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
     threshold:
@@ -457,17 +459,17 @@ system_metrics:
     threshold:
       warning: 70%
       critical: 85%
-      
+
   memory_utilization:
     threshold:
       warning: 80%
       critical: 90%
-      
+
   disk_utilization:
     threshold:
       warning: 75%
       critical: 85%
-      
+
   network_errors:
     threshold:
       warning: 0.01%
@@ -476,7 +478,7 @@ system_metrics:
 
 ---
 
-## 📊 MONITORING BEST PRACTICES
+## MONITORING BEST PRACTICES
 
 ### 1. **Layered Monitoring**:
 - **Symptoms** (user-facing): Latency, errors, availability
@@ -484,10 +486,10 @@ system_metrics:
 - **Business** (metrics): API usage, feature adoption
 
 ### 2. **Alert Hygiene**:
-- ✅ Every alert must be actionable
-- ✅ Define severity levels clearly
-- ✅ Avoid alert fatigue
-- ✅ Regular alert review and tuning
+- Every alert must be actionable
+- Define severity levels clearly
+- Avoid alert fatigue
+- Regular alert review and tuning
 
 ### 3. **Dashboard Organization**:
 - **Executive**: High-level health
@@ -504,7 +506,7 @@ system_metrics:
 
 ---
 
-## ✅ MONITORING CHECKLIST
+## MONITORING CHECKLIST
 
 ### Setup Phase:
 - [ ] Prometheus installed and configured
@@ -531,7 +533,7 @@ system_metrics:
 
 ---
 
-## 🚀 QUICK START SCRIPTS
+## QUICK START SCRIPTS
 
 ### Verify Monitoring:
 
@@ -539,42 +541,42 @@ system_metrics:
 #!/bin/bash
 # scripts/verify-monitoring.sh
 
-echo "🔍 Verifying monitoring stack..."
+echo "Verifying monitoring stack..."
 
 # Check Prometheus
 if curl -s http://localhost:9090/-/healthy | grep -q "Prometheus is Healthy"; then
-    echo "✅ Prometheus: OK"
+    echo "[OK] Prometheus"
 else
-    echo "❌ Prometheus: FAILED"
+    echo "[FAIL] Prometheus"
 fi
 
 # Check Grafana
 if curl -s http://localhost:3000/api/health | grep -q "ok"; then
-    echo "✅ Grafana: OK"
+    echo "[OK] Grafana"
 else
-    echo "❌ Grafana: FAILED"
+    echo "[FAIL] Grafana"
 fi
 
 # Check Loki
 if curl -s http://localhost:3100/ready | grep -q "ready"; then
-    echo "✅ Loki: OK"
+    echo "[OK] Loki"
 else
-    echo "❌ Loki: FAILED"
+    echo "[FAIL] Loki"
 fi
 
 # Check NestGate metrics endpoint
 if curl -s http://localhost:8080/metrics | grep -q "http_requests_total"; then
-    echo "✅ NestGate metrics: OK"
+    echo "[OK] NestGate metrics"
 else
-    echo "❌ NestGate metrics: FAILED"
+    echo "[FAIL] NestGate metrics"
 fi
 
-echo "✅ Monitoring verification complete!"
+echo "Monitoring verification complete."
 ```
 
 ---
 
-## 📚 RESOURCES
+## RESOURCES
 
 ### Documentation:
 - Prometheus: https://prometheus.io/docs/
@@ -589,7 +591,7 @@ echo "✅ Monitoring verification complete!"
 
 ---
 
-**Status**: ✅ **MONITORING SETUP GUIDE COMPLETE**  
+**Status**: MONITORING SETUP GUIDE COMPLETE
 **Next**: Configure infrastructure and start monitoring stack
 
 **Your monitoring will provide**:
@@ -598,5 +600,5 @@ echo "✅ Monitoring verification complete!"
 - Historical data for capacity planning
 - Rapid incident response capabilities
 
-**Let's monitor it! 📊**
+**Let's monitor it.**
 

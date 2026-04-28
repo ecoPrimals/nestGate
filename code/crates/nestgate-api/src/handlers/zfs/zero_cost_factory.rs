@@ -6,7 +6,7 @@
 //! Factory pattern for creating zero-cost ZFS service abstractions
 //! with compile-time optimizations and type safety.
 //!
-//! **⚠️ DEVELOPMENT ONLY ⚠️**
+//! **DEVELOPMENT ONLY**
 //!
 //! This module is only available with `dev-stubs` feature.
 

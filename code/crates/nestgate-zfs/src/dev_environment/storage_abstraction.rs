@@ -32,7 +32,7 @@ pub struct DevEnvironmentStorageService {
 }
 /// Configuration for storage abstraction
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

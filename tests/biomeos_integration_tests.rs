@@ -41,7 +41,7 @@ fn prepare_ecosystem_ipc(family_id: &str) -> (Arc<IsomorphicIpcServer>, PathBuf)
         .expect("socket config")
         .socket_path
         .clone();
-    let handler = legacy_ecosystem_rpc_handler(family_id).expect("rpc handler");
+    let handler = legacy_ecosystem_rpc_handler(family_id, None).expect("rpc handler");
     let server = Arc::new(IsomorphicIpcServer::new(family_id.to_string(), handler));
     (server, socket_path)
 }

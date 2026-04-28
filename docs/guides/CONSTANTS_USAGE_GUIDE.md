@@ -1,14 +1,14 @@
 > **Historical**: This document was written in November 7, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 📖 Constants Usage Guide
+# Constants Usage Guide
 **Last Updated**: November 7, 2025  
 **Purpose**: Definitive guide for using NestGate constants  
 **Audience**: Developers, code reviewers
 
 ---
 
-## 🎯 SINGLE SOURCE OF TRUTH
+## SINGLE SOURCE OF TRUTH
 
 All constants are now consolidated in a clear hierarchy:
 
@@ -23,9 +23,9 @@ constants/
 
 ---
 
-## 📦 IMPORT PATTERNS
+## IMPORT PATTERNS
 
-### ✅ PREFERRED: Use canonical module
+### PREFERRED: Use canonical module
 
 ```rust
 use nestgate_core::constants::canonical::{
@@ -41,7 +41,7 @@ let buffer_size = performance::DEFAULT_BUFFER_SIZE;
 let timeout = timeouts::DEFAULT_TIMEOUT_MS;
 ```
 
-### ✅ ALSO GOOD: Use re-exports
+### ALSO GOOD: Use re-exports
 
 ```rust
 use nestgate_core::constants::{
@@ -52,7 +52,7 @@ use nestgate_core::constants::{
 };
 ```
 
-### ❌ AVOID: Direct imports from fragmented locations
+### AVOID: Direct imports from fragmented locations
 
 ```rust
 // DON'T DO THIS:
@@ -62,7 +62,7 @@ use nestgate_core::constants::hardcoding::*;
 
 ---
 
-## 🚀 BUFFER SIZES (Domain-Specific)
+## BUFFER SIZES (Domain-Specific)
 
 ### **IMPORTANT**: Buffer sizes are intentionally different!
 
@@ -122,7 +122,7 @@ let mut stream_buffer = vec![0u8; performance::NETWORK_BUFFER_SIZE]; // 64KB
 let mut socket_buffer = vec![0u8; defaults::NETWORK_BUFFER_SIZE]; // 8KB
 ```
 
-### ⚠️ DO NOT CONSOLIDATE
+### DO NOT CONSOLIDATE
 
 These buffer sizes should **NEVER** be consolidated:
 - They serve different purposes
@@ -131,7 +131,7 @@ These buffer sizes should **NEVER** be consolidated:
 
 ---
 
-## ⏰ TIMEOUT CONSTANTS
+## TIMEOUT CONSTANTS
 
 ### Single Source: `canonical::timeouts`
 
@@ -170,7 +170,7 @@ let request_timeout = timeouts::request_timeout();       // Duration
 
 ---
 
-## 🌐 PORT CONSTANTS
+## PORT CONSTANTS
 
 ### Single Source: `port_defaults`
 
@@ -209,7 +209,7 @@ let metrics = port_defaults::get_metrics_port();  // checks NESTGATE_METRICS_POR
 
 ---
 
-## 🔄 RETRY & BACKOFF
+## RETRY & BACKOFF
 
 ```rust
 use nestgate_core::constants::canonical::timeouts;
@@ -221,7 +221,7 @@ let rate_limit = timeouts::DEFAULT_RATE_LIMIT_RPM;       // 1000 requests/min
 
 ---
 
-## 🗄️ STORAGE CONSTANTS
+## STORAGE CONSTANTS
 
 ```rust
 use nestgate_core::constants::canonical::storage;
@@ -243,7 +243,7 @@ let cold = storage::TIER_COLD;  // "cold"
 
 ---
 
-## 🔒 SECURITY CONSTANTS
+## SECURITY CONSTANTS
 
 ```rust
 use nestgate_core::constants::canonical::security;
@@ -258,7 +258,7 @@ let user = security::ROLE_USER;    // "user"
 
 ---
 
-## 📡 NETWORK CONSTANTS
+## NETWORK CONSTANTS
 
 ```rust
 use nestgate_core::constants::canonical::network;
@@ -281,7 +281,7 @@ let recv_buf = network::RECV_BUFFER_SIZE;     // 65536
 
 ---
 
-## 🎭 TESTING CONSTANTS
+## TESTING CONSTANTS
 
 ```rust
 use nestgate_core::constants::testing;
@@ -293,9 +293,9 @@ let test_retries = testing::TEST_RETRY_ATTEMPTS;
 
 ---
 
-## ⚠️ WHAT NOT TO DO
+## WHAT NOT TO DO
 
-### ❌ Don't Consolidate Domain-Specific Values
+### Don't Consolidate Domain-Specific Values
 
 ```rust
 // WRONG: These are intentionally different!
@@ -304,7 +304,7 @@ let test_retries = testing::TEST_RETRY_ATTEMPTS;
 // Don't make them the same!
 ```
 
-### ❌ Don't Hardcode Values
+### Don't Hardcode Values
 
 ```rust
 // WRONG:
@@ -317,7 +317,7 @@ let port = network::DEFAULT_API_PORT;
 let timeout = timeouts::DEFAULT_TIMEOUT_MS;
 ```
 
-### ❌ Don't Import From Multiple Sources
+### Don't Import From Multiple Sources
 
 ```rust
 // WRONG: Fragmented imports
@@ -331,7 +331,7 @@ use nestgate_core::constants::canonical::{performance, timeouts, network};
 
 ---
 
-## ✅ BEST PRACTICES
+## BEST PRACTICES
 
 ### 1. Always Use Canonical Source
 
@@ -371,7 +371,7 @@ fn test_buffer_sizes_are_intentionally_different() {
 
 ---
 
-## 🔍 FINDING CONSTANTS
+## FINDING CONSTANTS
 
 ### Quick Reference
 
@@ -382,9 +382,7 @@ fn test_buffer_sizes_are_intentionally_different() {
 | Buffer (disk) | `canonical::performance` | `DEFAULT_BUFFER_SIZE` |
 | Buffer (network) | `canonical::performance` | `NETWORK_BUFFER_SIZE` |
 | Retry count | `canonical::timeouts` | `DEFAULT_RETRY_ATTEMPTS` |
-| IP address | `canonical::network` | `DEFAULT_BIND_ADDRESS` |
-
-### Search Commands
+| IP address | `canonical::network` | `DEFAULT_BIND_ADDRESS` | ### Search Commands
 
 ```bash
 # Find a constant
@@ -407,7 +405,7 @@ rg "pub const.*TIMEOUT" code/crates/nestgate-core/src/constants/canonical.rs
 
 ---
 
-## 🎯 SUMMARY
+## SUMMARY
 
 **Remember**:
 1. Use `canonical` module as single source
@@ -424,7 +422,7 @@ rg "pub const.*TIMEOUT" code/crates/nestgate-core/src/constants/canonical.rs
 
 ---
 
-**Status**: ✅ COMPLETE  
+**Status**: COMPLETE  
 **Version**: 1.0  
 **Last Updated**: November 7, 2025  
 **Maintainer**: NestGate Team

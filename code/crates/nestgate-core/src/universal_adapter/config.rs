@@ -67,7 +67,7 @@ pub enum DiscoveryMethod {
 
 /// Configuration for the universal adapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore

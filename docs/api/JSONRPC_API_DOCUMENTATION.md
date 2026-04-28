@@ -1,4 +1,4 @@
-# 📚 NestGate JSON-RPC 2.0 API Documentation
+# NestGate JSON-RPC 2.0 API Documentation
 
 **Version**: 0.2.0  
 **Protocol**: JSON-RPC 2.0  
@@ -8,29 +8,29 @@
 
 ---
 
-## 🌐 **Overview**
+## **Overview**
 
 NestGate provides a complete JSON-RPC 2.0 API for universal, language-agnostic access to storage operations. This API works with **any** programming language that can make HTTP requests.
 
 ### **Why JSON-RPC?**
 
-- ✅ **Universal**: Works with Python, JavaScript, Go, Java, Ruby, etc.
-- ✅ **Simple**: Standard HTTP POST with JSON
-- ✅ **Human-Readable**: Easy to debug and test
-- ✅ **Standardized**: JSON-RPC 2.0 specification
-- ✅ **Same Operations**: 14 methods (identical to tarpc)
+- **Universal**: Works with Python, JavaScript, Go, Java, Ruby, etc.
+- **Simple**: Standard HTTP POST with JSON
+- **Human-Readable**: Easy to debug and test
+- **Standardized**: JSON-RPC 2.0 specification
+- **Same Operations**: 14 methods (identical to tarpc)
 
 ---
 
-## 🎯 **Protocol Priority**
+## **Protocol Priority**
 
 1. **tarpc** (PRIMARY) - High-performance primal-to-primal (~10-20μs)
-2. **JSON-RPC** (SECONDARY) - Universal access (~50-100μs) ← **This API**
+2. **JSON-RPC** (SECONDARY) - Universal access (~50-100μs) — **This API**
 3. **HTTP REST** (FALLBACK) - Broad compatibility (~500-1000μs)
 
 ---
 
-## 📋 **Request Format**
+## **Request Format**
 
 All requests must be HTTP POST to `/jsonrpc` with:
 
@@ -68,7 +68,7 @@ All requests must be HTTP POST to `/jsonrpc` with:
 
 ---
 
-## 🗄️ **Storage Operations** (9 methods)
+## **Storage Operations** (9 methods)
 
 ### **1. nestgate.createDataset**
 
@@ -392,7 +392,7 @@ curl -X POST http://localhost:8092/jsonrpc \
 
 ---
 
-## 🔍 **Capability Operations** (2 methods)
+## **Capability Operations** (2 methods)
 
 ### **10. nestgate.registerCapability**
 
@@ -447,7 +447,7 @@ curl -X POST http://localhost:8092/jsonrpc \
 
 ---
 
-## 📊 **Monitoring Operations** (3 methods)
+## **Monitoring Operations** (3 methods)
 
 ### **12. nestgate.health**
 
@@ -539,7 +539,7 @@ curl -X POST http://localhost:8092/jsonrpc \
 
 ---
 
-## 🔧 **Client Libraries**
+## **Client Libraries**
 
 ### **Python Example**
 
@@ -673,7 +673,7 @@ console.log(data.toString());  // "Hello World!"
 
 ---
 
-## ❌ **Error Codes**
+## **Error Codes**
 
 | Code | Meaning | Description |
 |------|---------|-------------|
@@ -685,7 +685,7 @@ console.log(data.toString());  // "Hello World!"
 
 ---
 
-## 🔒 **Binary Data Encoding**
+## **Binary Data Encoding**
 
 All binary data (object contents) must be **base64 encoded** in JSON-RPC requests and responses.
 
@@ -703,7 +703,7 @@ echo "SGVsbG8gV29ybGQh" | base64 -d
 
 ---
 
-## ⚡ **Performance Characteristics**
+## **Performance Characteristics**
 
 - **Latency**: ~50-100μs per request
 - **Throughput**: ~10,000-20,000 requests/sec
@@ -713,7 +713,7 @@ echo "SGVsbG8gV29ybGQh" | base64 -d
 
 ---
 
-## 🎯 **Best Practices**
+## **Best Practices**
 
 1. **Use tarpc for primal-to-primal** (~10x faster)
 2. **Use JSON-RPC for external clients** (universal)
@@ -724,7 +724,7 @@ echo "SGVsbG8gV29ybGQh" | base64 -d
 
 ---
 
-## 📝 **Notes**
+## **Notes**
 
 - Phase 1-2 implementation uses **in-memory storage** (proof of concept)
 - Phase 3 will wire to **real ZFS storage backend**
@@ -733,6 +733,6 @@ echo "SGVsbG8gV29ybGQh" | base64 -d
 
 ---
 
-**Status**: ✅ **PRODUCTION-READY** (Phase 1-2 Complete)  
+**Status**: **PRODUCTION-READY** (Phase 1-2 Complete)  
 **Next**: Phase 3 - Storage Integration  
 **Documentation Version**: 1.0 (2026-01-10)

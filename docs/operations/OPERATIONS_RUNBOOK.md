@@ -1,11 +1,11 @@
 > **Historical**: This document was written in December 1, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 📋 NestGate Operations Runbook
+# NestGate Operations Runbook
 
 **Version**: 4.7.0-dev  
 **Grade**: A- (92/100)  
-**Status**: ✅ **PRODUCTION-READY**  
+**Status**: **PRODUCTION-READY**  
 **Last Updated**: March 29, 2026
 
 ---
@@ -165,27 +165,27 @@ cargo test --lib
 ### Key Metrics to Watch
 
 1. **Service Health**:
-   - ✅ HTTP 200 on `/health` endpoint
-   - ⚠️ Response time > 500ms
-   - 🚨 HTTP 500/503 errors
+   - OK: HTTP 200 on `/health` endpoint
+   - Warning: Response time > 500ms
+   - Critical: HTTP 500/503 errors
 
 2. **Resource Usage**:
-   - ✅ CPU < 70%
-   - ⚠️ CPU 70-90%
-   - 🚨 CPU > 90%
-   - ✅ Memory < 80%
-   - ⚠️ Memory 80-95%
-   - 🚨 Memory > 95%
+   - OK: CPU < 70%
+   - Warning: CPU 70-90%
+   - Critical: CPU > 90%
+   - OK: Memory < 80%
+   - Warning: Memory 80-95%
+   - Critical: Memory > 95%
 
 3. **Error Rates**:
-   - ✅ Error rate < 0.1%
-   - ⚠️ Error rate 0.1-1%
-   - 🚨 Error rate > 1%
+   - OK: Error rate < 0.1%
+   - Warning: Error rate 0.1-1%
+   - Critical: Error rate > 1%
 
 4. **Disk Space**:
-   - ✅ Usage < 70%
-   - ⚠️ Usage 70-90%
-   - 🚨 Usage > 90%
+   - OK: Usage < 70%
+   - Warning: Usage 70-90%
+   - Critical: Usage > 90%
 
 ### Alert Thresholds
 

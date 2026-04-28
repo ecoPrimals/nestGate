@@ -1,22 +1,22 @@
 > **Historical**: This document was written in November 10, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 🏗️ **NESTGATE ARCHITECTURE CLARIFICATION**
+# **NESTGATE ARCHITECTURE CLARIFICATION**
 
 **Date**: November 10, 2025  
-**Status**: 🎯 **ARCHITECTURE CORRECTED**
+**Status**: **ARCHITECTURE CORRECTED**
 
 ---
 
-## 🤔 **WHAT WE LEARNED**
+## **WHAT WE LEARNED**
 
 ### **1. Federation Architecture is Hierarchical**
 
 ```
-❌ WRONG (What we implemented first):
+FAIL: WRONG (What we implemented first):
 NestGate → Songbird (Tower A) → Federation
 
-✅ CORRECT (Proper hierarchy):
+OK: CORRECT (Proper hierarchy):
 NestGate → Songbird (LOCAL) → Songbird (Tower A) → Federation
 ```
 
@@ -46,18 +46,18 @@ Westgate Tower (NAS)
 **OLD Priority**:
 1. ENV variable
 2. Config file
-3. **LAN first** (192.0.2.10) ❌
-4. localhost second ❌
+3. **LAN first** (192.0.2.10) FAIL
+4. localhost second FAIL
 
 **NEW Priority**:
 1. ENV variable (explicit override)
 2. Config file
-3. **localhost FIRST** (biome) ✅
-4. LAN second (federation) ✅
+3. **localhost FIRST** (biome) OK
+4. LAN second (federation) OK
 
 ---
 
-## 🎯 **CORRECT ARCHITECTURE**
+## **CORRECT ARCHITECTURE**
 
 ### **Metal Matrix Topology**
 
@@ -72,13 +72,13 @@ Westgate Tower (NAS)
    (NAS Tower)       (Server Tower)     (Dev Tower)
         │                 │                  │
    ┌────┴────┐       ┌────┴────┐        ┌───┴────┐
-   │Songbird │       │Songbird │        │Songbird│ ← LOCAL
+   │Songbird │       │Songbird │        │Songbird│ LOCAL
    │(8080)   │       │(8080)   │        │(8080)  │
    └────┬────┘       └────┬────┘        └───┬────┘
         │                 │                  │
    ┌────┴────┐       ┌────┴────┐      ┌─────┴─────────┐
    │NestGate │       │Compute  │      │ LOCAL BIOME:  │
-   │(Storage)│       │Services │      │ • NestGate    │ ← WE ARE HERE
+   │(Storage)│       │Services │      │ • NestGate    │ WE ARE HERE
    │86TB NAS │       │         │      │ • Toadstool   │
    └─────────┘       └─────────┘      │ • Squirrel    │
                                        └───────────────┘
@@ -93,7 +93,7 @@ Westgate Tower (NAS)
 ./target/release/nestgate service start
 
 # Discovery:
-# 1. Check localhost:8080 → Found! ✅
+# 1. Check localhost:8080 → Found! OK
 # 2. Connect to LOCAL Songbird
 # 3. Register as part of Eastgate biome
 # 4. Local Songbird handles federation connection
@@ -110,7 +110,7 @@ Westgate Tower (NAS)
 ./target/release/nestgate service start
 
 # Discovery:
-# 1. Check localhost:8080 → Found! ✅
+# 1. Check localhost:8080 → Found! OK
 # 2. Connect to LOCAL Songbird on Westgate
 # 3. Register as main storage service
 # 4. Songbird represents Westgate in federation
@@ -122,7 +122,7 @@ Westgate Tower (NAS)
 
 ---
 
-## 🔧 **WHAT CHANGED**
+## **WHAT CHANGED**
 
 ### **1. Discovery Priority Fixed**
 
@@ -138,18 +138,18 @@ let discovery_order = [
 ### **2. Better Logging**
 
 ```
-🔍 Discovered Songbird at http://localhost:8080 (local biome)
+Discovered Songbird at http://localhost:8080 (local biome)
 ```
 
 vs
 
 ```
-🔍 Discovered Songbird at http://192.0.2.10:8080 (federation)
+Discovered Songbird at http://192.0.2.10:8080 (federation)
 ```
 
 ---
 
-## 🚀 **0-TOUCH DEPLOYMENT**
+## **0-TOUCH DEPLOYMENT**
 
 ### **Goal: Zero Configuration Needed**
 
@@ -161,10 +161,10 @@ scp nestgate tower:~/
 ssh tower "./nestgate service start"
 
 # NestGate automatically:
-# 1. ✅ Finds local Songbird
-# 2. ✅ Registers with biome
-# 3. ✅ Advertises capabilities
-# 4. ✅ Joins federation (via Songbird)
+# 1. Finds local Songbird
+# 2. Registers with biome
+# 3. Advertises capabilities
+# 4. Joins federation (via Songbird)
 ```
 
 ### **1-TOUCH: Override for Special Cases**
@@ -177,7 +177,7 @@ export NESTGATE_ORCHESTRATOR_URL="http://specific-songbird:8080"
 
 ---
 
-## 📊 **BIOME vs FEDERATION NODE**
+## **BIOME vs FEDERATION NODE**
 
 ### **When is NestGate a Biome Member?**
 
@@ -207,7 +207,7 @@ Songbird represents the tower in federation
 
 ---
 
-## 🎯 **INFANT DISCOVERY INTEGRATION**
+## **INFANT DISCOVERY INTEGRATION**
 
 NestGate already has **Infant Discovery** (world-first zero-knowledge discovery).
 
@@ -229,33 +229,33 @@ NestGate already has **Infant Discovery** (world-first zero-knowledge discovery)
 
 ---
 
-## ✅ **BENEFITS OF CORRECT ARCHITECTURE**
+## **BENEFITS OF CORRECT ARCHITECTURE**
 
-### **1. True Sovereignty** 🏠
+### **1. True Sovereignty**
 - Each tower operates independently
 - Local biome works without federation
 - Federation enhances but doesn't require
 
-### **2. Scalability** 📈
+### **2. Scalability**
 - Add towers without reconfiguring others
 - Biomes handle local coordination
 - Federation handles cross-tower
 
-### **3. Resilience** 💪
+### **3. Resilience**
 - Local biome works if federation down
 - Federation continues if one tower fails
 - No single point of failure
 
-### **4. Zero Touch** ⚡
+### **4. Zero Touch**
 - No configuration needed
 - Automatic discovery
 - Self-organizing
 
 ---
 
-## 🔄 **MIGRATION PLAN**
+## **MIGRATION PLAN**
 
-### **Phase 1: Update Discovery Priority** ✅ DONE
+### **Phase 1: Update Discovery Priority** DONE
 - Prefer localhost over LAN
 - Better logging
 
@@ -269,7 +269,7 @@ cd ~/Development/ecoPrimals/songbird
 cd ~/Development/ecoPrimals/nestgate  
 ./target/release/nestgate service start
 
-# Should connect to localhost! ✅
+# Should connect to localhost! OK
 ```
 
 ### **Phase 3: Multi-Tower Deployment**
@@ -281,7 +281,7 @@ cd ~/Development/ecoPrimals/nestgate
 
 ---
 
-## 📝 **SUMMARY**
+## **SUMMARY**
 
 ### **What We Learned:**
 1. **Hierarchy matters**: Biomes → Towers → Federation
@@ -290,23 +290,23 @@ cd ~/Development/ecoPrimals/nestgate
 4. **Biomes are powerful**: Multiple primals cooperate locally
 
 ### **What We Fixed:**
-1. ✅ Discovery priority (local first)
-2. ✅ Better logging (biome vs federation)
-3. ✅ Architecture understanding
+1. Discovery priority (local first)
+2. Better logging (biome vs federation)
+3. Architecture understanding
 
 ### **What's Next:**
-1. 🔧 Start local Songbird
-2. 🔧 Test local biome
-3. 🔧 Infant Discovery integration
-4. 🔧 Multi-tower deployment
+1. Start local Songbird
+2. Test local biome
+3. Infant Discovery integration
+4. Multi-tower deployment
 
 ---
 
-**🏠 Local biome for coordination**
+**Local biome for coordination**
 
-**🌐 Federation for scale**
+**Federation for scale**
 
-**⚡ Zero-touch deployment**
+**Zero-touch deployment**
 
-**🎯 Correct architecture = better system!**
+**Correct architecture = better system!**
 

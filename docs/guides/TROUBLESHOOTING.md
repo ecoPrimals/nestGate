@@ -1,10 +1,10 @@
-# 🔧 Troubleshooting Guide
+# Troubleshooting Guide
 
 **Quick solutions to common NestGate issues**
 
 ---
 
-## 🚨 Common Issues
+## Common Issues
 
 ### **Issue: Port Already in Use**
 
@@ -145,7 +145,7 @@ export NESTGATE_DATA_DIR=/mnt/large-disk/nestgate
 
 ---
 
-## 🔌 Connection Issues
+## Connection Issues
 
 ### **Issue: Cannot Connect to NestGate**
 
@@ -219,7 +219,7 @@ curl -X POST http://localhost:8080/api/services/announce \
 
 ---
 
-## 🐛 Build/Compilation Issues
+## Build/Compilation Issues
 
 ### **Issue: Compilation Fails**
 
@@ -276,7 +276,7 @@ cargo test
 
 ---
 
-## 🚀 Performance Issues
+## Performance Issues
 
 ### **Issue: Slow Response Times**
 
@@ -343,7 +343,7 @@ valgrind --leak-check=full ./nestgate
 
 ---
 
-## 🔄 Discovery Issues
+## Discovery Issues
 
 ### **Issue: mDNS Not Working**
 
@@ -368,7 +368,7 @@ export NESTGATE_DISCOVERY_ENABLED=false
 
 ---
 
-## 🗂️ Storage Issues
+## Storage Issues
 
 ### **Issue: Objects Not Persisting**
 
@@ -402,7 +402,7 @@ mkdir -p $NESTGATE_DATA_DIR
 
 ---
 
-## 🔍 Debugging Tips
+## Debugging Tips
 
 ### **Enable Debug Logging**:
 
@@ -443,15 +443,15 @@ env | grep NESTGATE | sort
 
 ---
 
-## 📞 Getting Help
+## Getting Help
 
 ### **Before Asking for Help**:
 
-1. ✅ Check this troubleshooting guide
-2. ✅ Review relevant documentation
-3. ✅ Check logs for error messages
-4. ✅ Try with default configuration
-5. ✅ Search existing GitHub issues
+1. Check this troubleshooting guide
+2. Review relevant documentation
+3. Check logs for error messages
+4. Try with default configuration
+5. Search existing GitHub issues
 
 ### **When Creating an Issue**:
 
@@ -472,7 +472,7 @@ Include:
 
 ---
 
-## 🎯 Quick Diagnostics Checklist
+## Quick Diagnostics Checklist
 
 ```bash
 # Run this diagnostic script
@@ -482,27 +482,27 @@ echo "=== NestGate Diagnostics ==="
 
 # 1. Check if running
 echo "Process status:"
-pgrep -f nestgate && echo "✅ Running" || echo "❌ Not running"
+pgrep -f nestgate && echo "OK: Running" || echo "FAIL: Not running"
 
 # 2. Check ports
 echo -e "\nPort binding:"
-sudo netstat -tlnp | grep :8080 || echo "❌ Port 8080 not bound"
+sudo netstat -tlnp | grep :8080 || echo "FAIL: Port 8080 not bound"
 
 # 3. Check socket
 echo -e "\nUnix socket:"
-ls /run/user/$(id -u)/nestgate/*.sock 2>/dev/null && echo "✅ Socket exists" || echo "❌ No socket"
+ls /run/user/$(id -u)/nestgate/*.sock 2>/dev/null && echo "OK: Socket exists" || echo "FAIL: No socket"
 
 # 4. Health check
 echo -e "\nHealth status:"
-curl -s http://localhost:8080/health | jq -r '.status' || echo "❌ Cannot connect"
+curl -s http://localhost:8080/health | jq -r '.status' || echo "FAIL: Cannot connect"
 
 # 5. Storage path
 echo -e "\nStorage path:"
-ls -ld ~/.local/share/nestgate 2>/dev/null && echo "✅ Storage exists" || echo "❌ No storage"
+ls -ld ~/.local/share/nestgate 2>/dev/null && echo "OK: Storage exists" || echo "FAIL: No storage"
 
 # 6. ZFS status
 echo -e "\nZFS availability:"
-which zfs && echo "✅ ZFS installed" || echo "⚠️  ZFS not found"
+which zfs && echo "OK: ZFS installed" || echo "Warning: ZFS not found"
 
 # 7. Environment
 echo -e "\nEnvironment variables:"
@@ -511,4 +511,4 @@ env | grep NESTGATE | wc -l
 
 ---
 
-**NestGate Troubleshooting** · Quick Fixes · Production Support 🦀
+**NestGate Troubleshooting** · Quick Fixes · Production Support

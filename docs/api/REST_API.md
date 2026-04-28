@@ -1,4 +1,4 @@
-# 📡 NestGate REST API Reference
+# NestGate REST API Reference
 
 **Version**: 3.3.0  
 **Base URL**: `http://localhost:8080` (configurable via `NESTGATE_PORT`)  
@@ -6,20 +6,20 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 NestGate provides a RESTful HTTP API for dataset and object management, service discovery, and health monitoring.
 
 **Features**:
-- ✅ RESTful design principles
-- ✅ JSON request/response
-- ✅ Standard HTTP status codes
-- ✅ Comprehensive error messages
-- ✅ SHA-256 checksums for data integrity
+- RESTful design principles
+- JSON request/response
+- Standard HTTP status codes
+- Comprehensive error messages
+- SHA-256 checksums for data integrity
 
 ---
 
-## 🔐 Authentication
+## Authentication
 
 **Current**: Optional (via `NESTGATE_API_KEY`)  
 **Future**: Delegated to BearDog security primal
@@ -36,7 +36,7 @@ curl -H "X-API-Key: your-secret-key" http://localhost:8080/api/datasets
 
 ---
 
-## 📦 Endpoints
+## Endpoints
 
 ### **Health & Monitoring**
 
@@ -438,7 +438,7 @@ curl http://localhost:8080/api/services/discover/orchestration
 
 ---
 
-## 🔧 Configuration Endpoints
+## Configuration Endpoints
 
 #### `GET /api/config`
 
@@ -471,7 +471,7 @@ curl http://localhost:8080/api/config
 
 ---
 
-## 📊 Statistics Endpoints
+## Statistics Endpoints
 
 #### `GET /api/stats`
 
@@ -505,7 +505,7 @@ curl http://localhost:8080/api/stats
 
 ---
 
-## ❌ Error Responses
+## Error Responses
 
 ### **Standard Error Format**:
 
@@ -552,7 +552,7 @@ curl http://localhost:8080/api/stats
 
 ---
 
-## 🧪 Example Workflows
+## Example Workflows
 
 ### **Complete CRUD Workflow**:
 
@@ -586,7 +586,7 @@ curl -X DELETE http://localhost:8080/api/datasets/documents
 
 ---
 
-## 🔄 Rate Limiting
+## Rate Limiting
 
 **Default Limits**:
 - `NESTGATE_RATE_LIMIT_RPM=100` (requests per minute)
@@ -613,7 +613,7 @@ X-RateLimit-Reset: 1706630460
 
 ---
 
-## 📏 Size Limits
+## Size Limits
 
 **Configurable via environment**:
 - `NESTGATE_MAX_OBJECT_SIZE_MB=1024` (default: 1GB)
@@ -632,7 +632,7 @@ X-RateLimit-Reset: 1706630460
 
 ---
 
-## 🎭 Content Types
+## Content Types
 
 **Auto-Detection**:
 NestGate automatically detects content types for common formats:
@@ -651,7 +651,7 @@ curl -X PUT http://localhost:8080/api/datasets/files/objects/data.bin \
 
 ---
 
-## 🔍 Query Parameters
+## Query Parameters
 
 ### **Pagination**:
 
@@ -678,7 +678,7 @@ curl "http://localhost:8080/api/datasets/photos/objects?sort=modified&order=desc
 
 ---
 
-## 🚀 Performance Tips
+## Performance Tips
 
 ### **1. Use Checksums for Integrity**:
 
@@ -711,7 +711,7 @@ For primal-to-primal communication, use Unix sockets instead of HTTP:
 
 ---
 
-## 📚 See Also
+## See Also
 
 - **RPC API**: `docs/api/RPC_API.md` - JSON-RPC over Unix sockets
 - **Error Codes**: `docs/api/ERROR_CODES.md` - Complete error reference
@@ -720,8 +720,8 @@ For primal-to-primal communication, use Unix sockets instead of HTTP:
 
 ---
 
-**NestGate REST API** · Storage · Discovery · Pure Rust 🦀
+**NestGate REST API** · Storage · Discovery · Pure Rust
 
 **Version**: 3.3.0  
 **Grade**: A++ 108/100 EXCEPTIONAL  
-**Status**: Production-Ready ✅
+**Status**: Production-Ready

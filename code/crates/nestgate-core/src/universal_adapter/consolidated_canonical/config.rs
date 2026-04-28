@@ -18,7 +18,7 @@ use super::enums::{DiscoveryMethod, RetryBackoff};
 
 /// Canonical adapter configuration - unified from all implementations
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -106,7 +106,7 @@ impl Default for DiscoveryConfig {
 
 /// Configuration for request handling
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -171,7 +171,7 @@ impl Default for MonitoringConfig {
 
 /// Configuration for security settings
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -254,7 +254,7 @@ impl Default for AlertThresholds {
 
 /// Rate limiting configuration
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]

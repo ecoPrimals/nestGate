@@ -3,13 +3,13 @@
 
 # Clone Optimization Guide for NestGate
 
-**Date**: November 28, 2025  
-**Purpose**: Systematic guide for reducing unnecessary clones and improving zero-copy patterns  
+**Date**: November 28, 2025
+**Purpose**: Systematic guide for reducing unnecessary clones and improving zero-copy patterns
 **Current Status**: 2,545 clone() calls identified across 711 files
 
 ---
 
-## 📊 CLONE USAGE ANALYSIS
+## CLONE USAGE ANALYSIS
 
 ### Current Statistics
 - **Total Clones**: 2,545 instances
@@ -30,7 +30,7 @@
 
 ---
 
-## 🎯 OPTIMIZATION STRATEGIES
+## OPTIMIZATION STRATEGIES
 
 ### Strategy 1: Config Clones → Arc\<Config>
 
@@ -38,7 +38,7 @@
 
 **Current Pattern**:
 ```rust
-// ❌ BEFORE: Expensive clone for immutable data
+// BAD — BEFORE: Expensive clone for immutable data
 fn process_with_config(config: ZfsConfig) {
     let service1 = ZfsService::new(config.clone());
     let service2 = ZfsService::new(config.clone());
@@ -48,7 +48,7 @@ fn process_with_config(config: ZfsConfig) {
 
 **Optimized Pattern**:
 ```rust
-// ✅ AFTER: Zero-cost Arc reference counting
+// GOOD — AFTER: Zero-cost Arc reference counting
 use std::sync::Arc;
 
 fn process_with_config(config: Arc<ZfsConfig>) {
@@ -84,7 +84,7 @@ impl ZfsService {
 
 **Current Pattern**:
 ```rust
-// ❌ BEFORE: Unnecessary allocation
+// BAD — BEFORE: Unnecessary allocation
 fn process_name(name: String) -> String {
     let processed = name.clone();
     processed.to_uppercase()
@@ -95,7 +95,7 @@ fn process_name(name: String) -> String {
 
 **Option A: Use References**
 ```rust
-// ✅ AFTER: Zero-copy string reference
+// GOOD — AFTER: Zero-copy string reference
 fn process_name(name: &str) -> String {
     name.to_uppercase() // Only allocate for result
 }
@@ -103,7 +103,7 @@ fn process_name(name: &str) -> String {
 
 **Option B: Use Cow for Conditional Modification**
 ```rust
-// ✅ BEST: Copy-on-Write
+// BEST: Copy-on-Write
 use std::borrow::Cow;
 
 fn process_name(name: Cow<str>) -> Cow<str> {
@@ -128,7 +128,7 @@ fn process_name(name: Cow<str>) -> Cow<str> {
 
 **Current Pattern**:
 ```rust
-// ❌ BEFORE: Clone entire Vec
+// BAD — BEFORE: Clone entire Vec
 fn count_items(items: Vec<String>) -> usize {
     items.len()
 }
@@ -139,7 +139,7 @@ let count = count_items(my_items.clone()); // Expensive!
 
 **Optimized Pattern**:
 ```rust
-// ✅ AFTER: Borrow reference
+// GOOD — AFTER: Borrow reference
 fn count_items(items: &[String]) -> usize {
     items.len()
 }
@@ -156,7 +156,7 @@ let count = count_items(&my_items); // Zero-cost!
 
 **Current Pattern**:
 ```rust
-// ❌ BEFORE: Clone entire large struct
+// BAD — BEFORE: Clone entire large struct
 #[derive(Clone)]
 struct LargeData {
     metrics: Vec<PerformanceMetric>, // 1000+ items
@@ -172,7 +172,7 @@ process(data.clone()); // Expensive deep copy!
 
 **Optimized Pattern**:
 ```rust
-// ✅ AFTER: Arc for shared ownership
+// GOOD — AFTER: Arc for shared ownership
 use std::sync::Arc;
 
 struct LargeData {
@@ -188,7 +188,7 @@ process(Arc::clone(&data)); // Cheap ref count increment!
 
 ---
 
-## 📋 MIGRATION CHECKLIST
+## MIGRATION CHECKLIST
 
 ### Phase 1: Config Optimization (3-4 days)
 
@@ -197,7 +197,7 @@ process(Arc::clone(&data)); // Cheap ref count increment!
   - [ ] Update all `ZfsService::new()` calls
   - [ ] Update tests (acceptable to keep test clones)
   - Files: `orchestrator_integration.rs`, `zfs/` modules
-  
+
 - [ ] **Network Config** (HIGH PRIORITY)
   - [ ] Convert network configs to `Arc<NetworkConfig>`
   - [ ] Update service initialization
@@ -235,7 +235,7 @@ process(Arc::clone(&data)); // Cheap ref count increment!
 
 ---
 
-## 🧪 TESTING STRATEGY
+## TESTING STRATEGY
 
 ### 1. Performance Benchmarks
 
@@ -245,7 +245,7 @@ Create benchmarks for optimizations:
 #[cfg(test)]
 mod clone_optimization_benchmarks {
     use criterion::{black_box, Criterion};
-    
+
     #[bench]
     fn bench_config_clone_before(c: &mut Criterion) {
         let config = ZfsConfig::default();
@@ -255,7 +255,7 @@ mod clone_optimization_benchmarks {
             })
         });
     }
-    
+
     #[bench]
     fn bench_config_arc_after(c: &mut Criterion) {
         let config = Arc::new(ZfsConfig::default());
@@ -288,7 +288,7 @@ fn test_arc_config_behavior() {
     let config = Arc::new(ZfsConfig::default());
     let service1 = ZfsService::new(Arc::clone(&config));
     let service2 = ZfsService::new(Arc::clone(&config));
-    
+
     // Both services should see same config
     assert_eq!(Arc::strong_count(&config), 3); // Original + 2 clones
 }
@@ -296,7 +296,7 @@ fn test_arc_config_behavior() {
 
 ---
 
-## 📊 EXPECTED OUTCOMES
+## EXPECTED OUTCOMES
 
 ### Performance Improvements
 
@@ -311,7 +311,7 @@ fn test_arc_config_behavior() {
 ### Memory Improvements
 
 - **Heap Allocations**: 15-25% reduction
-- **Peak Memory**: 10-15% reduction  
+- **Peak Memory**: 10-15% reduction
 - **GC Pressure**: Significant reduction (fewer allocations)
 
 ### Maintainability Improvements
@@ -322,16 +322,16 @@ fn test_arc_config_behavior() {
 
 ---
 
-## ⚠️ ANTI-PATTERNS TO AVOID
+## ANTI-PATTERNS TO AVOID
 
 ### 1. Over-Arcing
 
 **DON'T** wrap everything in Arc:
 ```rust
-// ❌ BAD: Unnecessary Arc for simple types
+// BAD: Unnecessary Arc for simple types
 fn process(num: Arc<i32>) { /* ... */ }
 
-// ✅ GOOD: Just copy simple types
+// GOOD: Just copy simple types
 fn process(num: i32) { /* ... */ }
 ```
 
@@ -344,10 +344,10 @@ fn process(num: i32) { /* ... */ }
 
 **DON'T** use Arc<Mutex<T>> when Arc<RwLock<T>> would work:
 ```rust
-// ❌ BAD: Mutex for read-heavy workload
+//  BAD: Mutex for read-heavy workload
 type Config = Arc<Mutex<ZfsConfig>>;
 
-// ✅ GOOD: RwLock allows concurrent reads
+// GOOD: RwLock allows concurrent reads
 type Config = Arc<RwLock<ZfsConfig>>;
 ```
 
@@ -355,16 +355,16 @@ type Config = Arc<RwLock<ZfsConfig>>;
 
 **DON'T** optimize before measuring:
 ```rust
-// ❌ BAD: Optimizing without profiling
+// BAD: Optimizing without profiling
 // Convert everything to Arc without knowing if it helps
 
-// ✅ GOOD: Profile first, optimize hot paths
+// GOOD: Profile first, optimize hot paths
 // Use `cargo flamegraph` or `perf` to find bottlenecks
 ```
 
 ---
 
-## 🛠️ TOOLS & COMMANDS
+## TOOLS AND COMMANDS
 
 ### Profiling Commands
 
@@ -397,7 +397,7 @@ rg "config\.clone\(\)" code/crates
 
 ---
 
-## 📈 PROGRESS TRACKING
+## PROGRESS TRACKING
 
 ### Optimization Metrics
 
@@ -411,16 +411,16 @@ rg "config\.clone\(\)" code/crates
 
 ### Success Criteria
 
-- ✅ All config clones converted to Arc (300 instances)
-- ✅ 50%+ string clones eliminated (400/800 instances)
-- ✅ 50%+ collection clones eliminated (100/200 instances)
-- ✅ Measurable performance improvement (10%+)
-- ✅ All tests passing
-- ✅ No functionality regressions
+- [Done] All config clones converted to Arc (300 instances)
+- [Done] 50%+ string clones eliminated (400/800 instances)
+- [Done] 50%+ collection clones eliminated (100/200 instances)
+- [Done] Measurable performance improvement (10%+)
+- [Done] All tests passing
+- [Done] No functionality regressions
 
 ---
 
-## 🎯 CONCLUSION
+## CONCLUSION
 
 Clone optimization is a **high-value, medium-effort** improvement with clear benefits:
 
@@ -433,7 +433,7 @@ Clone optimization is a **high-value, medium-effort** improvement with clear ben
 
 ---
 
-**Status**: Ready to Execute  
-**Timeline**: 8-12 weeks (incremental)  
+**Status**: Ready to Execute
+**Timeline**: 8-12 weeks (incremental)
 **Priority**: MEDIUM (valuable, not blocking)
 

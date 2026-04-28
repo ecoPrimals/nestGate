@@ -24,7 +24,7 @@ pub struct FsMonitorStorageSettings {
     pub backup: BackupSettings,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
 /// ```rust

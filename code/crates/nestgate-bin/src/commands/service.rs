@@ -147,12 +147,22 @@ impl ServiceManager {
             info!("TCP JSON-RPC also listening on {addr}");
         }
 
-        let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
-            crate::error::NestGateBinError::service_init_error(
-                format!("Failed to create JSON-RPC handler: {e}"),
-                Some("unix-socket-handler".to_string()),
-            )
-        })?;
+        let encryption = nestgate_core::rpc::storage_encryption::StorageEncryption::resolve(Some(
+            socket_config.family_id.as_str(),
+        ))
+        .await;
+        let encryption = encryption.map(std::sync::Arc::new);
+        if encryption.is_some() {
+            info!("Storage encrypt-at-rest: enabled (chacha20-poly1305)");
+        }
+
+        let handler =
+            legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
+                crate::error::NestGateBinError::service_init_error(
+                    format!("Failed to create JSON-RPC handler: {e}"),
+                    Some("unix-socket-handler".to_string()),
+                )
+            })?;
         let server = Arc::new(IsomorphicIpcServer::new(
             socket_config.family_id.clone(),
             handler.clone(),
@@ -468,12 +478,22 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
     socket_config.log_summary();
 
     info!("Initializing persistent storage backend");
-    let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
-        crate::error::NestGateBinError::service_init_error(
-            format!("Failed to create JSON-RPC handler: {e}"),
-            Some("unix-socket-handler".to_string()),
-        )
-    })?;
+    let encryption = nestgate_core::rpc::storage_encryption::StorageEncryption::resolve(Some(
+        socket_config.family_id.as_str(),
+    ))
+    .await;
+    let encryption = encryption.map(std::sync::Arc::new);
+    if encryption.is_some() {
+        info!("Storage encrypt-at-rest: enabled (chacha20-poly1305)");
+    }
+
+    let handler =
+        legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
+            crate::error::NestGateBinError::service_init_error(
+                format!("Failed to create JSON-RPC handler: {e}"),
+                Some("unix-socket-handler".to_string()),
+            )
+        })?;
     let server = Arc::new(IsomorphicIpcServer::new(
         socket_config.family_id.clone(),
         handler.clone(),

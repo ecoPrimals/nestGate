@@ -1,10 +1,10 @@
-# 🏠 **LOCAL NESTGATE INSTANCE SETUP**
+# **LOCAL NESTGATE INSTANCE SETUP**
 
 **Run NestGate locally and connect to Songbird service mesh**
 
 ---
 
-## 🎯 **OVERVIEW**
+## **OVERVIEW**
 
 This guide sets up:
 1. Local NestGate service (development instance)
@@ -13,15 +13,15 @@ This guide sets up:
 4. Ecosystem integration testing
 
 **Why this approach?**
-- ✅ Local instance for development/testing
-- ✅ CLI connects to local service (full features)
-- ✅ Songbird provides service discovery
-- ✅ Can connect to other towers via mesh
-- ✅ Test ecosystem integration safely
+- Local instance for development/testing
+- CLI connects to local service (full features)
+- Songbird provides service discovery
+- Can connect to other towers via mesh
+- Test ecosystem integration safely
 
 ---
 
-## 🚀 **QUICK START** (5 minutes)
+## **QUICK START** (5 minutes)
 
 ### **Step 1: Start Local NestGate Service**
 
@@ -69,7 +69,7 @@ export NESTGATE_API_URL="http://127.0.0.1:8080"
 
 ---
 
-## 🌐 **CONNECT TO SONGBIRD** (Optional - Network Effects!)
+## **CONNECT TO SONGBIRD** (Optional - Network Effects!)
 
 ### **Step 3: Check if Songbird is Running**
 
@@ -77,7 +77,7 @@ export NESTGATE_API_URL="http://127.0.0.1:8080"
 # Check if Songbird is running on any tower
 for node in node-a node-b node-c node-d; do
     echo "Checking $node..."
-    ssh $node "pgrep songbird && echo '✓ Songbird running on $node'" || true
+    ssh $node "pgrep songbird && echo 'OK Songbird running on $node'" || true
 done
 ```
 
@@ -117,7 +117,7 @@ kill $(cat ~/.nestgate/service.pid)
 echo $! > ~/.nestgate/service.pid
 
 # NestGate will now register with Songbird
-echo "✓ NestGate registered with Songbird"
+echo "OK NestGate registered with Songbird"
 ```
 
 ### **Step 6: Verify Integration**
@@ -133,7 +133,7 @@ curl -s http://localhost:9090/services | jq '.'
 
 ---
 
-## 📝 **CONFIGURATION FILE** (Recommended)
+## **CONFIGURATION FILE** (Recommended)
 
 Create a config file for easier management:
 
@@ -177,7 +177,7 @@ EOF
 
 ---
 
-## 🧪 **TEST CLI FUNCTIONALITY**
+## **TEST CLI FUNCTIONALITY**
 
 ### **Basic Commands**
 
@@ -227,7 +227,7 @@ echo "Hello NestGate!" | ./target/release/nestgate storage write testdata/hello.
 
 ---
 
-## 🌐 **ECOSYSTEM INTEGRATION TESTING**
+## **ECOSYSTEM INTEGRATION TESTING**
 
 ### **Scenario: Use Songbird to Find Storage**
 
@@ -237,9 +237,9 @@ echo "Hello NestGate!" | ./target/release/nestgate storage write testdata/hello.
 
 # Output:
 # Found 3 storage services:
-#   - nestgate-node-d-dev (local, 127.0.0.1:8080)
-#   - nestgate-node-a (remote, node-a:8080)
-#   - nestgate-node-c (remote, node-c:8080)
+# - nestgate-node-d-dev (local, 127.0.0.1:8080)
+# - nestgate-node-a (remote, node-a:8080)
+# - nestgate-node-c (remote, node-c:8080)
 
 # Connect to remote service via Songbird
 ./target/release/nestgate connect node-a --via-songbird
@@ -263,7 +263,7 @@ echo "Hello NestGate!" | ./target/release/nestgate storage write testdata/hello.
 
 ---
 
-## 🔧 **DEVELOPMENT WORKFLOW**
+## **DEVELOPMENT WORKFLOW**
 
 ### **Typical Dev Session**
 
@@ -306,7 +306,7 @@ fi
     --config ~/.nestgate/config.toml &
 
 echo $! > ~/.nestgate/service.pid
-echo "✓ NestGate started (PID: $(cat ~/.nestgate/service.pid))"
+echo "OK NestGate started (PID: $(cat ~/.nestgate/service.pid))"
 EOF
 
 # ~/.nestgate/scripts/stop.sh
@@ -314,10 +314,10 @@ cat > ~/.nestgate/scripts/stop.sh << 'EOF'
 #!/bin/bash
 if [ -f ~/.nestgate/service.pid ]; then
     PID=$(cat ~/.nestgate/service.pid)
-    kill $PID 2>/dev/null && echo "✓ NestGate stopped (PID: $PID)"
+    kill $PID 2>/dev/null && echo "OK NestGate stopped (PID: $PID)"
     rm ~/.nestgate/service.pid
 else
-    echo "⚠ NestGate not running"
+    echo "NestGate not running"
 fi
 EOF
 
@@ -335,7 +335,7 @@ chmod +x ~/.nestgate/scripts/*.sh
 
 ---
 
-## 🐛 **TROUBLESHOOTING**
+## **TROUBLESHOOTING**
 
 ### **Service Won't Start**
 
@@ -382,7 +382,7 @@ curl http://localhost:9090/services | jq '.[] | select(.name | contains("nestgat
 
 ---
 
-## 📊 **MONITORING LOCAL INSTANCE**
+## **MONITORING LOCAL INSTANCE**
 
 ### **Health Checks**
 
@@ -414,7 +414,7 @@ du -sh ~/.nestgate/logs/
 
 ---
 
-## 🎯 **EXAMPLE: FULL LOCAL SETUP**
+## **EXAMPLE: FULL LOCAL SETUP**
 
 Complete setup script:
 
@@ -424,7 +424,7 @@ Complete setup script:
 
 set -e
 
-echo "🏠 Setting up local NestGate instance..."
+echo "Setting up local NestGate instance..."
 
 # 1. Create directories
 mkdir -p ~/.nestgate/{data,logs,config,cache,scripts}
@@ -466,7 +466,7 @@ export NESTGATE_API_URL="http://127.0.0.1:8080"
 alias ng='nestgate'
 EOF
 
-echo "✓ Setup complete!"
+echo "OK Setup complete!"
 echo ""
 echo "Next steps:"
 echo "  1. source ~/.bashrc"
@@ -476,7 +476,7 @@ echo "  3. nestgate storage list"
 
 ---
 
-## 🚀 **NEXT STEPS**
+## **NEXT STEPS**
 
 ### **After Local Setup**
 
@@ -497,7 +497,7 @@ Once local testing is complete:
 
 ---
 
-## 📚 **RELATED DOCS**
+## **RELATED DOCS**
 
 - **Build Guide**: `BUILD_SUCCESS_REPORT.md`
 - **CLI Reference**: `docs/CLI_REFERENCE.md`
@@ -506,9 +506,9 @@ Once local testing is complete:
 
 ---
 
-**🏠 Local instance: Your development playground!**
+**Local instance: Your development playground!**
 
-**🌐 + Songbird: Production-ready service mesh!**
+**Plus Songbird: Production-ready service mesh!**
 
-**🚀 Start building and testing locally, deploy globally!**
+**Start building and testing locally, deploy globally!**
 

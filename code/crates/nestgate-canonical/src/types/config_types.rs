@@ -35,7 +35,7 @@ pub struct CanonicalConfig {
 
 /// Canonical Network Configuration
 ///
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_primary::domains::network`
+/// **DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_primary::domains::network`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -84,7 +84,7 @@ pub struct StorageConfig {
 
 /// Canonical Security Configuration
 ///
-/// **⚠️ DEPRECATED**: This config has been consolidated into `canonical_primary`
+/// **DEPRECATED**: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

@@ -12,7 +12,7 @@ use std::time::Duration;
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -58,7 +58,7 @@ pub enum AuthenticationMethod {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -87,7 +87,7 @@ pub struct SecurityAuthorizationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -127,7 +127,7 @@ pub struct KeyDerivationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -154,7 +154,7 @@ pub struct SecurityTlsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -183,7 +183,7 @@ pub struct SecurityAuditConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -212,7 +212,7 @@ pub struct SecurityThreatDetectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore

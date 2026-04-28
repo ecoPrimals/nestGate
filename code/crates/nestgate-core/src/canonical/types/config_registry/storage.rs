@@ -39,7 +39,7 @@ impl Default for StorageBackendType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -70,7 +70,7 @@ pub struct StorageConnectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -105,7 +105,7 @@ pub struct StoragePerformanceConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -136,7 +136,7 @@ pub struct StorageSecurityConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -203,7 +203,7 @@ impl Default for ConflictResolutionStrategy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -271,7 +271,7 @@ pub struct MigrationCondition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -395,7 +395,7 @@ pub struct FtpProtocolConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
 /// ```rust,ignore

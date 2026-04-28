@@ -169,7 +169,7 @@ pub struct NestGateCanonicalConfig<
     pub handlers: CanonicalHandlerConfigs,
 
     /// Test and validation configurations (NEW - consolidates 40+ scattered test configs)
-    /// **⚠️ DEV/TEST ONLY**: Only available with `dev-stubs` feature
+    /// **DEV/TEST ONLY**: Only available with `dev-stubs` feature
     #[cfg(feature = "dev-stubs")]
     /// Testing
     pub testing: CanonicalTestConfigs,

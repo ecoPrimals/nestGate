@@ -1,23 +1,23 @@
-# 👋 Developer Onboarding Guide
+# Developer Onboarding Guide
 
 **Welcome to NestGate development!**
 
 ---
 
-## 🎯 What is NestGate?
+## What is NestGate?
 
 **NestGate** is a **storage and discovery primal** in the ecoPrimals ecosystem.
 
 **Core Responsibilities**:
-- 📦 **Storage**: Dataset and object management with ZFS backend
-- 🔍 **Discovery**: Capability-based service discovery (mDNS/Consul/K8s)
-- 📋 **Registry**: Service metadata and capability tracking
+- **Storage**: Dataset and object management with ZFS backend
+- **Discovery**: Capability-based service discovery (mDNS/Consul/K8s)
+- **Registry**: Service metadata and capability tracking
 
 **Architecture**: Primal Sovereignty (self-knowledge + runtime discovery)
 
 ---
 
-## 🏗️ Codebase Structure
+## Codebase Structure
 
 ```
 nestGate/
@@ -25,8 +25,8 @@ nestGate/
 │   ├── nestgate-core/          # Core library (main development here)
 │   │   ├── src/
 │   │   │   ├── services/       # Service implementations
-│   │   │   │   └── storage/    # Storage service (✅ refactored)
-│   │   │   ├── config/         # Configuration system (✅ refactored)
+│   │   │   │   └── storage/    # Storage service (refactored)
+│   │   │   ├── config/         # Configuration system (refactored)
 │   │   │   ├── rpc/            # RPC and IPC
 │   │   │   ├── primal_discovery/ # Capability discovery
 │   │   │   ├── error/          # Error handling
@@ -42,15 +42,15 @@ nestGate/
 ```
 
 **Key Modules**:
-- `services/storage` - Dataset/object operations (✅ modular)
-- `config/environment` - Environment-driven config (✅ modular)
+- `services/storage` - Dataset/object operations (modular)
+- `config/environment` - Environment-driven config (modular)
 - `primal_discovery` - Capability-based discovery
 - `rpc` - HTTP API + Unix socket JSON-RPC
 - `error` - Comprehensive error handling
 
 ---
 
-## 🚀 Getting Started (30 minutes)
+## Getting Started (30 minutes)
 
 ### **Step 1: Prerequisites** (5 min)
 
@@ -82,7 +82,7 @@ cargo build --workspace
 # Run tests (verify everything works)
 cargo test --workspace
 
-# Expected: 3670+ tests passing ✅
+# Expected: 3670+ tests passing
 ```
 
 ### **Step 3: Understand the Architecture** (10 min)
@@ -108,7 +108,7 @@ curl http://localhost:8080/health
 
 ---
 
-## 🎓 Development Workflow
+## Development Workflow
 
 ### **Daily Development**:
 
@@ -189,11 +189,11 @@ debug!("Processing request: {:?}", request);
 
 ---
 
-## 📚 Coding Guidelines
+## Coding Guidelines
 
 ### **Rust Style**:
 
-✅ **DO**:
+**DO**:
 - Use `rustfmt` (auto-format)
 - Run `clippy` (catch issues)
 - Write comprehensive tests
@@ -201,7 +201,7 @@ debug!("Processing request: {:?}", request);
 - Use `Result<T>` for fallible operations
 - Prefer `&str` over `String` in function params
 
-❌ **DON'T**:
+**DON'T**:
 - Use `unwrap()` in production code (use `?` or `.ok()`)
 - Hardcode values (use environment variables)
 - Create large monolithic files (>800 lines = consider refactoring)
@@ -211,14 +211,14 @@ debug!("Processing request: {:?}", request);
 ### **Error Handling**:
 
 ```rust
-// ✅ GOOD
+// GOOD
 pub async fn create_dataset(name: &str) -> Result<DatasetInfo> {
     validate_name(name)?;
     let dataset = storage.create(name).await?;
     Ok(dataset)
 }
 
-// ❌ BAD
+// BAD
 pub async fn create_dataset(name: &str) -> DatasetInfo {
     storage.create(name).await.unwrap()  // Will panic!
 }
@@ -227,13 +227,13 @@ pub async fn create_dataset(name: &str) -> DatasetInfo {
 ### **Environment Variables**:
 
 ```rust
-// ✅ GOOD - With fallback
+// GOOD - With fallback
 let port = std::env::var("NESTGATE_PORT")
     .ok()
     .and_then(|p| p.parse().ok())
     .unwrap_or(8080);
 
-// ❌ BAD - Hardcoded
+// BAD - Hardcoded
 let port = 8080;
 ```
 
@@ -261,7 +261,7 @@ mod tests {
 
 ---
 
-## 🎯 Common Development Tasks
+## Common Development Tasks
 
 ### **Add a New API Endpoint**:
 
@@ -298,9 +298,9 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 
 ---
 
-## 🏆 Best Practices
+## Best Practices
 
-### **1. Test Coverage** ✅
+### **1. Test Coverage**
 
 - Unit tests for all public functions
 - Integration tests for workflows
@@ -309,7 +309,7 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 
 **Target**: >80% coverage
 
-### **2. Documentation** ✅
+### **2. Documentation**
 
 - Public APIs: Comprehensive doc comments
 - Complex logic: Inline comments
@@ -318,7 +318,7 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 
 **Target**: All public items documented
 
-### **3. Performance** ✅
+### **3. Performance**
 
 - Profile before optimizing
 - Benchmark changes
@@ -327,7 +327,7 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 
 **Target**: No regressions
 
-### **4. Security** ✅
+### **4. Security**
 
 - No secrets in code
 - Validate all inputs
@@ -338,7 +338,7 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 
 ---
 
-## 🔄 Review Process
+## Review Process
 
 ### **Before Creating PR**:
 
@@ -389,7 +389,7 @@ Closes #123
 
 ---
 
-## 🧪 Testing Guidelines
+## Testing Guidelines
 
 ### **Test Pyramid**:
 
@@ -434,7 +434,7 @@ mod tests {
 
 ---
 
-## 📖 Learning Resources
+## Learning Resources
 
 ### **Internal Documentation**:
 - `docs/architecture/` - System design
@@ -450,7 +450,7 @@ mod tests {
 
 ---
 
-## 🎉 Your First Contribution
+## Your First Contribution
 
 **Recommended starter tasks**:
 
@@ -473,7 +473,7 @@ mod tests {
 
 ---
 
-## 🤝 Community
+## Community
 
 ### **Communication**:
 - GitHub Issues - Bug reports, feature requests
@@ -488,8 +488,8 @@ mod tests {
 
 ---
 
-**Welcome to the team!** 🎉
+**Welcome to the team!**
 
 **Questions?** See `CONTRIBUTING.md` or open a GitHub Discussion!
 
-🦀 **NestGate Development** · Pure Rust · Production-Ready 🦀
+**NestGate Development** · Pure Rust · Production-Ready

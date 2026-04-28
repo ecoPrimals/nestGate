@@ -275,7 +275,7 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
 ///         |status| {
 ///             println!("NestGate status: {:?}", status);
 ///             if status.needs_attention() {
-///                 eprintln!("⚠️  NestGate needs attention!");
+///                 eprintln!("NestGate needs attention!");
 ///             }
 ///         }
 ///     ).await
@@ -343,7 +343,7 @@ pub async fn wait_for_healthy(timeout: Duration) -> Result<()> {
     let start = std::time::Instant::now();
     let check_interval = Duration::from_millis(500);
 
-    info!("⏳ Waiting for NestGate to become healthy...");
+    info!("Waiting for NestGate to become healthy...");
 
     loop {
         if start.elapsed() > timeout {

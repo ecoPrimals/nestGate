@@ -1,12 +1,12 @@
-# 🚀 NestGate biomeOS Integration - Quick Start Guide
+# NestGate biomeOS Integration - Quick Start Guide
 
-**Status**: ✅ Production Ready  
+**Status**: Production Ready  
 **Grade**: A (93/100)  
 **Version**: 0.1.0 with biomeOS IPC
 
 ---
 
-## 📋 **Quick Start**
+## **Quick Start**
 
 ### **1. Environment Setup**
 
@@ -46,7 +46,7 @@ ls -la /run/user/$(id -u)/nestgate-*.sock
 
 ---
 
-## 🔌 **Using from biomeOS**
+## **Using from biomeOS**
 
 ### **Rust Client (biomeOS)**
 
@@ -101,7 +101,7 @@ echo '{"jsonrpc":"2.0","method":"storage.store","params":{"key":"test","data":{"
 
 ---
 
-## 📖 **API Reference**
+## **API Reference**
 
 ### **storage.store**
 Store key-value data.
@@ -287,7 +287,7 @@ Response:
 
 ---
 
-## 🎵 **Songbird Integration**
+## **Songbird Integration**
 
 ### **Automatic Registration**
 
@@ -332,13 +332,13 @@ NestGate sends health reports every 30 seconds:
 ### **Graceful Fallback**
 
 If Songbird is unavailable, NestGate continues normally:
-- ✅ No registration errors
-- ✅ Storage operations work
-- ✅ Logs informational message
+- No registration errors
+- Storage operations work
+- Logs informational message
 
 ---
 
-## 🔒 **Family Isolation**
+## **Family Isolation**
 
 Each family ID has isolated storage:
 
@@ -360,7 +360,7 @@ client2.store("config", &data2).await?;
 
 ---
 
-## 🧪 **Testing**
+## **Testing**
 
 ### **Run Integration Tests**
 
@@ -384,7 +384,7 @@ cargo test --package biomeos-core -- nestgate_integration
 
 ---
 
-## 📊 **Monitoring**
+## **Monitoring**
 
 ### **Check Socket Status**
 
@@ -416,7 +416,7 @@ RUST_LOG=info cargo run --release
 
 ---
 
-## 🚨 **Troubleshooting**
+## **Troubleshooting**
 
 ### **Socket Not Found**
 
@@ -451,7 +451,7 @@ export SONGBIRD_FAMILY_ID=production
 
 ---
 
-## 📚 **Additional Resources**
+## **Additional Resources**
 
 - **Architecture**: `ARCHITECTURE_OVERVIEW.md`
 - **Deployment**: `DEPLOYMENT_VERIFICATION.md`
@@ -459,20 +459,20 @@ export SONGBIRD_FAMILY_ID=production
 
 ---
 
-## ✅ **Success Criteria**
+## **Success Criteria**
 
 Your integration is working when:
 
-1. ✅ Socket exists at `/run/user/{uid}/nestgate-{family_id}.sock`
-2. ✅ `storage.stats` returns statistics
-3. ✅ Can store and retrieve data
-4. ✅ biomeOS client tests pass
-5. ✅ (Optional) Registered with Songbird
+1. Socket exists at `/run/user/{uid}/nestgate-{family_id}.sock`
+2. `storage.stats` returns statistics
+3. Can store and retrieve data
+4. biomeOS client tests pass
+5. (Optional) Registered with Songbird
 
 ---
 
-**Status**: ✅ Production Ready  
+**Status**: Production Ready  
 **Grade**: A (93/100)  
 **Support**: Full biomeOS IPC integration
 
-🎊 **Ready for Production Use** 🎊
+**Ready for Production Use**

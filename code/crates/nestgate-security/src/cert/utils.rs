@@ -243,7 +243,7 @@ pub mod modern {
 
     /// Modern certificate generation with automatic endpoint discovery
     ///
-    /// **⚠️ DEV ONLY**: Uses stub network adapter, not for production
+    /// **DEV ONLY**: Uses stub network adapter, not for production
     ///
     /// # Errors
     ///

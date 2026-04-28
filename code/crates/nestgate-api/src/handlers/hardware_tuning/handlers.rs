@@ -3,7 +3,7 @@
 
 //! **HARDWARE TUNING HANDLERS - DEVELOPMENT STUBS**
 //!
-//! ⚠️ **ONLY AVAILABLE WITH `dev-stubs` FEATURE** ⚠️
+//! **ONLY AVAILABLE WITH `dev-stubs` FEATURE**
 //!
 //! HTTP handlers for hardware tuning operations.
 //! Resource discovery uses Linux `/proc` via [`super::linux_proc`] (no `sysinfo`).

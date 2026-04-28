@@ -6,7 +6,7 @@
     reason = "Intro banner is intentionally verbose for mutation-testing documentation; shorten in a follow-up."
 )]
 
-/// 🔍 **VALIDATION PREDICATES MODULE** 🔍
+/// **VALIDATION PREDICATES MODULE**
 /// Pure boolean predicate functions for validation logic.
 /// Extracted from complex validation chains to enable precise testing
 /// and catch boolean logic mutations (|| vs &&, ! vs identity).

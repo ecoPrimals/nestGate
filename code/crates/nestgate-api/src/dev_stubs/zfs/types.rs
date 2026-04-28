@@ -266,7 +266,7 @@ impl ZeroCostZfsOperations {
 ///
 /// ZFS performance optimization service.
 ///
-/// ⚠️ **DEV STUB**: Shared type — used by production handlers.
+/// **DEV STUB**: Shared type — used by production handlers.
 #[derive(Debug, Clone)]
 pub struct PerformanceOptimizer;
 
@@ -302,7 +302,7 @@ impl PerformanceOptimizer {
 ///
 /// Calculates confidence scores for ZFS operations and predictions.
 ///
-/// ⚠️ **DEV STUB**: Shared type — used by production handlers.
+/// **DEV STUB**: Shared type — used by production handlers.
 #[derive(Debug, Clone)]
 /// Confidencecalculator
 pub struct ConfidenceCalculator;
@@ -390,7 +390,7 @@ pub struct ZeroCostSnapshotInfo {
 ///
 /// Extended dataset information with additional metadata.
 ///
-/// ⚠️ **UNUSED**: Reserved for future use. Consider removing if not needed.
+/// **UNUSED**: Reserved for future use. Consider removing if not needed.
 #[expect(
     dead_code,
     reason = "Extended dataset metadata reserved for future dev-stub features"

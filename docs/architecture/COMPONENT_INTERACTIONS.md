@@ -1,4 +1,4 @@
-# 🏗️ Component Interaction Architecture
+# Component Interaction Architecture
 
 **Last Updated**: January 30, 2026  
 **Version**: 3.3.0  
@@ -6,13 +6,13 @@
 
 ---
 
-## 🎯 System Overview
+## System Overview
 
 NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem, following the **Primal Sovereignty** architecture where each primal has self-knowledge and discovers others at runtime.
 
 ---
 
-## 📊 High-Level Architecture
+## High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -22,12 +22,12 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem, foll
 │                                                                       │
 │  ┌──────────────┐      ┌───────────────┐      ┌─────────────────┐  │
 │  │   HTTP API   │      │  Unix Socket  │      │  Capability     │  │
-│  │   :8080      │◄────►│  JSON-RPC     │◄────►│  Discovery      │  │
+│  │   :8080      │<────>│  JSON-RPC     │<────>│  Discovery      │  │
 │  └──────┬───────┘      └───────┬───────┘      └────────┬────────┘  │
 │         │                      │                       │            │
 │         └──────────┬───────────┴───────────────────────┘            │
 │                    │                                                 │
-│         ┌──────────▼──────────────────────────┐                     │
+│         ┌──────────v──────────────────────────┐                     │
 │         │    STORAGE MANAGER SERVICE          │                     │
 │         │  ┌─────────────┐  ┌──────────────┐  │                     │
 │         │  │  Datasets   │  │   Objects    │  │                     │
@@ -37,13 +37,13 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem, foll
 │         │  └──────┬──────┘  └──────┬───────┘  │                     │
 │         │         └────────┬────────┘          │                     │
 │         │                  │                   │                     │
-│         │         ┌────────▼────────┐          │                     │
+│         │         ┌────────v────────┐          │                     │
 │         │         │  ZFS Backend    │          │                     │
 │         │         │  (Filesystem)   │          │                     │
 │         │         └────────┬────────┘          │                     │
 │         └──────────────────┼──────────────────-┘                     │
 │                            │                                          │
-│                   ┌────────▼────────┐                                │
+│                   ┌────────v────────┐                                │
 │                   │  XDG-Compliant  │                                │
 │                   │  Storage Paths  │                                │
 │                   │  (Phase 4)      │                                │
@@ -54,27 +54,27 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem, foll
 
 ---
 
-## 🔄 Component Interaction Flow
+## Component Interaction Flow
 
 ### **1. Client Request → API → Storage**
 
 ```
 Client                  HTTP API              Storage Service          ZFS Backend
   │                        │                        │                      │
-  ├─► POST /datasets ──────┤                        │                      │
-  │                        ├─► create_dataset() ───►│                      │
-  │                        │                        ├─► create_dir()  ─────┤
-  │                        │                        │◄─── success ─────────┤
-  │                        │◄─── DatasetInfo ───────┤                      │
-  │◄─── 201 Created ───────┤                        │                      │
+  ├─> POST /datasets ──────┤                        │                      │
+  │                        ├─> create_dataset() ───>│                      │
+  │                        │                        ├─> create_dir()  ─────┤
+  │                        │                        │<─── success ─────────┤
+  │                        │<─── DatasetInfo ───────┤                      │
+  │<─── 201 Created ───────┤                        │                      │
   │                        │                        │                      │
-  ├─► PUT /objects ────────┤                        │                      │
-  │                        ├─► store_object() ──────┤                      │
-  │                        │                        ├─► write_file() ──────┤
-  │                        │                        ├─► calc_checksum() ───┤
-  │                        │                        │◄─── success ─────────┤
-  │                        │◄─── ObjectInfo ────────┤                      │
-  │◄─── 200 OK ────────────┤                        │                      │
+  ├─> PUT /objects ────────┤                        │                      │
+  │                        ├─> store_object() ──────┤                      │
+  │                        │                        ├─> write_file() ──────┤
+  │                        │                        ├─> calc_checksum() ───┤
+  │                        │                        │<─── success ─────────┤
+  │                        │<─── ObjectInfo ────────┤                      │
+  │<─── 200 OK ────────────┤                        │                      │
 ```
 
 ### **2. Primal Discovery Flow**
@@ -82,17 +82,17 @@ Client                  HTTP API              Storage Service          ZFS Backe
 ```
 NestGate (Self)       Discovery System      Other Primals      Service Registry
     │                      │                      │                   │
-    ├─► self_knowledge ───►│                      │                   │
+    ├─> self_knowledge ───>│                      │                   │
     │   (capabilities)     │                      │                   │
-    │                      ├─► announce() ────────┼──────────────────►│
-    │                      │                      │                   ├─► store metadata
+    │                      ├─> announce() ────────┼──────────────────>│
+    │                      │                      │                   ├─> store metadata
     │                      │                      │                   │
-    ├─► find_by_cap() ────►│                      │                   │
-    │   ("security")       ├─► query() ───────────┼──────────────────►│
-    │                      │◄─── services ────────┼───────────────────┤
+    ├─> find_by_cap() ────>│                      │                   │
+    │   ("security")       ├─> query() ───────────┼──────────────────>│
+    │                      │<─── services ────────┼───────────────────┤
     │                      │                      │                   │
-    │                      ├─► connect(BearDog)  ►│                   │
-    │◄─── connection ──────┤◄─────────────────────┤                   │
+    │                      ├─> connect(BearDog)  >│                   │
+    │<─── connection ──────┤<─────────────────────┤                   │
     │                      │                      │                   │
 ```
 
@@ -101,22 +101,22 @@ NestGate (Self)       Discovery System      Other Primals      Service Registry
 ```
 Client Process         Unix Socket           NestGate Server        Storage
       │                     │                       │                  │
-      ├─► connect() ────────┤                       │                  │
+      ├─> connect() ────────┤                       │                  │
       │   /run/.../sock     │                       │                  │
-      │                     ├─► accept() ───────────┤                  │
-      │◄─── connected ──────┤◄──────────────────────┤                  │
+      │                     ├─> accept() ───────────┤                  │
+      │<─── connected ──────┤<──────────────────────┤                  │
       │                     │                       │                  │
-      ├─► JSON-RPC ─────────┤                       │                  │
-      │   request           ├─► parse() ────────────┤                  │
-      │                     │                       ├─► execute() ─────┤
-      │                     │                       │◄─── result ──────┤
-      │◄─── JSON-RPC ───────┤◄─── response ─────────┤                  │
+      ├─> JSON-RPC ─────────┤                       │                  │
+      │   request           ├─> parse() ────────────┤                  │
+      │                     │                       ├─> execute() ─────┤
+      │                     │                       │<─── result ──────┤
+      │<─── JSON-RPC ───────┤<─── response ─────────┤                  │
       │   response          │                       │                  │
 ```
 
 ---
 
-## 🧩 Core Components
+## Core Components
 
 ### **1. HTTP API Layer** (`rpc/mod.rs`)
 
@@ -200,21 +200,21 @@ Client Process         Unix Socket           NestGate Server        Storage
 
 ---
 
-## 🔌 Integration Points
+## Integration Points
 
 ### **With Songbird (Universal IPC)**:
 
 ```
 NestGate                      Songbird
    │                              │
-   ├─► register("nestgate") ──────►│
-   │   capabilities: [storage]    ├─► announce to mesh
+   ├─> register("nestgate") ──────>│
+   │   capabilities: [storage]    ├─> announce to mesh
    │                              │
-   │◄─── endpoint ────────────────┤
+   │<─── endpoint ────────────────┤
    │                              │
-   ├─► listen(endpoint) ──────────►│
-   │                              ├─► route requests
-   │◄─── incoming requests ────────┤
+   ├─> listen(endpoint) ──────────>│
+   │                              ├─> route requests
+   │<─── incoming requests ────────┤
 ```
 
 ### **With BearDog (Security)**:
@@ -222,16 +222,16 @@ NestGate                      Songbird
 ```
 NestGate                      BearDog
    │                              │
-   ├─► find_by_cap("security") ───►│
-   │◄─── connection ───────────────┤
+   ├─> find_by_cap("security") ───>│
+   │<─── connection ───────────────┤
    │                              │
-   ├─► encrypt(data) ─────────────►│
-   │                              ├─► encrypt with keys
-   │◄─── encrypted_data ───────────┤
+   ├─> encrypt(data) ─────────────>│
+   │                              ├─> encrypt with keys
+   │<─── encrypted_data ───────────┤
    │                              │
-   ├─► verify_token(token) ───────►│
-   │                              ├─► validate JWT
-   │◄─── validation_result ────────┤
+   ├─> verify_token(token) ───────>│
+   │                              ├─> validate JWT
+   │<─── validation_result ────────┤
 ```
 
 ### **With Orchestrator**:
@@ -239,52 +239,52 @@ NestGate                      BearDog
 ```
 NestGate                   Orchestrator
    │                              │
-   ├─► register() ────────────────►│
-   │   metadata + capabilities    ├─► add to registry
+   ├─> register() ────────────────>│
+   │   metadata + capabilities    ├─> add to registry
    │                              │
-   │◄─── heartbeat_request ────────┤
-   ├─► health_status() ───────────►│
+   │<─── heartbeat_request ────────┤
+   ├─> health_status() ───────────>│
    │                              │
-   │◄─── task_assignment ──────────┤
-   ├─► execute_task() ────────────►│
-   │◄─── task_complete ────────────┤
+   │<─── task_assignment ──────────┤
+   ├─> execute_task() ────────────>│
+   │<─── task_complete ────────────┤
 ```
 
 ---
 
-## 🎭 Runtime Behavior
+## Runtime Behavior
 
 ### **Startup Sequence**:
 
 ```
 1. Load Environment Config
-   ├─► Parse NESTGATE_* variables
-   ├─► Apply XDG fallbacks
-   └─► Validate configuration
+   ├─> Parse NESTGATE_* variables
+   ├─> Apply XDG fallbacks
+   └─> Validate configuration
 
 2. Initialize Storage
-   ├─► Create XDG-compliant paths
-   ├─► Check ZFS availability
-   ├─► Discover existing pools
-   └─► Initialize quota system
+   ├─> Create XDG-compliant paths
+   ├─> Check ZFS availability
+   ├─> Discover existing pools
+   └─> Initialize quota system
 
 3. Start Discovery
-   ├─► Auto-detect mechanism (mDNS/Consul/K8s)
-   ├─► Announce own capabilities
-   ├─► Build self-knowledge
-   └─► Start background discovery loop
+   ├─> Auto-detect mechanism (mDNS/Consul/K8s)
+   ├─> Announce own capabilities
+   ├─> Build self-knowledge
+   └─> Start background discovery loop
 
 4. Launch Servers
-   ├─► Bind Unix socket (XDG runtime dir)
-   ├─► Start HTTP server (configured port)
-   ├─► Enable health checks
-   └─► Start monitoring
+   ├─> Bind Unix socket (XDG runtime dir)
+   ├─> Start HTTP server (configured port)
+   ├─> Enable health checks
+   └─> Start monitoring
 
 5. Runtime Operation
-   ├─► Process incoming requests
-   ├─► Maintain discovery cache
-   ├─► Send heartbeats
-   └─► Update metrics
+   ├─> Process incoming requests
+   ├─> Maintain discovery cache
+   ├─> Send heartbeats
+   └─> Update metrics
 ```
 
 ### **Request Processing**:
@@ -292,32 +292,32 @@ NestGate                   Orchestrator
 ```
 Incoming Request
     │
-    ├─► Parse & Validate
-    │   ├─► Check auth (if enabled)
-    │   ├─► Validate parameters
-    │   └─► Rate limit check
+    ├─> Parse & Validate
+    │   ├─> Check auth (if enabled)
+    │   ├─> Validate parameters
+    │   └─> Rate limit check
     │
-    ├─► Route to Handler
-    │   ├─► Dataset operations
-    │   ├─► Object operations
+    ├─> Route to Handler
+    │   ├─> Dataset operations
+    │   ├─> Object operations
     │   └─── Service queries
     │
-    ├─► Execute Operation
-    │   ├─► Call storage service
-    │   ├─► Interact with ZFS
-    │   ├─► Calculate checksums
-    │   └─► Update statistics
+    ├─> Execute Operation
+    │   ├─> Call storage service
+    │   ├─> Interact with ZFS
+    │   ├─> Calculate checksums
+    │   └─> Update statistics
     │
-    └─► Return Response
-        ├─► Format JSON
-        ├─► Add headers
-        ├─► Log operation
-        └─► Send to client
+    └─> Return Response
+        ├─> Format JSON
+        ├─> Add headers
+        ├─> Log operation
+        └─> Send to client
 ```
 
 ---
 
-## 🧬 Primal Sovereignty Pattern
+## Primal Sovereignty Pattern
 
 ### **Self-Knowledge First**:
 
@@ -349,10 +349,10 @@ let orchestrator = discovery
 ### **Zero Hardcoding**:
 
 ```rust
-// ❌ NEVER:
+// NEVER:
 let beardog_url = "http://beardog:8443";
 
-// ✅ ALWAYS:
+// ALWAYS:
 let security_primal = runtime_discovery
     .find_security_primal()
     .await?;
@@ -361,12 +361,12 @@ let connection = security_primal.endpoint;
 
 ---
 
-## 📡 Communication Patterns
+## Communication Patterns
 
 ### **Pattern 1: Synchronous Request/Response**
 
 ```
-Client ──request──► NestGate ──query──► Storage ──result──► NestGate ──response──► Client
+Client ──request──> NestGate ──query──> Storage ──result──> NestGate ──response──> Client
 ```
 
 **Use Cases**: CRUD operations, health checks, queries
@@ -374,11 +374,11 @@ Client ──request──► NestGate ──query──► Storage ──result
 ### **Pattern 2: Asynchronous Background Tasks**
 
 ```
-NestGate ──periodic──► Discovery
+NestGate ──periodic──> Discovery
     │                      │
-    ├──background──► Quota Monitoring
+    ├──background──> Quota Monitoring
     │                      │
-    └──background──► Pool Discovery
+    └──background──> Pool Discovery
 ```
 
 **Use Cases**: Service discovery, monitoring, maintenance
@@ -386,52 +386,52 @@ NestGate ──periodic──► Discovery
 ### **Pattern 3: Event-Driven**
 
 ```
-Storage Event ──►┌─────────────┐
+Storage Event ──>┌─────────────┐
                  │ Event Queue │
-ZFS Event ───────►│             │──► Listeners ──► Actions
+ZFS Event ───────>│             │──> Listeners ──> Actions
                  │             │
-Discovery Event ─►└─────────────┘
+Discovery Event ─>└─────────────┘
 ```
 
 **Use Cases**: Pool changes, service joins/leaves, failures
 
 ---
 
-## 🔐 Security Integration
+## Security Integration
 
 ### **Authentication Flow**:
 
 ```
 1. Client Request
    │
-   ├─► Extract Token/API Key
+   ├─> Extract Token/API Key
    │
 2. Validate with BearDog
    │
-   ├─► discovery.find_security_primal()
-   ├─► security.verify_token(token)
+   ├─> discovery.find_security_primal()
+   ├─> security.verify_token(token)
    │
 3. Check Authorization
    │
-   ├─► Verify capability permissions
-   ├─► Check resource access
+   ├─> Verify capability permissions
+   ├─> Check resource access
    │
 4. Execute if Authorized
    │
-   └─► Process request
+   └─> Process request
 ```
 
 ### **Encryption Flow**:
 
 ```
-Data ──►┌──────────┐──► BearDog ──►┌───────────┐──► Encrypted ──► Storage
+Data ──>┌──────────┐──> BearDog ──>┌───────────┐──> Encrypted ──> Storage
         │ NestGate │               │  Encrypt  │      Data
         └──────────┘               └───────────┘
 ```
 
 ---
 
-## 📊 Data Flow Examples
+## Data Flow Examples
 
 ### **Example 1: Store Object with Encryption**
 
@@ -439,24 +439,24 @@ Data ──►┌──────────┐──► BearDog ──►┌
 1. Client: PUT /api/datasets/photos/vacation.jpg
    │
 2. NestGate receives request
-   ├─► Validate request
-   ├─► Check authentication
+   ├─> Validate request
+   ├─> Check authentication
    │
 3. Find security primal
-   ├─► discovery.find_by_capability("security")
-   ├─► connect to BearDog
+   ├─> discovery.find_by_capability("security")
+   ├─> connect to BearDog
    │
 4. Encrypt data
-   ├─► beardog.encrypt(image_data)
-   ├─► receive encrypted_data
+   ├─> beardog.encrypt(image_data)
+   ├─> receive encrypted_data
    │
 5. Store encrypted data
-   ├─► storage_service.store_object("photos", "vacation.jpg", encrypted_data)
-   ├─► calculate SHA-256 checksum
-   ├─► write to ZFS filesystem
+   ├─> storage_service.store_object("photos", "vacation.jpg", encrypted_data)
+   ├─> calculate SHA-256 checksum
+   ├─> write to ZFS filesystem
    │
 6. Return success
-   └─► 200 OK + ObjectInfo (with checksum)
+   └─> 200 OK + ObjectInfo (with checksum)
 ```
 
 ### **Example 2: Discover and Connect to Orchestrator**
@@ -465,33 +465,33 @@ Data ──►┌──────────┐──► BearDog ──►┌
 1. NestGate startup
    │
 2. Initialize discovery
-   ├─► Auto-detect mechanism (mDNS/Consul/K8s)
-   ├─► Create RuntimeDiscovery
+   ├─> Auto-detect mechanism (mDNS/Consul/K8s)
+   ├─> Create RuntimeDiscovery
    │
 3. Announce self
-   ├─► discovery.announce(self_knowledge)
-   ├─► Broadcast capabilities: [Storage, ZFS, Registry]
+   ├─> discovery.announce(self_knowledge)
+   ├─> Broadcast capabilities: [Storage, ZFS, Registry]
    │
 4. Find orchestrator
-   ├─► discovery.find_by_capability(Capability::Orchestration)
-   ├─► Query service registry
-   ├─► Receive orchestrator endpoints
+   ├─> discovery.find_by_capability(Capability::Orchestration)
+   ├─> Query service registry
+   ├─> Receive orchestrator endpoints
    │
 5. Establish connection
-   ├─► Connect via Unix socket (preferred)
-   ├─► Or connect via HTTP (fallback)
+   ├─> Connect via Unix socket (preferred)
+   ├─> Or connect via HTTP (fallback)
    │
 6. Register with orchestrator
-   ├─► orchestrator.register_service(metadata)
-   ├─► Start sending heartbeats
+   ├─> orchestrator.register_service(metadata)
+   ├─> Start sending heartbeats
    │
 7. Receive tasks
-   └─► Listen for orchestration commands
+   └─> Listen for orchestration commands
 ```
 
 ---
 
-## 🏭 Production Deployment Patterns
+## Production Deployment Patterns
 
 ### **Pattern 1: Single Instance** (Development/Small Production)
 
@@ -512,12 +512,12 @@ Data ──►┌──────────┐──► BearDog ──►┌
 
 ```
                   ┌──────────────┐
-Client ──────────►│Load Balancer │
+Client ──────────>│Load Balancer │
                   └──────┬───────┘
                          │
         ┌────────────────┼────────────────┐
         │                │                │
-  ┌─────▼─────┐   ┌─────▼─────┐   ┌─────▼─────┐
+  ┌─────v─────┐   ┌─────v─────┐   ┌─────v─────┐
   │ NestGate  │   │ NestGate  │   │ NestGate  │
   │ Instance1 │   │ Instance2 │   │ Instance3 │
   │ (Leader)  │   │(Follower) │   │(Follower) │
@@ -525,7 +525,7 @@ Client ──────────►│Load Balancer │
         │                │                │
         └────────────────┼────────────────┘
                          │
-                  ┌──────▼───────┐
+                  ┌──────v───────┐
                   │  Shared ZFS  │
                   │     Pool     │
                   └──────────────┘
@@ -541,13 +541,13 @@ Client ──────────►│Load Balancer │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
-│  │Orchestr. │◄──►│ NestGate │◄──►│ BearDog  │              │
+│  │Orchestr. │<──>│ NestGate │<──>│ BearDog  │              │
 │  │(Control) │    │(Storage) │    │(Security)│              │
 │  └──────────┘    └────┬─────┘    └──────────┘              │
 │                       │                                       │
-│                       ▼                                       │
+│                       v                                       │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
-│  │ Songbird │◄──►│   ZFS    │◄──►│  mDNS    │              │
+│  │ Songbird │<──>│   ZFS    │<──>│  mDNS    │              │
 │  │  (IPC)   │    │ Backend  │    │Discovery │              │
 │  └──────────┘    └──────────┘    └──────────┘              │
 │                                                               │
@@ -558,7 +558,7 @@ Client ──────────►│Load Balancer │
 
 ---
 
-## 🔄 State Management
+## State Management
 
 ### **Component States**:
 
@@ -569,31 +569,31 @@ Client ──────────►│Load Balancer │
 │                                                  │
 │  Initializing                                   │
 │      │                                           │
-│      ├─► Load config                            │
-│      ├─► Initialize storage                     │
-│      ├─► Start discovery                        │
+│      ├─> Load config                            │
+│      ├─> Initialize storage                     │
+│      ├─> Start discovery                        │
 │      │                                           │
-│      ▼                                           │
-│  Running ◄──┐                                    │
+│      v                                           │
+│  Running <──┐                                    │
 │      │      │                                    │
-│      ├─► Process requests                       │
-│      ├─► Maintain discovery                     │
-│      ├─► Send heartbeats                        │
+│      ├─> Process requests                       │
+│      ├─> Maintain discovery                     │
+│      ├─> Send heartbeats                        │
 │      │      │                                    │
-│      ▼      │                                    │
+│      v      │                                    │
 │  Degraded ─┘ (recoverable)                      │
 │      │                                           │
-│      ├─► Reduce capacity                        │
-│      ├─► Alert monitoring                       │
+│      ├─> Reduce capacity                        │
+│      ├─> Alert monitoring                       │
 │      │                                           │
-│      ▼                                           │
+│      v                                           │
 │  Shutting Down                                  │
 │      │                                           │
-│      ├─► Drain connections                      │
-│      ├─► Flush buffers                          │
-│      ├─► Deregister from discovery              │
+│      ├─> Drain connections                      │
+│      ├─> Flush buffers                          │
+│      ├─> Deregister from discovery              │
 │      │                                           │
-│      ▼                                           │
+│      v                                           │
 │  Stopped                                        │
 │                                                  │
 └─────────────────────────────────────────────────┘
@@ -601,7 +601,7 @@ Client ──────────►│Load Balancer │
 
 ---
 
-## 📈 Performance Characteristics
+## Performance Characteristics
 
 ### **Throughput**:
 - **HTTP API**: ~10,000 req/sec (single instance)
@@ -620,21 +620,21 @@ Client ──────────►│Load Balancer │
 
 ---
 
-## 🎯 Design Principles
+## Design Principles
 
-### **1. Primal Sovereignty** ✅
+### **1. Primal Sovereignty** 
 Each primal is autonomous with self-knowledge
 
-### **2. Capability-Based Discovery** ✅
+### **2. Capability-Based Discovery** 
 Find services by what they CAN DO, not what they ARE
 
-### **3. Zero Hardcoding** ✅
+### **3. Zero Hardcoding** 
 All configuration from environment, discovery at runtime
 
-### **4. XDG Compliance** ✅
+### **4. XDG Compliance** 
 Follow standards for paths, sockets, configuration
 
-### **5. Fail-Safe Defaults** ✅
+### **5. Fail-Safe Defaults** 
 Sensible defaults, graceful degradation
 
 ---
@@ -645,4 +645,4 @@ Sensible defaults, graceful degradation
 - API: `docs/api/REST_API.md`
 - Configuration: `docs/guides/ENVIRONMENT_VARIABLES.md`
 
-🦀 **NestGate · Storage · Discovery · Pure Rust** 🦀
+**NestGate · Storage · Discovery · Pure Rust**

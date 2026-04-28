@@ -1,41 +1,41 @@
 > **Historical**: This document was written in November 10, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 🌟 **UNIVERSAL ZFS - TESTING GUIDE**
+# **UNIVERSAL ZFS - TESTING GUIDE**
 
 **Date**: November 10, 2025  
 **Core Concept**: ZFS features on ANY storage backend  
-**Status**: 🚀 **READY TO TEST**
+**Status**: **READY TO TEST**
 
 ---
 
-## 🎯 **THE NESTGATE VALUE PROPOSITION**
+## **THE NESTGATE VALUE PROPOSITION**
 
 ### **Traditional Problem:**
 ```
 Want ZFS features? You MUST have:
-❌ ZFS kernel modules installed
-❌ Root access for pool creation
-❌ Dedicated disks/partitions
-❌ Linux/FreeBSD/Solaris
-❌ Complex setup and configuration
+- ZFS kernel modules installed
+- Root access for pool creation
+- Dedicated disks/partitions
+- Linux/FreeBSD/Solaris
+- Complex setup and configuration
 ```
 
 ### **NestGate Solution:**
 ```
-✅ ZFS features on ANY storage backend!
-✅ No kernel modules needed
-✅ Works with regular filesystems (ext4, xfs, btrfs, ntfs)
-✅ Works with cloud storage (S3, Azure, GCS)
-✅ Works with network storage (NFS, SMB, iSCSI)
-✅ Works with memory (RAM disk, tmpfs)
-✅ Cross-platform (Linux, macOS, Windows, containers)
-✅ No root required, no special setup
+ZFS features on ANY storage backend!
+No kernel modules needed
+Works with regular filesystems (ext4, xfs, btrfs, ntfs)
+Works with cloud storage (S3, Azure, GCS)
+Works with network storage (NFS, SMB, iSCSI)
+Works with memory (RAM disk, tmpfs)
+Cross-platform (Linux, macOS, Windows, containers)
+No root required, no special setup
 ```
 
 ---
 
-## 🏗️ **HOW IT WORKS**
+## **HOW IT WORKS**
 
 ### **NestGate Universal Storage Abstraction**
 
@@ -96,7 +96,7 @@ Want ZFS features? You MUST have:
 
 ---
 
-## 🧪 **TESTING WITHOUT NATIVE ZFS**
+## **TESTING WITHOUT NATIVE ZFS**
 
 ### **Test 1: Regular Filesystem Storage**
 
@@ -133,7 +133,7 @@ curl -X PUT http://localhost:9001/api/v1/datasets/mydata/file.txt \
 curl -X POST http://localhost:9001/api/v1/datasets/mydata/rollback \
   -d '{"snapshot": "snap1"}'
 
-# ✅ File reverted! ZFS semantics on ext4!
+# File reverted! ZFS semantics on ext4!
 ```
 
 ### **Test 2: Memory-Backed Storage**
@@ -193,23 +193,23 @@ nestgate storage configure --backend tiered \
 
 ---
 
-## 📊 **CAPABILITY MATRIX**
+## **CAPABILITY MATRIX**
 
 | Feature | Native ZFS | Filesystem | Memory | Cloud | Network |
 |---------|------------|------------|--------|-------|---------|
-| **Snapshots** | ✅ Native | ✅ COW | ✅ COW | ✅ Versions | ✅ COW |
-| **Compression** | ✅ LZ4/ZSTD | ✅ Transparent | ✅ In-memory | ✅ Pre-compress | ✅ Transparent |
-| **Dedup** | ✅ Block-level | ✅ Content-hash | ✅ Content-hash | ✅ Object-hash | ✅ Content-hash |
-| **Checksums** | ✅ SHA-256 | ✅ XAttr + SHA | ✅ In-memory | ✅ ETag/MD5 | ✅ Verify |
-| **COW** | ✅ Native | ✅ Emulated | ✅ Native | ✅ Emulated | ✅ Emulated |
-| **Encryption** | ✅ Native | ✅ Layer | ✅ Layer | ✅ SSE | ✅ Layer |
-| **Replication** | ✅ Send/Recv | ✅ Sync | ✅ N/A | ✅ S3 Repl | ✅ Rsync |
+| **Snapshots** | Native | COW | COW | Versions | COW |
+| **Compression** | LZ4/ZSTD | Transparent | In-memory | Pre-compress | Transparent |
+| **Dedup** | Block-level | Content-hash | Content-hash | Object-hash | Content-hash |
+| **Checksums** | SHA-256 | XAttr + SHA | In-memory | ETag/MD5 | Verify |
+| **COW** | Native | Emulated | Native | Emulated | Emulated |
+| **Encryption** | Native | Layer | Layer | SSE | Layer |
+| **Replication** | Send/Recv | Sync | N/A | S3 Repl | Rsync |
 
 **Result: Same API, Same Features, Any Backend!**
 
 ---
 
-## 🚀 **PRACTICAL EXAMPLES**
+## **PRACTICAL EXAMPLES**
 
 ### **Example 1: Dev Environment (No ZFS)**
 
@@ -293,7 +293,7 @@ spec:
 
 ---
 
-## 🎯 **KEY TESTING SCENARIOS**
+## **KEY TESTING SCENARIOS**
 
 ### **Scenario 1: Snapshot & Rollback**
 
@@ -320,7 +320,7 @@ nestgate rollback dataset1@snap1
 nestgate get dataset1/data.txt
 # Output: version 1
 
-✅ Snapshots work without native ZFS!
+Snapshots work without native ZFS!
 ```
 
 ### **Scenario 2: Compression**
@@ -337,7 +337,7 @@ nestgate get --info dataset1/zeros.dat
 # logical_size: 100MB
 # actual_size: 100KB  ← Compressed!
 
-✅ Compression works without native ZFS!
+Compression works without native ZFS!
 ```
 
 ### **Scenario 3: Deduplication**
@@ -354,7 +354,7 @@ nestgate get --stats dataset1
 # logical_size: 30MB
 # actual_size: 10MB  ← Deduped!
 
-✅ Dedup works without native ZFS!
+Dedup works without native ZFS!
 ```
 
 ### **Scenario 4: Data Integrity**
@@ -365,21 +365,21 @@ nestgate put --checksum sha256 dataset1/important.dat < important.dat
 
 # Verify integrity
 nestgate verify dataset1/important.dat
-# ✅ Checksum valid
+# Checksum valid
 
 # Simulate corruption
 # (manually modify file on backend)
 
 # Verify again
 nestgate verify dataset1/important.dat
-# ❌ Checksum mismatch - data corrupted!
+# FAIL: Checksum mismatch - data corrupted!
 
-✅ Data integrity without native ZFS!
+Data integrity without native ZFS!
 ```
 
 ---
 
-## 🌟 **THE POWER OF UNIVERSAL ZFS**
+## **THE POWER OF UNIVERSAL ZFS**
 
 ### **What This Means:**
 
@@ -410,7 +410,7 @@ nestgate verify dataset1/important.dat
 
 ---
 
-## 🧪 **LOCAL TESTING PLAN**
+## **LOCAL TESTING PLAN**
 
 ### **Phase 1: Filesystem Backend** (NOW)
 
@@ -456,7 +456,7 @@ curl http://localhost:9001/api/v1/health
 
 ---
 
-## ✅ **VERIFICATION**
+## **VERIFICATION**
 
 After configuration, verify:
 
@@ -478,18 +478,18 @@ curl -X POST http://localhost:9001/api/v1/datasets \
 
 ---
 
-## 🎊 **SUMMARY**
+## **SUMMARY**
 
 ### **The Key Point:**
 
 **"No ZFS on system? That's EXACTLY why NestGate exists!"**
 
 NestGate brings ZFS features to:
-- ✅ Regular filesystems (ext4, xfs, btrfs, ntfs)
-- ✅ Memory (RAM disk, tmpfs)
-- ✅ Cloud storage (S3, Azure, GCS)
-- ✅ Network storage (NFS, SMB)
-- ✅ ANY storage backend!
+- Regular filesystems (ext4, xfs, btrfs, ntfs)
+- Memory (RAM disk, tmpfs)
+- Cloud storage (S3, Azure, GCS)
+- Network storage (NFS, SMB)
+- ANY storage backend!
 
 **Same API. Same Features. Any Backend.**
 
@@ -497,9 +497,9 @@ NestGate brings ZFS features to:
 
 ---
 
-**🌟 Universal ZFS = ZFS everywhere**
+**Universal ZFS = ZFS everywhere**
 
-**🚀 No installation barriers**
+**No installation barriers**
 
-**⚡ Works on THIS system RIGHT NOW!**
+**Works on THIS system RIGHT NOW!**
 

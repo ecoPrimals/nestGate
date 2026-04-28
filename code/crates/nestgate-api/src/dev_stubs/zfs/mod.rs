@@ -3,7 +3,7 @@
 
 //! **ZFS STUB IMPLEMENTATION - DEVELOPMENT ONLY**
 //!
-//! ⚠️ **WARNING: THIS IS NOT PRODUCTION CODE** ⚠️
+//! **WARNING: THIS IS NOT PRODUCTION CODE**
 //!
 //! This module provides stub implementations for ZFS operations during development and testing.
 //! All data returned is HARDCODED and does not reflect actual system state.

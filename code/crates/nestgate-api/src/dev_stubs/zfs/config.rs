@@ -3,7 +3,7 @@
 
 //! **ZFS STUB IMPLEMENTATION - DEVELOPMENT ONLY**
 //!
-//! ⚠️ **WARNING: THIS IS NOT PRODUCTION CODE** ⚠️
+//! **WARNING: THIS IS NOT PRODUCTION CODE**
 //!
 //! When the `zfs` / `zpool` CLI is available, [`ZfsConfig::try_detect_system`] reads pool names
 //! from `zpool list`. If ZFS is not installed, pools are empty (explicit fallback, not fake names).
@@ -138,8 +138,8 @@ impl Default for ZfsConfig {
 
 /// **DEVELOPMENT ZFS STUB MANAGER**
 ///
-/// ⚠️ **THIS IS A STUB - NOT FOR PRODUCTION USE** ⚠️
-/// ⚠️ **ONLY AVAILABLE WITH `dev-stubs` FEATURE** ⚠️
+/// **THIS IS A STUB - NOT FOR PRODUCTION USE**
+/// **ONLY AVAILABLE WITH `dev-stubs` FEATURE**
 ///
 /// This manager returns HARDCODED mock data for development and testing purposes only.
 /// All operations return fake data and do not interact with real ZFS systems.

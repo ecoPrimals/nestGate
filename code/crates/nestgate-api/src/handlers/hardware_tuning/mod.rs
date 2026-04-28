@@ -5,7 +5,7 @@
 //!
 //! Hardware tuning functionality split into logical modules for better maintainability.
 //!
-//! **⚠️ DEVELOPMENT STUBS ⚠️**
+//! **DEVELOPMENT STUBS**
 //!
 //! Handlers are only available with `dev-stubs` feature.
 //! Production builds use placeholders that return "not implemented".

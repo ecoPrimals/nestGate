@@ -6,7 +6,7 @@
     reason = "Banner documents mutation-testing context for consensus arithmetic helpers."
 )]
 
-/// 🧮 **CONSENSUS MATH MODULE** 🧮
+/// **CONSENSUS MATH MODULE**
 /// Pure arithmetic functions for consensus calculations.
 /// Extracted from complex business logic to enable precise testing
 /// and catch arithmetic mutations (+ vs -, * vs /, >= vs >).

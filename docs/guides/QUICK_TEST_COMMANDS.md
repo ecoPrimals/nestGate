@@ -1,12 +1,12 @@
-# ⚡ **QUICK TEST COMMANDS - CONNECTED NESTGATE**
+# **QUICK TEST COMMANDS - CONNECTED NESTGATE**
 
 **System**: Eastgate (ext4 filesystem - no native ZFS)  
-**Status**: ✅ Connected to Songbird  
+**Status**: Connected to Songbird  
 **Backend**: Universal Storage (Pure Rust)
 
 ---
 
-## 🎮 **WORKING COMMANDS TO TRY**
+## **WORKING COMMANDS TO TRY**
 
 ### **1. Service Status**
 ```bash
@@ -79,7 +79,7 @@ curl -s http://localhost:8080/api/federation/services | \
 
 ---
 
-## 🧪 **PRACTICAL DEMONSTRATIONS**
+## **PRACTICAL DEMONSTRATIONS**
 
 ### **Test 1: Service Discovery (From Another Primal)**
 
@@ -97,16 +97,16 @@ import json
 SONGBIRD = "http://localhost:8080"
 
 # Discover all storage services
-print("🔍 Discovering storage services...")
+print("Discovering storage services...")
 response = requests.get(f"{SONGBIRD}/api/federation/services")
 services = response.json()
 
 # Filter for storage
 storage_services = [s for s in services if s['service_type'] == 'storage']
 
-print(f"\n✅ Found {len(storage_services)} storage service(s):\n")
+print(f"\nFound {len(storage_services)} storage service(s):\n")
 for svc in storage_services:
-    print(f"📦 {svc['service_name']}")
+    print(f"{svc['service_name']}")
     print(f"   Endpoint: {svc['endpoint']}")
     print(f"   Capabilities: {', '.join(svc['capabilities'])}")
     print(f"   Health: {svc['health_status']}")
@@ -115,13 +115,13 @@ for svc in storage_services:
 # Test connection to NestGate
 if storage_services:
     nestgate = storage_services[0]
-    print(f"🔗 Testing connection to {nestgate['service_name']}...")
+    print(f"Testing connection to {nestgate['service_name']}...")
     
     try:
         health = requests.get(f"{nestgate['endpoint']}/api/v1/health", timeout=5)
-        print(f"✅ NestGate is responsive: {health.text}")
+        print(f"NestGate is responsive: {health.text}")
     except Exception as e:
-        print(f"❌ Connection failed: {e}")
+        print(f"FAIL: Connection failed: {e}")
 ```
 
 ### **Test 2: Real Data Pipeline**
@@ -130,7 +130,7 @@ if storage_services:
 #!/bin/bash
 # Bioinformatics pipeline using NestGate
 
-echo "🧬 Bioinformatics Pipeline Test"
+echo "Bioinformatics Pipeline Test"
 echo "================================"
 echo ""
 
@@ -140,23 +140,23 @@ echo "ATCGATCGATCGATCGATCGATCG" >> test_sequences.fasta
 echo ">Test_Sequence_2" >> test_sequences.fasta
 echo "GCTAGCTAGCTAGCTAGCTAGCTA" >> test_sequences.fasta
 
-echo "✅ Created test sequences"
+echo "Created test sequences"
 
 # 2. Store in NestGate (via API when implemented)
 # curl -X PUT http://localhost:9005/api/v1/datasets/bioinfo/sequences.fasta \
-#   --data-binary @test_sequences.fasta
+# --data-binary @test_sequences.fasta
 
 # 3. Create snapshot before processing
 # curl -X POST http://localhost:9005/api/v1/datasets/bioinfo/snapshots \
-#   -d '{"name": "raw-data"}'
+# -d '{"name": "raw-data"}'
 
-echo "📊 Data would be:"
+echo "Data would be:"
 echo "  • Automatically compressed (save space!)"
 echo "  • Checksummed (data integrity!)"
 echo "  • Snapshotted (version control!)"
 echo "  • All on regular ext4 filesystem!"
 echo ""
-echo "✅ Pipeline ready for AI review and protein prediction!"
+echo "Pipeline ready for AI review and protein prediction!"
 ```
 
 ### **Test 3: Compare Native ZFS vs Universal**
@@ -165,36 +165,36 @@ echo "✅ Pipeline ready for AI review and protein prediction!"
 #!/bin/bash
 # Show that Universal Storage provides same features
 
-echo "⚖️  ZFS Feature Comparison"
+echo "ZFS Feature Comparison"
 echo "=========================="
 echo ""
 
 echo "Native ZFS           Universal ZFS (NestGate)"
 echo "-------------        ------------------------"
-echo "Snapshots     ✅     Snapshots     ✅"
-echo "Compression   ✅     Compression   ✅"
-echo "Checksums     ✅     Checksums     ✅"
-echo "COW           ✅     COW           ✅"
-echo "Dedup         ✅     Dedup         🔧 (coming)"
-echo "Encryption    ✅     Encryption    ✅"
+echo "Snapshots         Snapshots     "
+echo "Compression       Compression   "
+echo "Checksums         Checksums     "
+echo "COW               COW           "
+echo "Dedup             Dedup          (coming)"
+echo "Encryption        Encryption    "
 echo ""
 echo "Requirements:"
 echo "Native ZFS:          Universal ZFS:"
-echo "- Kernel module ❌   - No kernel module ✅"
-echo "- Root access   ❌   - No root needed  ✅"
-echo "- Linux only    ❌   - Cross-platform  ✅"
-echo "- Complex setup ❌   - Auto-configured ✅"
+echo "- Kernel module    - No kernel module "
+echo "- Root access      - No root needed  "
+echo "- Linux only       - Cross-platform  "
+echo "- Complex setup    - Auto-configured "
 echo ""
-echo "✨ Same features, zero barriers!"
+echo "Same features, zero barriers!"
 ```
 
 ---
 
-## 📊 **EXPECTED OUTPUTS**
+## **EXPECTED OUTPUTS**
 
 ### **Storage List**
 ```
-💾 NestGate Storage Backends:
+NestGate Storage Backends:
   Name        Type    Size      Status
   ────────────────────────────────────
   main        ZFS     500GB     Online
@@ -205,17 +205,17 @@ echo "✨ Same features, zero barriers!"
 
 ### **Doctor Check**
 ```
-🩺 NestGate System Diagnostics
+NestGate System Diagnostics
   Mode: Basic
   Auto-fix: Disabled
 
-🔍 Basic System Checks:
-  ✅ Configuration files readable
-  ✅ Required ports available
-  ✅ Storage backends accessible
-  ✅ Memory usage normal (45MB)
+Basic System Checks:
+  Configuration files readable
+  Required ports available
+  Storage backends accessible
+  Memory usage normal (45MB)
 
-📊 Diagnostic Summary:
+Diagnostic Summary:
   Status: Healthy
   Issues Found: 0
   Issues Fixed: 0
@@ -223,7 +223,7 @@ echo "✨ Same features, zero barriers!"
 
 ### **Monitor Output**
 ```
-📊 NestGate Performance Monitor
+NestGate Performance Monitor
   Interval: 2 seconds
   Duration: 10 seconds
 
@@ -239,31 +239,31 @@ Time: 15:42:10
 
 ---
 
-## 🎯 **WHAT THIS DEMONSTRATES**
+## **WHAT THIS DEMONSTRATES**
 
-✅ **NestGate is fully operational**
+**NestGate is fully operational**
 - Connected to Songbird federation
 - Discoverable by other primals
 - Healthy and monitored
 
-✅ **Universal Storage works**
+**Universal Storage works**
 - ZFS features on ext4 (no native ZFS!)
 - Pure Rust implementation
 - No system dependencies
 
-✅ **Production ready**
+**Production ready**
 - Performance monitoring
 - Health diagnostics
 - Service mesh integration
 
-✅ **Easy to use**
+**Easy to use**
 - Simple CLI commands
 - Clear outputs
 - Well documented
 
 ---
 
-## 🚀 **NEXT STEPS**
+## **NEXT STEPS**
 
 ### **For Local Testing:**
 1. Run through these commands
@@ -285,11 +285,11 @@ Time: 15:42:10
 
 ---
 
-**⚡ All commands tested and working!**
+**All commands tested and working!**
 
-**🌟 Universal Storage: ZFS on ANY filesystem!**
+**Universal Storage: ZFS on ANY filesystem!**
 
-**🌐 Connected to Songbird: Service mesh ready!**
+**Connected to Songbird: Service mesh ready!**
 
-**🚀 Ready for bioinformatics, AI, and more!**
+**Ready for bioinformatics, AI, and more!**
 

@@ -108,7 +108,7 @@ pub mod transport;
 /// **DEV STUBS MODULE** (Feature-gated: `dev-stubs`)
 ///
 /// Development stub implementations for testing and local development.
-/// ⚠️ **NOT FOR PRODUCTION** - Only available with `dev-stubs` feature flag.
+/// **NOT FOR PRODUCTION** - Only available with `dev-stubs` feature flag.
 ///
 /// **Consolidated**: November 10, 2025
 /// - Replaces: `handlers/zfs_stub.rs`

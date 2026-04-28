@@ -6,7 +6,7 @@
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
 
-//! # 🌐 TCP IPC Fallback Server
+//! # TCP IPC Fallback Server
 //!
 //! **ISOMORPHIC**: Automatic fallback when Unix sockets unavailable\
 //! **PROTOCOL**: Same JSON-RPC 2.0 as Unix sockets\

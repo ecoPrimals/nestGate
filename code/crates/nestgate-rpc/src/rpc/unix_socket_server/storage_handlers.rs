@@ -92,8 +92,14 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
 
     let family_id = resolve_family_id(params, state)?;
 
-    let bytes = serde_json::to_vec_pretty(data)
+    let serialized = serde_json::to_vec_pretty(data)
         .map_err(|e| NestGateError::io_error(format!("Failed to serialize value: {e}")))?;
+
+    let bytes = if let Some(ref enc) = state.encryption {
+        enc.encrypt(&serialized)?
+    } else {
+        serialized
+    };
 
     debug!(
         "storage.store: family_id='{}', key='{}', value_size={} bytes",
@@ -150,9 +156,21 @@ pub(super) async fn storage_retrieve(
         )));
     }
 
-    let bytes = tokio::fs::read(&object_path)
+    let raw_bytes = tokio::fs::read(&object_path)
         .await
         .map_err(|e| NestGateError::io_error(format!("Failed to read {family_id}/{key}: {e}")))?;
+
+    let bytes =
+        if crate::rpc::storage_encryption::StorageEncryption::is_encrypted_envelope(&raw_bytes) {
+            if let Some(ref enc) = state.encryption {
+                enc.decrypt(&raw_bytes)?
+            } else {
+                raw_bytes
+            }
+        } else {
+            raw_bytes
+        };
+
     let value: Value = serde_json::from_slice(&bytes)
         .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()));
 
@@ -331,6 +349,7 @@ mod tests {
             audits: crate::rpc::audit_storage::AuditStorage::new(),
             family_id: family_id.map(String::from),
             storage_initialized: true,
+            encryption: None,
         }
     }
 
@@ -560,5 +579,87 @@ mod tests {
         assert_eq!(result["family_id"], family_id);
 
         let _ = tokio::fs::remove_dir_all(&base).await;
+    }
+
+    fn encrypted_state(family_id: &str) -> StorageState {
+        let mut key = [0u8; 32];
+        for (i, b) in key.iter_mut().enumerate() {
+            *b = i as u8;
+        }
+        StorageState {
+            templates: crate::rpc::template_storage::TemplateStorage::new(),
+            audits: crate::rpc::audit_storage::AuditStorage::new(),
+            family_id: Some(family_id.to_string()),
+            storage_initialized: true,
+            encryption: Some(std::sync::Arc::new(
+                crate::rpc::storage_encryption::StorageEncryption::new(key),
+            )),
+        }
+    }
+
+    #[tokio::test]
+    async fn encrypted_store_and_retrieve_round_trip() {
+        let family_id = format!("test-enc-rt-{}", uuid::Uuid::new_v4());
+        let state = encrypted_state(&family_id);
+
+        let store_params = Some(json!({
+            "family_id": &family_id,
+            "key": "secret",
+            "value": {"msg": "classified data"}
+        }));
+        let store_result = storage_store(store_params.as_ref(), &state).await;
+        assert!(store_result.is_ok(), "encrypted store: {store_result:?}");
+
+        let retrieve_result = storage_retrieve(
+            Some(&json!({"family_id": &family_id, "key": "secret"})),
+            &state,
+        )
+        .await;
+        assert!(
+            retrieve_result.is_ok(),
+            "encrypted retrieve: {retrieve_result:?}"
+        );
+        let val = retrieve_result.unwrap();
+        assert_eq!(val["value"]["msg"], "classified data");
+
+        // Verify on-disk data is an encrypted envelope, not plaintext
+        let on_disk = tokio::fs::read(dataset_key_path(&family_id, "secret"))
+            .await
+            .expect("read disk");
+        assert!(
+            crate::rpc::storage_encryption::StorageEncryption::is_encrypted_envelope(&on_disk),
+            "on-disk data should be an encrypted envelope"
+        );
+        let disk_str = String::from_utf8_lossy(&on_disk);
+        assert!(
+            !disk_str.contains("classified"),
+            "plaintext must not appear on disk"
+        );
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn encrypted_state_reads_unencrypted_data() {
+        let family_id = format!("test-enc-compat-{}", uuid::Uuid::new_v4());
+        let plain_state = mock_state(Some(&family_id)).await;
+
+        let p = json!({"family_id": &family_id, "key": "plain", "value": "hello"});
+        assert!(storage_store(Some(&p), &plain_state).await.is_ok());
+
+        let enc_state = encrypted_state(&family_id);
+        let result = storage_retrieve(
+            Some(&json!({"family_id": &family_id, "key": "plain"})),
+            &enc_state,
+        )
+        .await;
+        assert!(result.is_ok(), "backward-compat retrieve: {result:?}");
+        assert_eq!(result.unwrap()["value"], "hello");
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
     }
 }

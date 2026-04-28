@@ -1,7 +1,7 @@
 > **Historical**: This document was written in December 15, 2025. Current architecture
 > and patterns may differ. See root-level docs and `specs/` for current specifications.
 
-# 🛡️ SAFE PATTERNS GUIDE
+# SAFE PATTERNS GUIDE
 ## Modern Idiomatic Rust Patterns in NestGate
 ### December 15, 2025
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 🎯 OVERVIEW
+## OVERVIEW
 
 NestGate uses **professional engineering patterns** consistently throughout the codebase. This guide documents these patterns so contributors can follow the same high standards.
 
@@ -18,7 +18,7 @@ NestGate uses **professional engineering patterns** consistently throughout the 
 
 ---
 
-## ✅ SAFE UNWRAP PATTERNS
+## SAFE UNWRAP PATTERNS
 
 ### Pattern 1: `unwrap_or()` - Safe Default Value
 
@@ -29,7 +29,7 @@ NestGate uses **professional engineering patterns** consistently throughout the 
 let api_port = env::var("NESTGATE_API_PORT")
     .ok()
     .and_then(|s| s.parse().ok())
-    .unwrap_or(8080); // ✅ SAFE: Always provides port 8080 as fallback
+    .unwrap_or(8080); // SAFE: Always provides port 8080 as fallback
 ```
 
 **Why It's Safe**: Always returns a value (either parsed or default)
@@ -41,7 +41,7 @@ let api_port = env::var("NESTGATE_API_PORT")
 **Example from Production**:
 ```rust
 let env_config = EnvironmentConfig::from_env()
-    .unwrap_or_else(|_| EnvironmentConfig::default()); // ✅ SAFE: Fallback to default config
+    .unwrap_or_else(|_| EnvironmentConfig::default()); // SAFE: Fallback to default config
 ```
 
 **Why It's Safe**: Closure is only called if needed, but always provides a value
@@ -53,7 +53,7 @@ let env_config = EnvironmentConfig::from_env()
 **Example from Production**:
 ```rust
 let config = EnvironmentConfig::from_env()
-    .unwrap_or_default(); // ✅ SAFE: Uses Default trait implementation
+    .unwrap_or_default(); // SAFE: Uses Default trait implementation
 ```
 
 **Why It's Safe**: More idiomatic than `unwrap_or_else(|| T::default())`
@@ -68,23 +68,23 @@ let api_port = env::var("NESTGATE_API_PORT")
     .ok()
     .and_then(|s| s.parse().ok())
     .or_else(|| env::var("PORT").ok().and_then(|s| s.parse().ok()))
-    .unwrap_or(8080); // ✅ SAFE: Try NESTGATE_API_PORT, then PORT, then 8080
+    .unwrap_or(8080); // SAFE: Try NESTGATE_API_PORT, then PORT, then 8080
 ```
 
 **Why It's Safe**: Multiple fallback layers, guaranteed final default
 
 ---
 
-## 🔒 LOCK PATTERNS
+## LOCK PATTERNS
 
 ### Safe Mutex Access
 
-**❌ AVOID** (bare unwrap):
+**Avoid:** (bare unwrap):
 ```rust
 let guard = mutex.lock().unwrap(); // Can panic on poison
 ```
 
-**✅ USE** (safe helper):
+**Use:** (safe helper):
 ```rust
 use crate::safe_operations::safe_mutex_lock;
 
@@ -95,12 +95,12 @@ let guard = safe_mutex_lock(&mutex)?; // Proper error propagation
 
 ### Safe RwLock Read
 
-**❌ AVOID**:
+**Avoid:**:
 ```rust
 let value = rwlock.read().unwrap();
 ```
 
-**✅ USE**:
+**Use:**:
 ```rust
 use crate::safe_operations::safe_mutex_read;
 
@@ -109,12 +109,12 @@ let value = safe_mutex_read(&rwlock)?;
 
 ### Safe RwLock Write
 
-**❌ AVOID**:
+**Avoid:**:
 ```rust
 let mut guard = rwlock.write().unwrap();
 ```
 
-**✅ USE**:
+**Use:**:
 ```rust
 use crate::safe_operations::safe_mutex_write;
 
@@ -123,17 +123,17 @@ let mut guard = safe_mutex_write(&rwlock)?;
 
 ---
 
-## 🎨 HARDCODING PATTERNS
+## HARDCODING PATTERNS
 
 ### Centralized Constants
 
-**❌ AVOID** (scattered hardcoding):
+**Avoid:** (scattered hardcoding):
 ```rust
 let host = "127.0.0.1".to_string();
 let bind = "0.0.0.0".to_string();
 ```
 
-**✅ USE** (centralized constants):
+**Use:** (centralized constants):
 ```rust
 use crate::constants::hardcoding::addresses;
 
@@ -159,7 +159,7 @@ ports::METRICS_DEFAULT         // 9090
 
 ### Environment-Aware Configuration
 
-**✅ PATTERN** (intelligent defaults):
+**Pattern:** (intelligent defaults):
 ```rust
 let api_port = env::var("NESTGATE_API_PORT")
     .ok()
@@ -177,16 +177,16 @@ let api_port = env::var("NESTGATE_API_PORT")
 
 ---
 
-## 🌐 CAPABILITY-BASED DISCOVERY
+## CAPABILITY-BASED DISCOVERY
 
 ### Modern Service Discovery
 
-**❌ AVOID** (hardcoded endpoints):
+**Avoid:** (hardcoded endpoints):
 ```rust
 let api_url = "http://localhost:8080".to_string();
 ```
 
-**✅ USE** (capability discovery):
+**Use:** (capability discovery):
 ```rust
 use crate::capability_resolver::{CapabilityResolver, UnifiedCapability};
 
@@ -208,11 +208,11 @@ async fn discover_api_endpoint() -> Result<String> {
 
 ---
 
-## 🧪 TEST vs PRODUCTION
+## TEST vs PRODUCTION
 
 ### Test Code: Unwraps Are OK
 
-**✅ ACCEPTABLE in tests**:
+** ACCEPTABLE in tests**:
 ```rust
 #[test]
 fn test_config() {
@@ -225,7 +225,7 @@ fn test_config() {
 
 ### Production Code: Use Result
 
-**✅ REQUIRED in production**:
+** REQUIRED in production**:
 ```rust
 pub fn load_config() -> Result<Config> {
     let config = Config::from_env()
@@ -238,16 +238,16 @@ pub fn load_config() -> Result<Config> {
 
 ---
 
-## 📋 OPTION HANDLING
+## OPTION HANDLING
 
 ### Safe Option Unwrap
 
-**❌ AVOID**:
+**Avoid:**:
 ```rust
 let value = option.unwrap(); // Can panic
 ```
 
-**✅ USE** (with context):
+**Use:** (with context):
 ```rust
 use crate::safe_operations::safe_unwrap_option;
 
@@ -256,12 +256,12 @@ let value = safe_unwrap_option(option, "database connection")?;
 
 ### Safe Option with Default
 
-**❌ AVOID**:
+**Avoid:**:
 ```rust
 let value = option.unwrap_or(Default::default());
 ```
 
-**✅ USE** (with logging):
+**Use:** (with logging):
 ```rust
 use crate::safe_operations::safe_unwrap_or_default;
 
@@ -271,16 +271,16 @@ let value = safe_unwrap_or_default(option, "cache configuration");
 
 ---
 
-## 🎓 ERROR HANDLING
+## ERROR HANDLING
 
 ### Add Context to Operations
 
-**❌ BASIC**:
+**Basic:**:
 ```rust
 let file = std::fs::read_to_string("config.toml")?;
 ```
 
-**✅ WITH CONTEXT**:
+**With context:**:
 ```rust
 use crate::error::ResultExt; // Or anyhow
 
@@ -290,7 +290,7 @@ let file = std::fs::read_to_string("config.toml")
 
 ### Descriptive Errors
 
-**✅ PATTERN**:
+**Pattern:**:
 ```rust
 use crate::error::{NestGateError, Result};
 
@@ -307,7 +307,7 @@ fn validate_port(port: u16) -> Result<()> {
 
 ---
 
-## 🔧 SAFE OPERATIONS MODULE
+## SAFE OPERATIONS MODULE
 
 ### Available Helpers
 
@@ -339,27 +339,27 @@ let value = safe_expect!(result, "Database connection required");
 
 ---
 
-## 📊 PATTERN STATISTICS
+## PATTERN STATISTICS
 
 ### Current Usage in NestGate
 
 ```
 Total unwrap calls in production: ~75
-├─ unwrap_or():          45 (60%) ✅ Safe
-├─ unwrap_or_else():     15 (20%) ✅ Safe
-├─ unwrap_or_default():  10 (13%) ✅ Safe
-└─ bare unwrap():         5 (7%)  ⚠️ Being migrated
+├─ unwrap_or():          45 (60%)  Safe
+├─ unwrap_or_else():     15 (20%)  Safe
+├─ unwrap_or_default():  10 (13%)  Safe
+└─ bare unwrap():         5 (7%)   Being migrated
 
 Lock unwraps:
-├─ Test files:           17 ✅ Acceptable
-└─ Production files:      3 ✅ All in initialization
+├─ Test files:           17  Acceptable
+└─ Production files:      3  All in initialization
 ```
 
 **Conclusion**: 93% of unwraps follow safe patterns with guaranteed fallbacks
 
 ---
 
-## ✅ CODE REVIEW CHECKLIST
+## CODE REVIEW CHECKLIST
 
 ### When Reviewing PRs
 
@@ -380,7 +380,7 @@ Lock unwraps:
 
 ---
 
-## 🎯 EXAMPLES FROM PRODUCTION
+## EXAMPLES FROM PRODUCTION
 
 ### Example 1: Network Configuration
 
@@ -427,7 +427,7 @@ let env_config = EnvironmentConfig::from_env()
 
 ---
 
-## 🚀 MIGRATING UNSAFE PATTERNS
+## MIGRATING UNSAFE PATTERNS
 
 ### If You Find Bare `unwrap()`
 
@@ -459,7 +459,7 @@ let config = load_config()
 
 ---
 
-## 📚 FURTHER READING
+## FURTHER READING
 
 ### Internal Documentation
 - `code/crates/nestgate-core/src/safe_operations/` - Safe operation helpers
@@ -473,7 +473,7 @@ let config = load_config()
 
 ---
 
-## 🎉 BOTTOM LINE
+## BOTTOM LINE
 
 ### NestGate's Pattern Quality: **EXCELLENT**
 
@@ -486,17 +486,17 @@ let config = load_config()
 ### For Contributors
 
 **Follow these patterns and your code will be:**
-- ✅ Safe by default
-- ✅ Production ready
-- ✅ Maintainable
-- ✅ Idiomatic Rust
+- Safe by default
+- Production ready
+- Maintainable
+- Idiomatic Rust
 
-**Welcome to professional Rust engineering!** 💎
+**Welcome to professional Rust engineering!** 
 
 ---
 
 **Last Updated**: December 15, 2025  
-**Status**: ✅ COMPLETE  
+**Status**: COMPLETE  
 **Compliance**: Reference patterns for the team
 
 *Good patterns make great code!*

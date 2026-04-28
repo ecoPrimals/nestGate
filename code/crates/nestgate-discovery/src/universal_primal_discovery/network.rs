@@ -20,7 +20,7 @@ use std::time::Duration;
 use super::network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 /// Network discovery configuration
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

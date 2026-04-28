@@ -211,6 +211,7 @@ mod tests {
             audits: crate::rpc::audit_storage::AuditStorage::new(),
             family_id: None,
             storage_initialized: true,
+            encryption: None,
         }
     }
 

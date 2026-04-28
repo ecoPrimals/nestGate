@@ -1,39 +1,39 @@
-# 🚀 NestGate Production Deployment Guide
+# NestGate Production Deployment Guide
 
-> **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: April 2026 (Session 45c)
+> **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: April 2026 (Session 48)
 >
 > **Note**: References to `deploy/` directory paths below are aspirational — that directory has not been created yet. NestGate currently deploys as a single static binary (`nestgate daemon`). See README.md for current quick start.
 
 This guide provides comprehensive instructions for deploying NestGate 4.7.0-dev in production environments.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [🎯 Overview](#-overview)
-- [⚙️ Prerequisites](#️-prerequisites)
-- [🚀 Quick Deployment](#-quick-deployment)
-- [🔧 Configuration](#-configuration)
-- [🐳 Docker Deployment](#-docker-deployment)
-- [🏗️ Manual Deployment](#️-manual-deployment)
-- [📊 Monitoring Setup](#-monitoring-setup)
-- [🔒 Security Configuration](#-security-configuration)
-- [🌍 Ecosystem Integration](#-ecosystem-integration)
-- [🧪 Validation](#-validation)
-- [🚨 Troubleshooting](#-troubleshooting)
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Quick Deployment](#quick-deployment)
+- [Configuration](#configuration)
+- [Docker Deployment](#docker-deployment)
+- [Manual Deployment](#manual-deployment)
+- [Monitoring Setup](#monitoring-setup)
+- [Security Configuration](#security-configuration)
+- [Ecosystem Integration](#ecosystem-integration)
+- [Validation](#validation)
+- [Troubleshooting](#troubleshooting)
 
-## 🎯 Overview
+## Overview
 
 NestGate 4.7.0-dev features a completely modernized architecture designed for production deployment:
 
-### ✨ Deployment Features
+### Deployment Features
 
-- **🏆 Zero-Downtime Deployment**: Rolling updates with health checks
-- **📊 Built-in Monitoring**: Prometheus metrics and Grafana dashboards
-- **🔒 Production Security**: TLS, RBAC, and sovereignty compliance
-- **⚡ High Performance**: Zero-cost abstractions and native async
-- **🌍 Ecosystem Ready**: Seamless integration with ecoPrimals services
-- **🛡️ Fault Tolerance**: Automatic recovery and circuit breakers
+- **Zero-Downtime Deployment**: Rolling updates with health checks
+- **Built-in Monitoring**: Prometheus metrics and Grafana dashboards
+- **Production Security**: TLS, RBAC, and sovereignty compliance
+- **High Performance**: Zero-cost abstractions and native async
+- **Ecosystem Ready**: Seamless integration with ecoPrimals services
+- **Fault Tolerance**: Automatic recovery and circuit breakers
 
-## ⚙️ Prerequisites
+## Prerequisites
 
 ### System Requirements
 
@@ -73,7 +73,7 @@ sudo dnf install zfs
 sudo zpool status
 ```
 
-## 🚀 Quick Deployment
+## Quick Deployment
 
 ### 1. Clone Repository
 
@@ -109,7 +109,7 @@ curl http://localhost:8080/health
 - **Metrics**: http://localhost:9090/metrics
 - **Grafana Dashboard**: http://localhost:3000
 
-## 🔧 Configuration
+## Configuration
 
 ### Core Configuration
 
@@ -163,7 +163,7 @@ NESTGATE_BACKUP_ENABLED=true
 NESTGATE_TLS_ENABLED=true
 ```
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Using Docker Compose (Recommended)
 
@@ -212,7 +212,7 @@ docker inspect --format='{{.State.Health.Status}}' nestgate-production
 docker inspect --format='{{range .State.Health.Log}}{{.Output}}{{end}}' nestgate-production
 ```
 
-## 🏗️ Manual Deployment
+## Manual Deployment
 
 ### 1. Build from Source
 
@@ -284,7 +284,7 @@ sudo chown nestgate:nestgate /etc/nestgate/production.env
 sudo chmod 600 /etc/nestgate/production.env
 ```
 
-## 📊 Monitoring Setup
+## Monitoring Setup
 
 ### Prometheus Configuration
 
@@ -330,7 +330,7 @@ docker-compose restart grafana
 | `nestgate_active_connections` | Active connections | >1000 |
 | `nestgate_storage_usage_bytes` | Storage usage | >90% of capacity |
 
-## 🔒 Security Configuration
+## Security Configuration
 
 ### TLS Certificate Setup
 
@@ -392,7 +392,7 @@ sudo iptables -A INPUT -p tcp --dport 8090 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 9090 -j ACCEPT
 ```
 
-## 🌍 Ecosystem Integration
+## Ecosystem Integration
 
 ### Service Discovery Configuration
 
@@ -417,7 +417,7 @@ curl http://localhost:8080/ecosystem/status
 curl http://localhost:8080/discovery/services
 ```
 
-## 🧪 Validation
+## Validation
 
 ### Deployment Validation Script
 
@@ -425,28 +425,28 @@ curl http://localhost:8080/discovery/services
 #!/bin/bash
 # validate-deployment.sh
 
-echo "🔍 Validating NestGate deployment..."
+echo "Validating NestGate deployment..."
 
 # Health check
 if curl -f -s http://localhost:8080/health > /dev/null; then
-    echo "✅ Health check passed"
+    echo "Health check passed"
 else
-    echo "❌ Health check failed"
+    echo "FAIL: Health check failed"
     exit 1
 fi
 
 # Metrics check
 if curl -f -s http://localhost:9090/metrics > /dev/null; then
-    echo "✅ Metrics endpoint accessible"
+    echo "Metrics endpoint accessible"
 else
-    echo "❌ Metrics endpoint failed"
+    echo "FAIL: Metrics endpoint failed"
 fi
 
 # Performance test
-echo "⚡ Running performance test..."
+echo "Running performance test..."
 ab -n 1000 -c 10 http://localhost:8080/health
 
-echo "🎉 Validation completed"
+echo "Validation completed"
 ```
 
 ### Load Testing
@@ -462,7 +462,7 @@ ab -n 10000 -c 100 http://localhost:8080/health
 wrk -t12 -c400 -d30s --latency http://localhost:8080/health
 ```
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -541,7 +541,7 @@ curl -s http://localhost:8080/health/ecosystem
 
 ---
 
-## 📞 Support
+## Support
 
 - **Documentation**: [docs.ecoprimals.com/nestgate](https://docs.ecoprimals.com/nestgate)
 - **Issues**: [GitHub Issues](https://github.com/ecoprimals/nestgate/issues)
@@ -549,4 +549,4 @@ curl -s http://localhost:8080/health/ecosystem
 
 ---
 
-**🏆 NestGate 4.7.0-dev - Production Ready** | **Built with ❤️ by the ecoPrimals team** 
+**NestGate 4.7.0-dev - Production Ready** | **Built by the ecoPrimals team** 

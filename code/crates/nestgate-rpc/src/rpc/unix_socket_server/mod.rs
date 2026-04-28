@@ -6,9 +6,9 @@
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
 
-//! # 🔌 JSON-RPC Unix Socket Server
+//! # JSON-RPC Unix Socket Server
 //!
-//! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
+//! **DEPRECATED**: This module is deprecated as of v2.3.0
 //!
 //! ## Migration to Universal IPC Architecture
 //!
@@ -161,6 +161,10 @@ pub(crate) struct StorageState {
     pub(crate) family_id: Option<String>,
     /// Set when template/audit backends are successfully initialized (`StorageState::new`).
     pub(crate) storage_initialized: bool,
+    /// Native encrypt-at-rest via ChaCha20-Poly1305. When `Some`, all
+    /// `storage.store` data is encrypted before writing to disk and
+    /// `storage.retrieve` auto-decrypts envelope payloads.
+    pub(crate) encryption: Option<Arc<crate::rpc::storage_encryption::StorageEncryption>>,
 }
 
 impl StorageState {
@@ -171,13 +175,14 @@ impl StorageState {
             audits: crate::rpc::audit_storage::AuditStorage::new(),
             family_id: None,
             storage_initialized: true,
+            encryption: None,
         })
     }
 }
 
 /// JSON-RPC Unix socket server for ecosystem Unix IPC (standard layout under `BIOMEOS_SOCKET_DIR`; see socket config)
 ///
-/// **⚠️ DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
+/// **DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
 ///
 /// Connection logic has moved to the orchestration provider for true platform universality.
 /// See `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md` for migration guide.
@@ -768,9 +773,11 @@ impl crate::rpc::isomorphic_ipc::RpcHandler for LegacyUnixJsonRpcHandler {
 /// Returns [`NestGateError`] if the storage backend used by the handler cannot be initialized.
 pub fn legacy_ecosystem_rpc_handler(
     family_id: impl Into<String>,
+    encryption: Option<Arc<crate::rpc::storage_encryption::StorageEncryption>>,
 ) -> Result<Arc<dyn crate::rpc::isomorphic_ipc::RpcHandler>> {
     let mut state = StorageState::new()?;
     state.family_id = Some(family_id.into());
+    state.encryption = encryption;
     Ok(Arc::new(LegacyUnixJsonRpcHandler::new(Arc::new(state))))
 }
 

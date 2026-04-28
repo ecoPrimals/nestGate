@@ -157,6 +157,7 @@ etcetera = "0.8"
 blake3 = { version = "1.5", default-features = false, features = ["std", "pure"] }
 
 # Encoding utilities (crypto ops delegated to bearDog via IPC)
+chacha20poly1305 = "0.10"
 base64 = "0.22"
 sha2 = "0.10"
 hmac = "0.12"

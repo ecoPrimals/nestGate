@@ -3,7 +3,7 @@
 
 //! **UNIX SOCKET LISTENER**
 //!
-//! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
+//! **DEPRECATED**: This module is deprecated as of v2.3.0
 //!
 //! ## Migration to Universal IPC Architecture
 //!
@@ -48,7 +48,7 @@ use tracing::{info, warn};
 
 /// **UNIX SOCKET LISTENER**
 ///
-/// **⚠️ DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
+/// **DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
 ///
 /// Listens for connections on a Unix socket and handles JSON-RPC requests.
 ///
