@@ -15,12 +15,12 @@
 //!
 //! **Old Way** (hardcoded):
 //! ```rust,ignore
-//! let security_url = "http://localhost:3000"; // ❌ Hardcoded!
+//! let security_url = "http://localhost:3000"; // Hardcoded (avoid in production)
 //! ```
 //!
 //! **New Way** (discovered):
 //! ```rust,ignore
-//! let security_url = discover_security().await?; // ✅ Discovered!
+//! let security_url = discover_security().await?; // Discovered at runtime
 //! ```
 //!
 //! # Features

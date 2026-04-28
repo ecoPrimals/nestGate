@@ -29,13 +29,13 @@
 //!           │
 //!           ├─→ Try Unix Socket
 //!           │     │
-//!           │     ├─→ Success? ✅ Use Unix
+//!           │     ├─→ Success? Use Unix
 //!           │     │
 //!           │     └─→ Platform Constraint? ⚠️
 //!           │              │
 //!           └─────────────→ Adapt: TCP Fallback
 //!                          │
-//!                          └─→ Success ✅
+//!                          └─→ Success
 //!
 //! ┌─────────────────────────────────────────┐
 //! │   Client Discovery                      │
@@ -44,13 +44,13 @@
 //!           │
 //!           ├─→ Try Unix Socket
 //!           │     │
-//!           │     ├─→ Exists? ✅ Use Unix
+//!           │     ├─→ Exists? Use Unix
 //!           │     │
 //!           │     └─→ Not found? ⚠️
 //!           │              │
 //!           └─────────────→ Try TCP Discovery File
 //!                          │
-//!                          └─→ Found ✅ Use TCP
+//!                          └─→ Found; use TCP
 //! ```
 //!
 //! ## Modules
@@ -122,7 +122,7 @@
 //! ```text
 //! [INFO] 🔌 Starting IPC server (isomorphic mode)...
 //! [INFO]    Trying Unix socket IPC (optimal)...
-//! [INFO] ✅ Unix socket IPC active (optimal path)
+//! [INFO] Unix socket IPC active (optimal path)
 //! ```
 //!
 //! ### Android (Unix sockets blocked by `SELinux`)
@@ -133,28 +133,26 @@
 //! [WARN] ⚠️  Unix sockets unavailable: Permission denied
 //! [WARN]    Detected platform constraint, adapting...
 //! [INFO] 🌐 Starting TCP IPC fallback (isomorphic mode)
-//! [INFO] ✅ TCP IPC listening on 127.0.0.1:45763
+//! [INFO] TCP IPC listening on 127.0.0.1:45763
 //! ```
 //!
 //! ## Deep Debt Principles
 //!
 //! This module exemplifies modern idiomatic Rust:
 //!
-//! 1. ✅ **100% Pure Rust** - No C dependencies for IPC
-//! 2. ✅ **Zero Unsafe Code** - All IPC code is safe Rust
-//! 3. ✅ **Runtime Discovery** - Detects platform constraints from errors
-//! 4. ✅ **Platform-Agnostic** - Same code on all platforms
-//! 5. ✅ **Modern Idiomatic** - async/await, traits, error context
-//! 6. ✅ **Primal Self-Knowledge** - No external configuration
-//! 7. ✅ **Zero Configuration** - Works out of the box
+//! 1. **100% Pure Rust** - No C dependencies for IPC
+//! 2. **Zero Unsafe Code** - All IPC code is safe Rust
+//! 3. **Runtime Discovery** - Detects platform constraints from errors
+//! 4. **Platform-Agnostic** - Same code on all platforms
+//! 5. **Modern Idiomatic** - async/await, traits, error context
+//! 6. **Primal Self-Knowledge** - No external configuration
+//! 7. **Zero Configuration** - Works out of the box
 //!
 //! ## Reference
 //!
 //! Pattern validated in orchestration provider v3.33.0\
 //! Implementation guide: `ISOMORPHIC_IPC_IMPLEMENTATION_PLAN_JAN_31_2026.md`
 //!
-//! **Status**: Phases 1, 2 & 3 Complete ✅ (A++ Grade)
-
 // Module exports
 pub mod discovery;
 pub mod platform_detection;

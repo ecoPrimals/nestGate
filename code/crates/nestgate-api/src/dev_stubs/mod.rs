@@ -5,7 +5,7 @@
 
 //! **DEVELOPMENT STUBS MODULE**
 //!
-//! ⚠️ **WARNING: DEVELOPMENT AND TESTING ONLY** ⚠️
+//! **WARNING: DEVELOPMENT AND TESTING ONLY**
 //!
 //! This module consolidates all development stub implementations for the NestGate API.
 //! All data returned is HARDCODED and does not reflect actual system state.
@@ -13,7 +13,7 @@
 //! **DO NOT USE IN PRODUCTION** - Use real implementations from respective crates instead.
 
 // ═══════════════════════════════════════════════════════════════
-// 🔒 FEATURE GATE: Development/Testing Only
+// Feature gate: development and testing only
 // ═══════════════════════════════════════════════════════════════
 // This module is NOT compiled in production builds.
 // Only available with the 'dev-stubs' feature flag.

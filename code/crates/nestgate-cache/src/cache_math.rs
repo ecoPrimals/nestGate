@@ -16,7 +16,7 @@ pub const fn needs_eviction(current_size: u64, new_item_size: u64, max_size: u64
     if max_size == 0 {
         return false; // No size limit
     }
-    // Prevent overflow by checking if addition would exceed max 🛡️
+    // Prevent overflow by checking if addition would exceed max
     if current_size > max_size {
         return true; // Already over limit
     }
@@ -29,7 +29,7 @@ pub const fn needs_eviction(current_size: u64, new_item_size: u64, max_size: u64
 /// **TESTABLE**: Can verify sum calculation with edge cases and overflow protection
 #[must_use]
 pub fn calculate_total_cache_size(item_sizes: &[u64]) -> u64 {
-    // Use saturating fold to prevent overflow 🛡️
+    // Use saturating fold to prevent overflow
     item_sizes
         .iter()
         .fold(0u64, |acc, &size| acc.saturating_add(size))
@@ -54,7 +54,7 @@ pub const fn calculate_eviction_size(current_size: u64, new_item_size: u64, max_
     reason = "Hit ratio metric from u64 hit/miss counters"
 )]
 pub fn calculate_hit_ratio(hits: u64, misses: u64) -> f64 {
-    // Handle extreme cases where both values are near max 🛡️
+    // Handle extreme cases where both values are near max
     if hits == u64::MAX && misses == u64::MAX {
         return 0.5; // Logically, equal hits and misses = 50% hit rate
     }
@@ -136,37 +136,37 @@ mod tests {
 
     use super::*;
 
-    /// 🎯 **CACHE ARITHMETIC MUTATION DETECTION TESTS**
+    /// **CACHE ARITHMETIC MUTATION DETECTION TESTS**
     /// These tests are specifically designed to catch mutations in cache operations
 
     #[test]
     fn test_eviction_decision_boundary_conditions() {
-        // ✅ CATCHES COMPARISON MUTATIONS (> vs >=, > vs <)
+        // CATCHES COMPARISON MUTATIONS (> vs >=, > vs <)
         assert!(!needs_eviction(100, 50, 200)); // 100 + 50 = 150 < 200, no eviction
         assert!(needs_eviction(100, 101, 200)); // 100 + 101 = 201 > 200, needs eviction
         assert!(!needs_eviction(100, 100, 200)); // 100 + 100 = 200 = 200, boundary case
 
-        // ✅ CATCHES ZERO MAX SIZE EDGE CASE
+        // CATCHES ZERO MAX SIZE EDGE CASE
         assert!(!needs_eviction(1000, 1000, 0)); // No limit when max_size is 0
 
-        // ✅ CATCHES ADDITION MUTATIONS (+ vs -, + vs *)
+        // CATCHES ADDITION MUTATIONS (+ vs -, + vs *)
         assert!(needs_eviction(150, 51, 200)); // 150 + 51 = 201 > 200
         assert!(!needs_eviction(150, 50, 200)); // 150 + 50 = 200 = 200
     }
 
     #[test]
     fn test_total_size_calculation_precision() {
-        // ✅ CATCHES SUM MUTATIONS AND OVERFLOW HANDLING
+        // CATCHES SUM MUTATIONS AND OVERFLOW HANDLING
         let sizes = vec![100, 200, 300, 400];
         assert_eq!(calculate_total_cache_size(&sizes), 1000);
 
-        // ✅ CATCHES EMPTY SLICE HANDLING
+        // CATCHES EMPTY SLICE HANDLING
         assert_eq!(calculate_total_cache_size(&[]), 0);
 
-        // ✅ CATCHES SINGLE ITEM CASE
+        // CATCHES SINGLE ITEM CASE
         assert_eq!(calculate_total_cache_size(&[42]), 42);
 
-        // ✅ CATCHES LARGE NUMBER HANDLING
+        // CATCHES LARGE NUMBER HANDLING
         let large_sizes = vec![u64::MAX / 4, u64::MAX / 4, u64::MAX / 4, u64::MAX / 4];
         let total = calculate_total_cache_size(&large_sizes);
         assert!(total > 0); // Should not overflow to 0
@@ -174,95 +174,95 @@ mod tests {
 
     #[test]
     fn test_eviction_size_calculation_exact() {
-        // ✅ CATCHES ARITHMETIC MUTATIONS (+ vs -, - vs +)
+        // CATCHES ARITHMETIC MUTATIONS (+ vs -, - vs +)
         assert_eq!(calculate_eviction_size(150, 100, 200), 50); // (150 + 100) - 200 = 50
         assert_eq!(calculate_eviction_size(100, 50, 200), 0); // 150 <= 200, no eviction
         assert_eq!(calculate_eviction_size(200, 1, 200), 1); // (200 + 1) - 200 = 1
 
-        // ✅ CATCHES EDGE CASES
+        // CATCHES EDGE CASES
         assert_eq!(calculate_eviction_size(0, 0, 100), 0); // Nothing to evict
         assert_eq!(calculate_eviction_size(300, 0, 200), 100); // Current already over limit
     }
 
     #[test]
     fn test_hit_ratio_division_precision() {
-        // ✅ CATCHES DIVISION MUTATIONS (/ vs *, / vs +, / vs -)
+        // CATCHES DIVISION MUTATIONS (/ vs *, / vs +, / vs -)
         assert_eq!(calculate_hit_ratio(8, 2), 0.8); // 8 / (8 + 2) = 8/10 = 0.8
         assert_eq!(calculate_hit_ratio(1, 3), 0.25); // 1 / (1 + 3) = 1/4 = 0.25
         assert_eq!(calculate_hit_ratio(7, 3), 0.7); // 7 / (7 + 3) = 7/10 = 0.7
 
-        // ✅ CATCHES DIVISION BY ZERO HANDLING
+        // CATCHES DIVISION BY ZERO HANDLING
         assert_eq!(calculate_hit_ratio(0, 0), 0.0); // 0 requests total
 
-        // ✅ CATCHES PERFECT HIT RATIO
+        // CATCHES PERFECT HIT RATIO
         assert_eq!(calculate_hit_ratio(10, 0), 1.0); // 10/10 = 100% hit rate
 
-        // ✅ CATCHES ZERO HIT RATIO
+        // CATCHES ZERO HIT RATIO
         assert_eq!(calculate_hit_ratio(0, 10), 0.0); // 0/10 = 0% hit rate
     }
 
     #[test]
     fn test_cache_size_update_mutations() {
-        // ✅ CATCHES ADDITION MUTATIONS (+= vs -=, + vs -)
+        // CATCHES ADDITION MUTATIONS (+= vs -=, + vs -)
         assert_eq!(add_to_cache_size(100, 50), 150);
         assert_eq!(add_to_cache_size(0, 100), 100);
 
-        // ✅ CATCHES OVERFLOW PROTECTION (saturating_add vs wrapping_add)
+        // CATCHES OVERFLOW PROTECTION (saturating_add vs wrapping_add)
         assert_eq!(add_to_cache_size(u64::MAX, 1), u64::MAX); // Should saturate, not wrap
 
-        // ✅ CATCHES SUBTRACTION MUTATIONS (-= vs +=, - vs +)
+        // CATCHES SUBTRACTION MUTATIONS (-= vs +=, - vs +)
         assert_eq!(subtract_from_cache_size(150, 50), 100);
         assert_eq!(subtract_from_cache_size(100, 100), 0);
 
-        // ✅ CATCHES UNDERFLOW PROTECTION (saturating_sub vs wrapping_sub)
+        // CATCHES UNDERFLOW PROTECTION (saturating_sub vs wrapping_sub)
         assert_eq!(subtract_from_cache_size(50, 100), 0); // Should saturate at 0, not wrap
     }
 
     #[test]
     fn test_max_size_threshold_comparison() {
-        // ✅ CATCHES COMPARISON MUTATIONS (>= vs >, >= vs <)
+        // CATCHES COMPARISON MUTATIONS (>= vs >, >= vs <)
         assert!(is_at_max_size(200, 200)); // Exactly at max
         assert!(is_at_max_size(201, 200)); // Over max
         assert!(!is_at_max_size(199, 200)); // Under max
 
-        // ✅ CATCHES ZERO MAX SIZE HANDLING
+        // CATCHES ZERO MAX SIZE HANDLING
         assert!(!is_at_max_size(1000, 0)); // No limit when max is 0
         assert!(!is_at_max_size(0, 0)); // Both zero
     }
 
     #[test]
     fn test_pool_expansion_threshold_calculation() {
-        // ✅ CATCHES PERCENTAGE CALCULATION MUTATIONS (* vs /, / vs *)
+        // CATCHES PERCENTAGE CALCULATION MUTATIONS (* vs /, / vs *)
         assert!(calculate_pool_expansion_threshold(75, 100, 75.0)); // 75 >= 75% of 100
         assert!(!calculate_pool_expansion_threshold(74, 100, 75.0)); // 74 < 75% of 100
         assert!(calculate_pool_expansion_threshold(80, 100, 75.0)); // 80 > 75% of 100
 
-        // ✅ CATCHES DIVISION BY 100 MUTATIONS
+        // CATCHES DIVISION BY 100 MUTATIONS
         assert!(calculate_pool_expansion_threshold(8, 10, 75.0)); // 8 >= 7.5 (75% of 10)
         assert!(!calculate_pool_expansion_threshold(7, 10, 75.0)); // 7 < 7.5 (75% of 10)
 
-        // ✅ CATCHES ZERO MAX SIZE HANDLING
+        // CATCHES ZERO MAX SIZE HANDLING
         assert!(!calculate_pool_expansion_threshold(100, 0, 50.0)); // No expansion if no limit
     }
 
     #[test]
     fn test_eviction_count_calculation() {
-        // ✅ CATCHES PERCENTAGE CALCULATION MUTATIONS
+        // CATCHES PERCENTAGE CALCULATION MUTATIONS
         assert_eq!(calculate_optimal_eviction_count(100, 25.0), 25); // 25% of 100 = 25
         assert_eq!(calculate_optimal_eviction_count(80, 50.0), 40); // 50% of 80 = 40
         assert_eq!(calculate_optimal_eviction_count(10, 30.0), 3); // 30% of 10 = 3
 
-        // ✅ CATCHES EDGE CASES
+        // CATCHES EDGE CASES
         assert_eq!(calculate_optimal_eviction_count(0, 50.0), 0); // No items to evict
         assert_eq!(calculate_optimal_eviction_count(10, 0.0), 0); // 0% eviction
 
-        // ✅ CATCHES MIN FUNCTION MUTATIONS (min vs max)
+        // CATCHES MIN FUNCTION MUTATIONS (min vs max)
         assert_eq!(calculate_optimal_eviction_count(5, 200.0), 5); // Can't evict more than total
     }
 
     #[test]
     fn test_integration_cache_workflow() {
-        // ✅ FULL CACHE WORKFLOW TEST - catches mutations in the complete calculation chain
+        // FULL CACHE WORKFLOW TEST - catches mutations in the complete calculation chain
         let current_size = 150;
         let new_item_size = 100;
         let max_size = 200;
@@ -288,13 +288,13 @@ mod tests {
 
     #[test]
     fn test_statistics_calculation_integration() {
-        // ✅ HIT RATIO CALCULATION WORKFLOW
+        // HIT RATIO CALCULATION WORKFLOW
         let hits = 85;
         let misses = 15;
         let hit_ratio = calculate_hit_ratio(hits, misses);
         assert_eq!(hit_ratio, 0.85); // 85 / (85 + 15) = 0.85
 
-        // ✅ CACHE SIZE MANAGEMENT WORKFLOW
+        // CACHE SIZE MANAGEMENT WORKFLOW
         let initial_size = 0;
         let size_after_add1 = add_to_cache_size(initial_size, 100);
         let size_after_add2 = add_to_cache_size(size_after_add1, 150);

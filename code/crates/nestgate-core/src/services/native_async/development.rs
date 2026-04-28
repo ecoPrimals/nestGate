@@ -147,7 +147,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
                 }],
                 endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
                     url: {
-                        // ✅ MIGRATED: Now uses centralized runtime configuration
+                        // Now uses centralized runtime configuration
                         use crate::config::runtime::get_config;
                         let config = get_config();
                         config.network.api_base_url()

@@ -29,7 +29,7 @@ pub(crate) use crate::commands::env::port_from_env_or_default;
 #[command(about = "Universal ZFS and Storage Management System")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(long_about = "
-🏠 NestGate - Sovereign Storage System
+NestGate — Sovereign Storage System
 NestGate provides ZFS capabilities through a modern API-based architecture:
 • Universal ZFS features accessible via REST API
 • Works with any storage backend (local, cloud, network, memory)

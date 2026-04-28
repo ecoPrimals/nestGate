@@ -130,8 +130,7 @@ impl PrimalId {
 
         let pid = std::process::id();
 
-        // ✅ CONCURRENT FIX: Use nanosecond precision for truly unique IDs
-        // Milliseconds were insufficient for rapid successive calls
+        // Nanosecond timestamps for unique IDs under rapid successive calls
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?

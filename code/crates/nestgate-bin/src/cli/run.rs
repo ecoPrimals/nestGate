@@ -25,8 +25,7 @@ impl Cli {
         // Setup logging
         setup_logging(self.verbose);
 
-        // 🔒 CRITICAL SECURITY: Validate JWT secret before starting
-        // This prevents production deployment with insecure default values
+        // Validate JWT secret before starting (reject insecure defaults).
         nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
 
         // Print banner

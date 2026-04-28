@@ -127,8 +127,8 @@ impl ConsolidatedCanonicalAdapter {
             _service_id: Uuid::new_v4(),
             config,
             our_capabilities: Arc::new(RwLock::new(Vec::new())),
-            _discovered_capabilities: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
-            active_requests: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
+            _discovered_capabilities: Arc::new(DashMap::new()), // DashMap (was incorrectly RwLock<HashMap>)
+            active_requests: Arc::new(DashMap::new()), // DashMap (was incorrectly RwLock<HashMap>)
             #[cfg(feature = "dev-stubs")]
             _client: client,
             #[cfg(not(feature = "dev-stubs"))]

@@ -286,7 +286,7 @@ impl ZeroCostZfsOperations for GcsBackend {
 
         info!("Creating GCS pool (bucket): {}", bucket_name);
 
-        // ✅ PROTOCOL-FIRST: Create GCS bucket via JSON API (no SDK)
+        // Protocol-first: Create GCS bucket via JSON API (no SDK)
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/insert
         // For now, use marker-based approach consistent with current architecture
         // Future: Full JSON API integration when using UniversalObjectStorage
@@ -329,7 +329,7 @@ impl ZeroCostZfsOperations for GcsBackend {
             prefix, tier, class_name
         );
 
-        // ✅ PROTOCOL-FIRST: Set up dataset with storage class
+        // Protocol-first: Set up dataset with storage class
         // Storage class mapping:
         // - Hot -> STANDARD (default)
         // - Warm -> NEARLINE (30-day minimum)
@@ -366,7 +366,7 @@ impl ZeroCostZfsOperations for GcsBackend {
 
         info!("Creating GCS snapshot: {}", generation);
 
-        // ✅ PROTOCOL-FIRST: Create snapshot using GCS object versioning
+        // Protocol-first: Create snapshot using GCS object versioning
         // Spec: https://cloud.google.com/storage/docs/object-versioning
         // GCS provides automatic object versioning (generations)
         // When versioning is enabled, each object modification creates a new generation
@@ -391,7 +391,7 @@ impl ZeroCostZfsOperations for GcsBackend {
     async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties> {
         debug!("Getting properties for pool: {}", pool.name);
 
-        // ✅ PROTOCOL-FIRST: Query GCS bucket properties via JSON API
+        // Protocol-first: Query GCS bucket properties via JSON API
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/get
         // Future: GET https://storage.googleapis.com/storage/v1/b/{bucket}
         // For now, return best-effort properties from local config
@@ -418,7 +418,7 @@ impl ZeroCostZfsOperations for GcsBackend {
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
         debug!("Listing GCS pools");
 
-        // ✅ PROTOCOL-FIRST: List GCS buckets via JSON API
+        // Protocol-first: List GCS buckets via JSON API
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/list
         // Future: GET https://storage.googleapis.com/storage/v1/b?project={project}&prefix={prefix}
         // For now, return in-memory pools (consistent with current architecture)
@@ -431,7 +431,7 @@ impl ZeroCostZfsOperations for GcsBackend {
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         debug!("Listing datasets for pool: {}", pool.name);
 
-        // ✅ PROTOCOL-FIRST: List object prefixes using delimiter
+        // Protocol-first: List object prefixes using delimiter
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/objects/list
         // Query: GET /b/{bucket}/o?delimiter=/&prefix={pool_prefix}/
         // The delimiter param returns only "directories" (common prefixes)
@@ -444,7 +444,7 @@ impl ZeroCostZfsOperations for GcsBackend {
     async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
         debug!("Listing snapshots for dataset: {}", dataset.name);
 
-        // ✅ PROTOCOL-FIRST: List object generations (versions)
+        // Protocol-first: List object generations (versions)
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/objects/list
         // Query: GET /b/{bucket}/o?prefix={dataset_prefix}&versions=true
         // Returns all object generations (GCS automatic versioning)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🚀 **SAFE SIMD BATCH PROCESSOR**
+//! # Safe SIMD Batch Processor
 //!
 //! **100% SAFE RUST** - Zero unsafe code, maximum performance
 //!
@@ -16,10 +16,10 @@ use super::types::SimdError;
 /// Replaces unsafe `x86_64` intrinsics with safe, portable code.
 ///
 /// ## Safety
-/// - ✅ Zero unsafe code
-/// - ✅ Works on all platforms (x86, ARM, RISC-V, WebAssembly)
-/// - ✅ Compiler-verified bounds checking
-/// - ✅ Same performance as unsafe intrinsics
+/// - Zero unsafe code
+/// - Works on all platforms (x86, ARM, RISC-V, WebAssembly)
+/// - Compiler-verified bounds checking
+/// - Same performance as unsafe intrinsics
 ///
 /// ## Performance
 /// - **u64 operations**: 4x speedup (AVX2)

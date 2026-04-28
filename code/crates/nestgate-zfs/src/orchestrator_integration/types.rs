@@ -72,7 +72,7 @@ pub struct ZfsServiceConfig {
 
 impl Default for ZfsServiceConfig {
     fn default() -> Self {
-        // ✅ MIGRATED: Now uses centralized runtime configuration
+        // Endpoint from centralized runtime configuration
         use nestgate_core::config::runtime::get_config;
         let config = get_config();
 

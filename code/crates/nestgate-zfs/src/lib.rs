@@ -47,7 +47,7 @@
 #![warn(rustdoc::broken_intra_doc_links)]
 
 // Core modules
-pub mod adaptive_backend; // ✅ Adaptive ZFS: system or internal
+pub mod adaptive_backend; // System ZFS vs internal implementation
 
 /// Storage backends (S3, Azure, GCS, etc.)
 pub mod backends;

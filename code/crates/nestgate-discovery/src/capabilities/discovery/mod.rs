@@ -44,17 +44,17 @@
 //! `PRIMAL_ECOSYSTEM_INTEGRATION_SPEC.md`. Services are discovered by
 //! **capability**, not by name. This ensures:
 //!
-//! - ✅ Vendor independence
-//! - ✅ Dynamic service substitution
-//! - ✅ Load balancing across providers
-//! - ✅ Sovereignty compliance
+//! - Vendor independence
+//! - Dynamic service substitution
+//! - Load balancing across providers
+//! - Sovereignty compliance
 //!
 //! # Migration from Hardcoded Names
 //!
 //! Old code with hardcoded primal names:
 //!
 //! ```rust,ignore
-//! // ❌ VIOLATES SPEC - hardcoded name
+//! // Hardcoded name (violates spec)
 //! if service_name == "<specific-primal>" {
 //!     // security operations
 //! }
@@ -63,7 +63,7 @@
 //! New code with capability-based discovery:
 //!
 //! ```rust,ignore
-//! // ✅ SPECIFICATION COMPLIANT
+//! // Capability-based (specification-compliant)
 //! if service.has_capability(&Capability::Security) {
 //!     // security operations
 //! }

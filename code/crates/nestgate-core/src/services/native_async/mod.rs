@@ -104,7 +104,7 @@ mod tests {
             true // If error, assume it exists to fail the test appropriately
         }));
 
-        println!("✅ Production load balancer test passed!");
+        println!("Production load balancer test passed!");
     }
 
     #[tokio::test]
@@ -157,7 +157,7 @@ mod tests {
         })?;
         assert!(!health_data.is_empty());
 
-        println!("✅ Development load balancer test passed!");
+        println!("Development load balancer test passed!");
         Ok(())
     }
 
@@ -172,7 +172,7 @@ mod tests {
         assert_eq!(DevelopmentLoadBalancer::max_concurrent_requests(), 1000);
         assert_eq!(DevelopmentLoadBalancer::stats_retention_seconds(), 3600);
 
-        println!("✅ Load balancer compile-time specialization working perfectly!");
+        println!("Load balancer compile-time specialization working perfectly!");
     }
 
     struct NativeAsyncService {
@@ -197,7 +197,7 @@ mod tests {
         let config = service.get_config();
         assert!(!config.is_empty());
 
-        println!("✅ Native async service created successfully");
+        println!("Native async service created successfully");
         Ok(())
     }
 
@@ -207,7 +207,7 @@ mod tests {
 
         // Test basic service operation - just verify the service was created
         assert!(!service.name.is_empty());
-        println!("✅ Service operation executed successfully");
+        println!("Service operation executed successfully");
 
         Ok(())
     }

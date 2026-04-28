@@ -171,7 +171,7 @@ mod tests {
     use super::*;
 
     /// Helper to create test endpoint
-    /// ✅ MIGRATED: Replaces hardcoded endpoints with configurable ones
+    /// Replaces hardcoded endpoints with configurable ones.
     fn test_endpoint(service: &str, port: u16) -> String {
         format!("http://{service}:{port}")
     }

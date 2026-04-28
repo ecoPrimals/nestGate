@@ -158,7 +158,7 @@ impl ComplianceManager {
             .map(|f| f.required_controls.len())
             .sum::<usize>() as f32;
 
-        // ✅ MODERN: Use epsilon for zero check in production code
+        // Use epsilon for zero check in production code
         if approx_eq_f32(total_controls, 0.0) {
             return 100.0;
         }

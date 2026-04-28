@@ -72,7 +72,7 @@ impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
                 // Successfully claimed slot - now write SAFELY
                 {
                     let mut blocks = self.blocks.lock();
-                    blocks[current] = Some(value); // ✅ 100% SAFE - bounds checked!
+                    blocks[current] = Some(value); // Bounds checked
                 }
 
                 // Update statistics
@@ -109,7 +109,7 @@ impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
             return None;
         }
 
-        // ✅ 100% SAFE - Mutex protects interior mutability
+        // Mutex protects interior mutability
         let value = {
             let mut blocks = self.blocks.lock();
             blocks[handle.index].take()
@@ -194,7 +194,7 @@ mod tests {
         let handle = pool.allocate(42u64).context("allocation failed")?;
         assert_eq!(pool.active_count(), 1);
 
-        // ✅ SAFE! No unsafe block needed!
+        // No unsafe block needed
         let value = pool.deallocate(handle);
         assert_eq!(value, Some(42u64));
         assert_eq!(pool.active_count(), 0);
@@ -239,7 +239,7 @@ mod tests {
             _phantom: std::marker::PhantomData,
         };
 
-        // ✅ SAFE! This doesn't crash or cause UB - it just returns None
+        // Invalid handle: returns None without UB
         let result = pool.deallocate(invalid_handle);
         assert_eq!(result, None);
     }
@@ -258,7 +258,7 @@ mod tests {
         assert_eq!(value1, Some(42u64));
 
         // Second deallocation (double-free attempt)
-        // ✅ SAFE! This doesn't crash - it just returns None
+        // Double-free attempt returns None
         let value2 = pool.deallocate(PoolHandle {
             index: handle.index,
             _phantom: std::marker::PhantomData,

@@ -19,7 +19,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> nestgate_core::Result<()> {
-//!     // ✅ Modern approach: 3-layer discovery
+//!     // Modern approach: 3-layer discovery
 //!     let api_port = capability_port_discovery::discover_api_port().await?;
 //!     println!("API port: {}", api_port);
 //!     Ok(())

@@ -3,7 +3,6 @@
 
 //! Configuration management commands
 //!
-//! ✅ EVOLVED: Real implementations replacing println stubs
 //! Provides configuration display, get/set, and reset operations.
 
 use crate::cli::ConfigAction;

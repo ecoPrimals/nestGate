@@ -4,7 +4,7 @@
 //! **SAFE HIGH-PERFORMANCE RING BUFFER**
 //!
 //! Lock-free SPSC (Single Producer, Single Consumer) ring buffer.
-//! ✅ EVOLVED: Uses `Mutex` with `Option` holding type `T` per slot — fully memory-safe Rust.
+//! Uses `Mutex` with `Option` holding type `T` per slot — fully memory-safe Rust.
 //!
 //! ## Key Features
 //!
@@ -42,7 +42,7 @@ use std::sync::{Arc, Mutex};
 /// Safe lock-free SPSC ring buffer
 ///
 /// Single Producer, Single Consumer ring buffer with atomic operations.
-/// ✅ EVOLVED: uses `Mutex<Option<T>>` per slot rather than lock-free shared mutable storage.
+/// Uses `Mutex<Option<T>>` per slot rather than lock-free shared mutable storage.
 pub struct SafeRingBuffer<T, const CAPACITY: usize> {
     /// Shared buffer state
     inner: Arc<RingBufferInner<T, CAPACITY>>,

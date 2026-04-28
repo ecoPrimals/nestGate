@@ -28,10 +28,10 @@
 //!
 //! ## Benefits of Refactoring:
 //!
-//! - ✅ **File Compliance** - All files under 1,000 lines
-//! - ✅ **Maintainability** - Easier to navigate and modify
-//! - ✅ **Clarity** - Each concern in its own module
-//! - ✅ **API Compatibility** - Re-exports maintain existing imports
+//! - **File Compliance** — All files under 1,000 lines
+//! - **Maintainability** — Easier to navigate and modify
+//! - **Clarity** — Each concern in its own module
+//! - **API Compatibility** — Re-exports maintain existing imports
 //!
 //! These traits use `impl Future` returns which may trigger `clippy::type_complexity` warnings
 //! but represent modern async Rust patterns and are more efficient than boxed futures.

@@ -24,10 +24,10 @@
 //! - `types`: Common SIMD types, errors, and capabilities
 //! - `batch_processor`: High-performance batch processing with SIMD
 
-// ✅ **SAFE SIMD** - Zero unsafe code, portable across all platforms
+// **SAFE SIMD** — Zero unsafe code, portable across all platforms
 pub mod safe_batch_processor;
 
-// ✅ ELIMINATED: batch_processor (13 unsafe blocks) - Use safe_batch_processor instead
+// ELIMINATED: batch_processor (13 unsafe blocks) — use safe_batch_processor instead
 
 pub mod types;
 

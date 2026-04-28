@@ -3,12 +3,12 @@
 
 //! Storage Backend Capability Detection
 //!
-//! ✅ DEEP DEBT PRINCIPLE #5: Hardcoding Elimination
+//! Deep debt principle #5: hardcoding elimination
 //! - No assumptions about deployment environment
 //! - Agnostic to filesystem type
 //! - Capability-based backend selection
 //!
-//! ✅ DEEP DEBT PRINCIPLE #6: Primal Self-Knowledge
+//! Deep debt principle #6: primal self-knowledge
 //! - Discovers own capabilities at runtime
 //! - No hardcoded assumptions
 //! - Runtime environment detection
@@ -27,7 +27,7 @@ pub enum BackendType {
 
 /// Backend capabilities
 ///
-/// ✅ MODERN IDIOMATIC: Clear capability advertisement
+/// Clear capability advertisement
 #[derive(Debug, Clone)]
 pub struct BackendCapabilities {
     /// Backend type
@@ -84,8 +84,8 @@ impl BackendCapabilities {
 
 /// Detect if ZFS is available on the system
 ///
-/// ✅ AGNOSTIC: No assumptions about environment
-/// ✅ SAFE: Graceful handling of all error cases
+/// Agnostic: no assumptions about environment
+/// Safe: graceful handling of all error cases
 #[must_use]
 pub fn is_zfs_available() -> bool {
     // Try to execute `zpool version` (safer than `zpool list`)
@@ -116,8 +116,8 @@ pub fn is_zfs_available() -> bool {
 
 /// Detect available storage backends
 ///
-/// ✅ CAPABILITY-BASED: Discovers what's available, never assumes
-/// ✅ RUNTIME DISCOVERY: No compile-time assumptions
+/// Capability-based: discovers what's available, never assumes
+/// Runtime discovery: no compile-time assumptions
 #[must_use]
 pub fn detect_backend() -> BackendCapabilities {
     let zfs_available = is_zfs_available();
@@ -141,7 +141,7 @@ pub fn detect_backend() -> BackendCapabilities {
 
 /// Detect and log backend capabilities (for service initialization)
 ///
-/// ✅ TRANSPARENT: Clear logging of capabilities
+/// Transparent: clear logging of capabilities
 pub fn detect_and_log() -> BackendCapabilities {
     info!("Detecting storage backend capabilities...");
     let capabilities = detect_backend();

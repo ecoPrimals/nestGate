@@ -54,7 +54,7 @@ impl NetworkDefaultsV2Config {
     /// Create a new configuration with default values (no env vars)
     #[must_use]
     pub fn new() -> Self {
-        // ✅ MIGRATED: Now uses centralized environment-driven functions
+        // MIGRATED: Now uses centralized environment-driven functions
         use crate::constants::hardcoding::addresses;
         use crate::constants::{
             get_admin_port, get_api_port, get_dev_port, get_health_port, get_metrics_port,

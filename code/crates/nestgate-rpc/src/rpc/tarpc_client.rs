@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🚀 tarpc Client for `NestGate`
+//! # tarpc Client for `NestGate`
 //!
 //! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL RPC CLIENT** (v0.2.0)
 //!

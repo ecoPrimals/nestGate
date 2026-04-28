@@ -51,7 +51,7 @@
 //! [INFO] 🔌 Starting IPC server (isomorphic mode)...
 //! [INFO]    Service: nestgate
 //! [INFO]    Trying Unix socket IPC (optimal)...
-//! [INFO] ✅ Unix socket IPC active (optimal path)
+//! [INFO] Unix socket IPC active (optimal path)
 //! ```
 //!
 //! **Android (Unix sockets blocked by `SELinux`)**:
@@ -62,12 +62,12 @@
 //! [WARN] ⚠️  Unix sockets unavailable: Permission denied
 //! [WARN]    Detected platform constraint, adapting...
 //! [INFO] 🌐 Starting TCP IPC fallback (isomorphic mode)
-//! [INFO] ✅ TCP IPC listening on 127.0.0.1:45763
+//! [INFO] TCP IPC listening on 127.0.0.1:45763
 //! ```
 //!
 //! **Real Error** (disk full, permissions, etc.):
 //! ```text
-//! [ERROR] ❌ Failed to start IPC server: No space left on device
+//! [ERROR] Failed to start IPC server: No space left on device
 //! ```
 //!
 //! ## Reference

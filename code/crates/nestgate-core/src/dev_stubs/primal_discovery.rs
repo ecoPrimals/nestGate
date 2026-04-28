@@ -18,14 +18,14 @@
 //! - Local development
 //! - Integration tests
 //!
-//! ## ✅ Production Alternative
+//! ## Production Alternative
 //!
 //! ```rust,ignore
-//! // ❌ NEVER DO THIS IN PRODUCTION:
+//! // NEVER DO THIS IN PRODUCTION:
 //! use nestgate_core::dev_stubs::primal_discovery::get_fallback_port;
 //! let port = get_fallback_port("api");  // Returns a default port constant
 //!
-//! // ✅ PRODUCTION CODE SHOULD USE:
+//! // PRODUCTION CODE SHOULD USE:
 //! use nestgate_core::universal_primal_discovery::production_capability_bridge::*;
 //! let discovery = CapabilityAwareDiscovery::initialize(&config).await?;
 //! let services = discovery.find_service("api").await?;  // Runtime discovery!

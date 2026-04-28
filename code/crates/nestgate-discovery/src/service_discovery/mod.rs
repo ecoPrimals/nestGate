@@ -9,7 +9,7 @@
 
 // Sub-module declarations
 pub mod dynamic_endpoints;
-pub mod dynamic_endpoints_config; // ✅ NEW: Concurrent-safe configuration
+pub mod dynamic_endpoints_config; // Concurrent-safe configuration
 /// Service registry implementation
 pub mod registry;
 /// Service discovery types
@@ -21,12 +21,12 @@ mod types_tests;
 #[cfg(test)]
 mod discovery_error_tests; // Nov 23, 2025 - P1 test expansion
 #[cfg(test)]
-mod service_discovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests // ✅ NEW: Dynamic endpoint resolution system
+mod service_discovery_edge_cases; // Nov 23, 2025 - P1-5 edge cases; dynamic endpoint resolution
 
 // Re-export all public types for backward compatibility
 pub use dynamic_endpoints::{DynamicEndpointResolver, resolve_service_endpoint};
-pub use dynamic_endpoints_config::{DynamicEndpointsConfig, SharedEndpointsConfig}; // ✅ NEW: Export config
-pub use types::*; // ✅ NEW: Export dynamic endpoint functionality
+pub use dynamic_endpoints_config::{DynamicEndpointsConfig, SharedEndpointsConfig};
+pub use types::*;
 
 // Convenience re-exports for common usage patterns
 pub use crate::service_discovery::registry::{InMemoryServiceRegistry, UniversalServiceRegistry};

@@ -25,7 +25,7 @@ impl Default for ZfsConfig {
     ///
     /// **Evolution** (Jan 30, 2026): Now uses environment variables for binary paths.
     fn default() -> Self {
-        // ✅ EVOLVED: Use environment-aware paths instead of hardcoded /usr/sbin/
+        // Use environment-aware paths instead of hardcoded /usr/sbin/
         let zfs_binary = crate::config::storage_paths::get_storage_paths()
             .zfs_binary_path()
             .to_string_lossy()
@@ -115,7 +115,7 @@ impl Default for StorageServiceConfig {
     /// **Evolution** (Jan 30, 2026): Now uses XDG-compliant storage paths
     /// instead of hardcoded `/var/lib/nestgate/storage`.
     fn default() -> Self {
-        // ✅ EVOLVED: Use XDG-compliant storage path instead of hardcoded /var/lib/
+        // Use XDG-compliant storage path instead of hardcoded /var/lib/
         let base_path = crate::config::storage_paths::get_storage_base_path()
             .to_string_lossy()
             .to_string();
@@ -201,9 +201,9 @@ impl StorageServiceConfig {
 
     /// Create configuration with auto-detected backend capabilities
     ///
-    /// ✅ DEEP DEBT: Agnostic, capability-based (no hardcoding)
-    /// ✅ UNIVERSAL: Works on ANY filesystem
-    /// ✅ OPTIMIZED: Uses ZFS features when available
+    /// Agnostic, capability-based (no hardcoding)
+    /// Universal: works on any filesystem
+    /// Optimized: uses ZFS features when available
     #[must_use]
     pub fn with_auto_detect() -> Self {
         use super::capabilities;
@@ -213,7 +213,7 @@ impl StorageServiceConfig {
 
         let mut config = Self::default();
 
-        // ✅ CAPABILITY-BASED: Only enable ZFS features if ZFS is available
+        // Only enable ZFS features if ZFS is available
         match caps.backend_type {
             capabilities::BackendType::Zfs => {
                 // ZFS available - enable optimization features

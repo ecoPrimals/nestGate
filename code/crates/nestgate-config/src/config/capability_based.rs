@@ -266,7 +266,7 @@ impl CapabilityConfig {
                     "Service for capability {:?} not found, using local implementation",
                     capability
                 );
-                // ✅ SOVEREIGNTY COMPLIANT: Use environment-driven fallback, not hardcoded
+                // SOVEREIGNTY COMPLIANT: Use environment-driven fallback, not hardcoded
                 // Get fallback host and port from environment or config
                 let fallback_host = self
                     .env

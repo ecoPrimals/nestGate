@@ -22,10 +22,10 @@
 //! `PRIMAL_ECOSYSTEM_INTEGRATION_SPEC.md`. Services are discovered by
 //! **capability**, not by name. This ensures:
 //!
-//! - ✅ Vendor independence (no hardcoded primal names)
-//! - ✅ Dynamic service substitution
-//! - ✅ Load balancing across providers
-//! - ✅ Sovereignty compliance
+//! - Vendor independence (no hardcoded primal names)
+//! - Dynamic service substitution
+//! - Load balancing across providers
+//! - Sovereignty compliance
 //!
 //! # Example: Complete Flow
 //!
@@ -39,7 +39,7 @@
 //! ## Before (Violates Specification)
 //!
 //! ```rust,ignore
-//! // ❌ HARDCODED primal name - violates spec
+//! // Hardcoded primal name (violates spec)
 //! if service_name == "<specific-primal>" {
 //!     connect_to_security_service("<specific-primal>:8443").await?;
 //! }
@@ -48,7 +48,7 @@
 //! ## After (Specification Compliant)
 //!
 //! ```rust,ignore
-//! // ✅ Capability-based - specification compliant
+//! // Capability-based resolution (specification-compliant)
 //! let security_services = registry
 //!     .find_providers(&Capability::Security(SecurityCapability::Authentication))
 //!     .await;
@@ -85,9 +85,9 @@
 //!
 //! # Status
 //!
-//! **Implementation**: ✅ Complete (December 2, 2025)\
+//! **Implementation**: Complete (December 2, 2025)\
 //! **Test Coverage**: 17 unit tests, all passing\
-//! **Build Status**: ✅ Clean compilation\
+//! **Build Status**: Clean compilation\
 //! **Next Phase**: Migrate hardcoded primal names to capability queries  
 
 pub mod discovery;

@@ -114,7 +114,7 @@ mod tests {
         );
         assert_eq!(DevelopmentServiceDiscovery::max_services(), 1000);
 
-        println!("✅ Native async service discovery validation successful!");
+        println!("Native async service discovery validation successful!");
         Ok(())
     }
 
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(ProductionProtocolHandler::max_connections(), 1000);
         assert_eq!(ProductionProtocolHandler::connection_timeout_seconds(), 30);
 
-        println!("✅ Native async protocol handler validation successful!");
+        println!("Native async protocol handler validation successful!");
         Ok(())
     }
 
@@ -187,7 +187,7 @@ mod tests {
             ));
         }
 
-        println!("✅ Service events and watching validation successful!");
+        println!("Service events and watching validation successful!");
         Ok(())
     }
 
@@ -204,7 +204,7 @@ mod tests {
         assert!(std::mem::size_of_val(&prod_discovery) > 0);
         assert!(std::mem::size_of_val(&dev_discovery) > 0);
 
-        println!("✅ Service discovery compile-time specialization working!");
+        println!("Service discovery compile-time specialization working!");
         println!("   Production and development configurations validated");
     }
 }

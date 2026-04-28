@@ -53,7 +53,7 @@ impl SovereigntyConfig {
 
     /// Get API port respecting user sovereignty
     ///
-    /// ✅ MIGRATED: Now uses centralized `get_api_port()` function
+    /// MIGRATED: Now uses centralized `get_api_port()` function
     #[must_use]
     pub fn api_port() -> u16 {
         // Use centralized environment-driven configuration
@@ -80,7 +80,7 @@ impl SovereigntyConfig {
     pub fn database_url() -> String {
         let default_url = format!(
             "postgresql://{}:{}/nestgate",
-            // ✅ Using compile-time constant for default
+            // Using compile-time constant for default
             safe_env_var_or_default(
                 "NESTGATE_DB_HOST",
                 &std::net::Ipv4Addr::LOCALHOST.to_string()

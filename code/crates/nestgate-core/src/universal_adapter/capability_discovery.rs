@@ -269,7 +269,7 @@ mod tests {
     use crate::config::discovery_config::ServiceDiscoveryConfig;
 
     /// Helper to create test endpoint using ServiceDiscoveryConfig
-    /// ✅ MIGRATED: Replaces hardcoded "localhost:port" with configurable endpoints
+    /// Replaces hardcoded "localhost:port" with configurable endpoints.
     fn test_endpoint(port: u16) -> String {
         let config = ServiceDiscoveryConfig::default();
         format!("http://{}:{}", config.discovery_host, port)
@@ -301,7 +301,7 @@ mod tests {
             .await
             .expect("Failed to discover networking capability");
         assert_eq!(providers.len(), 1);
-        // ✅ MIGRATED: Now uses ServiceDiscoveryConfig default host (127.0.0.1)
+        // Now uses ServiceDiscoveryConfig default host (127.0.0.1)
         assert!(providers[0].endpoint.contains("127.0.0.1:8080"));
     }
 
@@ -591,7 +591,7 @@ mod tests {
             .await
             .expect("Failed to discover networking capability");
         assert_eq!(discovered.len(), 1);
-        // ✅ MIGRATED: Endpoint now uses ServiceDiscoveryConfig
+        // Endpoint now uses ServiceDiscoveryConfig
         assert!(discovered[0].endpoint.contains("127.0.0.1:9090"));
     }
 }

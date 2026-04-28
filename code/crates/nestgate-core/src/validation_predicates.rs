@@ -192,7 +192,7 @@ pub fn are_alert_thresholds_valid(
         && is_valid_percentage_threshold(memory_threshold)
         && is_valid_percentage_threshold(disk_threshold)
         && is_valid_percentage_threshold(error_rate_threshold)
-        // ✅ MODERN: Use epsilon for non-negative check
+        // MODERN: Use epsilon for non-negative check
         && latency_threshold >= -1e-9
 }
 
@@ -287,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_environment_detection_mutations() {
-        // ✅ CATCHES STRING COMPARISON MUTATIONS (== vs !=)
+        // CATCHES STRING COMPARISON MUTATIONS (== vs !=)
         assert!(is_production_environment("production"));
         assert!(is_production_environment("PRODUCTION"));
         assert!(is_production_environment("Production"));
@@ -295,7 +295,7 @@ mod tests {
         assert!(!is_production_environment("test"));
         assert!(!is_production_environment(""));
 
-        // ✅ CATCHES CASE SENSITIVITY MUTATIONS
+        // CATCHES CASE SENSITIVITY MUTATIONS
         assert!(is_development_environment("development"));
         assert!(is_development_environment("DEVELOPMENT"));
         assert!(!is_development_environment("production"));
@@ -307,14 +307,14 @@ mod tests {
 
     #[test]
     fn test_range_validation_boundary_conditions() {
-        // ✅ CATCHES COMPARISON MUTATIONS (>= vs >, <= vs <)
+        // CATCHES COMPARISON MUTATIONS (>= vs >, <= vs <)
         assert!(is_valid_percentage_threshold(0.0)); // Boundary: exactly 0
         assert!(is_valid_percentage_threshold(100.0)); // Boundary: exactly 100
         assert!(is_valid_percentage_threshold(50.0)); // Middle value
         assert!(!is_valid_percentage_threshold(-0.1)); // Just below minimum
         assert!(!is_valid_percentage_threshold(100.1)); // Just above maximum
 
-        // ✅ CATCHES CONSENSUS THRESHOLD LOGIC (>= vs >)
+        // CATCHES CONSENSUS THRESHOLD LOGIC (>= vs >)
         assert!(!is_valid_consensus_threshold(0.4)); // Below minimum
         assert!(is_valid_consensus_threshold(0.5)); // Exact minimum
         assert!(is_valid_consensus_threshold(0.7)); // Valid middle
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn test_port_validation_mutations() {
-        // ✅ CATCHES PORT RANGE MUTATIONS (> vs >=)
+        // CATCHES PORT RANGE MUTATIONS (> vs >=)
         assert!(!is_valid_port_number(0)); // Invalid: zero
         assert!(is_valid_port_number(1)); // Valid: minimum
         assert!(is_valid_port_number(8080)); // Valid: common port
@@ -334,13 +334,13 @@ mod tests {
 
     #[test]
     fn test_string_validation_mutations() {
-        // ✅ CATCHES NEGATION MUTATIONS (! vs identity)
+        // CATCHES NEGATION MUTATIONS (! vs identity)
         assert!(!is_non_empty_string("")); // Empty string
         assert!(is_non_empty_string(" ")); // Whitespace
         assert!(is_non_empty_string("test")); // Normal string
         assert!(is_non_empty_string("a")); // Single character
 
-        // ✅ CATCHES POSITIVE NUMBER MUTATIONS (> vs >=)
+        // CATCHES POSITIVE NUMBER MUTATIONS (> vs >=)
         assert!(!is_positive_number(0)); // Zero is not positive
         assert!(is_positive_number(1)); // One is positive
         assert!(is_positive_number(u64::MAX)); // Maximum value
@@ -348,20 +348,20 @@ mod tests {
 
     #[test]
     fn test_tls_configuration_and_logic() {
-        // ✅ CATCHES AND LOGIC MUTATIONS (&& vs ||)
+        // CATCHES AND LOGIC MUTATIONS (&& vs ||)
         assert!(!has_required_tls_files("", "")); // Both empty
         assert!(!has_required_tls_files("cert.pem", "")); // Only cert
         assert!(!has_required_tls_files("", "key.pem")); // Only key
         assert!(has_required_tls_files("cert.pem", "key.pem")); // Both present
 
-        // ✅ CATCHES SPECIFIC CASE: Both must be non-empty (AND logic)
+        // CATCHES SPECIFIC CASE: Both must be non-empty (AND logic)
         assert!(!has_required_tls_files("cert", "")); // AND requires both
         assert!(!has_required_tls_files("", "key")); // AND requires both
     }
 
     #[test]
     fn test_notification_methods_or_logic() {
-        // ✅ CATCHES OR LOGIC MUTATIONS (|| vs &&)
+        // CATCHES OR LOGIC MUTATIONS (|| vs &&)
         assert!(!has_notification_methods(false, false, false)); // None
         assert!(has_notification_methods(true, false, false)); // Email only
         assert!(has_notification_methods(false, true, false)); // Slack only
@@ -369,14 +369,14 @@ mod tests {
         assert!(has_notification_methods(true, true, false)); // Email + Slack
         assert!(has_notification_methods(true, true, true)); // All methods
 
-        // ✅ CATCHES SPECIFIC CASE: Any method enables notifications (OR logic)
+        // CATCHES SPECIFIC CASE: Any method enables notifications (OR logic)
         assert!(has_notification_methods(true, false, false)); // OR allows any
         assert!(has_notification_methods(false, true, false)); // OR allows any
     }
 
     #[test]
     fn test_prometheus_validation_conditional_logic() {
-        // ✅ CATCHES CONDITIONAL MUTATIONS (if enabled -> must be valid)
+        // CATCHES CONDITIONAL MUTATIONS (if enabled -> must be valid)
         assert!(is_prometheus_config_valid(false, 0, "")); // Disabled is always valid
         assert!(is_prometheus_config_valid(false, 80, "/metrics")); // Disabled ignores params
         assert!(!is_prometheus_config_valid(true, 0, "")); // Enabled but empty path
@@ -384,31 +384,31 @@ mod tests {
         assert!(is_prometheus_config_valid(true, 0, "/metrics")); // Enabled, port 0 (OS-assigned), valid path
         assert!(is_prometheus_config_valid(true, 80, "/metrics")); // Enabled and valid
 
-        // ✅ CATCHES IMPLICATION LOGIC: enabled -> non_empty_path (port 0 is OK for OS assignment)
+        // CATCHES IMPLICATION LOGIC: enabled -> non_empty_path (port 0 is OK for OS assignment)
         assert!(is_prometheus_config_valid(true, 9090, "/metrics")); // Full validation when enabled
     }
 
     #[test]
     fn test_signature_format_multiple_or_conditions() {
-        // ✅ CATCHES OR CHAIN MUTATIONS (|| vs &&)
+        // CATCHES OR CHAIN MUTATIONS (|| vs &&)
         assert!(!has_valid_signature_format("")); // Too short
         assert!(!has_valid_signature_format("short")); // Too short
         assert!(!has_valid_signature_format("invalid_prefix_12345")); // Wrong prefix
 
-        // ✅ CATCHES EACH OR CONDITION
+        // CATCHES EACH OR CONDITION
         assert!(has_valid_signature_format("sec_provider_sig_12345")); // First OR condition
         assert!(has_valid_signature_format("security_sig_67890")); // Second OR condition
         assert!(has_valid_signature_format("vault_sig_abcdef")); // Third OR condition
         assert!(has_valid_signature_format("standalone_sig_xyz")); // Fourth OR condition
         assert!(has_valid_signature_format("self_signed_123")); // Fifth OR condition
 
-        // ✅ CATCHES LENGTH CHECK AND PREFIX CHECK (both required)
+        // CATCHES LENGTH CHECK AND PREFIX CHECK (both required)
         assert!(!has_valid_signature_format("sec_pro")); // Valid prefix but too short
     }
 
     #[test]
     fn test_internal_communication_complex_and_logic() {
-        // ✅ CATCHES COMPLEX AND LOGIC (both source AND destination must be internal)
+        // CATCHES COMPLEX AND LOGIC (both source AND destination must be internal)
         assert!(!is_internal_communication("external", "external")); // Both external
         assert!(!is_internal_communication("nestgate-api", "external")); // Mixed: internal -> external
         assert!(!is_internal_communication("external", "nestgate-core")); // Mixed: external -> internal
@@ -416,14 +416,14 @@ mod tests {
         assert!(is_internal_communication("primal-auth", "primal-storage")); // Both primal
         assert!(is_internal_communication("internal-service", "internal-db")); // Both internal
 
-        // ✅ CATCHES PREFIX MATCHING LOGIC
+        // CATCHES PREFIX MATCHING LOGIC
         assert!(is_internal_communication("nestgate-foo", "primal-bar")); // Different internal prefixes
         assert!(!is_internal_communication("nestgate-foo", "external-bar")); // One external
     }
 
     #[test]
     fn test_alert_thresholds_all_valid_and_logic() {
-        // ✅ CATCHES AND CHAIN MUTATIONS (all must be valid)
+        // CATCHES AND CHAIN MUTATIONS (all must be valid)
         assert!(are_alert_thresholds_valid(50.0, 60.0, 70.0, 80.0, 100.0)); // All valid
         assert!(!are_alert_thresholds_valid(-1.0, 60.0, 70.0, 80.0, 100.0)); // CPU invalid
         assert!(!are_alert_thresholds_valid(50.0, 150.0, 70.0, 80.0, 100.0)); // Memory invalid
@@ -431,20 +431,20 @@ mod tests {
         assert!(!are_alert_thresholds_valid(50.0, 60.0, 70.0, 200.0, 100.0)); // Error rate invalid
         assert!(!are_alert_thresholds_valid(50.0, 60.0, 70.0, 80.0, -50.0)); // Latency invalid
 
-        // ✅ CATCHES SPECIAL CASE: Latency threshold (>= 0, not percentage)
+        // CATCHES SPECIAL CASE: Latency threshold (>= 0, not percentage)
         assert!(are_alert_thresholds_valid(50.0, 60.0, 70.0, 80.0, 0.0)); // Latency can be 0
         assert!(are_alert_thresholds_valid(50.0, 60.0, 70.0, 80.0, 1000.0)); // Latency > 100 is ok
     }
 
     #[test]
     fn test_role_based_access_hierarchy() {
-        // ✅ CATCHES ADMIN PRIVILEGE MUTATIONS (admin should access everything)
+        // CATCHES ADMIN PRIVILEGE MUTATIONS (admin should access everything)
         assert!(has_required_role("admin", "admin")); // Admin accessing admin
         assert!(has_required_role("admin", "operator")); // Admin accessing operator
         assert!(has_required_role("admin", "readonly")); // Admin accessing readonly
         assert!(has_required_role("admin", "custom")); // Admin accessing custom
 
-        // ✅ CATCHES NON-ADMIN ACCESS MUTATIONS (exact match only)
+        // CATCHES NON-ADMIN ACCESS MUTATIONS (exact match only)
         assert!(has_required_role("operator", "operator")); // Exact match
         assert!(!has_required_role("operator", "admin")); // Cannot elevate
         assert!(!has_required_role("readonly", "operator")); // Cannot elevate
@@ -460,20 +460,20 @@ mod tests {
         let required_multiple = vec!["read".to_string(), "admin".to_string()];
         let required_none: Vec<String> = vec![];
 
-        // ✅ CATCHES OR LOGIC IN PERMISSION CHECKING (any required permission)
+        // CATCHES OR LOGIC IN PERMISSION CHECKING (any required permission)
         assert!(has_any_required_permission(&user_perms, &required_read)); // Has read
         assert!(!has_any_required_permission(&user_perms, &required_admin)); // Missing admin
         assert!(has_any_required_permission(&user_perms, &required_multiple)); // Has read (first)
         assert!(has_any_required_permission(&user_perms, &required_none)); // No requirements
 
-        // ✅ CATCHES EMPTY REQUIREMENTS CASE
+        // CATCHES EMPTY REQUIREMENTS CASE
         assert!(has_any_required_permission(&[], &required_none)); // No user perms, no requirements
         assert!(!has_any_required_permission(&[], &required_read)); // No user perms, has requirements
     }
 
     #[test]
     fn test_system_resources_all_positive_and_logic() {
-        // ✅ CATCHES AND LOGIC MUTATIONS (all resources must be positive)
+        // CATCHES AND LOGIC MUTATIONS (all resources must be positive)
         assert!(are_system_resources_valid(4, 30, 10, 100, 10)); // All positive
         assert!(!are_system_resources_valid(0, 30, 10, 100, 10)); // Worker threads zero
         assert!(!are_system_resources_valid(4, 0, 10, 100, 10)); // Request timeout zero
@@ -481,27 +481,27 @@ mod tests {
         assert!(!are_system_resources_valid(4, 30, 10, 0, 10)); // Max connections zero
         assert!(!are_system_resources_valid(4, 30, 10, 100, 0)); // DB pool size zero
 
-        // ✅ CATCHES BOUNDARY CONDITIONS (> 0 vs >= 0)
+        // CATCHES BOUNDARY CONDITIONS (> 0 vs >= 0)
         assert!(are_system_resources_valid(1, 1, 1, 1, 1)); // All minimum positive
         assert!(!are_system_resources_valid(4, 30, 10, 100, 0)); // Last parameter zero fails all
     }
 
     #[test]
     fn test_production_security_requirements() {
-        // ✅ CATCHES CONDITIONAL LOGIC (production requires capabilities)
+        // CATCHES CONDITIONAL LOGIC (production requires capabilities)
         assert!(requires_security_capabilities_in_production(false, 0)); // Non-prod, no capabilities
         assert!(requires_security_capabilities_in_production(false, 5)); // Non-prod, has capabilities
         assert!(!requires_security_capabilities_in_production(true, 0)); // Prod, no capabilities - INVALID
         assert!(requires_security_capabilities_in_production(true, 1)); // Prod, has capabilities
         assert!(requires_security_capabilities_in_production(true, 10)); // Prod, many capabilities
 
-        // ✅ CATCHES IMPLICATION LOGIC: production -> (capabilities > 0)
+        // CATCHES IMPLICATION LOGIC: production -> (capabilities > 0)
         assert!(!requires_security_capabilities_in_production(true, 0)); // Production requires capabilities
     }
 
     #[test]
     fn test_monitoring_completeness_complex_and_logic() {
-        // ✅ CATCHES COMPLEX CONDITIONAL AND LOGIC
+        // CATCHES COMPLEX CONDITIONAL AND LOGIC
         // Case 1: Nothing enabled - should be valid
         assert!(is_monitoring_config_complete(false, false, false, false));
         assert!(is_monitoring_config_complete(false, true, false, false)); // Extra notifications ok
@@ -519,7 +519,7 @@ mod tests {
         assert!(!is_monitoring_config_complete(true, true, true, false)); // Prometheus enabled, invalid
         assert!(is_monitoring_config_complete(true, true, true, true)); // Both properly configured
 
-        // ✅ CATCHES IMPLICATION CHAINS:
+        // CATCHES IMPLICATION CHAINS:
         // enabled_alerts -> has_notifications AND enabled_prometheus -> prometheus_valid
         assert!(is_monitoring_config_complete(false, false, false, true)); // Disabled alerts, valid prometheus
         assert!(!is_monitoring_config_complete(true, false, false, true)); // Enabled alerts need notifications
@@ -527,7 +527,7 @@ mod tests {
 
     #[test]
     fn test_integration_workflow_predicates() {
-        // ✅ COMPREHENSIVE INTEGRATION TEST - catches mutations in predicate chains
+        // COMPREHENSIVE INTEGRATION TEST - catches mutations in predicate chains
 
         // Scenario 1: Development environment setup
         let env = "development";

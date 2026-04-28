@@ -17,10 +17,10 @@
 //!
 //! # Safety
 //!
-//! - ✅ Shell invocation goes through validated argument lists only
-//! - ✅ Timeout enforcement prevents indefinite blocking
-//! - ✅ Proper error propagation
-//! - ✅ Structured logging for audit trails
+//! - Shell invocation goes through validated argument lists only
+//! - Timeout enforcement prevents indefinite blocking
+//! - Proper error propagation
+//! - Structured logging for audit trails
 //!
 //! # Examples
 //!

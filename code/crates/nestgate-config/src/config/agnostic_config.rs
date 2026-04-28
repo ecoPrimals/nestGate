@@ -303,7 +303,7 @@ impl AgnosticConfig {
 
     /// Get API port
     ///
-    /// ✅ MIGRATED: Now uses centralized `get_api_port()` function
+    /// MIGRATED: Now uses centralized `get_api_port()` function
     pub fn api_port(&self) -> u16 {
         use crate::constants::get_api_port;
         self.ports.get("api").copied().unwrap_or_else(get_api_port)
@@ -317,7 +317,7 @@ impl AgnosticConfig {
 
     /// Get metrics port
     ///
-    /// ✅ MIGRATED: Now uses centralized `get_metrics_port()` function
+    /// MIGRATED: Now uses centralized `get_metrics_port()` function
     pub fn metrics_port(&self) -> u16 {
         use crate::constants::get_metrics_port;
         self.ports
@@ -328,7 +328,7 @@ impl AgnosticConfig {
 
     /// Get health check port
     ///
-    /// ✅ MIGRATED: Now uses centralized `get_health_port()` function
+    /// MIGRATED: Now uses centralized `get_health_port()` function
     pub fn health_port(&self) -> u16 {
         use crate::constants::get_health_port;
         self.ports

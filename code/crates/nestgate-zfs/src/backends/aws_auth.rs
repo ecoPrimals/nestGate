@@ -13,11 +13,11 @@
 //!
 //! ## Features
 //!
-//! - ✅ Zero dependencies on AWS SDK
-//! - ✅ Standard HMAC-SHA256 implementation
-//! - ✅ Canonical request generation
-//! - ✅ Signature calculation
-//! - ✅ Authorization header creation
+//! - Zero dependencies on AWS SDK
+//! - Standard HMAC-SHA256 implementation
+//! - Canonical request generation
+//! - Signature calculation
+//! - Authorization header creation
 //!
 //! ## References
 //!

@@ -34,7 +34,7 @@ impl ZfsServiceFactory {
     /// Create a ZFS service instance based on configuration
     #[must_use]
     pub fn create_service(_config: NestGateCanonicalConfig) -> Arc<UniversalZfsServiceEnum> {
-        // ✅ PRODUCTION: Always use native service - no more mocks in production
+        // Production: always use native service (mocks are test-only)
         Arc::new(UniversalZfsServiceEnum::Native(NativeZfsService::new()))
     }
 
@@ -43,7 +43,7 @@ impl ZfsServiceFactory {
     pub fn create_service_with_sudo(
         _config: NestGateCanonicalConfig,
     ) -> Arc<UniversalZfsServiceEnum> {
-        // ✅ PRODUCTION: Always use native service with sudo - no more mocks
+        // Production: native service with sudo when required
         Arc::new(UniversalZfsServiceEnum::Native(NativeZfsService::new()))
     }
 
@@ -73,7 +73,7 @@ impl ZfsServiceFactory {
     pub async fn create_auto_service(
         config: NestGateCanonicalConfig,
     ) -> Arc<UniversalZfsServiceEnum> {
-        // ✅ ADAPTIVE: Detect ZFS capabilities
+        // Detect ZFS capabilities for backend selection
         let capabilities = Self::detect_zfs_capabilities().await;
 
         match capabilities.availability {

@@ -44,7 +44,7 @@
 //!
 //! # Status
 //!
-//! **Production Ready**: ✅ Core functionality complete\
+//! **Production Ready**: Core functionality complete\
 //! **Test Coverage**: Comprehensive edge case and error tests\
 //! **Performance**: Zero-cost abstractions with Arc for efficient sharing
 

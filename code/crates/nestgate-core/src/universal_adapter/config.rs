@@ -98,7 +98,7 @@ pub struct AdapterConfig {
 impl AdapterConfig {
     /// Create a new adapter configuration
     ///
-    /// ✅ MIGRATED: Now uses `ServiceDiscoveryConfig` instead of hardcoded endpoints
+    /// Now uses `ServiceDiscoveryConfig` instead of hardcoded endpoints.
     #[must_use]
     pub fn new() -> Self {
         use crate::config::discovery_config::ServiceDiscoveryConfig;
@@ -238,7 +238,7 @@ mod tests {
         assert_eq!(config.discovery_timeout, Duration::from_secs(30));
         assert_eq!(config.retry_attempts, 3);
         assert_eq!(config.cache_ttl, Duration::from_secs(300));
-        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints by default
+        // ServiceDiscoveryConfig generates 3 endpoints by default
         assert_eq!(config.endpoints.len(), 3);
         assert!(config.fallback_enabled);
     }
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(config.discovery_timeout, Duration::from_secs(30));
         assert_eq!(config.retry_attempts, 3);
         assert_eq!(config.cache_ttl, Duration::from_secs(300));
-        // ✅ MIGRATED: Now uses ServiceDiscoveryConfig, which generates endpoints
+        // Now uses ServiceDiscoveryConfig, which generates endpoints
         // Default: 3 endpoints starting from 127.0.0.1:8080
         assert_eq!(config.endpoints.len(), 3);
         assert!(
@@ -282,7 +282,7 @@ mod tests {
     fn test_adapter_config_builder_add_endpoint() {
         let config = AdapterConfig::new().add_endpoint("http://custom:9000/discovery".to_string());
 
-        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints + 1 custom = 4
+        // ServiceDiscoveryConfig generates 3 endpoints + 1 custom = 4
         assert_eq!(config.endpoints.len(), 4);
         assert!(
             config
@@ -311,7 +311,7 @@ mod tests {
 
         assert_eq!(config.discovery_timeout, Duration::from_secs(45));
         assert_eq!(config.retry_attempts, 10);
-        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 default + 2 added = 5
+        // ServiceDiscoveryConfig generates 3 default + 2 added = 5
         assert_eq!(config.endpoints.len(), 5);
         assert!(!config.fallback_enabled);
     }
@@ -368,7 +368,7 @@ mod tests {
             config = config.add_endpoint(format!("http://endpoint{i}:8080/discovery"));
         }
 
-        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 default + 10 added = 13
+        // ServiceDiscoveryConfig generates 3 default + 10 added = 13
         assert_eq!(config.endpoints.len(), 13);
     }
 }

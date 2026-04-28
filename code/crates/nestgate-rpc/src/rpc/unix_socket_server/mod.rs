@@ -42,9 +42,9 @@
 //!
 //! ### What `NestGate` Still Provides
 //!
-//! - ✅ Service metadata storage (`service_metadata` module)
-//! - ✅ Capability-based discovery
-//! - ✅ Persistent service registry
+//! - Service metadata storage (`service_metadata` module)
+//! - Capability-based discovery
+//! - Persistent service registry
 //!
 //! ### References
 //!

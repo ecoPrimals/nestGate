@@ -21,10 +21,10 @@
 //! # use nestgate_core::capability_config::CapabilityConfig;
 //! # use anyhow::Result;
 //! # fn example() -> Result<()> {
-//! // ❌ OLD: Hardcoded
+//! // OLD: Hardcoded
 //! // const API_PORT: u16 = 8080;
 //!
-//! // ✅ NEW: Capability-based
+//! // NEW: Capability-based
 //! let config = CapabilityConfig::from_env()?;
 //! let api_endpoint = config.get_endpoint("api")?;
 //! # Ok(())

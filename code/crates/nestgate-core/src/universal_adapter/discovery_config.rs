@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for capability discovery
 /// Captures environment variables at initialization to prevent race conditions
 ///
-/// ✅ MIGRATED: Now uses `ServiceDiscoveryConfig` for discovery endpoints,
+/// Now uses `ServiceDiscoveryConfig` for discovery endpoints,
 /// removing hardcoded fallbacks in favor of centralized configuration.
 #[derive(Debug, Clone)]
 /// Configuration for DiscoveryRuntime
@@ -64,14 +64,14 @@ impl DiscoveryRuntimeConfig {
     // Accessors
 
     /// Get discovery endpoints from centralized configuration
-    /// ✅ MIGRATED: Now uses `ServiceDiscoveryConfig` instead of hardcoded fallbacks
+    /// Now uses `ServiceDiscoveryConfig` instead of hardcoded fallbacks.
     #[must_use]
     pub fn get_discovery_endpoints(&self) -> Vec<String> {
         self.service_discovery.get_endpoints().to_vec()
     }
 
     /// Get base endpoint from service discovery configuration
-    /// ✅ MIGRATED: Uses configured discovery host instead of hardcoded localhost
+    /// Uses configured discovery host instead of hardcoded localhost.
     #[must_use]
     pub fn get_base_endpoint(&self) -> String {
         format!(

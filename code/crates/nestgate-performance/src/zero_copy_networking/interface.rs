@@ -19,7 +19,7 @@ const DEFAULT_LOCAL_BIND_EPHEMERAL: &str = "0.0.0.0:0";
 /// High-performance networking interface with zero-copy I/O
 /// Integrates with kernel bypass and hardware acceleration
 ///
-/// **✅ 100% SAFE** — uses safe concurrent structures for shared state
+/// **100% safe** — uses safe concurrent structures for shared state
 pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
     connection_registry: SafeConcurrentHashMap<u64, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
@@ -29,7 +29,7 @@ pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
 ///
 /// Individual network connection with zero-copy capabilities
 ///
-/// **✅ 100% SAFE** — per-connection work is queued with safe concurrent queues
+/// **100% safe** — per-connection work is queued with safe concurrent queues
 /// Zerocopyconnection
 pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,
@@ -151,7 +151,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         buffer.set_length(copy_len);
 
         // Queue for zero-copy transmission
-        connection.tx_queue.push(ZeroCopyTxPayload::Pooled(buffer)); // ✅ SAFE
+        connection.tx_queue.push(ZeroCopyTxPayload::Pooled(buffer));
 
         // Update statistics
         self.stats
@@ -193,7 +193,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         let connection = self.get_connection(connection_id)?;
         let len = data.len();
 
-        connection.tx_queue.push(ZeroCopyTxPayload::Shared(data)); // ✅ SAFE
+        connection.tx_queue.push(ZeroCopyTxPayload::Shared(data));
 
         self.stats
             .bytes_sent
@@ -235,7 +235,6 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         let connection = self.get_connection(connection_id)?;
 
         if let Some(buffer) = connection.rx_queue.try_pop() {
-            // ✅ SAFE
             // Update statistics
             self.stats
                 .bytes_received

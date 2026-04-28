@@ -15,11 +15,11 @@
 //!
 //! ## Benefits of Modular Structure
 //!
-//! ✅ **Maintained Cohesion** - Related types grouped logically by domain
-//! ✅ **Better Discoverability** - Clear module boundaries for navigation
-//! ✅ **Reduced Complexity** - Each file <600 lines, easier to understand
-//! ✅ **Single Import Point** - Still use `config_registry::*` for all types
-//! ✅ **No Circular Dependencies** - Clean module hierarchy
+//! **Maintained Cohesion** — Related types grouped logically by domain
+//! **Better Discoverability** — Clear module boundaries for navigation
+//! **Reduced Complexity** — Each file <600 lines, easier to understand
+//! **Single Import Point** — Still use `config_registry::*` for all types
+//! **No Circular Dependencies** — Clean module hierarchy
 //!
 //! ## Usage
 //!

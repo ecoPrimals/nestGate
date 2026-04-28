@@ -7,8 +7,8 @@
 //! This module combines safe operation wrappers and error constructor patterns.
 //!
 //! **Replaces** (REMOVED November 10, 2025):
-//! - `error/helpers.rs` (safe operation wrappers) ✅
-//! - `error/modernized_error_helpers.rs` (error constructors) ✅
+//! - `error/helpers.rs` (safe operation wrappers)
+//! - `error/modernized_error_helpers.rs` (error constructors)
 
 use super::{NestGateError, NestGateUnifiedError};
 use crate::{EnvSource, ProcessEnv, env_var_or_default};

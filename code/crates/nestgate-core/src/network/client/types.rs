@@ -368,7 +368,7 @@ mod tests {
         assert!(Port::new(0).is_err());
         assert!(Port::new(8080).is_ok());
 
-        // ✅ EVOLVED: Proper error handling instead of unwrap
+        // Proper error handling instead of unwrap
         let port = Port::new(443).expect("Port 443 should be valid");
         assert_eq!(port.get(), 443);
     }
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn test_endpoint_from_url() {
-        // ✅ EVOLVED: Test unwraps with clear failure context
+        // Test unwraps with clear failure context
         let ep = Endpoint::from_url("http://localhost:8080")
             .expect("Valid HTTP URL should parse successfully");
         assert_eq!(ep.host, "localhost");
@@ -407,7 +407,7 @@ mod tests {
 
     #[test]
     fn test_endpoint_url_generation() {
-        // ✅ EVOLVED: Test setup with clear context
+        // Test setup with clear context
         let port = Port::new(8080).expect("Port 8080 is valid for test setup");
         let ep = Endpoint::http("localhost".to_string(), port);
         assert_eq!(ep.url("/api/test"), "http://localhost:8080/api/test");

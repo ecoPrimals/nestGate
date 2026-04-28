@@ -190,7 +190,7 @@ pub async fn get_workspace_from_env_source(
             let snapshot_count = get_snapshot_count(&zfs_bin, &dataset_name).await;
 
             // Calculate utilization
-            // ✅ FIXED: Replace unwrap_or with .get().map().unwrap_or_default() for safety
+            // Prefer .get().map() over unwrap_or for property lookups
             let used_bytes = parse_size(
                 properties
                     .get("used")
@@ -217,7 +217,7 @@ pub async fn get_workspace_from_env_source(
                 "healthy"
             };
 
-            // ✅ EVOLVED: Proper error handling with safe fallback
+            // Workspace display name with fallback when property unset
             let workspace_name = properties
                 .get("org.nestgate:workspace_name")
                 .cloned()
@@ -231,7 +231,7 @@ pub async fn get_workspace_from_env_source(
                     "dataset_name": dataset_name,
                     "health_status": health_status,
                     "utilization_percent": utilization,
-                    // ✅ FIXED: Replace unwrap_or with safe map().unwrap_or() pattern
+                    // map_or for optional ZFS property strings in JSON
                     "used": properties.get("used").map_or("0", std::string::String::as_str),
                     "available": properties.get("available").map_or("0", std::string::String::as_str),
                     "referenced": properties.get("referenced").map_or("0", std::string::String::as_str),

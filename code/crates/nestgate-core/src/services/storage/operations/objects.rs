@@ -66,7 +66,7 @@ pub async fn store_object(
         created_at: now,
         modified_at: now,
         content_type: Some("application/octet-stream".to_string()),
-        // ✅ EVOLVED: Calculate SHA-256 checksum for data integrity
+        // Calculate SHA-256 checksum for data integrity
         checksum: Some(calculate_checksum(data_ref)),
         encrypted: false,
         compressed: false,

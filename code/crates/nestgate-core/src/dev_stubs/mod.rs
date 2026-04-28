@@ -23,11 +23,8 @@
 //!
 //! Most stubs are gated behind the `dev-stubs` feature flag:
 
-// ═══════════════════════════════════════════════════════════════
-// 🔒 FEATURE GATE: Development/Testing Only
-// ═══════════════════════════════════════════════════════════════
-// This module is NOT compiled in production builds.
-// Only available when running tests or with dev-stubs feature.
+// Feature gate: development/testing only.
+// Not compiled in production builds.
 #![cfg(any(test, feature = "dev-stubs"))]
 //!
 //! ```toml
@@ -41,12 +38,12 @@
 //!
 //! ## When to Use Stubs
 //!
-//! **Development** ✅
+//! **Development**
 //! - Local development on non-Linux platforms
 //! - Quick prototyping without infrastructure
 //! - Testing without external dependencies
 //!
-//! **Production** ❌
+//! **Production** (stubs must not be enabled)
 //! - Never enable `dev-stubs` in production
 //! - Always use real implementations
 //! - Stubs provide sensible defaults but limited functionality

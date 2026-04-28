@@ -21,10 +21,10 @@
 //! let a = 0.1 + 0.2;
 //! let b = 0.3;
 //!
-//! // ❌ WRONG: May fail due to precision
+//! // WRONG: May fail due to precision
 //! // assert_eq!(a, b);
 //!
-//! // ✅ CORRECT: Uses epsilon comparison
+//! // CORRECT: Uses epsilon comparison
 //! assert!(approx_eq_f64(a, b));
 //! ```
 //!

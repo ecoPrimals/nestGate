@@ -98,7 +98,7 @@ impl NetworkConfig {
 
     /// Development defaults
     ///
-    /// ✅ MIGRATED: Now uses centralized environment-driven configuration
+    /// MIGRATED: Now uses centralized environment-driven configuration
     #[must_use]
     pub fn default_dev() -> Self {
         use crate::constants::hardcoding::addresses;

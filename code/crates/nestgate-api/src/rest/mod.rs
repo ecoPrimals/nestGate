@@ -13,7 +13,7 @@ pub mod rpc;
 /// **WEBSOCKET MODULE**
 ///
 /// WebSocket support for real-time bidirectional communication with clients.
-pub mod websocket; // ✅ WebSocket module implemented
+pub mod websocket;
 
 use axum::{
     Router,
@@ -87,8 +87,7 @@ impl ApiState {
         self.rpc_manager.get_or_init(|| {
             let rpc_manager = UnifiedRpcManager::new();
 
-            // ✅ UNIVERSAL ADAPTER PATTERN - Pure capability-based discovery
-            // Zero primal knowledge - infant-like discovery of capabilities
+            // Universal adapter: capability-based discovery (no hardcoded primals)
 
             // Initialize security capability discovery
             if let Ok(security_endpoint) = std::env::var("SECURITY_DISCOVERY_ENDPOINT") {
@@ -103,7 +102,7 @@ impl ApiState {
                 tracing::info!("Security capability discovery through universal adapter");
             }
 
-            // ✅ UNIVERSAL ADAPTER INTEGRATION - Modern capability-based RPC
+            // Universal adapter RPC integration when enabled
             if std::env::var("UNIVERSAL_ADAPTER_ENABLED")
                 .unwrap_or_else(|_| "true".to_string())
                 .parse()

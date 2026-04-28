@@ -13,7 +13,7 @@ use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-// 🚀 ECOSYSTEM UNIFICATION: Import unified types
+// Unified performance types from nestgate_config
 
 /// Test type enumeration
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -40,13 +40,9 @@ impl std::fmt::Display for TestType {
     }
 }
 
-// 🚀 FULLY MODERN: Clean imports - no duplicates
-
-// 🚀 MODERNIZATION: UnifiedConfig now uses UnifiedPerformanceTestConfig directly
-/// **MODERNIZED**: `UnifiedConfig` now uses `UnifiedPerformanceTestConfig` directly  
+/// Performance test configuration aliases `canonical_primary::PerformanceConfig`.
 pub type PerformanceTestConfig = nestgate_config::config::canonical_primary::PerformanceConfig;
-// 🚀 FULLY MODERN: All performance testing functionality now uses UnifiedPerformanceTestConfig directly
-// No legacy implementation needed - use UnifiedPerformanceTestConfig::default() and methods
+// Use `PerformanceTestConfig` defaults and methods for benchmarks.
 
 /// Response time thresholds for performance validation
 #[derive(Debug, Clone, Serialize, Deserialize)]

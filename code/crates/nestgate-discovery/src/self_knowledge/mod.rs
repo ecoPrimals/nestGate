@@ -68,7 +68,7 @@
 //!
 //! ### Old: Hardcoded Dependencies
 //! ```rust,ignore
-//! // ❌ Hardcoded - violates sovereignty
+//! // Hardcoded URLs (violates sovereignty)
 //! const ORCHESTRATOR_URL: &str = "http://orchestrator:8080";
 //! const AI_SERVICE_URL: &str = "http://ai:9000";
 //!
@@ -79,7 +79,7 @@
 //!
 //! ### New: Capability-Based Discovery
 //! ```rust,ignore
-//! // ✅ Discovered - sovereign and flexible
+//! // Discovered endpoints (sovereign, flexible)
 //! async fn connect_to_capability(
 //!     discovery: &PrimalDiscovery,
 //!     cap: Capability,

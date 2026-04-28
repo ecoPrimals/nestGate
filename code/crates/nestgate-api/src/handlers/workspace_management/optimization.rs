@@ -242,8 +242,7 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 
 /// Request Ai Optimization
 async fn request_ai_optimization(_dataset_name: &str, _pattern: &StoragePattern) -> Option<String> {
-    // ✅ MIGRATED: Now uses capability-based discovery (not primal names!)
-    // Try to use any available AI provider via capability discovery
+    // Resolve AI via capability discovery (no hardcoded primal names)
     use nestgate_core::config::runtime::{capability_url, get_config};
 
     // Get endpoint via capability-based discovery (not primal names!)

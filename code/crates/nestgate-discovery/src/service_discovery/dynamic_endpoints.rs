@@ -203,7 +203,7 @@ impl DynamicEndpointResolver {
         }
 
         // Production port allocation based on service type
-        // ✅ MIGRATED: Now uses environment-driven functions instead of constants
+        // Ports from environment-driven helpers (not crate-level constants)
         let api_port = get_api_port();
         let metrics_port = get_metrics_port();
         let health_port = get_health_port();

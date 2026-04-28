@@ -11,8 +11,8 @@
 //!
 //! # Philosophy
 //!
-//! - ✅ **Capability-based**: "I need security" → discovers ANY security provider
-//! - ❌ **NOT identity-based**: "I need `<specific-primal>`" → vendor lock-in
+//! - **Capability-based**: "I need security" → discovers ANY security provider
+//! - **NOT identity-based**: "I need `<specific-primal>`" → vendor lock-in
 //!
 //! # Example
 //!
@@ -21,7 +21,7 @@
 //!
 //! let services = &get_config().services;
 //!
-//! // ✅ CORRECT: Capability-based discovery
+//! // CORRECT: Capability-based discovery
 //! if let Some(security_url) = services.get_capability_url("security") {
 //!     // Connect to ANY primal offering security capability
 //!     let client = SecurityClient::new(&security_url)?;
@@ -97,7 +97,7 @@ impl ServicesConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            // ✅ SOVEREIGNTY: Environment-driven discovery port
+            // SOVEREIGNTY: Environment-driven discovery port
             discovery_port: env::var("NESTGATE_DISCOVERY_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -121,7 +121,7 @@ impl ServicesConfig {
     /// # Example
     ///
     /// ```ignore
-    /// // ✅ CORRECT: Capability-based
+    /// // CORRECT: Capability-based
     /// let security_url = services.get_capability_url("security");
     /// // Discovers ANY primal offering the security capability
     /// ```

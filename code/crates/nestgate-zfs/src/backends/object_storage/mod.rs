@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! **OBJECT STORAGE BACKEND - SOVEREIGNTY COMPLIANT** ✅
+//! **OBJECT STORAGE BACKEND - SOVEREIGNTY COMPLIANT**
 //!
 //! Universal S3-compatible object storage backend that works with ANY provider.
 //!
@@ -17,11 +17,11 @@
 //!
 //! ## Sovereignty Principles
 //!
-//! ✅ **No Vendor Hardcoding**: Works with ANY S3-compatible service  
-//! ✅ **Capability-Based Discovery**: Discovers services at runtime  
-//! ✅ **Protocol-Based**: Uses standard S3-compatible API  
-//! ✅ **Runtime Configuration**: All endpoints discovered or env-configured  
-//! ✅ **Primal Self-Knowledge**: Only knows itself, discovers others at runtime
+//! - **No vendor hardcoding**: works with any S3-compatible service  
+//! - **Capability-based discovery**: discovers services at runtime  
+//! - **Protocol-based**: uses standard S3-compatible API  
+//! - **Runtime configuration**: endpoints discovered or env-configured  
+//! - **Primal self-knowledge**: only local identity; peers discovered at runtime
 //!
 //! ## Supported Providers
 //!

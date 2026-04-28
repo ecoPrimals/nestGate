@@ -42,10 +42,10 @@
 //!
 //! # Sovereignty Compliance
 //!
-//! ✅ **Self-Knowledge Only**: Only announces own capabilities
-//! ✅ **Runtime Discovery**: No hardcoded primal endpoints
-//! ✅ **Agnostic**: Works across any deployment environment
-//! ✅ **Fallback Safe**: Graceful degradation to defaults
+//! **Self-Knowledge Only**: Only announces own capabilities
+//! **Runtime Discovery**: No hardcoded primal endpoints
+//! **Agnostic**: Works across any deployment environment
+//! **Fallback Safe**: Graceful degradation to defaults
 
 use crate::constants::system::ecosystem_path_segment;
 use nestgate_types::EnvSource;

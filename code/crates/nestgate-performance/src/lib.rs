@@ -39,7 +39,7 @@
 //! Provides adaptive performance optimization, SIMD operations, **safe concurrent structures**,
 //! and zero-copy networking capabilities.
 //!
-//! ## 🚀 Safe Concurrent Structures
+//! ## Safe concurrent structures
 //!
 //! This crate provides **100% safe** concurrent data structures:
 //! - `SafeConcurrentQueue<T>`: Lock-free multi-producer multi-consumer queue
@@ -49,8 +49,8 @@
 //! providing **equal or better performance** with **complete memory safety**.
 
 pub mod adaptive_optimization;
-// ✅ ELIMINATED: custom_allocators — use `nestgate_core::memory_pool` instead
-// ✅ ELIMINATED: lock_free_structures — use `safe_concurrent` instead
+// Prefer `nestgate_core::memory_pool` over legacy custom allocators.
+// Prefer `safe_concurrent` over legacy lock-free experiments.
 pub mod safe_concurrent;
 pub mod simd;
 pub mod zero_copy_networking;

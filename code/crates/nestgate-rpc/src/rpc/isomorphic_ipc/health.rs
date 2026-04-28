@@ -29,10 +29,10 @@
 //!
 //! ## Deep Debt Principles
 //!
-//! - ✅ **Zero Hardcoding**: Uses runtime endpoint discovery
-//! - ✅ **Platform Agnostic**: Works with both Unix and TCP transports
-//! - ✅ **Modern Idiomatic Rust**: Async/await, Result propagation
-//! - ✅ **Runtime Discovery**: No compile-time knowledge of transport
+//! - **Zero Hardcoding**: Uses runtime endpoint discovery
+//! - **Platform Agnostic**: Works with both Unix and TCP transports
+//! - **Modern Idiomatic Rust**: Async/await, Result propagation
+//! - **Runtime Discovery**: No compile-time knowledge of transport
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};

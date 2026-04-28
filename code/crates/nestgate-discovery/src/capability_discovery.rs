@@ -55,11 +55,11 @@
 //!
 //! ## Benefits
 //!
-//! - ✅ Primal autonomy: No hardcoded names
-//! - ✅ Self-knowledge: Only know own capabilities
-//! - ✅ Runtime discovery: Flexible service providers
-//! - ✅ Testing: Easy to mock capabilities
-//! - ✅ Ecosystem compliant: Standards-conforming
+//! - Primal autonomy: no hardcoded names
+//! - Self-knowledge: only own capabilities
+//! - Runtime discovery: flexible service providers
+//! - Testing: easy to mock capabilities
+//! - Ecosystem standards alignment
 
 use dashmap::DashMap;
 use nestgate_types::error::{NestGateError, Result};

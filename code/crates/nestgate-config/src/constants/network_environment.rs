@@ -24,10 +24,10 @@
 //!
 //! ## Benefits
 //!
-//! - ✅ **Deployment Flexibility**: Different ports per environment
-//! - ✅ **Zero Configuration**: Sensible defaults just work
-//! - ✅ **Runtime Discovery**: Integrates with capability-based discovery
-//! - ✅ **Testability**: Override via environment in tests
+//! - **Deployment Flexibility**: Different ports per environment
+//! - **Zero Configuration**: Sensible defaults just work
+//! - **Runtime Discovery**: Integrates with capability-based discovery
+//! - **Testability**: Override via environment in tests
 //!
 //! ## Environment Variables
 //!

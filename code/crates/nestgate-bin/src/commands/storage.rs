@@ -3,7 +3,6 @@
 
 //! Storage management commands
 //!
-//! ✅ EVOLVED: Real implementations replacing println stubs
 //! Provides storage backend listing, scanning, benchmarking, and configuration.
 
 use crate::cli::StorageAction;
@@ -37,7 +36,7 @@ async fn list_backends_from_env_source(env: &(impl EnvSource + ?Sized)) -> Resul
     println!("NestGate Storage Backends");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    // ✅ REAL: Detect backend capabilities
+    // Detect backend capabilities from the storage service layer
     let caps = nestgate_core::services::storage::capabilities::detect_backend();
     println!("\nActive Backend:");
     println!("  Type:       {:?}", caps.backend_type);

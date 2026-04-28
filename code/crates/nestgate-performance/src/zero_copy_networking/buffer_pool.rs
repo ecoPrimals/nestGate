@@ -11,7 +11,7 @@ use crate::safe_concurrent::SafeConcurrentQueue;
 /// Memory pool for zero-copy networking operations
 /// Pre-allocated buffers eliminate allocation overhead during I/O
 ///
-/// **✅ 100% SAFE** — built on a safe concurrent queue (see [`crate::safe_concurrent::SafeConcurrentQueue`])
+/// **100% safe** — built on a safe concurrent queue (see [`crate::safe_concurrent::SafeConcurrentQueue`])
 pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE: usize = 1024> {
     available_buffers: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     total_buffers: std::sync::atomic::AtomicUsize,
@@ -45,7 +45,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> Default
         // Pre-allocate buffers
         for _ in 0..POOL_SIZE {
             let buffer = ZeroCopyBuffer::new();
-            pool.available_buffers.push(buffer); // ✅ SAFE
+            pool.available_buffers.push(buffer);
             pool.total_buffers
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
@@ -64,7 +64,6 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     /// Get buffer from pool (zero-copy acquisition)
     pub fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
         if let Some(buffer) = self.available_buffers.try_pop() {
-            // ✅ SAFE
             self.buffer_hits
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Some(buffer)
@@ -79,7 +78,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     /// Return buffer to pool (zero-copy release)
     pub fn release_buffer(&self, mut buffer: ZeroCopyBuffer<BUFFER_SIZE>) {
         buffer.reset();
-        self.available_buffers.push(buffer); // ✅ SAFE
+        self.available_buffers.push(buffer);
     }
 
     /// Get pool statistics

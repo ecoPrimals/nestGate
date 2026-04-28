@@ -255,7 +255,7 @@ impl NetworkDiscovery {
         use tokio::net::TcpListener;
 
         // Try to bind to the port
-        // ✅ MIGRATED: Use environment-configurable localhost address
+        // Bind address from environment configuration
         use nestgate_config::config::environment::EnvironmentConfig;
         let env_config =
             EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());

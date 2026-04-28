@@ -3,7 +3,7 @@
 
 //! # Universal ZFS Types
 //!
-//! **Status**: Production Ready ✅  
+//! **Status**: Production ready  
 //! **Purpose**: Common types used across all ZFS service implementations
 //!
 //! ## Architecture

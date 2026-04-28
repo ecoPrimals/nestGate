@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🔥 **SIMD Acceleration Foundation**
+//! # SIMD acceleration foundation
 //!
 //! High-performance SIMD operations built on `NestGate`'s unified architecture.
 //! Targeting 4-16x performance improvements through vectorization.
@@ -20,7 +20,7 @@ use std::mem;
 const SIMD_BATCH_MULTIPLIER: usize = 4;
 
 // Re-export SIMD modules
-// ✅ **SAFE SIMD** — portable patterns (`safe_simd`), no vendor intrinsics in-tree
+// **Safe SIMD**: portable patterns (`safe_simd`), no vendor intrinsics in-tree
 pub mod safe_simd;
 
 /// SIMD capability detection and feature flags
@@ -391,7 +391,7 @@ mod tests {
         metrics.set_speedup(4.5);
         metrics.calculate_bandwidth(4000); // 4KB
 
-        // ✅ MODERN: Use epsilon for positive value checks
+        // Use epsilon for positive value checks
         assert!(
             metrics.throughput_ops_per_sec > 1e-9,
             "Throughput should be positive"

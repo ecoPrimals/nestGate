@@ -70,7 +70,7 @@ impl HealthMonitoringConfig {
             recovery_threshold: 1,
             alerting_enabled: true,
             alert_endpoints: {
-                // ✅ SOVEREIGNTY: Environment-driven alert configuration
+                // Alert thresholds from environment configuration
                 // Alert endpoints should be explicitly configured in production
                 // For development, this can be optional
 

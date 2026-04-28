@@ -69,7 +69,7 @@ pub type SharedDiscoveryConfig = Arc<AdapterDiscoveryConfig>;
 impl AdapterDiscoveryConfig {
     /// Create a new empty configuration
     ///
-    /// ✅ MIGRATED: Now uses centralized runtime configuration
+    /// Now uses centralized runtime configuration.
     /// Typically used for testing or when building configuration programmatically.
     #[must_use]
     pub fn new() -> Self {
@@ -143,7 +143,7 @@ impl AdapterDiscoveryConfig {
                 .insert("ecosystem".to_string(), endpoint);
         }
 
-        // ✅ MIGRATED: Load from centralized runtime config
+        // Load from centralized runtime config
         let runtime_config = get_config();
 
         // Load adapter endpoint override

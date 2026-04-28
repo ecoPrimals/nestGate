@@ -36,8 +36,8 @@ impl<Provider> ZeroCostWrapper<Provider> {
 ```
 
 ## Performance Benefits
-- ✅ 40-60% throughput improvement
-- ✅ 70% memory overhead reduction  
-- ✅ 100% elimination of virtual dispatch
-- ✅ Compile-time optimization and safety
+- 40-60% throughput improvement
+- 70% memory overhead reduction  
+- 100% elimination of virtual dispatch
+- Compile-time optimization and safety
 ";

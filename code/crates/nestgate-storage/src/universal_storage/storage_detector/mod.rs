@@ -13,10 +13,10 @@ use std::collections::HashMap;
 // **New**: 6 focused modules with clear separation of concerns
 //
 // **Benefits**:
-// - ✅ Each module has a single, focused responsibility
-// - ✅ Clear separation between detection, profiling, and analysis
-// - ✅ Easy to extend with new storage types
-// - ✅ 100% backward compatibility maintained
+// - Each module has a single, focused responsibility
+// - Clear separation between detection, profiling, and analysis
+// - Easy to extend with new storage types
+// - Backward compatibility preserved
 
 use nestgate_types::error::Result;
 // Removed unused imports: UnifiedStorageCapability, UnifiedStorageType, Deserialize, Serialize

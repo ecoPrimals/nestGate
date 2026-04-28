@@ -70,11 +70,11 @@ impl NetworkConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or({
-                    // ✅ SOVEREIGNTY: Compile-time constant, zero runtime overhead
+                    // SOVEREIGNTY: Compile-time constant, zero runtime overhead
                     IpAddr::V4(Ipv4Addr::LOCALHOST) // 127.0.0.1
                 }),
 
-            // ✅ MIGRATED: Now uses centralized environment-driven functions
+            // MIGRATED: Now uses centralized environment-driven functions
             api_port: env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())

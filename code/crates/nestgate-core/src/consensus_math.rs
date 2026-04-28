@@ -77,31 +77,31 @@ mod tests {
 
     #[test]
     fn test_consensus_calculation_exactvalues() {
-        // ✅ CATCHES MULTIPLICATION MUTATIONS (* vs +, * vs -)
+        // CATCHES MULTIPLICATION MUTATIONS (* vs +, * vs -)
         assert_eq!(calculate_required_consensus(10, 0.6), 6); // 10 * 0.6 = 6.0 -> ceil -> 6
         assert_eq!(calculate_required_consensus(10, 0.7), 7); // 10 * 0.7 = 7.0 -> ceil -> 7
         assert_eq!(calculate_required_consensus(7, 0.5), 4); // 7 * 0.5 = 3.5 -> ceil -> 4
 
-        // ✅ CATCHES CEILING FUNCTION MUTATIONS (ceil vs floor, ceil vs round)
+        // CATCHES CEILING FUNCTION MUTATIONS (ceil vs floor, ceil vs round)
         assert_eq!(calculate_required_consensus(3, 0.34), 2); // 3 * 0.34 = 1.02 -> ceil -> 2
         assert_eq!(calculate_required_consensus(3, 0.33), 1); // 3 * 0.33 = 0.99 -> ceil -> 1
 
-        // ✅ CATCHES EDGE CASES
+        // CATCHES EDGE CASES
         assert_eq!(calculate_required_consensus(1, 0.9), 1); // 1 * 0.9 = 0.9 -> ceil -> 1
         assert_eq!(calculate_required_consensus(0, 0.5), 0); // Edge case: no nodes
     }
 
     #[test]
     fn test_consensus_percentage_division_precision() {
-        // ✅ CATCHES DIVISION MUTATIONS (/ vs *, / vs +, / vs -)
+        // CATCHES DIVISION MUTATIONS (/ vs *, / vs +, / vs -)
         assert_eq!(calculate_consensus_percentage(3, 10), 0.3);
         assert_eq!(calculate_consensus_percentage(7, 10), 0.7);
         assert_eq!(calculate_consensus_percentage(1, 4), 0.25);
 
-        // ✅ CATCHES DIVISION BY ZERO HANDLING
+        // CATCHES DIVISION BY ZERO HANDLING
         assert_eq!(calculate_consensus_percentage(5, 0), 0.0); // Should not panic
 
-        // ✅ CATCHES PRECISION EDGE CASES
+        // CATCHES PRECISION EDGE CASES
         assert_eq!(calculate_consensus_percentage(1, 3), 1.0 / 3.0); // Repeating decimal
         assert_eq!(calculate_consensus_percentage(0, 10), 0.0); // Zero successful
         assert_eq!(calculate_consensus_percentage(10, 10), 1.0); // All successful
@@ -109,40 +109,40 @@ mod tests {
 
     #[test]
     fn test_consensus_threshold_comparison_boundary() {
-        // ✅ CATCHES COMPARISON MUTATIONS (>= vs >, >= vs <, >= vs <=)
+        // CATCHES COMPARISON MUTATIONS (>= vs >, >= vs <, >= vs <=)
         assert!(is_consensus_achieved(0.6, 0.6)); // Exactly at threshold
         assert!(is_consensus_achieved(0.61, 0.6)); // Just above threshold
         assert!(!is_consensus_achieved(0.59, 0.6)); // Just below threshold
 
-        // ✅ CATCHES EXTREME VALUES
+        // CATCHES EXTREME VALUES
         assert!(is_consensus_achieved(1.0, 0.9)); // 100% vs 90% requirement
         assert!(!is_consensus_achieved(0.0, 0.1)); // 0% vs 10% requirement
         assert!(is_consensus_achieved(0.5, 0.5)); // Exactly equal
 
-        // ✅ CATCHES FLOATING POINT PRECISION ISSUES
+        // CATCHES FLOATING POINT PRECISION ISSUES
         let calculated = calculate_consensus_percentage(6, 10); // Should be exactly 0.6
         assert!(is_consensus_achieved(calculated, 0.6));
     }
 
     #[test]
     fn test_consensus_expiry_minimum_calculation() {
-        // ✅ CATCHES MIN/MAX MUTATIONS (min vs max)
+        // CATCHES MIN/MAX MUTATIONS (min vs max)
         let times = vec![1000, 2000, 1500, 3000];
         assert_eq!(calculate_consensus_expiry(&times, 3600), 1000); // Should be minimum
 
-        // ✅ CATCHES EMPTY SLICE HANDLING
+        // CATCHES EMPTY SLICE HANDLING
         let empty: Vec<i64> = vec![];
         let result = calculate_consensus_expiry(&empty, 3600);
         assert!(result > 0); // Should return reasonable default
 
-        // ✅ CATCHES SINGLE VALUE CASE
+        // CATCHES SINGLE VALUE CASE
         let single = vec![5000];
         assert_eq!(calculate_consensus_expiry(&single, 3600), 5000);
     }
 
     #[test]
     fn test_integration_consensus_workflow() {
-        // ✅ FULL WORKFLOW TEST - catches mutations in the complete calculation chain
+        // FULL WORKFLOW TEST - catches mutations in the complete calculation chain
         let node_count = 10;
         let min_consensus = 0.6;
         let successful_verifications = 7;
@@ -158,7 +158,7 @@ mod tests {
         // Step 3: Check if consensus achieved
         assert!(is_consensus_achieved(percentage, min_consensus)); // 0.7 >= 0.6
 
-        // ✅ VERIFY FAILURE CASE
+        // VERIFY FAILURE CASE
         let insufficient_verifications = 5;
         let low_percentage = calculate_consensus_percentage(insufficient_verifications, node_count);
         assert_eq!(low_percentage, 0.5); // 5/10 = 0.5

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🚀 **SAFE CONCURRENT DATA STRUCTURES**
+//! # Safe concurrent data structures
 //!
 //! **100% SAFE RUST** — battle-tested crates, maximum performance
 //!
@@ -10,11 +10,11 @@
 //!
 //! ## Why Safe Concurrent Structures?
 //!
-//! - ✅ **Memory safety** — enforced by the compiler and well-tested dependencies
-//! - ✅ **Production proven** - Used by thousands of companies worldwide
-//! - ✅ **Equal or better performance** - Often faster than handwritten lock-free code
-//! - ✅ **Easier to maintain** - No subtle memory ordering bugs
-//! - ✅ **Better debuggability** - Standard tooling works perfectly
+//! - **Memory safety** — enforced by the compiler and well-tested dependencies
+//! - **Production proven** — widely deployed ecosystem crates
+//! - **Equal or better performance** — often faster than handwritten lock-free code
+//! - **Easier to maintain** — no subtle memory ordering bugs
+//! - **Better debuggability** — standard tooling works well
 //!
 //! ## Performance Characteristics
 //!
@@ -25,10 +25,10 @@
 //! ## Replaced legacy patterns
 //!
 //! This module replaces:
-//! - ❌ `LockFreeMpscQueue<T>` → ✅ `SafeConcurrentQueue<T>`
-//! - ❌ `LockFreeHashMap<K, V>` → ✅ `SafeConcurrentHashMap<K, V>`
+//! - `LockFreeMpscQueue<T>` → `SafeConcurrentQueue<T>`
+//! - `LockFreeHashMap<K, V>` → `SafeConcurrentHashMap<K, V>`
 //!
-//! **Result**: custom lock-free code replaced with maintainable, auditable abstractions ✅
+//! **Result**: custom lock-free code replaced with maintainable, auditable abstractions.
 
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use dashmap::DashMap;
@@ -49,10 +49,10 @@ use std::sync::Arc;
 /// - Contention: Excellent scaling on multi-core systems
 ///
 /// ## Safety
-/// - ✅ No custom atomics or raw synchronization primitives here
-/// - ✅ Compiler-verified memory safety
-/// - ✅ No data races possible
-/// - ✅ No use-after-free possible
+/// - No custom atomics or raw synchronization primitives here
+/// - Compiler-verified memory safety
+/// - No data races possible
+/// - No use-after-free possible
 ///
 /// Safe concurrent queue
 #[derive(Debug, Clone)]
@@ -171,10 +171,10 @@ impl<T> Default for SafeConcurrentQueue<T> {
 /// - Contention: Sharded design, excellent scaling
 ///
 /// ## Safety
-/// - ✅ No custom atomics or raw synchronization primitives here
-/// - ✅ Compiler-verified memory safety
-/// - ✅ No data races possible
-/// - ✅ No use-after-free possible
+/// - No custom atomics or raw synchronization primitives here
+/// - Compiler-verified memory safety
+/// - No data races possible
+/// - No use-after-free possible
 ///
 /// ## Features
 /// - Lock-free reads (no contention on lookups)

@@ -331,7 +331,7 @@ impl ZeroCostZfsOperations for AzureBackend {
 
         info!("Creating Azure pool (container): {}", container_name);
 
-        // ✅ PROTOCOL-FIRST: Create Azure container via REST API (no SDK)
+        // Protocol-first: Create Azure container via REST API (no SDK)
         // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/create-container
         // PUT /{container}?restype=container
         // Future: Implement when using UniversalObjectStorage
@@ -372,7 +372,7 @@ impl ZeroCostZfsOperations for AzureBackend {
             prefix, tier, azure_tier
         );
 
-        // ✅ PROTOCOL-FIRST: Set up dataset with access tier
+        // Protocol-first: Set up dataset with access tier
         // Access tier mapping:
         // - Hot -> Hot (frequent access, higher storage cost, lower access cost)
         // - Warm -> Cool (infrequent access, 30-day minimum)
@@ -404,7 +404,7 @@ impl ZeroCostZfsOperations for AzureBackend {
 
         info!("Creating Azure snapshot: {}", snapshot_id);
 
-        // ✅ PROTOCOL-FIRST: Create Azure blob snapshot
+        // Protocol-first: Create Azure blob snapshot
         // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/snapshot-blob
         // PUT /{container}/{blob}?comp=snapshot
         // Azure blob snapshots are immutable, read-only versions
@@ -430,7 +430,7 @@ impl ZeroCostZfsOperations for AzureBackend {
     async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties> {
         debug!("Getting properties for pool: {}", pool.name);
 
-        // ✅ PROTOCOL-FIRST: Query Azure container properties via REST API
+        // Protocol-first: Query Azure container properties via REST API
         // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/get-container-properties
         // HEAD /{container}?restype=container
         // Returns: x-ms-blob-public-access, x-ms-has-immutability-policy, etc.
@@ -456,7 +456,7 @@ impl ZeroCostZfsOperations for AzureBackend {
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
         debug!("Listing Azure pools");
 
-        // ✅ PROTOCOL-FIRST: List Azure containers via REST API
+        // Protocol-first: List Azure containers via REST API
         // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/list-containers2
         // GET /?comp=list&prefix={prefix}
         // Returns XML with container names and metadata
@@ -470,7 +470,7 @@ impl ZeroCostZfsOperations for AzureBackend {
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         debug!("Listing datasets for pool: {}", pool.name);
 
-        // ✅ PROTOCOL-FIRST: List blob prefixes using delimiter
+        // Protocol-first: List blob prefixes using delimiter
         // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/list-blobs
         // GET /{container}?restype=container&comp=list&delimiter=/&prefix={prefix}
         // The delimiter param returns "virtual directories" (BlobPrefix elements)
@@ -483,7 +483,7 @@ impl ZeroCostZfsOperations for AzureBackend {
     async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
         debug!("Listing snapshots for dataset: {}", dataset.name);
 
-        // ✅ PROTOCOL-FIRST: List blob snapshots
+        // Protocol-first: List blob snapshots
         // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/list-blobs
         // GET /{container}?restype=container&comp=list&include=snapshots&prefix={prefix}
         // Returns all blob versions including snapshots with DateTime identifiers

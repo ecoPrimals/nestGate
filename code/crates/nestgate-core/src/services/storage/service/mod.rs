@@ -51,9 +51,9 @@ pub struct StorageManagerService {
 impl StorageManagerService {
     /// Create a new Storage Manager Service with real implementations
     ///
-    /// ✅ CAPABILITY-BASED: Auto-detects available backends (ZFS, filesystem)
-    /// ✅ AGNOSTIC: Works on ANY filesystem
-    /// ✅ OPTIMIZED: Uses ZFS features when available
+    /// Capability-based: auto-detects available backends (ZFS, filesystem).
+    /// Agnostic: works on any filesystem.
+    /// Optimized: uses ZFS features when available.
     ///
     /// # Errors
     ///
@@ -62,7 +62,7 @@ impl StorageManagerService {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn new() -> Result<Self> {
-        // ✅ DEEP DEBT: Capability-based configuration (no hardcoding)
+        // Capability-based configuration (no hardcoding)
         Self::with_config(StorageServiceConfig::with_auto_detect()).await
     }
 

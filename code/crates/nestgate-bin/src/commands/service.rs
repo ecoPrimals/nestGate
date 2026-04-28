@@ -194,10 +194,10 @@ impl ServiceManager {
     ) -> BinResult<()> {
         info!("Starting in STANDALONE MODE (HTTP)");
 
-        // ✅ MIGRATED: Use runtime configuration instead of hardcoding
+        // Runtime configuration (no hardcoded host/port defaults here)
         let runtime_config = nestgate_core::config::runtime::get_config();
 
-        // ✅ MIGRATED: tarpc port from config (was hardcoded 8091)
+        // tarpc port from runtime config
         let tarpc_port = runtime_config.network.tarpc_port;
 
         // `--listen` (UniBin v1.2) takes precedence over `--bind` + `--port` / runtime defaults
@@ -301,7 +301,7 @@ impl ServiceManager {
     async fn stop_service(&mut self) -> BinResult<()> {
         info!("Stopping NestGate service");
 
-        // ✅ MODERN CONCURRENT: Event-driven shutdown instead of sleep
+        // Event-driven shutdown (no blocking sleep)
         if let Some(tx) = &self.shutdown_tx {
             // Send shutdown signal to all subscribers
             let _ = tx.send(());
@@ -321,7 +321,7 @@ impl ServiceManager {
         // Clean up shutdown channel
         self.shutdown_tx = None;
 
-        info!("✅ NestGate service stopped successfully");
+        info!("NestGate service stopped successfully");
 
         Ok(())
     }
@@ -330,12 +330,11 @@ impl ServiceManager {
     async fn restart_service(&mut self, port: Option<u16>, config: Option<&str>) -> BinResult<()> {
         info!("Restarting NestGate service");
 
-        // ✅ MODERN CONCURRENT: Event-driven coordination, no sleep!
+        // Event-driven coordination for restart
         // Stop service and wait for graceful shutdown
         self.stop_service().await?;
 
-        // ✅ NO SLEEP: Service stop is event-driven with proper coordination
-        // The stop_service() method already waits for graceful shutdown
+        // Stop is event-driven; `stop_service` already waited for graceful shutdown
 
         // Start service with new configuration
         self.start_service(port, None, None, config).await?;
@@ -344,7 +343,7 @@ impl ServiceManager {
     }
 
     // Show service status
-    // ✅ EVOLVED: Real runtime checks replacing hardcoded placeholders
+    // Status from runtime config and socket probes (not placeholders)
     async fn show_status(&self) -> BinResult<()> {
         info!("Checking NestGate service status");
 

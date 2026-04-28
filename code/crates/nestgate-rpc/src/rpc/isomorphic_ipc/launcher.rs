@@ -31,11 +31,11 @@
 //!
 //! ## Deep Debt Principles
 //!
-//! - ✅ **Zero Hardcoding**: Discovery via XDG-compliant runtime paths
-//! - ✅ **Platform Agnostic**: Works on Linux, macOS, FreeBSD, WSL2
-//! - ✅ **Self-Knowledge**: `NestGate` discovers its own endpoint
-//! - ✅ **Runtime Discovery**: Other primals discover `NestGate` at runtime
-//! - ✅ **Capability-Based**: Adapts to platform capabilities (Unix vs TCP)
+//! - **Zero Hardcoding**: Discovery via XDG-compliant runtime paths
+//! - **Platform Agnostic**: Works on Linux, macOS, FreeBSD, WSL2
+//! - **Self-Knowledge**: `NestGate` discovers its own endpoint
+//! - **Runtime Discovery**: Other primals discover `NestGate` at runtime
+//! - **Capability-Based**: Adapts to platform capabilities (Unix vs TCP)
 
 use anyhow::{Context, Result, anyhow};
 use nestgate_types::{EnvSource, ProcessEnv};

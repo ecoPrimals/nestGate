@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🚀 RPC Module for `NestGate`
+//! # RPC Module for `NestGate`
 //!
 //! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL COMMUNICATION** (v0.3.0)
 //!

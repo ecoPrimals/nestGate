@@ -392,7 +392,7 @@ mod tests {
 
         assert_eq!(stats.peak_response_time_ms, 200.0);
         // Average is (100 + 200) / 2 = 150.0, then (150 + 200) / 2 = 175.0
-        // ✅ MODERN: Use epsilon for positive value check
+        // Use epsilon for positive value check
         assert!(stats.average_response_time_ms > 1e-9);
     }
 

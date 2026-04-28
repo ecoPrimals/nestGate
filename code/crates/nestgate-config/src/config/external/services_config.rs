@@ -198,11 +198,11 @@ impl ServicesConfig {
     ///
     /// # Example
     /// ```ignore
-    /// // ✅ CORRECT: Capability-based
+    /// // CORRECT: Capability-based
     /// let security_url = config.get_capability_url("security");
     /// let orchestration_url = config.get_capability_url("orchestration");
     ///
-    /// // ❌ DEPRECATED: Don't use primal-specific methods
+    /// // DEPRECATED: Don't use primal-specific methods
     /// // let specific_url = config.get_primal_url("name");
     /// ```
     ///
