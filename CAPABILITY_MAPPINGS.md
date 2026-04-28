@@ -2,11 +2,11 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: April 26, 2026 (Session 46)
+**Last Updated**: April 27, 2026 (Session 47)
 
 ---
 
-## 📊 OVERVIEW
+## Overview
 
 NestGate operates as a **storage & discovery primal** within the ecoPrimals ecosystem. This document maps:
 
@@ -150,7 +150,7 @@ pub async fn list_services()  // → discovery.list
 pub async fn get_service_metadata(name: &str)  // → discovery.metadata
 ```
 
-**Status**: ✅ Well-architected, needs semantic method naming
+**Status**: Implemented, needs semantic method naming
 
 ---
 
@@ -178,7 +178,7 @@ pub async fn get_service(name: &str)  // → metadata.retrieve
 pub async fn find_by_capability(cap: &str)  // → metadata.search
 ```
 
-**Status**: ✅ Implemented, needs semantic naming
+**Status**: Implemented, needs semantic naming
 
 ---
 
@@ -206,11 +206,11 @@ pub async fn readiness_check()  // → health.readiness
 pub async fn liveness_check()  // → health.liveness
 ```
 
-**Status**: ✅ Implemented
+**Status**: Implemented
 
 ---
 
-## 🔍 CAPABILITIES REQUIRED BY NESTGATE
+## Capabilities Required by NestGate
 
 ### **1. IPC/Orchestration (from Songbird)**
 
@@ -238,7 +238,7 @@ let discovery = CapabilityDiscovery::new(songbird);
 let crypto_service = discovery.find("crypto").await?;
 ```
 
-**Status**: ✅ Using capability discovery pattern
+**Status**: Using capability discovery pattern
 
 ---
 
@@ -294,7 +294,7 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 // reqwest + rustls; content addressing via blake3; no Songbird http.get hop for this path.
 ```
 
-**Status**: ✅ Implemented — NestGate terminates TLS for this fetch path
+**Status**: Implemented — NestGate terminates TLS for this fetch path
 
 #### **Optional / future (Songbird or other primals)**
 
@@ -318,7 +318,7 @@ Legacy documentation referred to Songbird for generic `http.get` / `http.post` a
 }
 ```
 
-**Status**: 📋 Planned (not yet integrated)
+**Status**: Planned (not yet integrated)
 
 ---
 
@@ -327,9 +327,9 @@ Legacy documentation referred to Songbird for generic `http.get` / `http.post` a
 ### **Current State**
 
 **External (JSON-RPC)**:
-- ✅ Uses semantic names (`crypto.generate_keypair`)
-- ✅ Follows wateringHole standard
-- ✅ Compatible with Neural API
+- Uses semantic names (`crypto.generate_keypair`)
+- Follows wateringHole standard
+- Compatible with Neural API
 
 **Internal (Rust methods)**:
 - ⚠️ Uses descriptive names (`store_object`, `retrieve_object`)
@@ -344,14 +344,14 @@ Legacy documentation referred to Songbird for generic `http.get` / `http.post` a
 
 **Pattern**:
 ```rust
-// ❌ OLD: Domain-specific method names
+// OLD: Domain-specific method names
 impl StorageService {
     pub async fn store_object(...) -> Result<()>
     pub async fn retrieve_object(...) -> Result<()>
     pub async fn delete_object(...) -> Result<()>
 }
 
-// ✅ NEW: Semantic method routing
+// NEW: Semantic method routing
 impl StorageService {
     pub async fn call_method(method: &str, params: Value) -> Result<Value> {
         match method {
@@ -383,7 +383,7 @@ impl StorageService {
 
 ---
 
-## 🌐 NEURAL API TRANSLATION
+## Neural API Translation
 
 ### **How biomeOS Routes NestGate Requests**
 
@@ -435,30 +435,30 @@ optional = ["crypto", "compute"]
 
 ---
 
-## 📊 CAPABILITY MATRIX
+## Capability Matrix
 
 ### **NestGate Capability Summary**
 
 | Domain | Methods | Status | Priority |
 |--------|---------|--------|----------|
-| **storage** | 10 methods | ✅ Implemented | P0 (core) |
-| **zfs** | 7 methods | ✅ Implemented (GAP-MATRIX-04) | P0 (core) |
-| **discovery** | 5 methods | ✅ Implemented | P0 (core) |
-| **metadata** | 4 methods | ✅ Implemented | P1 (important) |
-| **health** | 4 methods | ✅ Implemented | P1 (important) |
+| **storage** | 10 methods | Implemented | P0 (core) |
+| **zfs** | 7 methods | Implemented (GAP-MATRIX-04) | P0 (core) |
+| **discovery** | 5 methods | Implemented | P0 (core) |
+| **metadata** | 4 methods | Implemented | P1 (important) |
+| **health** | 4 methods | Implemented | P1 (important) |
 
 ### **Required From Other Primals**
 
 | Capability | Provider | Methods Used | Status |
 |------------|----------|--------------|--------|
-| **ipc** | Songbird | 5 methods | ✅ Integrated |
-| **crypto** | BearDog | 6 methods | Evolved (delegation) |
-| **networking** | Songbird (optional) | 3 methods | 📋 Planned (not used for `storage.fetch_external`) |
-| **compute** | ToadStool | 3 methods | 📋 Future |
+| **ipc** | IPC capability provider | 5 methods | Integrated |
+| **crypto** | Security capability provider | 6 methods | Evolved (delegation) |
+| **networking** | Network capability provider (optional) | 3 methods | Planned (not used for `storage.fetch_external`) |
+| **compute** | Compute capability provider | 3 methods | Future |
 
 ---
 
-## 🎯 INTEGRATION EXAMPLES
+## Integration Examples
 
 ### **Example 1: Another Primal Uses NestGate Storage**
 
@@ -518,4 +518,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: April 2026 (Session 46)
+**Last Updated**: April 27, 2026 (Session 47)

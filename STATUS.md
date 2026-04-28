@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 2026 (Session 46 — streaming storage, BTSP relay fixes, hardcoded port elimination, deep debt)  
+**Last Updated**: April 27, 2026 (Session 47 — emoji/marketing purge, unfulfilled lint cleanup, clippy compliance, comment hygiene)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,11 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 45c
-Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of Session 45c
-Format:             CLEAN (cargo fmt --check passes), as of Session 45c
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 45c
-Tests:              8,822 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 46
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 47
+Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of Session 47
+Format:             CLEAN (cargo fmt --check passes), as of Session 47
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 47
+Tests:              8,822 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 47
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -32,7 +32,7 @@ IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, disc
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 42 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol, transport
-Emoji in logs:      ZERO in library tracing — professional structured logging only (Session 43f)
+Emoji in logs/code: ZERO in production sources — professional structured logging, no emoji in comments or log output (Session 47)
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback

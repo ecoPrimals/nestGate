@@ -2,9 +2,9 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-26, Session 46)**  
+**Verification (as of 2026-04-27, Session 47)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
-- **Clippy**: `cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery` — PASS (zero warnings)  
+- **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace --lib` — 8,822 passing, 0 failures, 60 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
@@ -31,7 +31,7 @@
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-**Last Updated**: April 2026 (Session 46)
+**Last Updated**: April 27, 2026 (Session 47)
 
 ---
 
@@ -127,7 +127,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-26 (Session 46).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-27 (Session 47).
 
 | Area | Status |
 |------|--------|
@@ -142,7 +142,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-26 (Se
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots |
 | TLS/crypto | `ureq` + `rustls-rustcrypto` (pure Rust); zero C-FFI `-sys` in production |
 | File size | All `.rs` files under 800 LOC (wateringHole limit 1000) |
-| Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests |
+| Env-var isolation | `EnvSource` / `MapEnv` primary; `#[serial]` scoped to ZFS command stub tests only |
 
 ### Compliance (wateringHole)
 
