@@ -10,7 +10,7 @@
 
 **Core Responsibilities**:
 - **Storage**: Dataset and object management with ZFS backend
-- **Discovery**: Capability-based service discovery (mDNS/Consul/K8s)
+- **Discovery**: Capability-based service discovery (runtime UDS socket resolution)
 - **Registry**: Service metadata and capability tracking
 
 **Architecture**: Primal Sovereignty (self-knowledge + runtime discovery)
@@ -20,7 +20,7 @@
 ## Codebase Structure
 
 ```
-nestGate/
+nestgate/
 ├── code/crates/
 │   ├── nestgate-core/          # Core library (main development here)
 │   │   ├── src/
@@ -36,7 +36,7 @@ nestGate/
 ├── tests/                      # Integration tests
 ├── benches/                    # Performance benchmarks
 ├── examples/                   # Usage examples
-├── docs/                       # Documentation (365+ files!)
+├── docs/                       # Documentation (39 guides)
 ├── config/                     # Configuration examples
 └── README.md                   # Project overview
 ```

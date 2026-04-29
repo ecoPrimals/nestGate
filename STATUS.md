@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 28, 2026 (Session 48 — encrypt-at-rest, auth mode bypass, emoji doc purge)  
+**Last Updated**: April 29, 2026 (Session 49 — GAP-21 family_id optional, dispatch.rs extraction, deep debt zero-unwrap)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,11 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 48
-Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of Session 48
-Format:             CLEAN (cargo fmt --check passes), as of Session 48
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 48
-Tests:              8,841 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 48
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 49
+Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of Session 49
+Format:             CLEAN (cargo fmt --check passes), as of Session 49
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 49
+Tests:              8,841 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 49
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -657,4 +657,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 2026 (Session 48)
+**Latest**: April 2026 (Session 49)

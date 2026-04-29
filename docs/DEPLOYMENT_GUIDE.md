@@ -1,6 +1,6 @@
 # NestGate Production Deployment Guide
 
-> **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: April 2026 (Session 48)
+> **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: April 2026 (Session 49)
 >
 > **Note**: References to `deploy/` directory paths below are aspirational — that directory has not been created yet. NestGate currently deploys as a single static binary (`nestgate daemon`). See README.md for current quick start.
 
