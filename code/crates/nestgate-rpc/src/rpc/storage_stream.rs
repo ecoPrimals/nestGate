@@ -18,6 +18,7 @@ use serde_json::{Value, json};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tokio::sync::Mutex;
+use tracing::debug;
 use uuid::Uuid;
 
 /// Maximum decoded bytes per `storage.store_stream_chunk` / `storage.retrieve_stream_chunk` response.
@@ -110,12 +111,17 @@ fn resolve_family_id<'a>(params: &'a Value, fallback: Option<&'a str>) -> Result
     if let Some(s) = params.get("family_id").and_then(Value::as_str) {
         return Ok(s);
     }
-    fallback.ok_or_else(|| {
-        NestGateError::invalid_input_with_field(
-            "family_id",
-            "family_id required (or connect via a family-scoped socket)",
-        )
-    })
+    if let Some(fid) = fallback {
+        debug!(
+            family_id = fid,
+            "family_id omitted in stream request, using server default"
+        );
+        return Ok(fid);
+    }
+    Err(NestGateError::invalid_input_with_field(
+        "family_id",
+        "family_id required — set NESTGATE_FAMILY_ID or pass family_id in params",
+    ))
 }
 
 fn extract_dataset(params: &Value) -> &str {

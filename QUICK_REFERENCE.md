@@ -1,7 +1,7 @@
 # NestGate - Quick Reference
 
 **Version**: 4.7.0-dev  
-**Tests**: `cargo test --workspace --lib` — PASS, 0 failures (8,840 passing, 60 ignored — see STATUS.md)  
+**Tests**: `cargo test --workspace --lib` — PASS, 0 failures (8,841 passing, 60 ignored — see STATUS.md)  
 **Coverage**: 84.12%+ line (llvm-cov); target 90%  
 **Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 48)  
 **Crates**: 23 workspace members (20 under `code/crates/` + `tools/unwrap-migrator` + `fuzz` + root)  

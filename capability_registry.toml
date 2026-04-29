@@ -26,6 +26,12 @@ methods = [
     "storage.fetch_external",
 ]
 
+# Common parameter: family_id
+# Optional when connecting via a family-scoped socket (nestgate-{family}.sock).
+# The server defaults to its own NESTGATE_FAMILY_ID / FAMILY_ID from the
+# environment. Explicit family_id in params always takes precedence.
+# Required only in standalone mode with no env var set.
+
 [capabilities.model]
 domain = "model"
 description = "AI model cache — registration, lookup, metadata"

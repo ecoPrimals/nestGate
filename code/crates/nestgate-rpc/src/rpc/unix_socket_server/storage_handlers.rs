@@ -49,11 +49,16 @@ pub(in crate::rpc::unix_socket_server) async fn ensure_parent_dirs(path: &Path) 
     Ok(())
 }
 
-/// Resolve `family_id` from params, falling back to the server's socket-scoped family.
+/// Resolve `family_id`: explicit param wins, then server's socket-scoped default.
 ///
-/// When callers connect via a family-scoped socket (`nestgate-{family}.sock`),
-/// the server already knows the family context. This eliminates the #1 friction
-/// point identified in downstream composition experiments.
+/// In NUCLEUS compositions, callers connect via a family-scoped socket
+/// (`nestgate-{family}.sock`) and can omit `family_id` entirely — the server
+/// already knows the family context from `NESTGATE_FAMILY_ID` / `FAMILY_ID`.
+///
+/// # Errors
+///
+/// Returns [`NestGateError`] only when both the request params and the server
+/// state lack a `family_id` (standalone mode with no env var set).
 pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
     params: &'a Value,
     state: &'a StorageState,
@@ -62,11 +67,15 @@ pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
         return Ok(fid);
     }
     if let Some(ref fid) = state.family_id {
+        debug!(
+            family_id = fid.as_str(),
+            "family_id omitted in request, using server default"
+        );
         return Ok(fid.as_str());
     }
     Err(NestGateError::invalid_input_with_field(
         "family_id",
-        "family_id required (or connect via a family-scoped socket)",
+        "family_id required — set NESTGATE_FAMILY_ID or pass family_id in params",
     ))
 }
 
@@ -302,12 +311,8 @@ pub(super) async fn storage_namespaces_list(
     params: Option<&Value>,
     state: &StorageState,
 ) -> Result<Value> {
-    let family_id = match params {
-        Some(p) => resolve_family_id(p, state)?,
-        None => state.family_id.as_deref().ok_or_else(|| {
-            NestGateError::invalid_input_with_field("family_id", "family_id required")
-        })?,
-    };
+    let empty_params = json!({});
+    let family_id = resolve_family_id(params.unwrap_or(&empty_params), state)?;
 
     let family_dir = get_storage_base_path().join("datasets").join(family_id);
     let mut namespaces = Vec::new();
@@ -473,6 +478,63 @@ mod tests {
         let _ =
             tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
                 .await;
+    }
+
+    /// GAP-21: family_id omitted in params — server uses its own family as default.
+    /// This is the primary composition pattern: springs connect to a family-scoped
+    /// socket and should not need to repeat the family in every request.
+    #[tokio::test]
+    async fn store_retrieve_without_family_id_uses_server_default() {
+        let server_family = format!("gap21-test-{}", uuid::Uuid::new_v4());
+        let state = mock_state(Some(&server_family)).await;
+
+        let store_params =
+            Some(json!({"key": "gap21-key", "value": {"msg": "no family in params"}}));
+        let store_result = storage_store(store_params.as_ref(), &state).await;
+        assert!(
+            store_result.is_ok(),
+            "store without family_id failed: {store_result:?}"
+        );
+        let store_val = store_result.unwrap();
+        assert_eq!(store_val["status"], "stored");
+        assert_eq!(store_val["family_id"], server_family.as_str());
+
+        let retrieve_params = Some(json!({"key": "gap21-key"}));
+        let retrieve_result = storage_retrieve(retrieve_params.as_ref(), &state).await;
+        assert!(
+            retrieve_result.is_ok(),
+            "retrieve without family_id failed: {retrieve_result:?}"
+        );
+        assert_eq!(
+            retrieve_result.unwrap()["value"]["msg"],
+            "no family in params"
+        );
+
+        let exists_params = json!({"key": "gap21-key"});
+        let exists_result = storage_exists(Some(&exists_params), &state);
+        assert!(exists_result.is_ok());
+        assert_eq!(exists_result.unwrap()["exists"], true);
+
+        let list_params = json!({});
+        let list_result = storage_list(Some(&list_params), &state).await;
+        assert!(
+            list_result.is_ok(),
+            "list without family_id failed: {list_result:?}"
+        );
+
+        let delete_params = json!({"key": "gap21-key"});
+        let delete_result = storage_delete(Some(&delete_params), &state).await;
+        assert!(
+            delete_result.is_ok(),
+            "delete without family_id failed: {delete_result:?}"
+        );
+
+        let _ = tokio::fs::remove_dir_all(
+            get_storage_base_path()
+                .join("datasets")
+                .join(&server_family),
+        )
+        .await;
     }
 
     #[tokio::test]

@@ -79,7 +79,7 @@ echo '{"jsonrpc":"2.0","method":"health.ping","params":{},"id":1}' | \
 echo '{"jsonrpc":"2.0","method":"identity.get","params":{},"id":2}' | \
   socat - UNIX-CONNECT:/tmp/nestgate-nat0.sock
 
-# Store data
+# Store data (family_id optional — server defaults to its NESTGATE_FAMILY_ID)
 echo '{"jsonrpc":"2.0","method":"storage.store","params":{"key":"test","value":[1,2,3]},"id":3}' | \
   socat - UNIX-CONNECT:/tmp/nestgate-nat0.sock
 ```

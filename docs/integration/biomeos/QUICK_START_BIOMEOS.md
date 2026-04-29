@@ -106,6 +106,11 @@ echo '{"jsonrpc":"2.0","method":"storage.store","params":{"key":"test","data":{"
 ### **storage.store**
 Store key-value data.
 
+**Parameters**:
+- `key` (string, required) — storage key
+- `data` or `value` (object, required) — JSON value to store
+- `family_id` (string, optional) — defaults to server's `NESTGATE_FAMILY_ID` when omitted
+
 ```json
 Request:
 {
@@ -132,6 +137,10 @@ Response:
 
 ### **storage.retrieve**
 Retrieve data by key.
+
+**Parameters**:
+- `key` (string, required) — storage key
+- `family_id` (string, optional) — defaults to server's `NESTGATE_FAMILY_ID` when omitted
 
 ```json
 Request:
