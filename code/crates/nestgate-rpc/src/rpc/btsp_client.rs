@@ -101,10 +101,15 @@ pub fn resolve_security_socket_path() -> PathBuf {
 /// canonical name, `crypto.sock` is an alias accepted by some providers.
 const SECURITY_SOCKET_CANDIDATES: &[&str] = &["security.sock", "crypto.sock"];
 
-/// Scans `$XDG_RUNTIME_DIR/biomeos/` for a security capability provider socket.
+/// Scans `$XDG_RUNTIME_DIR/{socket_dir}/` for a security capability provider socket.
+///
+/// The socket subdirectory defaults to `biomeos` but can be overridden via
+/// `ECOSYSTEM_SOCKET_DIR` for alternative deployment layouts.
 fn discover_security_socket_xdg() -> Option<PathBuf> {
     let runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok()?;
-    let base = PathBuf::from(runtime_dir).join("biomeos");
+    let socket_dir =
+        std::env::var("ECOSYSTEM_SOCKET_DIR").unwrap_or_else(|_| "biomeos".to_string());
+    let base = PathBuf::from(runtime_dir).join(socket_dir);
     for name in SECURITY_SOCKET_CANDIDATES {
         let candidate = base.join(name);
         if candidate.exists() {

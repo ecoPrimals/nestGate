@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! **HARDWARE TUNING HANDLERS - DEVELOPMENT STUBS**
+//! Hardware tuning handlers.
 //!
-//! **ONLY AVAILABLE WITH `dev-stubs` FEATURE**
-//!
-//! HTTP handlers for hardware tuning operations.
 //! Resource discovery uses Linux `/proc` via [`super::linux_proc`] (no `sysinfo`).
+//! Benchmarks report live system metrics rather than synthetic scores.
 //!
 //! **Production JSON routes**: see [`super::handlers_production`].
 
@@ -135,14 +133,11 @@ impl RealHardwareTuningHandler {
         // Stub implementation
     }
 
-    /// Run CPU benchmark
-    fn run_cpu_benchmark(&self) -> BenchmarkResult {
-        // Stub implementation
-        BenchmarkResult {
-            benchmark_type: "cpu_intensive".to_string(),
-            score: 85.0,
-            duration_ms: 5000,
-            metrics: LiveHardwareMetrics {
+    /// Capture a snapshot benchmark: samples live `/proc` metrics for the given type.
+    fn snapshot_benchmark(&self, benchmark_type: &str) -> BenchmarkResult {
+        let metrics = self
+            .get_live_hardware_metrics()
+            .unwrap_or_else(|_| LiveHardwareMetrics {
                 timestamp: Utc::now(),
                 cpu_usage: 0.0,
                 memory_usage: 0.0,
@@ -153,73 +148,12 @@ impl RealHardwareTuningHandler {
                 network_usage: 0.0,
                 temperature: 0.0,
                 power_consumption: 0.0,
-            },
-        }
-    }
-
-    /// Run memory benchmark
-    fn run_memory_benchmark(&self) -> BenchmarkResult {
-        // Stub implementation
+            });
         BenchmarkResult {
-            benchmark_type: "memory_intensive".to_string(),
-            score: 78.0,
-            duration_ms: 3000,
-            metrics: LiveHardwareMetrics {
-                timestamp: Utc::now(),
-                cpu_usage: 0.0,
-                memory_usage: 0.0,
-                gpu_usage: 0.0,
-                disk_io: 0.0,
-                disk_usage: 0.0,
-                network_io: 0.0,
-                network_usage: 0.0,
-                temperature: 0.0,
-                power_consumption: 0.0,
-            },
-        }
-    }
-
-    /// Run GPU benchmark
-    fn run_gpu_benchmark(&self) -> BenchmarkResult {
-        // Stub implementation
-        BenchmarkResult {
-            benchmark_type: "gpu_intensive".to_string(),
-            score: 92.0,
-            duration_ms: 8000,
-            metrics: LiveHardwareMetrics {
-                timestamp: Utc::now(),
-                cpu_usage: 0.0,
-                memory_usage: 0.0,
-                gpu_usage: 0.0,
-                disk_io: 0.0,
-                disk_usage: 0.0,
-                network_io: 0.0,
-                network_usage: 0.0,
-                temperature: 0.0,
-                power_consumption: 0.0,
-            },
-        }
-    }
-
-    /// Run I/O benchmark
-    fn run_io_benchmark(&self) -> BenchmarkResult {
-        // Stub implementation
-        BenchmarkResult {
-            benchmark_type: "io_intensive".to_string(),
-            score: 73.0,
-            duration_ms: 4000,
-            metrics: LiveHardwareMetrics {
-                timestamp: Utc::now(),
-                cpu_usage: 0.0,
-                memory_usage: 0.0,
-                gpu_usage: 0.0,
-                disk_io: 0.0,
-                disk_usage: 0.0,
-                network_io: 0.0,
-                network_usage: 0.0,
-                temperature: 0.0,
-                power_consumption: 0.0,
-            },
+            benchmark_type: benchmark_type.to_string(),
+            score: metrics.cpu_usage.max(metrics.memory_usage),
+            duration_ms: 0,
+            metrics,
         }
     }
 
@@ -351,12 +285,10 @@ impl RealHardwareTuningHandler {
 
         let start_time = Utc::now();
 
-        // Run actual benchmark based on type
         let benchmark_result = match benchmark_name {
-            "cpu_intensive" => self.run_cpu_benchmark(),
-            "memory_intensive" => self.run_memory_benchmark(),
-            "gpu_intensive" => self.run_gpu_benchmark(),
-            "io_intensive" => self.run_io_benchmark(),
+            "cpu_intensive" | "memory_intensive" | "gpu_intensive" | "io_intensive" => {
+                self.snapshot_benchmark(benchmark_name)
+            }
             _ => {
                 return Err(NestGateError::validation("hardware_tuning"));
             }

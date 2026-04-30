@@ -92,10 +92,10 @@ impl StorageEncryption {
     /// Try to retrieve the storage purpose key from the security capability
     /// provider via `secrets.retrieve`.
     ///
-    /// Connects using `BEARDOG_SOCKET` env, falling back to the 6-tier
-    /// security socket discovery chain.
+    /// Connects using `SECURITY_PROVIDER_SOCKET` env, falling back to the
+    /// 6-tier security socket discovery chain.
     pub async fn from_provider(family_id: &str) -> Option<Self> {
-        let socket_path = resolve_beardog_socket()?;
+        let socket_path = resolve_security_provider_socket()?;
         debug!("Attempting storage key retrieval from security provider at {socket_path}");
 
         let secret_name = format!("nucleus:{family_id}:purpose:storage");
@@ -246,12 +246,15 @@ impl StorageEncryption {
 
 /// Resolve the security provider socket path from environment.
 ///
-/// Precedence: `BEARDOG_SOCKET` → 6-tier security socket discovery.
-fn resolve_beardog_socket() -> Option<String> {
-    if let Ok(p) = std::env::var("BEARDOG_SOCKET")
-        && !p.is_empty()
-    {
-        return Some(p);
+/// Precedence: `SECURITY_PROVIDER_SOCKET` → `BEARDOG_SOCKET` (legacy) →
+/// 6-tier security socket discovery.
+fn resolve_security_provider_socket() -> Option<String> {
+    for var in ["SECURITY_PROVIDER_SOCKET", "BEARDOG_SOCKET"] {
+        if let Ok(p) = std::env::var(var)
+            && !p.is_empty()
+        {
+            return Some(p);
+        }
     }
     let path = super::btsp_client::resolve_security_socket_path();
     path.to_str().map(String::from)

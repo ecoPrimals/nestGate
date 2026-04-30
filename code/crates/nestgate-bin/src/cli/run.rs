@@ -26,9 +26,11 @@ impl Cli {
         setup_logging(self.verbose);
 
         let auth_mode = std::env::var("NESTGATE_AUTH_MODE").unwrap_or_default();
-        if auth_mode.eq_ignore_ascii_case("beardog") {
+        let delegated = auth_mode.eq_ignore_ascii_case("delegated")
+            || auth_mode.eq_ignore_ascii_case("beardog");
+        if delegated {
             tracing::info!(
-                "Auth mode: beardog — JWT validation skipped, \
+                "Auth mode: delegated — JWT validation skipped, \
                  auth delegated to security capability provider"
             );
         } else {

@@ -326,10 +326,9 @@ where
     debug!("BTSP: received ClientHello");
 
     // 2. Resolve family seed and base64-encode for transport.
-    //    BearDog's handler base64-decodes the param before HKDF key
-    //    derivation.  primalSpring's client uses the raw hex bytes.
-    //    All converged primals base64-encode the raw env string so that
-    //    BearDog recovers the original hex for key agreement.
+    //    The security provider base64-decodes the param before HKDF key
+    //    derivation.  All converged primals base64-encode the raw env
+    //    string so the provider recovers the original hex for key agreement.
     let raw_seed = resolve_family_seed()?;
     let family_seed_b64 = STANDARD.encode(raw_seed.as_bytes());
 

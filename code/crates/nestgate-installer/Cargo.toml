@@ -50,17 +50,5 @@ dialoguer = { version = "0.11", features = ["completion"] }
 default = ["cli"]
 cli = []
 
-[target."cfg(windows)".dependencies]
-winreg = "0.52"
-windows-service = "0.6"
-
-[target."cfg(windows)".dependencies.winapi]
-version = "0.3"
-features = ["winuser", "winsvc"]
-
-[target."cfg(unix)".dependencies.nix]
-version = "0.27"
-features = ["user"]
-
 [dev-dependencies]
 temp-env = { workspace = true }
