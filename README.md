@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-29, Session 49)**  
+**Verification (as of 2026-04-30, Session 50)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace --lib` — 8,841 passing, 0 failures, 60 ignored  
@@ -31,7 +31,7 @@
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-**Last Updated**: April 29, 2026 (Session 49)
+**Last Updated**: April 30, 2026 (Session 50)
 
 ---
 
@@ -127,7 +127,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-29 (Session 49).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-30 (Session 50).
 
 | Area | Status |
 |------|--------|
@@ -283,4 +283,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 2026 (Session 49)
+**Latest**: April 2026 (Session 50)

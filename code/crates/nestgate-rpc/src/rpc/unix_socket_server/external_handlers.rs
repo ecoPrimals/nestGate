@@ -219,10 +219,7 @@ async fn do_external_fetch(
 ///
 /// Returns an error if required params are missing, the URL scheme is not
 /// HTTPS (or HTTP when explicitly allowed), the fetch fails, or disk I/O fails.
-pub(super) async fn storage_fetch_external(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn storage_fetch_external(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let url = params["url"]

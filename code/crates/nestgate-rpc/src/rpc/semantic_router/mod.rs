@@ -242,6 +242,7 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             }
             "storage.object.size" => storage::storage_object_size(self, params).await,
             "storage.namespaces.list" => storage::storage_namespaces_list(self, params).await,
+            "storage.fetch_external" => storage::storage_fetch_external(self, params).await,
 
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, &params),

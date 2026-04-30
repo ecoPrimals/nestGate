@@ -294,6 +294,69 @@ Response:
 }
 ```
 
+### **Streaming Storage (large objects)**
+
+For objects larger than 64 MiB, use the chunked streaming protocol.
+Each chunk carries up to 4 MiB decoded (base64-encoded in JSON).
+
+**Upload (chunked):**
+
+```json
+Step 1 - Begin stream:
+{"jsonrpc":"2.0","method":"storage.store_stream","params":{"key":"model:weights.bin","family_id":"myapp"},"id":1}
+Response: {"stream_id":"<uuid>","chunk_size":4194304}
+
+Step 2 - Send chunks (repeat):
+{"jsonrpc":"2.0","method":"storage.store_stream_chunk","params":{"stream_id":"<uuid>","data":"<base64>","is_last":false},"id":2}
+Final chunk: set "is_last": true
+```
+
+**Download (chunked):**
+
+```json
+Step 1 - Begin retrieval:
+{"jsonrpc":"2.0","method":"storage.retrieve_stream","params":{"key":"model:weights.bin","family_id":"myapp"},"id":1}
+Response: {"stream_id":"<uuid>","total_size":67108864,"chunk_size":4194304}
+
+Step 2 - Fetch chunks (repeat until is_last):
+{"jsonrpc":"2.0","method":"storage.retrieve_stream_chunk","params":{"stream_id":"<uuid>","offset":0},"id":2}
+Response: {"data":"<base64>","length":4194304,"is_last":false}
+```
+
+Sessions expire after 1 hour. `family_id` is optional when server is family-scoped.
+
+### **storage.fetch_external**
+
+Fetch and cache data from an external HTTPS URL. Useful for cross-spring data pipelines
+when one spring publishes artifacts and another retrieves them via URL.
+
+```json
+Request:
+{
+  "jsonrpc": "2.0",
+  "method": "storage.fetch_external",
+  "params": {
+    "url": "https://releases.example.com/model-v2.bin",
+    "cache_key": "model-v2",
+    "family_id": "myapp"
+  },
+  "id": 1
+}
+
+Response:
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "cache_key": "model-v2",
+    "blake3": "abc123...",
+    "size": 67108864,
+    "cached": false,
+    "url": "https://releases.example.com/model-v2.bin"
+  },
+  "id": 1
+}
+```
+
 ---
 
 ## **Songbird Integration**

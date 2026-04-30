@@ -370,6 +370,16 @@ pub(super) async fn storage_namespaces_list(
     Ok(json!({"namespaces": namespaces, "family_id": fid, "count": namespaces.len()}))
 }
 
+/// Route `storage.fetch_external` — delegates to the `unix_socket_server` external handler.
+pub(super) async fn storage_fetch_external(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    let state = crate::rpc::unix_socket_server::StorageState::new()?;
+    crate::rpc::unix_socket_server::external_handlers::storage_fetch_external(Some(&params), &state)
+        .await
+}
+
 // ==================== DATASET OPERATIONS ====================
 
 /// Route storage.dataset.create → `create_dataset`

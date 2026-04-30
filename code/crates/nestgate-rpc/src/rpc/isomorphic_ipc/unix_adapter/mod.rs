@@ -231,6 +231,9 @@ impl UnixSocketRpcHandler {
             "storage.namespaces.list" => {
                 unix_adapter_handlers::handle_storage_namespaces_list(state).await
             }
+            "storage.fetch_external" => {
+                unix_adapter_handlers::handle_storage_fetch_external(state, &request).await
+            }
             "session.save" => unix_adapter_handlers::handle_session_save(state, &request).await,
             "session.load" => unix_adapter_handlers::handle_session_load(state, &request).await,
             "session.list" => unix_adapter_handlers::handle_session_list(state, &request).await,

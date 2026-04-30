@@ -387,6 +387,20 @@ pub(super) async fn handle_storage_namespaces_list(state: &StorageState) -> Hand
     Ok(json!({"namespaces": namespaces, "family_id": state.family_id, "count": namespaces.len()}))
 }
 
+pub(super) async fn handle_storage_fetch_external(
+    _state: &StorageState,
+    request: &JsonRpcRequest,
+) -> HandlerResult {
+    let legacy_state = crate::rpc::unix_socket_server::StorageState::new()
+        .map_err(|e| (-32603, Cow::Owned(format!("state init: {e}"))))?;
+    crate::rpc::unix_socket_server::external_handlers::storage_fetch_external(
+        request.params.as_ref(),
+        &legacy_state,
+    )
+    .await
+    .map_err(|e| (-32603, Cow::Owned(e.to_string())))
+}
+
 pub(super) async fn handle_health_readiness(state: &StorageState) -> HandlerResult {
     let shared_dir = state.namespace_dir(DEFAULT_NAMESPACE);
     let dir_ok = shared_dir.exists()

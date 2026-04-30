@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: April 29, 2026 (Session 49)
+**Last Updated**: April 30, 2026 (Session 50)
 
 ---
 
@@ -29,7 +29,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
   "version": "<semver>",
   "methods": ["<51 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
   "provided_capabilities": [
-    {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external"]},
+    {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external", "store_stream", "store_stream_chunk", "retrieve_stream", "retrieve_stream_chunk"]},
     {"type": "model", "methods": ["register", "exists", "locate", "metadata"]},
     {"type": "templates", "methods": ["store", "retrieve", "list", "community_top"]},
     {"type": "session", "methods": ["save", "load"]},
@@ -518,4 +518,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: April 29, 2026 (Session 49)
+**Last Updated**: April 30, 2026 (Session 50)
