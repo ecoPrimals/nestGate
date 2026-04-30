@@ -35,7 +35,7 @@ nestgate/
 ├── README.md, STATUS.md, START_HERE.md    Root docs (ground truth)
 ├── CAPABILITY_MAPPINGS.md                 Wire standard compliance
 ├── capability_registry.toml               Machine-readable self-knowledge
-├── code/crates/                           23 workspace members
+├── code/crates/                           20 crates (23 workspace members total incl. root, tools, fuzz)
 ├── specs/                                 Protocol specifications
 ├── tests/                                 Integration, chaos, e2e tests
 ├── docs/

@@ -57,7 +57,7 @@ See `wateringHole/CAPABILITY_WIRE_STANDARD.md` for the ecosystem-wide standard.
 
 ---
 
-## 🎁 CAPABILITIES PROVIDED BY NESTGATE
+## CAPABILITIES PROVIDED BY NESTGATE
 
 ### **1. Storage Capability**
 
@@ -322,7 +322,7 @@ Legacy documentation referred to Songbird for generic `http.get` / `http.post` a
 
 ---
 
-## 🔄 SEMANTIC METHOD NAMING EVOLUTION
+## SEMANTIC METHOD NAMING EVOLUTION
 
 ### **Current State**
 
@@ -332,9 +332,9 @@ Legacy documentation referred to Songbird for generic `http.get` / `http.post` a
 - Compatible with Neural API
 
 **Internal (Rust methods)**:
-- ⚠️ Uses descriptive names (`store_object`, `retrieve_object`)
-- ⚠️ Not fully semantic (`storage.put` format)
-- ⚠️ Needs refactoring for consistency
+- Uses descriptive names (`store_object`, `retrieve_object`)
+- Not fully semantic (`storage.put` format)
+- Needs refactoring for consistency
 
 ---
 
@@ -500,7 +500,7 @@ self.call_method("storage.put", json!({
 
 ---
 
-## 📚 REFERENCES
+## REFERENCES
 
 - wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0
 - wateringHole/PRIMAL_IPC_PROTOCOL.md v1.0

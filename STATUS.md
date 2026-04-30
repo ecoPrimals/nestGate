@@ -572,7 +572,7 @@ HTTP client:   Pure Rust (tokio TcpStream bootstrap; reqwest/rustls/ring all rem
 No direct libc: rustix replaces uzers
 Hostname:      rustix::system::uname (gethostname eliminated)
 Tokio:         Minimal features (9 specific, not "full")
-Discovery:     Env vars + capability IPC (mDNS feature-gated, not default)
+Discovery:     Env vars + capability IPC (mDNS removed; runtime discovery only)
 sysinfo:       Optional, non-Linux only
 ```
 

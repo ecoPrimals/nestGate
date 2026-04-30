@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 50: deep debt audit, streaming registry, dependency purge (April 30, 2026)
+
+- **Streaming storage discovery gap resolved**: 4 streaming methods (`store_stream`,
+  `store_stream_chunk`, `retrieve_stream`, `retrieve_stream_chunk`) added to
+  `capability_registry.toml`. Springs can now discover chunked storage via
+  `capabilities.list`. Streaming wire protocol documented in `QUICK_START_BIOMEOS.md`.
+- **`storage.fetch_external` dispatch gap**: wired into `SemanticRouter` and isomorphic
+  unix adapter (was only dispatched on unix_socket_server path). Advertise-but-404 bug
+  eliminated.
+- **14 unused dependencies purged**: `portpicker`, `test-log`, `rstest`, `proptest`,
+  `quickcheck`, `wiremock`, `testcontainers`, `assert_matches`, `approx`, `fake`, `nix`,
+  `winreg`, `windows-service`, `winapi` — all declared in Cargo.toml but never imported.
+- **Hardcoding evolved to capability-based**: `BEARDOG_SOCKET` env renamed to
+  `SECURITY_PROVIDER_SOCKET` (backward-compat fallback retained). Auth mode `"delegated"`
+  is canonical (`"beardog"` alias kept). XDG socket directory configurable via
+  `ECOSYSTEM_SOCKET_DIR`.
+- **Hardware tuning stubs replaced**: 4 benchmark methods that returned fabricated scores
+  now sample live `/proc` metrics via `snapshot_benchmark`.
+- **Transport README rewritten**: emoji purged, full 17-method inventory including
+  streaming protocol.
+- **Verification**: fmt PASS, clippy PASS (0 own-code warnings), check PASS,
+  8,841 lib tests / 0 failures / 60 ignored.
+
+### Session 49: GAP-21, dispatch extraction, deep debt zero-unwrap (April 29, 2026)
+
+- **GAP-21 resolved**: `family_id` parameter documented as optional when server has family
+  context. Debug logging added to `resolve_family_id`. Error messages improved.
+- **File refactoring**: `compliance/manager.rs` (793 to 240 lines, tests to
+  `manager_tests.rs`). `unix_socket_server/mod.rs` (786 to 558 lines, dispatch to
+  `dispatch.rs`).
+- **Production `.unwrap()` count: zero** — refined audit confirmed all 1,132 hits are in
+  `#[cfg(test)]` blocks, `_tests.rs` files, or doc comments.
+- **Clone hotspots reviewed**: 19 files with 8+ `.clone()` calls; most necessary for
+  ownership (locks, async, DTOs). 3 minor reducible in `hybrid_manager.rs`.
+- **Verification**: 8,841 lib tests, 0 failures, 60 ignored.
+
+### Session 48: JWT bypass, native encrypt-at-rest, emoji purge (April 28, 2026)
+
+- **JWT bypass via `NESTGATE_AUTH_MODE`**: `beardog` (now also `delegated`) skips JWT
+  secret validation, delegates auth to security capability provider.
+- **Native encrypt-at-rest**: `StorageEncryption` module using ChaCha20-Poly1305 with JSON
+  envelope format. Key resolution: `NESTGATE_ENCRYPTION_KEY` env > security provider.
+- **Emoji purge**: 178 emoji removed from 73 production source files.
+- **Verification**: 8,841 lib tests, 0 failures.
+
 ### Session 44b: BTSP wire fix + deep debt (April 24, 2026)
 
 - **BTSP wire fix (primalSpring Phase 45c)**: `btsp_server_handshake/mod.rs` was sending
@@ -1619,14 +1664,14 @@ parallel compilation:
 
 ## [3.4.0] - 2026-01-30
 
-### 🏆 LEGENDARY ACHIEVEMENT: A+++ (110/100) - TOP 0.001% EXCELLENCE
+###  LEGENDARY ACHIEVEMENT: A+++ (110/100) - TOP 0.001% EXCELLENCE
 
 **Grade Evolution**: A++ (100/100) → **A+++ (110/100)** in 12 hours  
 **Status**: LEGENDARY - Production + Research Grade  
 **Bonus Points**: +10 in one session!
 
 ### Added
-- ✅ **Documentation Enhancement** (+2 points)
+-  **Documentation Enhancement** (+2 points)
   - Complete REST API reference (500+ lines)
   - Architecture diagrams with component interactions (450+ lines)
   - 5-minute quick start guide (400+ lines)
@@ -1634,17 +1679,17 @@ parallel compilation:
   - Comprehensive troubleshooting guide (350+ lines)
   - Developer onboarding guide (350+ lines)
   - v2→v3 migration guide (250+ lines)
-- ✅ **Smart Refactoring** (+2 points)
+-  **Smart Refactoring** (+2 points)
   - Modular storage operations (datasets.rs, objects.rs)
   - Modular environment config (6 domain modules)
   - 482 lines eliminated (28% average reduction)
   - 9 new focused modules created
-- ✅ **Technical Debt Cleanup** (+2 points)
+-  **Technical Debt Cleanup** (+2 points)
   - SHA-256 checksum calculation for data integrity
   - Fixed 2 ignored tests (recursion + Unicode)
   - Integrated tarpc capability discovery
   - Resolved 22/29 tracked inline markers (76%)
-- ✅ **Hardcoding Evolution** (+4 points)
+-  **Hardcoding Evolution** (+4 points)
   - Zero production hardcodes
   - XDG-compliant storage paths
   - 4-tier fallback system
@@ -1679,7 +1724,7 @@ parallel compilation:
 
 ## [3.3.0] - 2026-01-30
 
-### 🎯 SMART REFACTORING: A++ (108/100)
+###  SMART REFACTORING: A++ (108/100)
 
 **Smart refactoring by logical cohesion completed**
 
@@ -1692,7 +1737,7 @@ parallel compilation:
 
 ## [3.2.0] - 2026-01-30
 
-### 🧹 TECHNICAL DEBT CLEANUP: A++ (106/100)
+###  TECHNICAL DEBT CLEANUP: A++ (106/100)
 
 **76% of technical debt addressed**
 
@@ -1708,7 +1753,7 @@ parallel compilation:
 
 ## [3.1.0] - 2026-01-30
 
-### 🔧 HARDCODING EVOLUTION: A++ (104/100)
+###  HARDCODING EVOLUTION: A++ (104/100)
 
 **Zero production hardcodes achieved**
 
@@ -1725,7 +1770,7 @@ parallel compilation:
 
 ## [3.0.0] - 2026-01-27
 
-### 🎉 PERFECT SCORE: A++ (100/100)
+###  PERFECT SCORE: A++ (100/100)
 
 **Socket standardization and perfect architecture achieved**
 
@@ -1733,27 +1778,27 @@ parallel compilation:
 
 ## [2.6.0] - 2026-01-29
 
-### 🏆 EXTRAORDINARY ACHIEVEMENT: A++ (99.5/100) - NEAR PERFECTION
+###  EXTRAORDINARY ACHIEVEMENT: A++ (99.5/100) - NEAR PERFECTION
 
 **Grade Evolution**: A- (90.7) → **A++ (99.5/100)** in 30 hours  
 **Status**: PRODUCTION READY - TOP 0.01% ARCHITECTURE GLOBALLY  
 **Just 0.5 points from PERFECT 100/100!**
 
 ### Added
-- ✅ Comprehensive testing evolution plan
-- ✅ Enhanced chaos engineering framework (100+ tests planned)
-- ✅ Enhanced E2E testing framework (50+ tests planned)
-- ✅ Enhanced fault injection framework (150+ tests planned)
-- ✅ Coverage analysis complete (cargo llvm-cov)
-- ✅ Performance baseline documentation (TOP 10% globally)
-- ✅ A++ Achievement documentation
+-  Comprehensive testing evolution plan
+-  Enhanced chaos engineering framework (100+ tests planned)
+-  Enhanced E2E testing framework (50+ tests planned)
+-  Enhanced fault injection framework (150+ tests planned)
+-  Coverage analysis complete (cargo llvm-cov)
+-  Performance baseline documentation (TOP 10% globally)
+-  A++ Achievement documentation
 
 ### Changed
-- ✅ Fixed 14 config test failures (port expectations)
-- ✅ Marked 5 Unix socket tests as integration tests
-- ✅ Test pass rate: 99.5% → 99.9%+ (19 failures → 2 flaky)
-- ✅ Updated all root docs to reflect A++ 99.5/100 status
-- ✅ Archived session-specific docs
+-  Fixed 14 config test failures (port expectations)
+-  Marked 5 Unix socket tests as integration tests
+-  Test pass rate: 99.5% → 99.9%+ (19 failures → 2 flaky)
+-  Updated all root docs to reflect A++ 99.5/100 status
+-  Archived session-specific docs
 
 ### Performance (TOP 10% GLOBALLY)
 - Build: 51s release - Excellent
@@ -1772,7 +1817,7 @@ parallel compilation:
 
 ## [2.5.0] - 2026-01-29
 
-### 🎊 Major Milestones
+###  Major Milestones
 - **Storage Backend Wiring**: Replaced in-memory DashMap with persistent `StorageManagerService`
 - **JSON-RPC Test Suite**: Fixed all 40 JSON-RPC API tests (100% passing)
 - **Grade Improvement**: A+ 95.0 → A+ 96.5/100 (+1.5 points)
@@ -1807,44 +1852,44 @@ parallel compilation:
 
 ## [0.1.0] - 2025-12-23
 
-### 🎉 First Stable Release
+###  First Stable Release
 
 #### Released
-- ✅ **GitHub Release**: v0.1.0 with binaries and checksums
-- ✅ **Build Stability**: Feature flags complete, broken examples disabled
-- ✅ **Verification**: SHA256 checksums for all artifacts
+-  **GitHub Release**: v0.1.0 with binaries and checksums
+-  **Build Stability**: Feature flags complete, broken examples disabled
+-  **Verification**: SHA256 checksums for all artifacts
 
 ### Build Stabilization (Dec 23, 2025)
 
 #### Critical Fixes
-- ✅ **Feature Flags**: Added missing `adaptive-storage` feature
-- ✅ **Broken Examples**: Disabled `adaptive_storage_demo.rs` and `service_integration_demo.rs`
-- ✅ **Build**: Clean release build with all optimizations
-- ✅ **Git History**: Removed large files (100MB+), cleaned workspace
+-  **Feature Flags**: Added missing `adaptive-storage` feature
+-  **Broken Examples**: Disabled `adaptive_storage_demo.rs` and `service_integration_demo.rs`
+-  **Build**: Clean release build with all optimizations
+-  **Git History**: Removed large files (100MB+), cleaned workspace
 
 #### Security Honesty
-- ✅ **Encryption Stubs**: Made explicit that BearDog integration is unimplemented
-- ✅ **Error Handling**: Replaced silent failures with explicit warnings
-- ✅ **Documentation**: Clarified handoff to BearDog team
+-  **Encryption Stubs**: Made explicit that BearDog integration is unimplemented
+-  **Error Handling**: Replaced silent failures with explicit warnings
+-  **Documentation**: Clarified handoff to BearDog team
 
 #### Zero-Copy Optimizations
-- ✅ **Storage Layer**: Uses `bytes::Bytes` efficiently, reduced allocations
-- ✅ **Network Layer**: Documented concurrent patterns (Arc<RwLock>, Semaphore)
-- ✅ **Passthrough**: Eliminated unnecessary clones in compression pipeline
+-  **Storage Layer**: Uses `bytes::Bytes` efficiently, reduced allocations
+-  **Network Layer**: Documented concurrent patterns (Arc<RwLock>, Semaphore)
+-  **Passthrough**: Eliminated unnecessary clones in compression pipeline
 
 ### Architecture
 
 #### Core Capabilities
-- ✅ **Adaptive Storage** - Intelligent compression pipeline with entropy analysis
-- ✅ **Universal Storage** - Protocol-first, S3-compatible backend adapter
-- ✅ **Zero-Cost Abstractions** - Native async, compile-time optimization
-- ✅ **Concurrent Design** - Thread-safe connection pooling and resource management
+-  **Adaptive Storage** - Intelligent compression pipeline with entropy analysis
+-  **Universal Storage** - Protocol-first, S3-compatible backend adapter
+-  **Zero-Cost Abstractions** - Native async, compile-time optimization
+-  **Concurrent Design** - Thread-safe connection pooling and resource management
 
 #### Code Quality
-- ✅ **Build Stability** - Clean build (release mode)
-- ✅ **File Organization** - 100% compliance with 1,000 line limit
-- ✅ **Unsafe Hygiene** - TOP 0.1% globally (158 blocks, 100% documented)
-- ✅ **Documentation** - Comprehensive tracking docs created
+-  **Build Stability** - Clean build (release mode)
+-  **File Organization** - 100% compliance with 1,000 line limit
+-  **Unsafe Hygiene** - TOP 0.1% globally (158 blocks, 100% documented)
+-  **Documentation** - Comprehensive tracking docs created
 
 ### Added (Dec 23, 2025)
 - **DEEP_DEBT_RESOLUTION_TRACKER.md** - Systematic debt tracking framework
@@ -1869,16 +1914,16 @@ parallel compilation:
 - Large files in git history (100MB+ removed)
 
 ### Technical Debt (Ongoing)
-- ⚠️ **Unwrap/Expect**: ~4,000+ instances (elimination in progress)
-- ⚠️ **Hardcoding**: ~1,600+ instances (tracked, migration planned)
-- ⚠️ **Test Coverage**: ~70% (target: 90%)
-- ⚠️ **BearDog Integration**: Stubs only (handoff documented)
+-  **Unwrap/Expect**: ~4,000+ instances (elimination in progress)
+-  **Hardcoding**: ~1,600+ instances (tracked, migration planned)
+-  **Test Coverage**: ~70% (target: 90%)
+-  **BearDog Integration**: Stubs only (handoff documented)
 
 ### Metrics (Dec 23, 2025)
 ```
 Overall Grade:        B (82/100) - Honest assessment
-Build Status:         ✅ Stable (release mode)
-Release:             ✅ v0.1.0 published with checksums
+Build Status:          Stable (release mode)
+Release:              v0.1.0 published with checksums
 Architecture:         A (92/100)
 File Organization:    A+ (100/100)
 Safety:              A (95/100)
@@ -1977,5 +2022,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: April 15, 2026  
+**Last Updated**: April 30, 2026  
 **Current Version**: 4.7.0-dev

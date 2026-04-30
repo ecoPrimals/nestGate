@@ -83,7 +83,7 @@ nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz +
 ├── nestgate-config      Config, constants, defaults, canonical modernization
 ├── nestgate-storage     Universal + temporal storage abstractions
 ├── nestgate-rpc         JSON-RPC + tarpc IPC layer (isomorphic UDS/TCP, storage.sock symlink)
-├── nestgate-discovery   Capability-based peer discovery (env + capability IPC; mDNS behind feature gate)
+├── nestgate-discovery   Capability-based peer discovery (env + capability IPC; runtime socket resolution)
 ├── nestgate-security    Crypto delegation (security capability provider), JWT, certs, zero-cost auth
 ├── nestgate-observe     Observability, diagnostics, event system
 ├── nestgate-cache       Multi-tier cache, UUID cache, cache math
@@ -159,7 +159,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-30 (Se
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
 | BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
-| Discovery | Env vars + capability IPC (mDNS behind `mdns` feature gate — delegated to biomeOS) |
+| Discovery | Env vars + capability IPC (runtime socket resolution — mDNS removed) |
 | Crypto delegation | Pass — capability-based `SecurityProviderClient` |
 
 ### Platform Support
@@ -209,7 +209,7 @@ The repository root package is mainly for integration tests. Its `[features]` ar
 - **`dev-stubs`** — enables dev/stub code in `nestgate-core` and `nestgate-zfs` for tests.
 - **`streaming-rpc`** — reserved for streaming RPC work (see root `Cargo.toml`).
 
-Other workspace crates define their own features (for example `mdns`, `sysinfo`, per-crate `dev-stubs`). Check each crate’s `Cargo.toml` for the authoritative list.
+Other workspace crates define their own features (for example `sysinfo`, per-crate `dev-stubs`). Check each crate’s `Cargo.toml` for the authoritative list.
 
 ### Key Technologies
 

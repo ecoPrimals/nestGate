@@ -59,7 +59,7 @@ nestgate/
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
-# Verify version (need 1.75+)
+# Verify version (need 1.85+; workspace uses 1.94.1 via rust-toolchain.toml)
 rustc --version
 
 # Install development tools
@@ -82,7 +82,7 @@ cargo build --workspace
 # Run tests (verify everything works)
 cargo test --workspace
 
-# Expected: 3670+ tests passing
+# Expected: 8,841+ tests passing (as of Session 50)
 ```
 
 ### **Step 3: Understand the Architecture** (10 min)
