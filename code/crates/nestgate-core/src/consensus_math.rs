@@ -53,17 +53,23 @@ pub fn is_consensus_achieved(percentage: f64, minimum: f64) -> bool {
 pub fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i64) -> i64 {
     if valid_until_times.is_empty() {
         // Default expiry: current time + default duration
-        std::time::SystemTime::now()
-            .duration_since(std::time::SystemTime::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs() as i64
+        i64::try_from(
+            std::time::SystemTime::now()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        )
+        .unwrap_or(i64::MAX)
             + default_duration
     } else {
         // Use minimum expiry from all verifications
-        let fallback = std::time::SystemTime::now()
-            .duration_since(std::time::SystemTime::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs() as i64
+        let fallback = i64::try_from(
+            std::time::SystemTime::now()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        )
+        .unwrap_or(i64::MAX)
             + default_duration;
         *valid_until_times.iter().min().unwrap_or(&fallback)
     }

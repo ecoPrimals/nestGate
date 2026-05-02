@@ -3,6 +3,11 @@
 
 //! Deprecated analysis configuration and canonical alias.
 
+#![expect(
+    clippy::struct_excessive_bools,
+    reason = "Legacy performance toggles mirrored for backward-compatible serde payloads"
+)]
+
 use serde::{Deserialize, Serialize};
 
 /// Configuration for performance analysis

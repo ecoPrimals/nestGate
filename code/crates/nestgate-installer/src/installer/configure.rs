@@ -19,7 +19,7 @@ impl NestGateInstaller {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn configure(&mut self, config_path: Option<PathBuf>) -> Result<()> {
+    pub fn configure(&self, config_path: Option<PathBuf>) -> Result<()> {
         let installation_info = self
             .get_installation_info()
             .context("NestGate is not installed")?;
@@ -43,7 +43,7 @@ impl NestGateInstaller {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn run_configuration_wizard(&mut self) -> Result<()> {
+    pub fn run_configuration_wizard(&self) -> Result<()> {
         let installation_info = self
             .get_installation_info()
             .context("NestGate is not installed")?;

@@ -1,42 +1,53 @@
 # NestGate Testing Guide
 
-**Last Updated**: April 7, 2026
-**Tests**: ~11,834 passing, 0 failures, ~461 ignored
-**Coverage**: ~80% line (workspace, all features)
-**Goal**: Maintain high coverage with clean, maintainable tests
+**Last Updated**: May 2, 2026  
+**Library tests (`cargo test --workspace --lib`)**: 8,841 passing, 60 ignored, 0 failures  
+**Coverage**: ~80% line (workspace, all features)  
+**Goal**: Maintain high coverage with clean, maintainable tests  
+
+The repo root **`tests/`** tree also contains **integration test binaries**: each **`tests/*.rs`** file becomes its own Cargo test crate. Those are **not** executed by `cargo test --workspace --lib` (which runs only tests inside `[lib]` targets). Run the **full suite**—including those binaries—with:
+
+```bash
+cargo test --workspace
+```
+
+(Optionally add `--all-features` when matching CI.)
 
 ---
 
 ## Quick Stats
 
 ```
-Tests passing:          ~11,834
-Failures:               0
-Ignored:                ~461 (mostly e2e/chaos; see tests/DISABLED_TESTS_REFERENCE.md)
-Crates with tests:      Workspace-wide (23 members)
-Clippy:                 cargo clippy --workspace --all-targets --all-features -- -D warnings PASS
+Lib tests passing:       8,841
+Failures:                0
+Ignored (lib only):       60 (see tests/DISABLED_TESTS_REFERENCE.md)
+Crates with tests:       Workspace-wide (23 members)
+Clippy:                  cargo clippy --workspace --all-targets --all-features -- -D warnings PASS
 ```
 
 ---
 
 ## Running Tests
 
-Primary command for the full suite (all crates, all features):
+Primary command for the **full** suite (all crates—including root `tests/*.rs` binaries—and all library tests):
 
 ```bash
 cargo test --workspace --all-features
 ```
 
+**Library-only** (faster; skips root `tests/*.rs` integration binaries):
+
+```bash
+cargo test --workspace --all-features --lib
+```
+
 Other useful invocations:
 
 ```bash
-# Library tests only (often faster during development)
-cargo test --workspace --all-features --lib
-
 # Specific test name filter
 cargo test --workspace --all-features test_name
 
-# Run ignored tests (e2e, chaos, etc. — needs environment/setup)
+# Run ignored tests (needs environment/setup)
 cargo test --workspace --all-features -- --ignored
 
 # With verbose output
@@ -64,11 +75,12 @@ cargo llvm-cov --workspace --all-features --html
 tests/
 ├── chaos/                   # Chaos / resilience scenarios (#[ignore])
 ├── common/                  # Shared utilities (config, mocks, test doubles)
-├── integration/             # Multi-component / API integration
-├── integration_test_suite/  # Comprehensive integration scenarios
-├── performance/             # Performance and load-oriented tests
+├── integration_test_suite/  # Comprehensive integration scenarios (+ main entry helpers)
 ├── unit/                    # Focused unit-style tests
-├── e2e_*.rs                 # End-to-end integration test files (top-level)
+├── e2e*.rs                  # End-to-end scenario binaries (Cargo test roots)
+├── integration_*.rs         # Integration-style Cargo test binaries
+├── fault_injection_*.rs     # Fault-injection suites (top-level binaries)
+├── performance_*.rs         # Performance/load-oriented Cargo test binaries
 ├── DISABLED_TESTS_REFERENCE.md  # Ignored test documentation
 └── SLEEP_MIGRATION_GUIDE.md     # Patterns for eliminating sleep in tests
 ```
@@ -190,5 +202,5 @@ cargo test --workspace --all-features -- --test-threads=1
 
 ---
 
-**Status**: Workspace test suite green; ignored tests documented separately
+**Status**: Workspace library test suite green; ignored tests documented separately  
 **Coverage**: ~80% workspace (all features); re-measure after large changes

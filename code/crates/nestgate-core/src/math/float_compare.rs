@@ -216,8 +216,8 @@ mod tests {
 
     #[test]
     fn test_approx_eq_f64_small_differences() {
-        assert!(approx_eq_f64(1.0, 1.0 + EPSILON_F64 / 2.0));
-        assert!(!approx_eq_f64(1.0, 1.0 + EPSILON_F64 * 2.0));
+        assert!(approx_eq_f64(1.0, EPSILON_F64.mul_add(0.5, 1.0)));
+        assert!(!approx_eq_f64(1.0, EPSILON_F64.mul_add(2.0, 1.0)));
     }
 
     #[test]

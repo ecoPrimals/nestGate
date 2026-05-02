@@ -218,22 +218,33 @@ fn test_timeout_discovery_defaults() {
 
 #[test]
 fn test_timeout_discovery_various_operations() {
-    let config = NestGateCanonicalConfig::default();
-    let discovery = ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+    temp_env::with_vars(
+        [
+            ("NESTGATE_CONNECT_TIMEOUT", None::<&str>),
+            ("NESTGATE_REQUEST_TIMEOUT", None::<&str>),
+            ("NESTGATE_HEALTH_CHECK_TIMEOUT", None::<&str>),
+            ("NESTGATE_DISCOVERY_TIMEOUT", None::<&str>),
+        ],
+        || {
+            let config = NestGateCanonicalConfig::default();
+            let discovery =
+                ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
 
-    let connect_timeout = discovery.discover_timeout("connect").expect("connect");
-    assert_eq!(connect_timeout, Duration::from_secs(10));
+            let connect_timeout = discovery.discover_timeout("connect").expect("connect");
+            assert_eq!(connect_timeout, Duration::from_secs(10));
 
-    let request_timeout = discovery.discover_timeout("request").expect("request");
-    assert_eq!(request_timeout, Duration::from_secs(30));
+            let request_timeout = discovery.discover_timeout("request").expect("request");
+            assert_eq!(request_timeout, Duration::from_secs(30));
 
-    let health_timeout = discovery
-        .discover_timeout("health_check")
-        .expect("health_check");
-    assert_eq!(health_timeout, Duration::from_secs(5));
+            let health_timeout = discovery
+                .discover_timeout("health_check")
+                .expect("health_check");
+            assert_eq!(health_timeout, Duration::from_secs(5));
 
-    let discovery_timeout = discovery.discover_timeout("discovery").expect("discovery");
-    assert_eq!(discovery_timeout, Duration::from_secs(15));
+            let discovery_timeout = discovery.discover_timeout("discovery").expect("discovery");
+            assert_eq!(discovery_timeout, Duration::from_secs(15));
+        },
+    );
 }
 
 #[test]

@@ -66,6 +66,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if CAPACITY is not a power of 2
+    #[must_use]
     pub fn new() -> Self {
         assert!(
             CAPACITY.is_power_of_two(),

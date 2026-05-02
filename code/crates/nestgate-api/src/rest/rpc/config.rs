@@ -3,6 +3,11 @@
 
 //! Config module
 
+#![expect(
+    clippy::struct_excessive_bools,
+    reason = "RPC security and operational toggles intentionally surface every wire-level switch"
+)]
+
 use nestgate_core::config::canonical_primary::domains::performance::MetricsConfig;
 
 use std::time::Duration;

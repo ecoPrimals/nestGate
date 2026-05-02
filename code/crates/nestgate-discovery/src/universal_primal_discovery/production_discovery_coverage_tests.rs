@@ -258,32 +258,40 @@ fn production_discovery_discover_limit_branches() {
 
 #[test]
 fn production_discovery_discover_timeout_branches() {
-    let config = canonical_default();
-    let discovery = match ProductionServiceDiscovery::new(&config) {
-        Ok(d) => d,
-        Err(e) => panic!("new: {e:?}"),
-    };
+    temp_env::with_vars(
+        [
+            ("NESTGATE_CONNECT_TIMEOUT", None::<&str>),
+            ("NESTGATE_HEALTH_CHECK_TIMEOUT", None::<&str>),
+        ],
+        || {
+            let config = canonical_default();
+            let discovery = match ProductionServiceDiscovery::new(&config) {
+                Ok(d) => d,
+                Err(e) => panic!("new: {e:?}"),
+            };
 
-    assert_eq!(
-        match discovery.discover_timeout("connect") {
-            Ok(v) => v,
-            Err(e) => panic!("{e:?}"),
+            assert_eq!(
+                match discovery.discover_timeout("connect") {
+                    Ok(v) => v,
+                    Err(e) => panic!("{e:?}"),
+                },
+                Duration::from_secs(10)
+            );
+            assert_eq!(
+                match discovery.discover_timeout("health_check") {
+                    Ok(v) => v,
+                    Err(e) => panic!("{e:?}"),
+                },
+                Duration::from_secs(5)
+            );
+            assert_eq!(
+                match discovery.discover_timeout("unknown_op") {
+                    Ok(v) => v,
+                    Err(e) => panic!("{e:?}"),
+                },
+                discovery.config().defaults.default_timeout
+            );
         },
-        Duration::from_secs(10)
-    );
-    assert_eq!(
-        match discovery.discover_timeout("health_check") {
-            Ok(v) => v,
-            Err(e) => panic!("{e:?}"),
-        },
-        Duration::from_secs(5)
-    );
-    assert_eq!(
-        match discovery.discover_timeout("unknown_op") {
-            Ok(v) => v,
-            Err(e) => panic!("{e:?}"),
-        },
-        discovery.config().defaults.default_timeout
     );
 }
 

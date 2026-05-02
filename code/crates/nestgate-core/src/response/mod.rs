@@ -301,11 +301,13 @@ pub mod testing {
     }
 
     /// Create a test error response
+    #[must_use]
     pub fn mock_error_response(message: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::simple(message, "TEST_ERROR", "test-service")
     }
 
     /// Create a test success response
+    #[must_use]
     pub fn mock_success_response(message: &str) -> SuccessResponse {
         SuccessResponse::new(message)
     }

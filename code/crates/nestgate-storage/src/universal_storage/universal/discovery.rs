@@ -213,6 +213,13 @@ impl UniversalStorageDiscovery {
     }
 
     /// Detect authentication pattern
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Thin wrapper for env-backed auth; exercised from unit tests only today"
+        )
+    )]
     fn detect_auth_pattern(name: &str, endpoint: &str) -> Option<AuthenticationPattern> {
         Self::detect_auth_pattern_from_env_source(name, endpoint, &ProcessEnv)
     }

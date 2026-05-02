@@ -215,21 +215,13 @@ impl ZfsPoolManager {
 
     /// Discover a single pool by name
     pub(crate) async fn discover_single_pool(&self, pool_name: &str) -> Result<Option<PoolInfo>> {
-        use crate::error::{ZfsOperation, create_zfs_error};
-
-        let output = TokioCommand::new("zpool")
+        let Ok(output) = TokioCommand::new("zpool")
             .args(["list", "-H", "-p", pool_name])
             .output()
             .await
-            .map_err(|_e| {
-                create_zfs_error(
-                    format!(
-                        "Failed to execute zpool command: {}",
-                        "actual_error_details"
-                    ),
-                    ZfsOperation::Command,
-                )
-            })?;
+        else {
+            return Ok(None);
+        };
 
         if !output.status.success() {
             return Ok(None);

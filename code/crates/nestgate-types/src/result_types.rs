@@ -74,7 +74,7 @@ use std::sync::Arc;
 /// # }
 /// ```
 ///
-/// The same alias is available as [`crate::result_types::Result`](Result) when you want to import
+/// The same alias is available as `crate::result_types::Result` when you want to import
 /// from this module explicitly:
 ///
 /// ```

@@ -8,6 +8,11 @@
 
 //! Types module
 
+#![expect(
+    clippy::pub_underscore_fields,
+    reason = "UnifiedRpc types expose `_params`/`_metadata` for JSON-RPC contract stability"
+)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

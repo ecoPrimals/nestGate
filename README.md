@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-30, Session 50)**  
+**Verification (as of 2026-05-02)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace --lib` — 8,841 passing, 0 failures, 60 ignored  
@@ -19,19 +19,21 @@
 - **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
 - **External deps**: Zero unused workspace deps; zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
-- **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
+- **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 - **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate); JSON-line + length-prefixed dual framing; 6-tier security socket discovery; security provider wire contract aligned (`family_seed`, `session_token`, `btsp.session.verify` params); mode-aware error frames; `SECURITY_FAMILY_SEED` canonical env var (Session 45c)  
+- **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code)  
 - **Primal sovereignty**: zero hardcoded other-primal names in production; capability-based socket discovery (`security.sock`, `crypto.sock`); `DEFAULT_SERVICE_NAME` for self-references  
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-**Last Updated**: April 30, 2026 (Session 50)
+- **Lint mega-list narrowing**: Crate-level lint suppressions narrowed: nestgate-core 22→16, nestgate-zfs 24→17, nestgate-api 14→12, nestgate-installer 12→2/4 (real code fixes, not just moved)  
+**Last Updated**: May 2, 2026
 
 ---
 

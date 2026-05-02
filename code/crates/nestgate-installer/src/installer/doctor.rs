@@ -15,7 +15,7 @@ impl NestGateInstaller {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn doctor(&mut self) -> Result<()> {
+    pub fn doctor(&self) -> Result<()> {
         let green = Style::new().green();
         let red = Style::new().red();
         let yellow = Style::new().yellow();

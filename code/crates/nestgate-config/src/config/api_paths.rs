@@ -3,7 +3,7 @@
 
 //! API path and endpoint layout is defined on the canonical network configuration type.
 //!
-//! The former `ApiPathsConfig` struct was removed; use [`ApiPathsConfigCanonical`].
+//! The former `ApiPathsConfig` struct was removed; use `ApiPathsConfigCanonical`.
 
 /// Canonical network configuration (successor to the removed `ApiPathsConfig` DTO).
 pub type ApiPathsConfigCanonical =

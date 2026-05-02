@@ -5,7 +5,6 @@
 /// **CONSOLIDATION COMPLETE**: Unifies all scattered test helper functions
 /// 
 /// This module consolidates helper functions found across:
-/// - tests/integration/production_readiness_test.rs (line 298: "Helper structures and functions")
 /// - tests/common/consolidated_mocks.rs (line 703: "Helper functions for creating common mock configurations")
 /// - tests/nestgate_storage_architecture_test.rs (line 455: "🔧 **HELPER FUNCTIONS FOR AGGRESSIVE TESTING**")
 /// - fuzz/fuzz_targets/fuzz_api_endpoints.rs (line 551: "Helper functions")

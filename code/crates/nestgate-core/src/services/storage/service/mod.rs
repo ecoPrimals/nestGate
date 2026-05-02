@@ -266,7 +266,7 @@ impl StorageManagerService {
             Ok(arcstats) => {
                 // Parse ARC size information
                 for line in arcstats.lines() {
-                    if line.contains("size") && line.contains("4") {
+                    if line.contains("size") && line.contains('4') {
                         let parts: Vec<&str> = line.split_whitespace().collect();
                         if parts.len() >= 3 {
                             let arc_size = parts[2].parse::<u64>().unwrap_or(0);
@@ -339,14 +339,16 @@ impl StorageManagerService {
                     let mut misses = 0u64;
 
                     for line in arcstats.lines() {
-                        if line.contains("hits") && line.contains("4") {
-                            if let Some(hit_str) = line.split_whitespace().nth(2) {
-                                hits = hit_str.parse().unwrap_or(0);
-                            }
-                        } else if line.contains("misses") && line.contains("4") {
-                            if let Some(miss_str) = line.split_whitespace().nth(2) {
-                                misses = miss_str.parse().unwrap_or(0);
-                            }
+                        if line.contains("hits")
+                            && line.contains('4')
+                            && let Some(hit_str) = line.split_whitespace().nth(2)
+                        {
+                            hits = hit_str.parse().unwrap_or(0);
+                        } else if line.contains("misses")
+                            && line.contains('4')
+                            && let Some(miss_str) = line.split_whitespace().nth(2)
+                        {
+                            misses = miss_str.parse().unwrap_or(0);
                         }
                     }
 

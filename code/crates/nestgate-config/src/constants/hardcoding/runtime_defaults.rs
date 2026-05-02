@@ -150,7 +150,7 @@ pub fn get_health_port() -> u16 {
     RuntimeDefaults::health_port()
 }
 
-/// WebSocket port from environment or [`ports::WEBSOCKET_DEFAULT`].
+/// WebSocket port from environment or `ports::WEBSOCKET_DEFAULT`.
 #[must_use]
 pub fn get_websocket_port() -> u16 {
     RuntimeDefaults::websocket_port()

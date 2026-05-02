@@ -7,6 +7,11 @@
 
 //! Types module
 
+#![expect(
+    clippy::pub_underscore_fields,
+    reason = "ZFS handler DTOs use `_devices`/`_metadata` as reserved wire-visible fields"
+)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

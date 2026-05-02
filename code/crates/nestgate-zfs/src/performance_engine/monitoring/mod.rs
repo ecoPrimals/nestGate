@@ -77,11 +77,13 @@ impl RealTimePerformanceMonitor {
         let n = values.len() as f64;
         let x_sum: f64 = (0..values.len()).map(|i| i as f64).sum();
         let y_sum: f64 = values.iter().sum();
-        let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
+        let sum_index_value_products: f64 =
+            values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
         let x_squared_sum: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
 
         // Calculate slope using least squares regression
-        n.mul_add(xy_sum, -(x_sum * y_sum)) / x_sum.mul_add(-x_sum, n * x_squared_sum)
+        n.mul_add(sum_index_value_products, -(x_sum * y_sum))
+            / x_sum.mul_add(-x_sum, n * x_squared_sum)
     }
 
     /// Analyze performance trends and generate predictive alerts

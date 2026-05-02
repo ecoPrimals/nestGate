@@ -26,10 +26,10 @@ impl ResponseBuilder {
     /// Create a created response with location
     pub fn created<T: Serialize>(data: T, location: Option<&str>) -> impl IntoResponse {
         let mut headers = axum::http::HeaderMap::new();
-        if let Some(location) = location {
-            if let Ok(locationvalue) = axum::http::HeaderValue::from_str(location) {
-                headers.insert(axum::http::header::LOCATION, locationvalue);
-            }
+        if let Some(location) = location
+            && let Ok(locationvalue) = axum::http::HeaderValue::from_str(location)
+        {
+            headers.insert(axum::http::header::LOCATION, locationvalue);
         }
         (StatusCode::CREATED, headers, Json(data))
     }
@@ -173,10 +173,10 @@ impl ResponseBuilder {
         }
 
         // Set ETag if provided
-        if let Some(etag) = etag {
-            if let Ok(etagvalue) = axum::http::HeaderValue::from_str(&format!("\"{etag}\"")) {
-                headers.insert(axum::http::header::ETAG, etagvalue);
-            }
+        if let Some(etag) = etag
+            && let Ok(etagvalue) = axum::http::HeaderValue::from_str(&format!("\"{etag}\""))
+        {
+            headers.insert(axum::http::header::ETAG, etagvalue);
         }
 
         (StatusCode::OK, headers, Json(data))

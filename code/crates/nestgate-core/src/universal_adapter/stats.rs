@@ -94,9 +94,10 @@ impl AdapterStats {
         if self.total_requests == 1 {
             self.average_response_time_ms = response_ms;
         } else {
+            let prev = self.average_response_time_ms;
+            let n = self.total_requests as f64;
             self.average_response_time_ms =
-                (self.average_response_time_ms * (self.total_requests - 1) as f64 + response_ms)
-                    / self.total_requests as f64;
+                prev.mul_add((self.total_requests - 1) as f64 / n, response_ms / n);
         }
 
         // Update peak response time
@@ -116,9 +117,10 @@ impl AdapterStats {
         if self.total_requests == 1 {
             self.average_response_time_ms = response_ms;
         } else {
+            let prev = self.average_response_time_ms;
+            let n = self.total_requests as f64;
             self.average_response_time_ms =
-                (self.average_response_time_ms * (self.total_requests - 1) as f64 + response_ms)
-                    / self.total_requests as f64;
+                prev.mul_add((self.total_requests - 1) as f64 / n, response_ms / n);
         }
     }
 
@@ -175,7 +177,7 @@ impl AdapterStats {
             self.peak_response_time_ms = response_time_ms;
         }
         // Simple moving average (could be improved)
-        self.average_response_time_ms = (self.average_response_time_ms + response_time_ms) / 2.0;
+        self.average_response_time_ms = self.average_response_time_ms.midpoint(response_time_ms);
     }
 
     /// Get current statistics as a summary

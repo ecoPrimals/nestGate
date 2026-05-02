@@ -191,7 +191,7 @@ impl ZfsManager {
             'G' => 1024 * 1024 * 1024,
             'T' => 1024u64 * 1024 * 1024 * 1024,
             'P' => 1024u64 * 1024 * 1024 * 1024 * 1024,
-            'B' | _ => 1, // Bytes or unknown unit → treat as multiplier 1
+            _ => 1, // byte / unknown suffix → multiplier 1
         };
 
         Some(f64_to_u64_saturating(number * multiplier as f64))

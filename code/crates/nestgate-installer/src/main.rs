@@ -16,16 +16,9 @@
 )]
 #![expect(
     clippy::doc_markdown,
-    clippy::module_name_repetitions,
     clippy::struct_excessive_bools,
-    clippy::case_sensitive_file_extension_comparisons,
-    clippy::unnecessary_debug_formatting,
-    clippy::unused_async,
-    clippy::needless_pass_by_ref_mut,
-    clippy::unnecessary_wraps,
     dead_code,
-    clippy::struct_field_names,
-    clippy::trivially_copy_pass_by_ref
+    clippy::struct_field_names
 )]
 
 //! Main module
@@ -114,7 +107,7 @@ enum Commands {
 }
 
 /// Setup Logging
-fn setup_logging(verbose: bool) -> nestgate_core::Result<()> {
+fn setup_logging(verbose: bool) {
     let log_level = if verbose { "debug" } else { "info" };
 
     tracing_subscriber::fmt()
@@ -127,19 +120,16 @@ fn setup_logging(verbose: bool) -> nestgate_core::Result<()> {
         .with_file(false)
         .with_line_number(false)
         .init();
-
-    Ok(())
 }
 
-#[tokio::main]
-async fn main() -> nestgate_core::Result<()> {
+fn main() -> nestgate_core::Result<()> {
     let cli = Cli::parse();
 
-    setup_logging(cli.verbose)?;
+    setup_logging(cli.verbose);
 
     info!("NestGate Installer starting...");
 
-    let mut installer = NestGateInstaller::new(cli.install_dir.clone()).map_err(|e| {
+    let installer = NestGateInstaller::new(cli.install_dir.clone()).map_err(|e| {
         NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
             field: "installer".into(),
             message: format!("Failed to create installer: {e}").into(),
@@ -185,7 +175,7 @@ async fn main() -> nestgate_core::Result<()> {
         }
 
         Some(Commands::Update { version }) => {
-            installer.update(version, cli.yes).await.map_err(|e| {
+            installer.update(version, cli.yes).map_err(|e| {
                 NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
                     field: "update".into(),
                     message: format!("Update failed: {e}").into(),
@@ -221,7 +211,7 @@ async fn main() -> nestgate_core::Result<()> {
         }
 
         Some(Commands::Doctor) => {
-            installer.doctor().await.map_err(|e| {
+            installer.doctor().map_err(|e| {
                 NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
                     field: "doctor".into(),
                     message: format!("Doctor check failed: {e}").into(),

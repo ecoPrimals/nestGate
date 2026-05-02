@@ -1,6 +1,6 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: April 7, 2026  
+**Last Updated**: May 2, 2026  
 **Status**: Active
 
 ---
@@ -20,7 +20,7 @@ find . -name "*.disabled" -type f
 
 ## Ignored tests (`#[ignore]`)
 
-Tests marked `#[ignore]` are compiled and shipped with the suite but **not** run by default. Most need real infrastructure, privileged operations, or long-running setup (e.g. e2e, chaos, live storage/network).
+Tests marked `#[ignore]` are compiled and shipped with the suite but **not** run by default. Most need real infrastructure, privileged operations, or long-running setup (chaos suites, live storage/network, benchmarks).
 
 Run them explicitly when your environment matches the test’s assumptions:
 
@@ -34,14 +34,13 @@ Narrow by name or test binary as usual, e.g. filters on scenario or module path.
 
 ## Where to run focused suites
 
-Use the layout and frameworks under `tests/`:
+Use the layout under `tests/`:
 
-- **`tests/e2e/`** — enhanced e2e framework and workflows (`enhanced_e2e_framework.rs`, `framework/`, `workflows/`, …).
 - **`tests/chaos/`** — chaos harnesses and scenarios (`chaos_testing_framework.rs`, `enhanced_chaos_framework.rs`, …).
-- **`tests/fault/`** — fault-injection-oriented tests.
-- **`tests/performance/`** — performance-oriented modules.
+- **`tests/integration_test_suite/`** — comprehensive integration modules and helpers (see also `integration_test_suite_main.rs`).
+- **Top-level `tests/*.rs`** — Cargo integration test crates (e2e scenarios, fault-injection suites, performance batteries, …).
 
-See [README.md](README.md) for the full category list and `cargo test --workspace --all-features` as the main entry point.
+See [README.md](README.md) for organization and **`cargo test --workspace`** (full suite including root binaries) versus **`cargo test --workspace --lib`** (crate library tests only).
 
 ---
 
@@ -49,9 +48,9 @@ See [README.md](README.md) for the full category list and `cargo test --workspac
 
 | Metric | Value |
 |--------|--------|
-| Passing (lib only) | 8,841 (as of Session 50) |
+| Passing (lib only) | 8,841 |
 | Failed | 0 |
-| Ignored | ~461 |
+| Ignored (lib only) | 60 |
 | Workspace coverage (line) | ~80% |
 
 Re-run `cargo test --workspace` and `cargo llvm-cov` after large changes; numbers drift with the tree.

@@ -17,6 +17,28 @@ use tracing::info;
 /// Default GitHub `owner/repo` for release metadata (override with `NESTGATE_RELEASES_REPO`).
 const DEFAULT_GITHUB_REPO: &str = "ecoprimals/nestgate";
 
+/// Whether `name` looks like a release archive (`zip`, `tar.gz`, `tar.xz`) using case-insensitive extensions.
+#[must_use]
+fn path_looks_like_release_asset(name: &str) -> bool {
+    let path = Path::new(name);
+    if path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("zip"))
+    {
+        return true;
+    }
+    let Some(ext) = path.extension().and_then(|inner| inner.to_str()) else {
+        return false;
+    };
+    if ext.eq_ignore_ascii_case("gz") || ext.eq_ignore_ascii_case("xz") {
+        return path
+            .file_stem()
+            .and_then(|stem| Path::new(stem).extension())
+            .is_some_and(|inner| inner.eq_ignore_ascii_case("tar"));
+    }
+    false
+}
+
 /// Parses GitHub `/releases/tags/{tag}` JSON for the download URL and asset filename.
 ///
 /// Mirrors the selection rules in [`DownloadManager::download_release`] for unit testing without I/O.
@@ -30,9 +52,9 @@ fn release_download_from_github_body(
     let asset = assets
         .iter()
         .find(|a| {
-            a["name"].as_str().is_some_and(|n| {
-                n.ends_with(".tar.gz") || n.ends_with(".tar.xz") || n.ends_with(".zip")
-            })
+            a["name"]
+                .as_str()
+                .is_some_and(path_looks_like_release_asset)
         })
         .or_else(|| assets.first())
         .ok_or_else(|| {
@@ -174,7 +196,7 @@ impl DownloadManager {
     /// # Errors
     ///
     /// Returns when the GitHub API is unreachable, the release or assets are missing, or I/O fails.
-    pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
+    pub fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
         std::fs::create_dir_all(target_dir)?;
         let repo = Self::github_repo();
         let tag = Self::release_tag(version);
@@ -195,7 +217,7 @@ impl DownloadManager {
     /// # Errors
     ///
     /// Returns when the API call fails or the response is not usable.
-    pub async fn check_latest_version(&self) -> Result<String> {
+    pub fn check_latest_version(&self) -> Result<String> {
         let repo = Self::github_repo();
         let url = format!("https://api.github.com/repos/{repo}/releases/latest");
 
@@ -271,35 +293,41 @@ impl DownloadManager {
             )));
         }
 
-        let output = std::process::Command::new(&binary_path)
-            .arg("--version")
-            .output();
-
-        match output {
-            Ok(output) if output.status.success() => {
-                let version = String::from_utf8_lossy(&output.stdout);
-                info!("Installation verified: {}", version.trim());
+        let mut last_err = None;
+        for _ in 0..5 {
+            match std::process::Command::new(&binary_path)
+                .arg("--version")
+                .output()
+            {
+                Ok(output) if output.status.success() => {
+                    let version = String::from_utf8_lossy(&output.stdout);
+                    info!("Installation verified: {}", version.trim());
+                    last_err = None;
+                    break;
+                }
+                Ok(_output) => {
+                    return Err(NestGateError::validation(
+                        "Binary execution failed: test_failed".to_string(),
+                    ));
+                }
+                Err(e) if e.raw_os_error() == Some(26) => {
+                    last_err = Some(e);
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                Err(e) => {
+                    return Err(NestGateError::from(e));
+                }
             }
-            Ok(_output) => {
-                return Err(NestGateError::validation(
-                    "Binary execution failed: test_failed".to_string(),
-                ));
-            }
-            Err(e) => {
-                return Err(NestGateError::from(e));
-            }
+        }
+        if let Some(e) = last_err {
+            return Err(NestGateError::from(e));
         }
 
         Ok(())
     }
 
-    /// Download components based on configuration
-    pub const fn download_components(
-        &self,
-        _config: &crate::config::InstallerConfig,
-    ) -> nestgate_core::error::Result<()> {
-        Ok(())
-    }
+    /// Placeholder hook for configuration-driven downloads; currently a no-op.
+    pub const fn download_components(&self, _config: &crate::config::InstallerConfig) {}
 }
 
 impl Default for DownloadManager {
@@ -332,7 +360,7 @@ mod download_url_tests {
     fn download_components_noop() {
         let dm = DownloadManager::new();
         let cfg = crate::config::InstallerConfig::default();
-        assert!(dm.download_components(&cfg).is_ok());
+        dm.download_components(&cfg);
     }
 
     #[test]

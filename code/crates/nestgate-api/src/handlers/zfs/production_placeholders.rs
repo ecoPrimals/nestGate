@@ -127,12 +127,6 @@ pub async fn list_universal_pools() -> (StatusCode, Json<serde_json::Value>) {
 pub async fn create_pool(
     body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    if !is_zpool_available().await {
-        return zfs_unavailable(
-            "zpool is not available on this system; install ZFS userland tools to create pools.",
-        );
-    }
-
     let name = match body.get("name").and_then(serde_json::Value::as_str) {
         Some(n) if !n.is_empty() => n.to_owned(),
         _ => return bad_request("Missing or empty 'name' field"),
@@ -149,6 +143,12 @@ pub async fn create_pool(
 
     if devices.is_empty() {
         return bad_request("'devices' array must not be empty");
+    }
+
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; install ZFS userland tools to create pools.",
+        );
     }
 
     let cmd = ZfsCommand::new();
@@ -265,16 +265,16 @@ pub async fn list_datasets() -> (StatusCode, Json<serde_json::Value>) {
 pub async fn create_dataset(
     body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
+    let name = match body.get("name").and_then(serde_json::Value::as_str) {
+        Some(n) if !n.is_empty() => n.to_owned(),
+        _ => return bad_request("Missing or empty 'name' field"),
+    };
+
     if !is_zfs_available().await {
         return zfs_unavailable(
             "zfs is not available on this system; install ZFS userland tools to create datasets.",
         );
     }
-
-    let name = match body.get("name").and_then(serde_json::Value::as_str) {
-        Some(n) if !n.is_empty() => n.to_owned(),
-        _ => return bad_request("Missing or empty 'name' field"),
-    };
 
     let properties: Option<HashMap<String, String>> = body
         .get("properties")

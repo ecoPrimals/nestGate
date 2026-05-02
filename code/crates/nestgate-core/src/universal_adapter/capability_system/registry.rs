@@ -67,10 +67,11 @@ impl CapabilityRegistry {
 
         if let Some(service_ids) = self.capability_index.get(category) {
             for service_id in service_ids {
-                if let Some(service) = self.services.get(service_id) {
-                    if service.provides_capability(category, operation) && service.healthy {
-                        providers.push(service);
-                    }
+                if let Some(service) = self.services.get(service_id)
+                    && service.provides_capability(category, operation)
+                    && service.healthy
+                {
+                    providers.push(service);
                 }
             }
         }

@@ -73,7 +73,7 @@ impl InstallationWizard {
         clippy::unused_self,
         reason = "Wizard method: will use self for platform state"
     )]
-    fn configure_system_integration(&mut self) -> Result<()> {
+    fn configure_system_integration(&self) -> Result<()> {
         println!("System Integration");
 
         let install_as_service = Confirm::new()
@@ -123,7 +123,7 @@ impl InstallationWizard {
         clippy::unused_self,
         reason = "Wizard method: will use self for platform state"
     )]
-    fn configure_advanced_features(&mut self) -> Result<()> {
+    fn configure_advanced_features(&self) -> Result<()> {
         println!("Advanced Features");
 
         let enable_monitoring = Confirm::new()

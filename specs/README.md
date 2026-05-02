@@ -1,6 +1,6 @@
 # NestGate Specifications
 
-**Last Updated**: April 3, 2026
+**Last Updated**: May 2, 2026
 
 Architectural specifications for nestGate — the storage and discovery primal
 in the ecoPrimals ecosystem.
@@ -25,7 +25,7 @@ For current build, test, and lint status (not duplicated here), see [STATUS.md](
 |---------------|---------|
 | [UNIVERSAL_RPC_SYSTEM_SPECIFICATION.md](./UNIVERSAL_RPC_SYSTEM_SPECIFICATION.md) | JSON-RPC 2.0 + tarpc IPC system and semantic routing |
 | [NESTGATE_DATA_SERVICE_SPECIFICATION.md](./NESTGATE_DATA_SERVICE_SPECIFICATION.md) | Data service scope and API surface |
-| [NESTGATE_NETWORK_MODERNIZATION_SPEC.md](./NESTGATE_NETWORK_MODERNIZATION_SPEC.md) | Network layer modernization and transport strategy |
+| [NESTGATE_NETWORK_MODERNIZATION_SPEC.md](./NESTGATE_NETWORK_MODERNIZATION_SPEC.md) | Network layer modernization and transport strategy (**COMPLETED** — crate removed) |
 | [UNIVERSAL_ADAPTER_MODULE_ARCHITECTURE_SPEC.md](./UNIVERSAL_ADAPTER_MODULE_ARCHITECTURE_SPEC.md) | Universal adapter module layout and backend abstraction |
 | [STEAM_DATA_SERVICE_SPEC.md](./STEAM_DATA_SERVICE_SPEC.md) | Steam/game data service domain spec |
 

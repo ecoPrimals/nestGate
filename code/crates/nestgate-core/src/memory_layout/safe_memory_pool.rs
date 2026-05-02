@@ -84,6 +84,7 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if CAPACITY > 64 (bitmap limitation for this implementation)
+    #[must_use]
     pub fn new() -> Self {
         assert!(
             CAPACITY > 0 && CAPACITY < 64,

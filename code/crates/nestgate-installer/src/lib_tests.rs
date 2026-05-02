@@ -49,14 +49,12 @@ mod basic_tests {
         assert_eq!(super::normalize_path("/path//to/file"), "/path/to/file");
     }
 
-    #[tokio::test]
-    async fn test_config_validation() -> nestgate_core::error::Result<()> {
+    #[test]
+    fn test_config_validation() {
         let config = InstallerConfig::default();
 
         // Test basic config validation
         assert!(!config.base_config.system.instance_name.is_empty());
-
-        Ok(())
     }
 }
 

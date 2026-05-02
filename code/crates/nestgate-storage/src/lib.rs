@@ -11,13 +11,7 @@
 #![expect(clippy::struct_excessive_bools)]
 // Config/detection structs intentionally use many feature flags
 // Stub pipelines and `Option`/`Result` carriers for `?` trigger pedantic style lints; kept for API stability.
-#![expect(
-    clippy::missing_const_for_fn,
-    clippy::needless_pass_by_value,
-    clippy::unnecessary_wraps,
-    clippy::unused_self,
-    dead_code
-)]
+#![expect(clippy::unnecessary_wraps)]
 #![cfg_attr(
     test,
     allow(

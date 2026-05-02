@@ -15,19 +15,7 @@
         clippy::items_after_statements,
     )
 )]
-#![expect(
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::doc_markdown,
-    clippy::module_name_repetitions,
-    clippy::struct_excessive_bools,
-    clippy::case_sensitive_file_extension_comparisons,
-    clippy::needless_pass_by_value,
-    clippy::unnecessary_debug_formatting,
-    clippy::unused_async,
-    clippy::needless_pass_by_ref_mut,
-    dead_code
-)]
+#![expect(clippy::doc_markdown, clippy::struct_excessive_bools)]
 
 //! **Cross-platform installation and configuration system for NestGate**
 //!

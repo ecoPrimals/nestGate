@@ -44,6 +44,10 @@ pub struct AutoConfigurator {
     /// Configuration preferences and constraints
     config: ConfiguratorSettings,
     /// Detected storage systems to work with
+    #[expect(
+        dead_code,
+        reason = "Constructor-populated tier inputs; analyzer pipeline not yet wired to this slice"
+    )]
     available_storage: Vec<DetectedStorage>,
 }
 
@@ -100,19 +104,19 @@ impl AutoConfigurator {
     /// - Network or I/O errors occur
     pub fn create_optimal_config(
         &self,
-        requirements: StorageRequirements,
+        requirements: &StorageRequirements,
     ) -> Result<OptimalStorageConfig> {
         // 1. Analyze available storage capabilities
         let storage_analysis = self.analyze_storage_landscape()?;
 
         // 2. Match requirements to available storage
-        let storage_mapping = self.map_requirements_to_storage(&requirements, &storage_analysis)?;
+        let storage_mapping = self.map_requirements_to_storage(requirements, &storage_analysis)?;
 
         // 3. Create tiered storage architecture
-        let tier_config = self.create_storage_tiers(&requirements, &storage_mapping)?;
+        let tier_config = self.create_storage_tiers(requirements, &storage_mapping)?;
 
         // 4. Configure redundancy
-        let redundancy = self.configure_redundancy(&requirements, &tier_config)?;
+        let redundancy = self.configure_redundancy(requirements, &tier_config)?;
 
         // 5. Optimize configuration
         let optimized = self.optimize_configuration(tier_config.clone(), redundancy)?;

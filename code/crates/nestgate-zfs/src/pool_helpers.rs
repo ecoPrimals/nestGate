@@ -11,6 +11,7 @@ use tokio::process::Command as TokioCommand;
 #[cfg(feature = "dev-stubs")]
 use tracing::info;
 
+use crate::constants::{BYTES_PER_GB, BYTES_PER_KB, BYTES_PER_MB, BYTES_PER_PB, BYTES_PER_TB};
 use crate::error::{Result, ZfsOperation, create_zfs_error};
 use crate::numeric::f64_to_u64_saturating;
 
@@ -45,8 +46,6 @@ pub fn parse_size_with_units(size_str: &str) -> Option<u64> {
     };
 
     let number: f64 = number_part.parse().ok()?;
-
-    use crate::constants::{BYTES_PER_GB, BYTES_PER_KB, BYTES_PER_MB, BYTES_PER_PB, BYTES_PER_TB};
 
     let multiplier = match unit.to_uppercase().as_str() {
         "" | "B" => 1,

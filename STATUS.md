@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 30, 2026 (Session 50 — deep debt: unused deps purged, hardcoding evolved, stubs replaced, streaming registry)  
+**Last Updated**: May 2, 2026 (deep debt sweep: BTSP Phase 3, lint mega-list narrowing, doc/test isolation fixes, nestgate-zfs unconditional safe)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,16 +8,16 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Session 50
-Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of Session 50
-Format:             CLEAN (cargo fmt --check passes), as of Session 50
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Session 50
-Tests:              8,841 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of Session 50
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 2, 2026
+Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of May 2, 2026
+Format:             CLEAN (cargo fmt --check passes), as of May 2, 2026
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 2, 2026
+Tests:              8,841 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 2, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
-Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
+Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots including nestgate-zfs unconditionally (zero exceptions — env-process-shim uses edition 2021 safe wrappers; nestgate-zfs was formerly `cfg_attr(not(test), forbid(...))`)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
 Box<dyn Error>:     ZERO in production library code (last one evolved Session 43k — ConfigError::ParseError → String)
@@ -39,6 +39,7 @@ Registry:           capability_registry.toml — machine-readable self-knowledge
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
 BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, security provider wire contract aligned: family_seed base64-encoded, session_token|session_id, btsp.session.verify on reused connection, btsp.negotiate eliminated; mode-aware error frames; persistent BufReader for multi-call relay; SECURITY_FAMILY_SEED canonical env var (backward-compat BEARDOG_FAMILY_SEED)
+BTSP Phase 3:      PASS — `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); UDS + isomorphic IPC listeners; plaintext fallback
 TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS
 UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only

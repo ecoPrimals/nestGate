@@ -31,13 +31,13 @@ pub struct GpuMonitor;
 
 /// **DISK MONITOR**
 ///
-/// Best-effort root filesystem usage via `df` (see [`DiskMonitor::usage_percent`]).
+/// Best-effort root filesystem usage via `df` (see `DiskMonitor::usage_percent`).
 #[derive(Debug, Clone)]
 pub struct DiskMonitor;
 
 /// **NETWORK MONITOR**
 ///
-/// Best-effort aggregate activity from `/proc/net/dev` (see [`NetworkMonitor::usage_percent`]).
+/// Best-effort aggregate activity from `/proc/net/dev` (see `NetworkMonitor::usage_percent`).
 #[derive(Debug, Clone)]
 pub struct NetworkMonitor;
 

@@ -128,10 +128,10 @@ impl UniversalAdapter {
         capability_type: CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
         // Check cache first
-        if let Some(cached) = self.capability_cache.get(&capability_type) {
-            if self.is_capability_healthy(cached)? {
-                return Ok(cached.clone());
-            }
+        if let Some(cached) = self.capability_cache.get(&capability_type)
+            && self.is_capability_healthy(cached)?
+        {
+            return Ok(cached.clone());
         }
 
         // Try discovery methods in order

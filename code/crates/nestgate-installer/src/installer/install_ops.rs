@@ -4,7 +4,6 @@
 //! Core constructor and install entrypoint.
 
 use anyhow::Result;
-use tracing::info;
 
 use crate::config::InstallerConfig;
 use crate::download::DownloadManager;
@@ -35,16 +34,6 @@ impl NestGateInstaller {
     ///
     /// This function will return an error if the operation fails.
     pub fn install(&self, config: &InstallerConfig) -> Result<()> {
-        // Note: domains field doesn't exist in canonical config - using system config instead
-        let system_config = &config.base_config.system;
-
-        // System integration logic would be based on system config
-        // For now, just log that we're doing system integration
-        info!(
-            "Performing system integration for: {}",
-            system_config.instance_name
-        );
-
-        Ok(())
+        self.setup_system_integration(config)
     }
 }

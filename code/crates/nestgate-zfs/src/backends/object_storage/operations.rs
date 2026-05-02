@@ -96,7 +96,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
             StorageTier::Warm => "INTELLIGENT_TIERING",
             StorageTier::Cold => "GLACIER_IR", // Instant Retrieval
             StorageTier::Archive => "DEEP_ARCHIVE",
-            StorageTier::Hot | _ => "STANDARD", // Hot, cache, unknown
+            StorageTier::Hot | StorageTier::Cache => "STANDARD",
         };
 
         debug!("Dataset storage class: {}", storage_class);

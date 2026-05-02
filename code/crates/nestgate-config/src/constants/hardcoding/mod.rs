@@ -8,7 +8,7 @@
 //! Primal code carries **self-knowledge** only: this process’s identity, capabilities, and own
 //! listen endpoints. **Other primals** (orchestrator, storage peers, etc.) are **not** baked in at
 //! compile time; their host/port (or URL) must come from **capability discovery at runtime**
-//! (service registry, mDNS, mesh, etc.). The numeric port constants in [`runtime_fallback_ports`]
+//! (service registry, mDNS, mesh, etc.). The numeric port constants in `runtime_fallback_ports`
 //! exist solely as
 //! **fallback defaults** for bootstrap, tests, and legacy paths—prefer `RuntimeDefaults` (env then
 //! fallback) or your discovery layer in production.
@@ -31,7 +31,7 @@
 //! # }
 //! ```
 //!
-//! Prefer `runtime_defaults` (env-first) and [`runtime_fallback_ports`] for numeric fallbacks.
+//! Prefer `runtime_defaults` (env-first) and `runtime_fallback_ports` for numeric fallbacks.
 //!
 //! ## Environment variables (central audit)
 //!
@@ -43,7 +43,7 @@
 //! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
 //! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`crate::constants::hardcoding::discovery::get_timeout_ms`]) |
 //!
-//! **[`runtime_fallback_ports`] symbols → env overrides (document every fallback; wire via config/discovery in production):**
+//! **`runtime_fallback_ports` symbols → env overrides (document every fallback; wire via config/discovery in production):**
 //!
 //! | Symbol | `NESTGATE_*` override |
 //! |----------|------------------------|

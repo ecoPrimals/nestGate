@@ -48,7 +48,7 @@ impl ZfsHealthMonitor {
         dataset_manager: Arc<ZfsDatasetManager>,
     ) -> Result<Self> {
         Ok(Self {
-            config: Default::default(),
+            config: crate::config::ZfsConfig::default(),
             pool_manager,
             dataset_manager,
             health_data: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
@@ -215,7 +215,7 @@ impl ZfsHealthMonitor {
             overall_health: crate::manager::HealthState::Healthy,
             pool_status,
             tier_status,
-            performance_metrics: Default::default(),
+            performance_metrics: crate::performance::CurrentPerformanceMetrics::default(),
             ai_status: None,
             migration_status: crate::manager::MigrationStatus::default(),
             snapshot_status: crate::manager::SnapshotStatus::default(),

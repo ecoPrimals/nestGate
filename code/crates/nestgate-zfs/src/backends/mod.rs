@@ -34,7 +34,8 @@ mod gcs_types;
 pub mod azure;
 pub mod gcs;
 
-/// Universal S3-compatible object storage backend (sovereignty-compliant)
+/// Universal S3-compatible object storage backend (sovereignty-compliant).
+///
 /// Works with ANY S3-compatible service: AWS, MinIO, Ceph, Wasabi, DigitalOcean, etc.
 pub mod object_storage;
 

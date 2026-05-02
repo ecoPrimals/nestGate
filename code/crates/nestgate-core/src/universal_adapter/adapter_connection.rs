@@ -82,10 +82,10 @@ impl UniversalAdapter {
     /// - Network or I/O errors occur
     pub fn get_capability(&self, category: &str) -> Result<CapabilityInfo, String> {
         // Check cache first
-        if let Some(cached) = self.discovery_cache.get(category) {
-            if SystemTime::now() < cached.expires_at {
-                return Ok(cached.info.clone());
-            }
+        if let Some(cached) = self.discovery_cache.get(category)
+            && SystemTime::now() < cached.expires_at
+        {
+            return Ok(cached.info.clone());
         }
 
         // Get from discovered capabilities

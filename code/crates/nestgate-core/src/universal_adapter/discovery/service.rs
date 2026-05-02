@@ -48,6 +48,7 @@ pub fn discover_by_capability(
         .collect())
 }
 /// Health check a discovered service
+#[must_use]
 pub const fn health_check_service(service: &DiscoveredService) -> bool {
     // Basic health check implementation - would be expanded with real health check logic
     matches!(service.state, ServiceState::Running)

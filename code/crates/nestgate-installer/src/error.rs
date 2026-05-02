@@ -79,7 +79,8 @@ pub fn installation_error(message: impl Into<String>) -> NestGateError {
     )
 }
 /// Create an installation error from an IO error
-pub fn from_io_error(error: std::io::Error, _b_operation: impl Into<String>) -> NestGateError {
+#[must_use]
+pub fn from_io_error(error: &std::io::Error, _operation: &str) -> NestGateError {
     NestGateError::internal_error(format!("IO error: {error}"), "installer")
 }
 /// Create a validation error
@@ -117,7 +118,7 @@ mod tests {
     #[test]
     fn from_io_error_maps_io() {
         let io = std::io::Error::other("oops");
-        let e = from_io_error(io, "copy");
+        let e = from_io_error(&io, "copy");
         assert!(e.to_string().contains("IO"));
     }
 

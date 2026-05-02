@@ -3,6 +3,7 @@
 
 //! Path-mocked tests for [`super::snapshot_ops`] snapshot create / list flows.
 
+use std::collections::HashMap;
 use std::fmt::Write;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -38,7 +39,7 @@ fn test_dataset() -> ZeroCostDatasetInfo {
         tier: StorageTier::Warm,
         size: 0,
         used: 0,
-        properties: Default::default(),
+        properties: HashMap::default(),
         mount_point: None,
         created_at: std::time::SystemTime::UNIX_EPOCH,
     }

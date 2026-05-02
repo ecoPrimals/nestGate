@@ -180,7 +180,7 @@ Effort: 16-20 hours
 ```yaml
 Primal: Songbird
 Reason: Network-level protocols are Songbird's domain
-Current Status: Protocol handling in nestgate-network (WRONG)
+Current Status: Protocol handling in nestgate-network (WRONG) [RESOLVED: crate removed]
 Action: Keep only storage-specific network access (NFS, SMB client)
 Lines to Remove: ~200-300
 Effort: 8-12 hours

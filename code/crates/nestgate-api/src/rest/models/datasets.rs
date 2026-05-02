@@ -6,6 +6,11 @@
 //! This module contains all data structures related to dataset management,
 //! including dataset properties, statistics, creation requests, and _metadata.
 
+#![expect(
+    clippy::struct_excessive_bools,
+    reason = "Dataset REST models expose many explicit ZFS property flags per OpenAPI parity"
+)]
+
 use serde::{Deserialize, Serialize};
 
 use super::types::{ChecksumType, CompressionType, DatasetStatus, DatasetType, StorageBackendType};

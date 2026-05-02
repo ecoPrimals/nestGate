@@ -6,7 +6,6 @@
 #![expect(
     clippy::missing_errors_doc,
     clippy::module_name_repetitions,
-    clippy::struct_excessive_bools,
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
@@ -14,8 +13,7 @@
     clippy::option_if_let_else,
     clippy::similar_names,
     clippy::too_long_first_doc_paragraph,
-    clippy::implicit_hasher,
-    clippy::pub_underscore_fields
+    clippy::implicit_hasher
 )]
 #![cfg_attr(
     test,

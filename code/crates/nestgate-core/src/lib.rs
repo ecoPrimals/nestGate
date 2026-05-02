@@ -29,20 +29,14 @@
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::must_use_candidate,
     clippy::option_if_let_else,
     clippy::needless_pass_by_value,
     clippy::unused_self,
     clippy::implicit_hasher,
     clippy::doc_markdown,
     clippy::float_cmp,
-    clippy::suboptimal_flops,
-    clippy::manual_midpoint,
     clippy::inline_always,
-    clippy::collapsible_if,
-    clippy::redundant_closure_for_method_calls,
-    clippy::single_char_pattern,
-    clippy::cast_possible_wrap
+    clippy::redundant_closure_for_method_calls
 )]
 // `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
 #![cfg_attr(

@@ -93,6 +93,11 @@ impl PlatformInfo {
 }
 
 /// Not wired into the wizard yet; kept for a future “add install dir to PATH” step.
+///
+/// # Errors
+///
+/// On Unix returns I/O failures when resolving the home directory or appending to the shell RC file.
+/// On Windows returns registry errors when reading or updating the user `PATH` value.
 pub fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
@@ -142,9 +147,15 @@ fn add_to_path_unix_from_env_source(
             install_path.join("bin").display()
         )?;
 
-        // User-facing interactive output — not log
-        println!("Added {} to PATH in {:?}", install_path.display(), rc_path);
-        println!("Please restart your shell or run: source {rc_path:?}");
+        println!(
+            "Added {} to PATH in {}",
+            install_path.display(),
+            rc_path.display()
+        );
+        println!(
+            "Please restart your shell or run: source {}",
+            rc_path.display()
+        );
     }
 
     Ok(())
@@ -179,6 +190,10 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
 }
 
 /// Optional post-install UX; not invoked by the current installer flow.
+///
+/// # Errors
+///
+/// Returns I/O errors when creating the desktop entry or shortcut file on the target platform.
 pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {
@@ -374,12 +389,20 @@ mod tests {
         let binary = info.get_binary_name("nestgate");
         assert!(binary.contains("nestgate"));
 
-        // Platform-specific check
+        // Platform-specific check (case-insensitive extension)
         #[cfg(target_os = "windows")]
-        assert!(binary.ends_with(".exe"));
+        assert!(
+            std::path::Path::new(&binary)
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("exe"))
+        );
 
         #[cfg(not(target_os = "windows"))]
-        assert!(!binary.ends_with(".exe"));
+        assert!(
+            !std::path::Path::new(&binary)
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("exe"))
+        );
     }
 
     #[test]
@@ -542,15 +565,10 @@ mod tests {
         let home = tmp.path();
         let install = tmp.path().join("nestgate-install");
         std::fs::create_dir_all(install.join("bin")).expect("bin");
-        temp_env::with_vars(
-            [
-                ("HOME", Some(home.to_str().expect("utf8"))),
-                ("SHELL", Some("/bin/bash")),
-            ],
-            || {
-                add_to_path(&install).expect("add_to_path");
-            },
-        );
+        let env = MapEnv::from([("SHELL", "/bin/bash")]);
+        temp_env::with_vars([("HOME", Some(home.to_str().expect("utf8")))], || {
+            add_to_path_unix_from_env_source(&install, &env).expect("add_to_path");
+        });
         let rc = home.join(".bashrc");
         assert!(rc.is_file());
         let content = std::fs::read_to_string(&rc).expect("read");

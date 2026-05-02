@@ -46,8 +46,6 @@ impl InstallerConfig {
         let mut config = Self::default();
         config.base_config.system.debug_mode = true; // Use available system field instead
         config.environment = "development".to_string();
-        // Test config modification
-        assert_eq!(config.environment, "development");
         config
     }
 

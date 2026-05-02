@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Deep debt sweep, BTSP Phase 3, lint evolution (May 2, 2026)
+
+- **BTSP Phase 3 (`btsp.negotiate`)**: Server-side encrypted channel negotiation
+  implemented. ChaCha20-Poly1305 AEAD with HKDF-SHA256 key derivation,
+  length-prefixed framing, `SessionKeys` with `ZeroizeOnDrop`. Wired into both
+  UDS and isomorphic IPC listeners with automatic fallback to plaintext.
+  28 new tests (20 unit + 8 integration-style).
+- **Lint mega-list narrowing**: Crate-level `#![expect(...)]` blocks reduced
+  across 5 crates via real code fixes (not just relocated suppressions):
+  nestgate-core 22→16, nestgate-zfs 24→17, nestgate-api 14→12,
+  nestgate-installer lib 12→2/main 12→4, nestgate-storage 5→1.
+  Fixes include: `mul_add`, `f64::midpoint`, `let...else`, `#[must_use]`,
+  `try_from` casts, collapsible-if merges, Default trait calls.
+- **nestgate-zfs `forbid(unsafe_code)`**: Now unconditional (was `cfg_attr(not(test), ...)`).
+- **Hardcoding evolution**: `BEARDOG_*` env vars deprioritized behind capability-agnostic
+  `SECURITY_*` names (`SECURITY_PROVIDER_SOCKET`, `CRYPTO_PROVIDER_SOCKET`,
+  `SECURITY_SOCKET`); legacy names retained as lowest-priority fallbacks.
+- **Dead code cleanup**: Crate-level `dead_code` suppressions in nestgate-storage
+  and nestgate-installer narrowed to per-item `#[expect(dead_code, reason = "...")]`.
+  Unused `is_installed` function removed.
+- **Doc fixes**: nestgate-core overview updated to list all 9 re-export families.
+  nestgate-middleware placeholder doc replaced. 9 doc-link warnings fixed
+  (unresolved/private/redundant links across 4 crates). Hardcoded deprecation
+  URLs removed from discovery registry.
+- **Test isolation**: Installer tests migrated from manual HOME/env mutation to
+  `temp_env` + `XDG_DATA_HOME` scoping (etcetera caching fix). Discovery timeout
+  tests wrapped in `temp_env` to prevent env leakage. ETXTBSY retry added to
+  `verify_installation`. `create_pool`/`create_dataset` validation reordered.
+- **Orphaned tests removed**: `tests/integration/` (36 files), `tests/performance/`
+  (1 file), `tests/common/templates.rs` (unused macros), `tests/test.env` (unused).
+- **Verification**: fmt PASS, clippy PASS (0 own-code warnings), doc PASS,
+  8,841 lib tests / 0 failures / 60 ignored. 3 consecutive clean runs.
+
 ### Session 50: deep debt audit, streaming registry, dependency purge (April 30, 2026)
 
 - **Streaming storage discovery gap resolved**: 4 streaming methods (`store_stream`,

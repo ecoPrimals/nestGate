@@ -1,5 +1,8 @@
 # NestGate Network Crate Modernization Specification
 
+> **Status**: COMPLETED — `nestgate-network` crate removed; all networking
+> responsibilities delegated per this spec. Retained as fossil record.
+
 **Version**: 1.0.0  
 **Originally Written**: September 17, 2025  
 **Purpose**: Eliminate primal domain conflicts while maintaining sovereignty

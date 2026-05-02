@@ -157,7 +157,7 @@ nestgate-core/sovereignty/
 ### **Layer 3: Capability Services** 🌐
 ```
 nestgate-api/           # Runtime-discovered endpoints
-nestgate-network/       # Vendor-agnostic networking
+nestgate-network/       # [REMOVED] — networking delegated per domain spec
 nestgate-middleware/    # Capability-aware processing
 nestgate-canonical/     # Discovery-based patterns
 ```

@@ -63,6 +63,7 @@ impl HealthMonitoringConfig {
     /// Like [`Self::production`], but reads alert-related env vars from an injectable [`EnvSource`].
     #[must_use]
     pub fn production_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
+        const DEV_HTTP_FALLBACK: u16 = 8080;
         Self {
             enabled: true,
             check_interval_seconds: 60,
@@ -85,7 +86,6 @@ impl HealthMonitoringConfig {
                         // Development convenience: local endpoints
                         // In production, this code path should never execute
                         let dev_host = env_var_or_default(env, "NESTGATE_DEV_HOST", LOCALHOST_NAME);
-                        const DEV_HTTP_FALLBACK: u16 = 8080;
                         let dev_port = env
                             .get("NESTGATE_DEV_PORT")
                             .and_then(|s| s.parse().ok())

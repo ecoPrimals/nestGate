@@ -37,7 +37,7 @@ mod update;
 #[cfg(test)]
 mod tests;
 
-/// Stable public alias for [`types::InstallationInfo`].
+/// Stable public alias for `types::InstallationInfo`.
 pub type InstallationInfo = types::InstallationInfo;
 
 use crate::download::DownloadManager;

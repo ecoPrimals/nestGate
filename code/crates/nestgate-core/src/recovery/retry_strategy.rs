@@ -98,7 +98,8 @@ impl RetryStrategy for ExponentialBackoff {
     /// Delay
     fn delay(&self, attempt: u32) -> Duration {
         let base_delay_ms = self.config.initial_delay.as_secs_f64() * 1000.0;
-        let multiplier = self.config.backoff_multiplier.powi(attempt as i32);
+        let exponent = i32::try_from(attempt).unwrap_or(i32::MAX);
+        let multiplier = self.config.backoff_multiplier.powi(exponent);
         let delay_ms = f64_to_delay_ms(base_delay_ms * multiplier);
 
         let max_ms = duration_millis_clamped(self.config.max_delay);

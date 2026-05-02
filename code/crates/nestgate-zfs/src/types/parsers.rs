@@ -67,7 +67,7 @@ pub fn pool_info_from_zfs_output(pool_name: &str, output: &str) -> ZfsResult<Poo
         "FAULTED" => PoolState::Faulted,
         "REMOVED" => PoolState::Removed,
         "UNAVAIL" => PoolState::Unavailable,
-        "OFFLINE" | _ => PoolState::Offline,
+        _ => PoolState::Offline,
     };
 
     let utilization_percent = if size > 0 {

@@ -362,7 +362,7 @@ fn test_timeout_extreme_values() {
 #[tokio::test]
 async fn test_manager_default_trait() {
     let _manager1: TestingZfsManager = ZeroCostZfsManager::new();
-    let _manager2: TestingZfsManager = Default::default();
+    let _manager2: TestingZfsManager = TestingZfsManager::default();
 
     // Both should initialize successfully
 }

@@ -79,7 +79,7 @@ impl ServiceManager {
 
     /// Check if this service manager supports automatic startup
     #[must_use]
-    pub const fn supports_auto_start(&self) -> bool {
+    pub const fn supports_auto_start(self) -> bool {
         !matches!(self, Self::Manual)
     }
 }

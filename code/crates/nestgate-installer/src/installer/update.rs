@@ -17,7 +17,7 @@ impl NestGateInstaller {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn update(&mut self, version: Option<String>, yes: bool) -> Result<()> {
+    pub fn update(&self, version: Option<String>, yes: bool) -> Result<()> {
         let blue = Style::new().blue().bold();
 
         info!("{}", blue.apply_to("NestGate Update"));
@@ -29,7 +29,7 @@ impl NestGateInstaller {
 
         let target_version = match version {
             Some(v) => v,
-            None => self.downloader.check_latest_version().await?,
+            None => self.downloader.check_latest_version()?,
         };
 
         if target_version == installation_info.version {
@@ -62,8 +62,7 @@ impl NestGateInstaller {
 
         let archive_path = self
             .downloader
-            .download_release(&target_version, &temp_dir)
-            .await?;
+            .download_release(&target_version, &temp_dir)?;
         self.downloader
             .extract_archive(&archive_path, &installation_info.install_path)?;
 

@@ -177,10 +177,9 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
                             service_stats.requests += 1;
                             service_stats.successful_requests += 1;
                             service_stats.last_request_time = Some(SystemTime::now());
-                            service_stats.average_response_time = (service_stats
-                                .average_response_time
-                                + response.duration.as_millis() as f64)
-                                / 2.0;
+                            let prev = service_stats.average_response_time;
+                            let sample = response.duration.as_millis() as f64;
+                            service_stats.average_response_time = prev.midpoint(sample);
                         }
                     }
 

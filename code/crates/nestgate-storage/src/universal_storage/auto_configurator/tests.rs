@@ -329,7 +329,7 @@ async fn test_create_optimal_config_basic() {
     };
 
     // Attempt to create optimal config (may fail without actual storage)
-    let result = configurator.create_optimal_config(requirements);
+    let result = configurator.create_optimal_config(&requirements);
     // Test passes if it returns without panicking
     let _ = result;
 }
@@ -354,7 +354,7 @@ async fn test_create_optimal_config_with_multiple_storage() {
         use_case: StorageUseCase::Enterprise,
     };
 
-    let result = configurator.create_optimal_config(requirements);
+    let result = configurator.create_optimal_config(&requirements);
     let _ = result;
 }
 
@@ -382,7 +382,7 @@ async fn test_create_optimal_config_performance_priority() {
         use_case: StorageUseCase::HighPerformance,
     };
 
-    let result = configurator.create_optimal_config(requirements);
+    let result = configurator.create_optimal_config(&requirements);
     let _ = result;
 }
 
@@ -410,7 +410,7 @@ async fn test_create_optimal_config_cost_priority() {
         use_case: StorageUseCase::Archive,
     };
 
-    let result = configurator.create_optimal_config(requirements);
+    let result = configurator.create_optimal_config(&requirements);
     let _ = result;
 }
 

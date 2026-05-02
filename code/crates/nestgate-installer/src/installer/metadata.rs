@@ -48,8 +48,4 @@ impl NestGateInstaller {
                 },
             )
     }
-
-    pub(super) fn is_installed(&self) -> bool {
-        self.get_installation_info().is_ok()
-    }
 }

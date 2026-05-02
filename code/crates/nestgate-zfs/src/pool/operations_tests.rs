@@ -3,6 +3,7 @@
 
 //! Tests for [`super::operations`] using mock `zpool` on `PATH`.
 
+use std::collections::HashMap;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -46,7 +47,7 @@ fn sample_pool(name: &str) -> PoolInfo {
             available: 500_000,
         },
         devices: vec![],
-        properties: Default::default(),
+        properties: HashMap::default(),
     }
 }
 

@@ -99,11 +99,12 @@ pub fn is_zfs_available() -> bool {
             let exit_code = output.status.code().unwrap_or(-1);
             debug!("ZFS not available (zpool version exit code: {})", exit_code);
 
+            let stderr_bytes = output.stderr;
             // Log stderr for debugging (but don't treat as error)
-            if !output.stderr.is_empty() {
-                if let Ok(stderr) = String::from_utf8(output.stderr) {
-                    debug!("   ZFS stderr: {}", stderr.trim());
-                }
+            if !stderr_bytes.is_empty()
+                && let Ok(stderr) = String::from_utf8(stderr_bytes)
+            {
+                debug!("   ZFS stderr: {}", stderr.trim());
             }
             false
         }

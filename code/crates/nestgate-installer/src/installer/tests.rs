@@ -13,19 +13,6 @@ use tokio::sync::Mutex;
 /// Serializes tests that repoint `HOME` so parallel runs do not race.
 static INSTALLER_HOME_MUTEX: Mutex<()> = Mutex::const_new(());
 
-fn install_info_json_path() -> PathBuf {
-    use etcetera::BaseStrategy;
-    etcetera::base_strategy::choose_base_strategy().map_or_else(
-        |_| PathBuf::from(".nestgate-install-info.json"),
-        |strategy| {
-            strategy
-                .data_dir()
-                .join("nestgate")
-                .join("install-info.json")
-        },
-    )
-}
-
 /// Creates  Test Installation Info
 fn create_test_installation_info() -> InstallationInfo {
     InstallationInfo {
@@ -246,20 +233,24 @@ fn install_with_default_config_ok() {
 fn configure_errors_when_install_metadata_missing() {
     let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
-    let old_home = std::env::var("HOME").ok();
-    nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
-    let res = (|| -> Result<()> {
-        let mut installer = NestGateInstaller::new(None)?;
-        installer.configure(None)?;
-        Ok(())
-    })();
-    match old_home {
-        Some(h) => nestgate_core::env_process::set_var("HOME", h),
-        None => nestgate_core::env_process::remove_var("HOME"),
-    }
-    assert!(
-        res.is_err(),
-        "expected error when install-info is absent: {res:?}"
+    let xdg_data = tmp.path().join("xdg_data_empty");
+    fs::create_dir_all(&xdg_data).expect("mkdir xdg");
+    temp_env::with_vars(
+        [
+            ("HOME", Some(tmp.path().to_str().expect("utf8"))),
+            ("XDG_DATA_HOME", Some(xdg_data.to_str().expect("utf8"))),
+        ],
+        || {
+            let res = (|| -> Result<()> {
+                let installer = NestGateInstaller::new(None)?;
+                installer.configure(None)?;
+                Ok(())
+            })();
+            assert!(
+                res.is_err(),
+                "expected error when install-info is absent: {res:?}"
+            );
+        },
     );
 }
 
@@ -267,8 +258,7 @@ fn configure_errors_when_install_metadata_missing() {
 fn configure_prints_when_config_file_missing_but_installed() {
     let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
-    let old_home = std::env::var("HOME").ok();
-    nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
+    let xdg_data = tmp.path().join("xdg_data");
 
     let install_root = tmp.path().join("opt/nestgate");
     let config_path = tmp.path().join("etc/nestgate/nestgate.toml");
@@ -287,29 +277,23 @@ fn configure_prints_when_config_file_missing_but_installed() {
         features: vec![],
     };
 
-    let meta = install_info_json_path();
-    let meta = if meta.is_absolute() {
-        meta
-    } else {
-        tmp.path().join(meta)
-    };
+    let meta = xdg_data.join("nestgate").join("install-info.json");
     fs::create_dir_all(meta.parent().expect("meta parent")).expect("mkdir meta");
     fs::write(&meta, serde_json::to_string(&info).expect("json")).expect("write meta");
 
-    let res = (|| -> Result<()> {
-        let mut installer = NestGateInstaller::new(None)?;
-        installer.configure(None)?;
-        Ok(())
-    })();
-
-    match old_home {
-        Some(h) => nestgate_core::env_process::set_var("HOME", h),
-        None => nestgate_core::env_process::remove_var("HOME"),
-    }
-
-    assert!(
-        res.is_ok(),
-        "configure should succeed listing missing file: {res:?}"
+    temp_env::with_vars(
+        [
+            ("HOME", Some(tmp.path().to_str().expect("utf8"))),
+            ("XDG_DATA_HOME", Some(xdg_data.to_str().expect("utf8"))),
+        ],
+        || {
+            let installer = NestGateInstaller::new(None).expect("installer");
+            let res = installer.configure(None);
+            assert!(
+                res.is_ok(),
+                "configure should succeed listing missing file: {res:?}"
+            );
+        },
     );
     assert!(!config_path.exists());
 }
@@ -318,8 +302,7 @@ fn configure_prints_when_config_file_missing_but_installed() {
 fn uninstall_with_force_removes_paths_and_metadata() {
     let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
-    let old_home = std::env::var("HOME").ok();
-    nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
+    let xdg_data = tmp.path().join("xdg_data");
 
     let install_root = tmp.path().join("opt/nestgate");
     let config_path = tmp.path().join("state/nestgate-config");
@@ -338,44 +321,41 @@ fn uninstall_with_force_removes_paths_and_metadata() {
         features: vec![],
     };
 
-    let meta = install_info_json_path();
-    let meta = if meta.is_absolute() {
-        meta
-    } else {
-        tmp.path().join(meta)
-    };
+    let meta = xdg_data.join("nestgate").join("install-info.json");
     fs::create_dir_all(meta.parent().expect("meta parent")).expect("mkdir meta");
     fs::write(&meta, serde_json::to_string(&info).expect("json")).expect("write meta");
 
-    let uninstall_res = (|| -> Result<()> {
-        let installer = NestGateInstaller::new(None)?;
-        installer.uninstall(true, true, true)?;
-        Ok(())
-    })();
-
-    match old_home {
-        Some(h) => nestgate_core::env_process::set_var("HOME", h),
-        None => nestgate_core::env_process::remove_var("HOME"),
-    }
-
-    uninstall_res.expect("uninstall");
+    temp_env::with_vars(
+        [
+            ("HOME", Some(tmp.path().to_str().expect("utf8"))),
+            ("XDG_DATA_HOME", Some(xdg_data.to_str().expect("utf8"))),
+        ],
+        || {
+            let installer = NestGateInstaller::new(None).expect("installer");
+            installer.uninstall(true, true, true).expect("uninstall");
+        },
+    );
     assert!(!install_root.exists());
     assert!(!config_path.exists());
     assert!(!data_path.exists());
     assert!(!meta.exists());
 }
 
-#[tokio::test]
-async fn doctor_runs_with_isolated_home() {
-    let _guard = INSTALLER_HOME_MUTEX.lock().await;
+#[test]
+fn doctor_runs_with_isolated_home() {
+    let _guard = INSTALLER_HOME_MUTEX.blocking_lock();
     let tmp = tempfile::tempdir().expect("tempdir");
-    let old_home = std::env::var("HOME").ok();
-    nestgate_core::env_process::set_var("HOME", tmp.path().as_os_str());
-    let mut installer = NestGateInstaller::new(None).expect("installer");
-    let res = installer.doctor().await;
-    match old_home {
-        Some(h) => nestgate_core::env_process::set_var("HOME", h),
-        None => nestgate_core::env_process::remove_var("HOME"),
-    }
-    assert!(res.is_ok());
+    let xdg_data = tmp.path().join("xdg_data_doc");
+    fs::create_dir_all(&xdg_data).expect("mkdir xdg");
+    temp_env::with_vars(
+        [
+            ("HOME", Some(tmp.path().to_str().expect("utf8"))),
+            ("XDG_DATA_HOME", Some(xdg_data.to_str().expect("utf8"))),
+        ],
+        || {
+            let installer = NestGateInstaller::new(None).expect("installer");
+            let res = installer.doctor();
+            assert!(res.is_ok());
+        },
+    );
 }

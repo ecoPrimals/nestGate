@@ -266,12 +266,16 @@ impl<'a> DetectionEngine<'a> {
 
     /// Detect SMB/CIFS shares by parsing `/proc/mounts` for `cifs` filesystem type.
     fn detect_smb_shares(&self) -> Result<Vec<DetectedStorage>> {
-        Self::detect_mounts_by_fs_type(&["cifs", "smb", "smb3"], UnifiedStorageType::Network, "smb")
+        Self::detect_mounts_by_fs_type(
+            &["cifs", "smb", "smb3"],
+            &UnifiedStorageType::Network,
+            "smb",
+        )
     }
 
     /// Detect NFS mounts by parsing `/proc/mounts` for `nfs`/`nfs4` filesystem types.
     fn detect_nfs_mounts(&self) -> Result<Vec<DetectedStorage>> {
-        Self::detect_mounts_by_fs_type(&["nfs", "nfs4"], UnifiedStorageType::Network, "nfs")
+        Self::detect_mounts_by_fs_type(&["nfs", "nfs4"], &UnifiedStorageType::Network, "nfs")
     }
 
     /// Detect iSCSI targets by checking `/sys/class/iscsi_host/` and cross-referencing
@@ -308,19 +312,19 @@ impl<'a> DetectionEngine<'a> {
 
     /// Detect tmpfs mounts by parsing `/proc/mounts`.
     fn detect_tmpfs(&self) -> Result<Vec<DetectedStorage>> {
-        Self::detect_mounts_by_fs_type(&["tmpfs"], UnifiedStorageType::Memory, "tmpfs")
+        Self::detect_mounts_by_fs_type(&["tmpfs"], &UnifiedStorageType::Memory, "tmpfs")
     }
 
     /// Detect ramdisk (ramfs) mounts by parsing `/proc/mounts`.
     fn detect_ramdisk(&self) -> Result<Vec<DetectedStorage>> {
-        Self::detect_mounts_by_fs_type(&["ramfs"], UnifiedStorageType::Memory, "ramdisk")
+        Self::detect_mounts_by_fs_type(&["ramfs"], &UnifiedStorageType::Memory, "ramdisk")
     }
 
     /// Shared helper: parse `/proc/mounts` for lines matching any of the given fs types
     /// and return them as `DetectedStorage`. Falls back to an empty vec on non-Linux.
     fn detect_mounts_by_fs_type(
         fs_types: &[&str],
-        storage_type: UnifiedStorageType,
+        storage_type: &UnifiedStorageType,
         label_prefix: &str,
     ) -> Result<Vec<DetectedStorage>> {
         let proc_mounts = std::path::Path::new("/proc/mounts");

@@ -3,6 +3,11 @@
 
 //! ZFS-specific models and statistics
 
+#![expect(
+    clippy::pub_underscore_fields,
+    reason = "REST ZFS payloads retain `_metadata` for forward-compatible serde"
+)]
+
 use serde::{Deserialize, Serialize};
 
 // ZFS-specific models and metrics for storage management

@@ -156,10 +156,10 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
                 .values()
                 .filter(|service| {
                     // Filter by service name
-                    if let Some(ref name) = query.service_name {
-                        if service.name != *name {
-                            return false;
-                        }
+                    if let Some(ref name) = query.service_name
+                        && service.name != *name
+                    {
+                        return false;
                     }
 
                     // Filter by tags (assuming ServiceInfo has tags field)

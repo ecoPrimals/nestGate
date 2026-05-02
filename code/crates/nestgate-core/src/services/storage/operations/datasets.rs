@@ -85,33 +85,36 @@ pub async fn list_datasets(
         .map_err(|e| NestGateError::io_error(format!("Failed to read directory entry: {e}")))?
     {
         let path = entry.path();
-        if path.is_dir() {
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                // Get directory metadata
-                let metadata = tokio::fs::metadata(&path).await.map_err(|e| {
-                    NestGateError::io_error(format!("Failed to read metadata: {e}"))
-                })?;
+        if path.is_dir()
+            && let Some(name) = path.file_name().and_then(|n| n.to_str())
+        {
+            // Get directory metadata
+            let metadata = tokio::fs::metadata(&path)
+                .await
+                .map_err(|e| NestGateError::io_error(format!("Failed to read metadata: {e}")))?;
 
-                let modified = metadata.modified().map_err(|e| {
-                    NestGateError::io_error(format!("Failed to get modification time: {e}"))
-                })?;
-                let modified_at = modified
+            let modified = metadata.modified().map_err(|e| {
+                NestGateError::io_error(format!("Failed to get modification time: {e}"))
+            })?;
+            let modified_at = i64::try_from(
+                modified
                     .duration_since(SystemTime::UNIX_EPOCH)
                     .unwrap_or_default()
-                    .as_secs() as i64;
+                    .as_secs(),
+            )
+            .unwrap_or(i64::MAX);
 
-                datasets.push(crate::rpc::tarpc_types::DatasetInfo {
-                    name: name.to_string(),
-                    description: None,
-                    created_at: modified_at,
-                    modified_at,
-                    size_bytes: 0,
-                    object_count: 0,
-                    compression_ratio: 1.0,
-                    params: crate::rpc::tarpc_types::DatasetParams::default(),
-                    status: "active".to_string(),
-                });
-            }
+            datasets.push(crate::rpc::tarpc_types::DatasetInfo {
+                name: name.to_string(),
+                description: None,
+                created_at: modified_at,
+                modified_at,
+                size_bytes: 0,
+                object_count: 0,
+                compression_ratio: 1.0,
+                params: crate::rpc::tarpc_types::DatasetParams::default(),
+                status: "active".to_string(),
+            });
         }
     }
 
@@ -142,10 +145,13 @@ pub async fn get_dataset(
     let modified = metadata
         .modified()
         .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {e}")))?;
-    let modified_at = modified
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64;
+    let modified_at = i64::try_from(
+        modified
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+    )
+    .unwrap_or(i64::MAX);
 
     Ok(crate::rpc::tarpc_types::DatasetInfo {
         name: name.to_string(),
@@ -188,10 +194,13 @@ pub async fn delete_dataset(config: &StorageServiceConfig, name: &str) -> Result
 
 /// Get current timestamp in Unix epoch seconds
 fn current_timestamp() -> i64 {
-    SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64
+    i64::try_from(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+    )
+    .unwrap_or(i64::MAX)
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![cfg_attr(not(test), forbid(unsafe_code))]
+#![forbid(unsafe_code)]
 
 //! **NESTGATE ZFS CRATE**
 //!
@@ -33,16 +33,9 @@
     clippy::unused_async,
     clippy::needless_pass_by_value,
     clippy::option_if_let_else,
-    clippy::too_long_first_doc_paragraph,
     clippy::implicit_hasher,
-    clippy::items_after_statements,
-    clippy::too_many_lines,
-    clippy::cognitive_complexity,
     clippy::unreadable_literal,
-    clippy::used_underscore_items,
-    clippy::default_trait_access,
-    clippy::wildcard_in_or_patterns,
-    clippy::similar_names
+    clippy::used_underscore_items
 )]
 #![warn(rustdoc::broken_intra_doc_links)]
 

@@ -51,7 +51,7 @@ impl PerformanceProfiler {
     }
 
     /// Test if storage supports parallel I/O operations
-    fn test_parallel_io(&self, _storage: &DetectedStorage) -> bool {
+    const fn test_parallel_io(_storage: &DetectedStorage) -> bool {
         // Most modern storage systems support parallel I/O
         // In a real implementation, this would test concurrent operations
         true
@@ -102,7 +102,7 @@ impl PerformanceProfiler {
             }
         }
 
-        profile.supports_parallel_io = self.test_parallel_io(storage);
+        profile.supports_parallel_io = Self::test_parallel_io(storage);
         profile.optimal_block_size = 4096;
 
         Ok(profile)

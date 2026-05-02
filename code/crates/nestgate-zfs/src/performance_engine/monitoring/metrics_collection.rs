@@ -36,8 +36,8 @@ pub(super) fn merge_arc_kstat_full_line(
     misses: &mut u64,
     size: &mut u64,
     c: &mut u64,
-    mru_size: &mut u64,
-    mfu_size: &mut u64,
+    recently_used_bytes: &mut u64,
+    frequently_used_bytes: &mut u64,
 ) {
     let parts: Vec<&str> = line.split_whitespace().collect();
     if parts.len() < 3 {
@@ -48,8 +48,8 @@ pub(super) fn merge_arc_kstat_full_line(
         "misses" => *misses = parts[2].parse().unwrap_or(0),
         "size" => *size = parts[2].parse().unwrap_or(0),
         "c" => *c = parts[2].parse().unwrap_or(0),
-        "mru_size" => *mru_size = parts[2].parse().unwrap_or(0),
-        "mfu_size" => *mfu_size = parts[2].parse().unwrap_or(0),
+        "mru_size" => *recently_used_bytes = parts[2].parse().unwrap_or(0),
+        "mfu_size" => *frequently_used_bytes = parts[2].parse().unwrap_or(0),
         _ => {}
     }
 }
@@ -168,6 +168,10 @@ impl RealTimePerformanceMonitor {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "Single cohesive async scrape of pool/dataset counters; splitting would obscure shared accumulation."
+    )]
     pub async fn collect_metrics(
         &self,
         _pool_manager: &ZfsPoolManager,
@@ -315,8 +319,8 @@ impl RealTimePerformanceMonitor {
             let mut misses = 0u64;
             let mut size = 0u64;
             let mut c = 0u64; // target size
-            let mut mru_size = 0u64;
-            let mut mfu_size = 0u64;
+            let mut recently_used_arc_bytes = 0u64;
+            let mut frequently_used_arc_bytes = 0u64;
 
             for line in arc_content.lines() {
                 merge_arc_kstat_full_line(
@@ -325,8 +329,8 @@ impl RealTimePerformanceMonitor {
                     &mut misses,
                     &mut size,
                     &mut c,
-                    &mut mru_size,
-                    &mut mfu_size,
+                    &mut recently_used_arc_bytes,
+                    &mut frequently_used_arc_bytes,
                 );
             }
 
@@ -471,16 +475,16 @@ mod collect_metrics_parse_tests {
         let mut misses = 0u64;
         let mut size = 0u64;
         let mut c = 0u64;
-        let mut mru = 0u64;
-        let mut mfu = 0u64;
+        let mut recently_used_arc_bytes = 0u64;
+        let mut frequently_used_arc_bytes = 0u64;
         merge_arc_kstat_full_line(
             "size 4 4096",
             &mut hits,
             &mut misses,
             &mut size,
             &mut c,
-            &mut mru,
-            &mut mfu,
+            &mut recently_used_arc_bytes,
+            &mut frequently_used_arc_bytes,
         );
         merge_arc_kstat_full_line(
             "c 4 8192",
@@ -488,8 +492,8 @@ mod collect_metrics_parse_tests {
             &mut misses,
             &mut size,
             &mut c,
-            &mut mru,
-            &mut mfu,
+            &mut recently_used_arc_bytes,
+            &mut frequently_used_arc_bytes,
         );
         merge_arc_kstat_full_line(
             "mru_size 4 1",
@@ -497,8 +501,8 @@ mod collect_metrics_parse_tests {
             &mut misses,
             &mut size,
             &mut c,
-            &mut mru,
-            &mut mfu,
+            &mut recently_used_arc_bytes,
+            &mut frequently_used_arc_bytes,
         );
         merge_arc_kstat_full_line(
             "mfu_size 4 2",
@@ -506,13 +510,13 @@ mod collect_metrics_parse_tests {
             &mut misses,
             &mut size,
             &mut c,
-            &mut mru,
-            &mut mfu,
+            &mut recently_used_arc_bytes,
+            &mut frequently_used_arc_bytes,
         );
         assert_eq!(size, 4096);
         assert_eq!(c, 8192);
-        assert_eq!(mru, 1);
-        assert_eq!(mfu, 2);
+        assert_eq!(recently_used_arc_bytes, 1);
+        assert_eq!(frequently_used_arc_bytes, 2);
     }
 
     #[test]

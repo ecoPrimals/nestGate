@@ -180,10 +180,10 @@ async fn collect_objects(
     let mut stack = vec![start.to_path_buf()];
 
     while let Some(dir) = stack.pop() {
-        if let Some(lim) = limit {
-            if results.len() >= lim {
-                return Ok(());
-            }
+        if let Some(lim) = limit
+            && results.len() >= lim
+        {
+            return Ok(());
         }
 
         let mut entries = tokio::fs::read_dir(&dir)
@@ -195,10 +195,10 @@ async fn collect_objects(
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to read entry: {e}")))?
         {
-            if let Some(lim) = limit {
-                if results.len() >= lim {
-                    return Ok(());
-                }
+            if let Some(lim) = limit
+                && results.len() >= lim
+            {
+                return Ok(());
             }
             let path = entry.path();
             if path.is_dir() {
@@ -210,10 +210,10 @@ async fn collect_objects(
                     .to_string_lossy()
                     .to_string();
 
-                if let Some(pfx) = prefix {
-                    if !key.starts_with(pfx) {
-                        continue;
-                    }
+                if let Some(pfx) = prefix
+                    && !key.starts_with(pfx)
+                {
+                    continue;
                 }
 
                 let metadata = tokio::fs::metadata(&path)
