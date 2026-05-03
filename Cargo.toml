@@ -153,11 +153,13 @@ etcetera = "0.8"
 # Content-addressing (BLAKE3 for fetch_external provenance)
 blake3 = { version = "1.5", default-features = false, features = ["std", "pure"] }
 
-# Encoding utilities (crypto ops delegated to bearDog via IPC)
+# Encoding utilities (crypto ops delegated to security capability provider via IPC)
 chacha20poly1305 = "0.10"
 base64 = "0.22"
 sha2 = "0.10"
 hmac = "0.12"
+hkdf = "0.12"
+zeroize = { version = "1", features = ["derive"] }
 hex = "0.4"
 x509-parser = "0.17"
 getrandom = "0.3"

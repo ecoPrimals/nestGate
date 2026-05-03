@@ -307,11 +307,84 @@ impl IsomorphicIpcServer {
             )
             .await?;
 
-            Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await?;
+            Self::post_handshake_phase3_or_plaintext(&mut raw_reader, &mut writer, &handler)
+                .await?;
             return Ok(());
         }
 
         Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await
+    }
+
+    /// After Phase 2 handshake, intercept the first message to check for
+    /// `btsp.negotiate`. On success, switch to the encrypted frame loop;
+    /// otherwise fall through to the plaintext keep-alive loop.
+    async fn post_handshake_phase3_or_plaintext<R, W>(
+        reader: &mut R,
+        writer: &mut W,
+        handler: &Arc<dyn RpcHandler>,
+    ) -> Result<()>
+    where
+        R: tokio::io::AsyncBufReadExt + Unpin,
+        W: tokio::io::AsyncWriteExt + Unpin,
+    {
+        let mut first_line = Vec::new();
+        let n = reader
+            .read_until(b'\n', &mut first_line)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to read first post-handshake message: {e}"))?;
+
+        if n == 0 {
+            return Ok(());
+        }
+
+        let trimmed = first_line.as_slice().trim_ascii();
+        if trimmed.is_empty() {
+            return Self::json_rpc_keep_alive_loop(reader, writer, handler).await;
+        }
+
+        let parsed: Value = match serde_json::from_slice(trimmed) {
+            Ok(v) => v,
+            Err(_) => return Self::json_rpc_keep_alive_loop(reader, writer, handler).await,
+        };
+
+        let is_negotiate = parsed
+            .get("method")
+            .and_then(Value::as_str)
+            .is_some_and(|m| m == "btsp.negotiate");
+
+        if !is_negotiate {
+            let response = handler.handle_request(parsed).await;
+            let response_bytes: Bytes = serde_json::to_vec(&response).map(Bytes::from)?;
+            writer.write_all(&response_bytes).await?;
+            writer.write_all(b"\n").await?;
+            writer.flush().await?;
+            return Self::json_rpc_keep_alive_loop(reader, writer, handler).await;
+        }
+
+        let keys = crate::rpc::btsp_phase3::transport::try_phase3_negotiate(&parsed, writer, true)
+            .await
+            .map_err(|e| anyhow::anyhow!("BTSP Phase 3 negotiate failed: {e}"))?;
+
+        let Some(session_keys) = keys else {
+            return Self::json_rpc_keep_alive_loop(reader, writer, handler).await;
+        };
+
+        info!("BTSP Phase 3: encrypted channel established (isomorphic IPC)");
+
+        let handler = handler.clone();
+        crate::rpc::btsp_phase3::transport::run_encrypted_frame_loop(
+            reader,
+            writer,
+            &session_keys,
+            |request| {
+                let h = handler.clone();
+                async move { h.handle_request(request).await }
+            },
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("BTSP Phase 3 encrypted loop error: {e}"))?;
+
+        Ok(())
     }
 
     /// Maximum idle time before a keep-alive connection is closed.

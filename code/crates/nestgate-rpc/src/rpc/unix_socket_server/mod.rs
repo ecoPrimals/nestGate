@@ -362,10 +362,127 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
         )
         .await?;
 
-        return json_rpc_loop(&mut raw_reader, &mut writer, &state).await;
+        return post_handshake_phase3_or_plaintext(&mut raw_reader, &mut writer, &state).await;
     }
 
     json_rpc_loop(&mut raw_reader, &mut writer, &state).await
+}
+
+/// After a successful BTSP Phase 2 handshake, check whether the client
+/// wants to negotiate Phase 3 (encrypted channel). If the first message is
+/// `btsp.negotiate` and keys are derived, switch to the encrypted frame
+/// loop; otherwise fall back to the plaintext JSON-RPC loop.
+async fn post_handshake_phase3_or_plaintext<R, W>(
+    reader: &mut R,
+    writer: &mut W,
+    state: &StorageState,
+) -> Result<()>
+where
+    R: tokio::io::AsyncBufReadExt + Unpin,
+    W: tokio::io::AsyncWriteExt + Unpin,
+{
+    let mut first_line = Vec::new();
+    let n = reader
+        .read_until(b'\n', &mut first_line)
+        .await
+        .map_err(|e| {
+            NestGateError::io_error(format!("Failed to read first post-handshake message: {e}"))
+        })?;
+
+    if n == 0 {
+        return Ok(());
+    }
+
+    let trimmed = first_line.as_slice().trim_ascii();
+    if trimmed.is_empty() {
+        return json_rpc_loop(reader, writer, state).await;
+    }
+
+    let parsed: Value = match serde_json::from_slice(trimmed) {
+        Ok(v) => v,
+        Err(_) => return json_rpc_loop(reader, writer, state).await,
+    };
+
+    let is_negotiate = parsed
+        .get("method")
+        .and_then(Value::as_str)
+        .is_some_and(|m| m == "btsp.negotiate");
+
+    if !is_negotiate {
+        let response = dispatch_parsed_request(&parsed, state).await;
+        let response_bytes = serde_json::to_vec(&response)
+            .map_err(|e| NestGateError::api(format!("Failed to serialize response: {e}")))?;
+        writer
+            .write_all(&response_bytes)
+            .await
+            .map_err(|e| NestGateError::io_error(format!("Failed to write response: {e}")))?;
+        writer
+            .write_all(b"\n")
+            .await
+            .map_err(|e| NestGateError::io_error(format!("Failed to write newline: {e}")))?;
+        writer
+            .flush()
+            .await
+            .map_err(|e| NestGateError::io_error(format!("Failed to flush: {e}")))?;
+        return json_rpc_loop(reader, writer, state).await;
+    }
+
+    let keys =
+        crate::rpc::btsp_phase3::transport::try_phase3_negotiate(&parsed, writer, true).await?;
+
+    let Some(session_keys) = keys else {
+        return json_rpc_loop(reader, writer, state).await;
+    };
+
+    info!("BTSP Phase 3: encrypted channel established, entering encrypted frame loop");
+
+    let state_arc = Arc::new(state.clone());
+    crate::rpc::btsp_phase3::transport::run_encrypted_frame_loop(
+        reader,
+        writer,
+        &session_keys,
+        |request| {
+            let st = Arc::clone(&state_arc);
+            async move { dispatch_value_request(request, &st).await }
+        },
+    )
+    .await?;
+
+    Ok(())
+}
+
+/// Dispatch a pre-parsed JSON-RPC Value through the handler, returning a Value response.
+async fn dispatch_value_request(request: Value, state: &StorageState) -> Value {
+    match serde_json::from_value::<JsonRpcRequest>(request) {
+        Ok(req) => {
+            let resp = handle_request(req, state).await;
+            serde_json::to_value(resp).unwrap_or_else(|_| {
+                json!({"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error"}, "id": null})
+            })
+        }
+        Err(e) => json!({
+            "jsonrpc": "2.0",
+            "error": {"code": -32700, "message": "Parse error", "data": {"error": e.to_string()}},
+            "id": null
+        }),
+    }
+}
+
+/// Dispatch a pre-parsed JSON-RPC Value through the handler (alias for non-negotiate first message).
+async fn dispatch_parsed_request(request: &Value, state: &StorageState) -> Value {
+    match serde_json::from_value::<JsonRpcRequest>(request.clone()) {
+        Ok(req) => {
+            let resp = handle_request(req, state).await;
+            serde_json::to_value(resp).unwrap_or_else(|_| {
+                json!({"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error"}, "id": null})
+            })
+        }
+        Err(e) => json!({
+            "jsonrpc": "2.0",
+            "error": {"code": -32700, "message": "Parse error", "data": {"error": e.to_string()}},
+            "id": null
+        }),
+    }
 }
 
 /// Persistent newline-delimited JSON-RPC read/dispatch/write loop (keep-alive).

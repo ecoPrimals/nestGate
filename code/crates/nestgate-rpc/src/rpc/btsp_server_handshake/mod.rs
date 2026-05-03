@@ -205,7 +205,7 @@ fn generate_challenge() -> [u8; 32] {
 /// `BIOMEOS_FAMILY_SEED`. The value is trimmed to strip trailing newlines
 /// that `xxd -p` or similar tools may leave. The caller is responsible for
 /// base64-encoding the result before sending to the security provider.
-fn resolve_family_seed() -> Result<String> {
+pub(crate) fn resolve_family_seed() -> Result<String> {
     for var in [
         "FAMILY_SEED",
         "SECURITY_FAMILY_SEED",
