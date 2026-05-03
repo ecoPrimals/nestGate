@@ -18,9 +18,8 @@ pub type DatasetMetricsMap = Arc<RwLock<HashMap<String, ZfsDatasetMetrics>>>;
 /// Type alias for `MetricsCacheMap`
 pub type MetricsCacheMap = Arc<RwLock<HashMap<String, ZfsPerformanceMetrics>>>;
 
-// Placeholder type until AlertThresholds is available
 #[derive(Debug, Default)]
-/// Alertthresholds
+/// Configurable thresholds for resource usage alerts.
 pub struct AlertThresholds {
     /// Cpu Threshold
     pub cpu_threshold: f32,

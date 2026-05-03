@@ -15,7 +15,7 @@ nestgate-config = { path = "../nestgate-config" }
 nestgate-discovery = { path = "../nestgate-discovery" }
 nestgate-rpc = { path = "../nestgate-rpc" }
 
-# Encoding utilities (crypto operations delegated to bearDog via IPC)
+# Encoding utilities (crypto operations delegated to security capability provider via IPC)
 base64 = { workspace = true }
 hex = { workspace = true }
 x509-parser = { workspace = true }

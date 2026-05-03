@@ -49,16 +49,13 @@ pub struct BtspClient {
     security_socket: PathBuf,
 }
 
-/// Returns `true` when BTSP is mandatory (non-default `FAMILY_ID`, no `BIOMEOS_INSECURE`).
+/// Returns `true` when BTSP is mandatory.
+///
+/// Delegates to [`super::btsp_server_handshake::is_btsp_required`] so
+/// client and server use identical env-var resolution and sentinel logic.
 #[must_use]
 pub fn is_btsp_required() -> bool {
-    let Ok(fid) = std::env::var("FAMILY_ID") else {
-        return false;
-    };
-    if fid.is_empty() || fid == "default" {
-        return false;
-    }
-    !matches!(std::env::var("BIOMEOS_INSECURE").as_deref(), Ok("1"))
+    super::btsp_server_handshake::is_btsp_required()
 }
 
 /// Resolves the security capability provider's Unix socket path.

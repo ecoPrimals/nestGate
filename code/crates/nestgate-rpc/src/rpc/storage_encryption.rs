@@ -246,10 +246,14 @@ impl StorageEncryption {
 
 /// Resolve the security provider socket path from environment.
 ///
-/// Precedence: `SECURITY_PROVIDER_SOCKET` → `BEARDOG_SOCKET` (legacy) →
-/// 6-tier security socket discovery.
+/// Precedence: `SECURITY_PROVIDER_SOCKET` → `SECURITY_SOCKET` →
+/// `BEARDOG_SOCKET` (legacy, lowest priority) → 6-tier capability discovery.
 fn resolve_security_provider_socket() -> Option<String> {
-    for var in ["SECURITY_PROVIDER_SOCKET", "BEARDOG_SOCKET"] {
+    for var in [
+        "SECURITY_PROVIDER_SOCKET",
+        "SECURITY_SOCKET",
+        "BEARDOG_SOCKET",
+    ] {
         if let Ok(p) = std::env::var(var)
             && !p.is_empty()
         {

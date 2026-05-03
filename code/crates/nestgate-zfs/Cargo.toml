@@ -15,18 +15,12 @@ workspace = true
 
 [features]
 default = ["dev-environment-fallbacks"]
-zfs = []
 orchestrator = []
-advanced = ["zfs"]
-ai = ["advanced"]
-performance = ["zfs"]
 dev-environment-fallbacks = []
-# Dev-only ZFS environment helpers (`dev_environment` module); opt-in for stubbed/local workflows.
 dev-stubs = []
 hardware-detection = []
 container = []
 dev-verbose-logging = []
-# Declared for `check-cfg` / clippy; bench sources reference these feature gates.
 benchmark = []
 
 [dependencies]

@@ -201,10 +201,10 @@ fn generate_challenge() -> [u8; 32] {
 /// Reads the family seed from the environment (typically a hex string).
 ///
 /// Checks canonical `FAMILY_SEED` first, then capability-scoped
-/// `SECURITY_FAMILY_SEED`, then backward-compat `BEARDOG_FAMILY_SEED` and
-/// `BIOMEOS_FAMILY_SEED`. The value is trimmed to strip trailing newlines
-/// that `xxd -p` or similar tools may leave. The caller is responsible for
-/// base64-encoding the result before sending to the security provider.
+/// `SECURITY_FAMILY_SEED`, then legacy `BEARDOG_FAMILY_SEED` and
+/// `BIOMEOS_FAMILY_SEED` (lowest priority, backward compat only).
+/// The value is trimmed to strip trailing newlines that `xxd -p` or
+/// similar tools may leave.
 pub(crate) fn resolve_family_seed() -> Result<String> {
     for var in [
         "FAMILY_SEED",

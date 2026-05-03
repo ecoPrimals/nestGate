@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```bash
 export NESTGATE_FAMILY_ID="nat0"
 export NESTGATE_SOCKET_PATH="/tmp/nestgate-nat0.sock"
-export NESTGATE_SECURITY_PROVIDER="/tmp/beardog-nat0-default.sock"
+export NESTGATE_SECURITY_PROVIDER="/run/user/1000/biomeos/security.sock"
 # export NESTGATE_HTTP_PORT="8080"  # Optional HTTP fallback
 ```
 
