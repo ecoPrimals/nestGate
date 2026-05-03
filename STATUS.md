@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 2, 2026 (deep debt sweep: BTSP Phase 3, lint mega-list narrowing, doc/test isolation fixes, nestgate-zfs unconditional safe)  
+**Last Updated**: May 2, 2026 (Session 51: BTSP Phase 3 wiring, deep debt sweep, stale features, commented code, lint scoping)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of May 2, 2026
 Format:             CLEAN (cargo fmt --check passes), as of May 2, 2026
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 2, 2026
-Tests:              8,841 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 2, 2026
+Tests:              8,869 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 2, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -26,7 +26,7 @@ Mocks in prod:      ZERO — all mocks test-only (#[cfg(test)]) or feature-gated
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED from dep tree AND lockfile; installer uses system curl
 Encrypt-at-rest:    ChaCha20-Poly1305 — implemented Session 48
-Auth mode bypass:   NESTGATE_AUTH_MODE=beardog — implemented Session 48
+Auth mode bypass:   NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider (Session 48; beardog alias removed Session 51)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
@@ -658,4 +658,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 2026 (Session 50)
+**Latest**: May 2, 2026 (Session 51)

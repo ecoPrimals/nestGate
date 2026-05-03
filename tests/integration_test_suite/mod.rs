@@ -7,26 +7,10 @@
 //! into focused, maintainable test modules for better organization and compliance
 //! with the <2000 lines per file standard.
 //!
-//! **MODULAR STRUCTURE**:
-//! - `environment`: Test environment setup and management
-//! - `adapter_tests`: Universal adapter integration tests
-//! - `service_tests`: Service discovery and registry tests
-//! - `workflow_tests`: End-to-end workflow integration tests
-//! - `performance_tests`: Performance and load testing
-//! - `error_tests`: Error handling and recovery tests
-
-// ==================== MODULAR ORGANIZATION ====================
+//! Currently only `environment` is active; the original adapter/service/workflow/
+//! performance/error test modules were migrated to per-crate `#[cfg(test)]` tests.
 
 /// Test environment setup and management
 pub mod environment;
-
-// Additional test modules - expand as needed for comprehensive coverage
-// pub mod adapter_tests;
-// pub mod service_tests;
-// pub mod workflow_tests;
-// pub mod performance_tests;
-// pub mod error_tests;
-
-// ==================== RE-EXPORTS FOR COMPATIBILITY ====================
 
 pub use environment::*;

@@ -5,13 +5,13 @@
 **Verification (as of 2026-05-02)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,841 passing, 0 failures, 60 ignored  
+- **Tests**: `cargo test --workspace --lib` — 8,869 passing, 0 failures, 60 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,841 passing, 60 ignored, 0 failures  
+- **Tests (last recorded)**: 8,869 passing, 60 ignored, 0 failures  
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -32,7 +32,10 @@
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
-- **Lint mega-list narrowing**: Crate-level lint suppressions narrowed: nestgate-core 22→16, nestgate-zfs 24→17, nestgate-api 14→12, nestgate-installer 12→2/4 (real code fixes, not just moved)  
+- **Lint mega-list narrowing**: Crate-level lint suppressions narrowed: nestgate-core 22→16, nestgate-zfs 24→17, nestgate-api 14→12, nestgate-installer 12→2/4, nestgate-bin 6→4 (real code fixes, not just moved)
+- **Stale features removed**: `btsp` (nestgate-rpc, never gated), `cli` (nestgate-installer, never gated)
+- **Commented-out code removed**: pool.rs HTTP block, operations.rs S3 stub, production_capability_bridge.rs K8s/Consul futures
+- **Visibility narrowed**: `pub mod protocol` → `pub(crate)` in nestgate-rpc  
 **Last Updated**: May 2, 2026
 
 ---

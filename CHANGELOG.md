@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 51: BTSP Phase 3 wiring, deep debt sweep, stale features (May 2, 2026)
+
+- **BTSP Phase 3 wiring completed**: Three gaps from primalSpring audit closed:
+  `pub mod btsp_phase3` added to module tree, `hkdf`/`zeroize` added to workspace
+  deps, `post_handshake_phase3_or_plaintext` intercept wired into both UDS and
+  isomorphic IPC accept paths. `resolve_family_seed()` promoted to `pub(crate)`.
+- **Deep debt sweep**: Commented-out code removed (pool.rs 46L HTTP block,
+  operations.rs S3 stub, production_capability_bridge.rs K8s/Consul futures).
+  Hardcoded `"beardog"` auth mode alias replaced with agnostic `"external"`.
+  Stale features removed: `btsp = []` (nestgate-rpc, never gated), `cli = []`
+  (nestgate-installer, never gated). `pub mod protocol` narrowed to `pub(crate)`.
+  nestgate-bin lint mega-list 6 → 4 (`cast_precision_loss` scoped to display
+  expressions, `items_after_statements` fixed by hoisting import).
+- **Verification**: clippy PASS (0 warnings), 8,869 lib tests / 0 failures / 60 ignored.
+
 ### Deep debt sweep, BTSP Phase 3, lint evolution (May 2, 2026)
 
 - **BTSP Phase 3 (`btsp.negotiate`)**: Server-side encrypted channel negotiation
