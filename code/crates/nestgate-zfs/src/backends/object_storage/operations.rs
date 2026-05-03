@@ -49,12 +49,6 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         let marker_path = format!("{bucket_name}/.nestgate-pool-marker");
         debug!("Pool marker path: {}", marker_path);
 
-        // In production with S3 SDK:
-        // match self.client.put_object(&marker_path, marker_data.as_bytes()).await {
-        //     Ok(()) => debug!("Pool marker created: {}", marker_path),
-        //     Err(e) => warn!("Pool marker creation failed (non-fatal): {}", e),
-        // }
-
         let pool = ObjectPool {
             name: name.to_string(),
             bucket: bucket_name.clone(),

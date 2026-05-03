@@ -43,8 +43,6 @@ uuid = { workspace = true }
 
 [features]
 default = []
-# BTSP handshake client (JSON-RPC to BearDog security capability; no crypto in NestGate).
-btsp = []
 # Orchestrator registration stub and related dev-only RPC helpers (opt-in).
 dev-stubs = []
 

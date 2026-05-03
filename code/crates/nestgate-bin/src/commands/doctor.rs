@@ -164,7 +164,12 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                             if parts.len() >= 3
                                 && let Ok(size) = parts[2].parse::<u64>()
                             {
-                                println!("   ARC size: {:.2} MB", size as f64 / 1024.0 / 1024.0);
+                                #[expect(
+                                    clippy::cast_precision_loss,
+                                    reason = "display-only human-readable output"
+                                )]
+                                let arc_mb = size as f64 / 1024.0 / 1024.0;
+                                println!("   ARC size: {arc_mb:.2} MB");
                             }
                             break;
                         }

@@ -205,6 +205,7 @@ async fn benchmark_storage_from_env_source(
     let write_path = bench_dir.join("bench_data");
     tokio::fs::write(&write_path, &data).await?;
     let write_elapsed = write_start.elapsed();
+    #[expect(clippy::cast_precision_loss, reason = "display-only benchmark output")]
     let write_mbps = size_mb as f64 / write_elapsed.as_secs_f64();
     println!(
         "  Write: {:.1} MB/s ({:.2}ms for {} MB)",
@@ -218,6 +219,7 @@ async fn benchmark_storage_from_env_source(
     let read_start = std::time::Instant::now();
     let _read_data = tokio::fs::read(&write_path).await?;
     let read_elapsed = read_start.elapsed();
+    #[expect(clippy::cast_precision_loss, reason = "display-only benchmark output")]
     let read_mbps = size_mb as f64 / read_elapsed.as_secs_f64();
     println!(
         "  Read:  {:.1} MB/s ({:.2}ms for {} MB)",

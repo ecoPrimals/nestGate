@@ -27,7 +27,7 @@ impl Cli {
 
         let auth_mode = std::env::var("NESTGATE_AUTH_MODE").unwrap_or_default();
         let delegated = auth_mode.eq_ignore_ascii_case("delegated")
-            || auth_mode.eq_ignore_ascii_case("beardog");
+            || auth_mode.eq_ignore_ascii_case("external");
         if delegated {
             tracing::info!(
                 "Auth mode: delegated — JWT validation skipped, \

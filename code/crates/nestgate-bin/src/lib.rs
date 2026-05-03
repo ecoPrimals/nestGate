@@ -16,9 +16,7 @@
     missing_docs,
     clippy::missing_errors_doc,
     clippy::module_name_repetitions,
-    clippy::unused_async,
-    clippy::cast_precision_loss,
-    clippy::items_after_statements
+    clippy::unused_async
 )]
 
 //! **NESTGATE BINARY LIBRARY**

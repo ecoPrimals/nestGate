@@ -8,6 +8,8 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use nestgate_api::routes::create_router_with_state;
+
 use tracing::info;
 
 use crate::cli::{ServiceAction, port_from_env_or_default};
@@ -229,8 +231,6 @@ impl ServiceManager {
             info!("Using configuration file: {}", config_path);
         }
 
-        // Create the API router from nestgate-api crate
-        use nestgate_api::routes::create_router_with_state;
         let app = create_router_with_state();
 
         // Create HTTP TCP listener

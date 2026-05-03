@@ -222,53 +222,6 @@ impl Connection {
         Err(NestGateError::api_error(
             "External HTTP deprecated. Use orchestration RPC via discover_orchestration()",
         ))
-
-        /*let mut req_builder = self.client.request(method, &url);
-
-        // Add headers
-        for (key, value) in &request.headers {
-            req_builder = req_builder.header(key, value);
-        }
-
-        // Add body if present
-        if let Some(body) = &request.body {
-            match body {
-                super::request::RequestBody::Raw(bytes) => {
-                    req_builder = req_builder.body(bytes.to_vec());
-                }
-                super::request::RequestBody::Json(json) => {
-                    req_builder = req_builder.body(json.to_string());
-                }
-                super::request::RequestBody::Form(data) => {
-                    req_builder = req_builder.form(data);
-                }
-            }
-        }
-
-        // Send request
-        let resp = req_builder
-            .send()
-            .await
-            .map_err(|e| NestGateError::network_error(format!("HTTP request failed: {}", e)))?;
-
-        // Convert response
-        let status = super::types::StatusCode::new(resp.status().as_u16());
-
-        // Extract headers
-        let mut headers = HeaderMap::new();
-        for (key, value) in resp.headers() {
-            if let Ok(value_str) = value.to_str() {
-                headers.insert(key.to_string(), value_str.to_string());
-            }
-        }
-
-        // Get body
-        let body = resp.bytes().await.map_err(|e| {
-            NestGateError::network_error(format!("Failed to read response body: {}", e))
-        })?;
-
-        Ok(Response::new(status, headers, body.to_vec()))
-        */
     }
 
     /// Get connection statistics

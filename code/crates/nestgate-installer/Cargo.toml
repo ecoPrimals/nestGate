@@ -42,13 +42,12 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 console = "0.15"
 # TLS: delegated to system curl (download.rs) — eliminates ring/rustls/reqwest C deps.
-# BearDog provides pure-Rust crypto for the ecosystem; the installer runs before the
-# ecosystem is available, so it uses the system TLS stack via curl.
+# The security capability provider offers pure-Rust crypto for the ecosystem; the installer
+# runs before the ecosystem is available, so it uses the system TLS stack via curl.
 dialoguer = { version = "0.11", features = ["completion"] }
 
 [features]
-default = ["cli"]
-cli = []
+default = []
 
 [dev-dependencies]
 temp-env = { workspace = true }
