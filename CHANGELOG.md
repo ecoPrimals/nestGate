@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 52: Phase 3 transport hardening, JWT NUCLEUS bypass, deep debt sweep (May 3, 2026)
+
+- **Phase 3 transport hardened**: `run_encrypted_frame_loop` now returns `Err`
+  on non-EOF read errors and decrypt failures instead of silently returning
+  `Ok(())`. EOF detection broadened to cover all tokio variants (`early eof`,
+  `unexpected end of file`). New test: corrupt frame propagation.
+- **JWT NUCLEUS bypass**: `Cli::run()` auto-detects BTSP composition via
+  `is_btsp_required()` — when `FAMILY_ID` is set and `BIOMEOS_INSECURE` is
+  not `"1"`, JWT validation is skipped. NUCLEUS stacks no longer need
+  `NESTGATE_JWT_SECRET` or explicit `NESTGATE_AUTH_MODE=delegated` to start.
+- **`is_btsp_required` unified**: `btsp_client.rs` now delegates to the
+  canonical `btsp_server_handshake` version — eliminates env-var divergence
+  (`BIOMEOS_FAMILY_ID`/`NESTGATE_FAMILY_ID` fallbacks) and `"standalone"`
+  sentinel handling mismatch.
+- **Dead features removed**: nestgate-zfs `zfs`/`advanced`/`ai`/`performance`
+  (declared but never cfg-gated in code).
+- **BEARDOG refs evolved**: `SECURITY_SOCKET` added to `storage_encryption.rs`
+  discovery chain; `bearDog` comment in nestgate-security Cargo.toml evolved
+  to capability-agnostic language; transport README socket path updated.
+- **Migration commentary cleaned**: nestgate-api `config.rs` — 120 lines of
+  duplicated canonical type alias banners collapsed to concise per-alias docs.
+- **Verification**: clippy PASS (0 warnings), 8,872 lib tests / 0 failures.
+
 ### Session 51: BTSP Phase 3 wiring, deep debt sweep, stale features (May 2, 2026)
 
 - **BTSP Phase 3 wiring completed**: Three gaps from primalSpring audit closed:

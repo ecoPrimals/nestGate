@@ -2,16 +2,16 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-05-02)**  
+**Verification (as of 2026-05-03)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,869 passing, 0 failures, 60 ignored  
+- **Tests**: `cargo test --workspace --lib` — 8,872 passing, 0 failures, 60 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,869 passing, 60 ignored, 0 failures  
+- **Tests (last recorded)**: 8,872 passing, 60 ignored, 0 failures  
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -26,17 +26,21 @@
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate); JSON-line + length-prefixed dual framing; 6-tier security socket discovery; security provider wire contract aligned (`family_seed`, `session_token`, `btsp.session.verify` params); mode-aware error frames; `SECURITY_FAMILY_SEED` canonical env var (Session 45c)  
-- **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners  
+- **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners; transport hardened (decrypt/read errors propagate as Err, not silent Ok)
+- **JWT NUCLEUS bypass**: BTSP composition auto-detected via `is_btsp_required()` — skips `NESTGATE_JWT_SECRET` validation when FAMILY_ID signals a NUCLEUS stack
+- **`is_btsp_required` unified**: client delegates to canonical server version (eliminates env-var and `"standalone"` divergence)  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code)  
 - **Primal sovereignty**: zero hardcoded other-primal names in production; capability-based socket discovery (`security.sock`, `crypto.sock`); `DEFAULT_SERVICE_NAME` for self-references  
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
 - **Lint mega-list narrowing**: Crate-level lint suppressions narrowed: nestgate-core 22→16, nestgate-zfs 24→17, nestgate-api 14→12, nestgate-installer 12→2/4, nestgate-bin 6→4 (real code fixes, not just moved)
-- **Stale features removed**: `btsp` (nestgate-rpc, never gated), `cli` (nestgate-installer, never gated)
+- **Stale features removed**: `btsp` (nestgate-rpc), `cli` (nestgate-installer), `zfs`/`advanced`/`ai`/`performance` (nestgate-zfs — declared but never cfg-gated)
 - **Commented-out code removed**: pool.rs HTTP block, operations.rs S3 stub, production_capability_bridge.rs K8s/Consul futures
-- **Visibility narrowed**: `pub mod protocol` → `pub(crate)` in nestgate-rpc  
-**Last Updated**: May 2, 2026
+- **Visibility narrowed**: `pub mod protocol` → `pub(crate)` in nestgate-rpc
+- **Migration commentary cleaned**: nestgate-api config.rs — 120 lines of duplicated alias banners collapsed
+- **BEARDOG refs evolved**: `SECURITY_SOCKET` added to discovery chain; doc/comment references updated to capability-agnostic language  
+**Last Updated**: May 3, 2026
 
 ---
 
@@ -212,7 +216,6 @@ cargo doc --no-deps --workspace
 The repository root package is mainly for integration tests. Its `[features]` are:
 
 - **`dev-stubs`** — enables dev/stub code in `nestgate-core` and `nestgate-zfs` for tests.
-- **`streaming-rpc`** — reserved for streaming RPC work (see root `Cargo.toml`).
 
 Other workspace crates define their own features (for example `sysinfo`, per-crate `dev-stubs`). Check each crate’s `Cargo.toml` for the authoritative list.
 

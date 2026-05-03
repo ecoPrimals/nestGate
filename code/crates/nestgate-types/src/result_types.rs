@@ -342,12 +342,8 @@ mod examples {
 
 // Domain-specific types with different error types remain in their respective modules:
 // - UniversalZfsResult<T> in nestgate-api/handlers/zfs/universal_zfs/types.rs
-// - AIResult<T> in nestgate-core/ai_first_refactored.rs
 // - NotificationResult<T> in nestgate-core/smart_abstractions/notification_channels.rs
-// - NetworkResult<T> in nestgate-network/error.rs
 // - InstallerResult<T> in nestgate-installer/error.rs
-//
-// These are legitimate because they use different error types or have specialized semantics.
 //
 // ## Consolidation History
 //

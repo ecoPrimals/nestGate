@@ -83,7 +83,7 @@ members = [
 ]
 
 # All ecoPrimals are AGPL-3.0-or-later (strictest copyleft)
-# Humans get free use through beardog entropy systems
+# Humans get free use through the scyBorg triple license
 [workspace.package]
 rust-version = "1.85"
 license = "AGPL-3.0-or-later"

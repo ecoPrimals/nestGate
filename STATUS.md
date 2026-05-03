@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 2, 2026 (Session 51: BTSP Phase 3 wiring, deep debt sweep, stale features, commented code, lint scoping)  
+**Last Updated**: May 3, 2026 (Session 52: Phase 3 transport hardening, JWT NUCLEUS bypass, BTSP client unification, dead features, beardog refs)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of May 2, 2026
 Format:             CLEAN (cargo fmt --check passes), as of May 2, 2026
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 2, 2026
-Tests:              8,869 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 2, 2026
+Tests:              8,872 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 3, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -39,7 +39,9 @@ Registry:           capability_registry.toml — machine-readable self-knowledge
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
 BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, security provider wire contract aligned: family_seed base64-encoded, session_token|session_id, btsp.session.verify on reused connection, btsp.negotiate eliminated; mode-aware error frames; persistent BufReader for multi-call relay; SECURITY_FAMILY_SEED canonical env var (backward-compat BEARDOG_FAMILY_SEED)
-BTSP Phase 3:      PASS — `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); UDS + isomorphic IPC listeners; plaintext fallback
+BTSP Phase 3:      PASS — `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); UDS + isomorphic IPC listeners; plaintext fallback; transport hardened (decrypt/read errors propagate as Err; Session 52)
+JWT NUCLEUS:       PASS — BTSP composition auto-detected via is_btsp_required(); JWT validation skipped when FAMILY_ID signals NUCLEUS stack (Session 52)
+is_btsp_required:  UNIFIED — client delegates to canonical server version (Session 52)
 TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS
 UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
