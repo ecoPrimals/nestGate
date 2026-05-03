@@ -39,6 +39,7 @@ tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde-tran
 [dev-dependencies]
 tokio-test = { workspace = true }
 tempfile = { workspace = true }
+temp-env = { workspace = true }
 
 [features]
 default = ["tarpc-server"]

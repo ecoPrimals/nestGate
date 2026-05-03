@@ -28,10 +28,16 @@ impl Cli {
         let auth_mode = std::env::var("NESTGATE_AUTH_MODE").unwrap_or_default();
         let delegated = auth_mode.eq_ignore_ascii_case("delegated")
             || auth_mode.eq_ignore_ascii_case("external");
+        let btsp_composition = nestgate_core::rpc::btsp_server_handshake::is_btsp_required();
         if delegated {
             tracing::info!(
                 "Auth mode: delegated — JWT validation skipped, \
                  auth delegated to security capability provider"
+            );
+        } else if btsp_composition {
+            tracing::info!(
+                "BTSP composition detected (FAMILY_ID set) — JWT validation \
+                 skipped, auth delegated to security capability provider via BTSP"
             );
         } else {
             nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
@@ -193,5 +199,38 @@ mod tests {
     #[test]
     fn resolve_family_id_none_when_no_cli_and_no_env() {
         assert!(resolve_family_id(None, None).is_none());
+    }
+
+    #[test]
+    fn btsp_composition_detected_when_family_id_set() {
+        temp_env::with_vars(
+            [
+                ("FAMILY_ID", Some("test-nucleus")),
+                ("BIOMEOS_INSECURE", None::<&str>),
+            ],
+            || {
+                assert!(
+                    nestgate_core::rpc::btsp_server_handshake::is_btsp_required(),
+                    "BTSP should be required when FAMILY_ID is set"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn btsp_composition_not_detected_standalone() {
+        temp_env::with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            || {
+                assert!(
+                    !nestgate_core::rpc::btsp_server_handshake::is_btsp_required(),
+                    "BTSP should not be required in standalone mode"
+                );
+            },
+        );
     }
 }

@@ -222,18 +222,18 @@ where
     loop {
         let frame = match read_frame(reader).await {
             Ok(f) => f,
-            Err(e) if is_eof_error(&e) => break,
+            Err(e) if is_eof_error(&e) => return Ok(()),
             Err(e) => {
                 warn!("BTSP encrypted frame read error: {e}");
-                break;
+                return Err(e);
             }
         };
 
         let plaintext = match session_keys.decrypt(&frame) {
             Ok(p) => p,
             Err(e) => {
-                warn!("BTSP decrypt error: {e}");
-                break;
+                warn!("BTSP decrypt error (possible tampering): {e}");
+                return Err(e);
             }
         };
 
@@ -253,8 +253,6 @@ where
         let response = dispatch(request).await;
         encrypt_and_write(writer, session_keys, &response).await?;
     }
-
-    Ok(())
 }
 
 /// Encrypt a JSON value and write as a length-prefixed frame.
@@ -271,7 +269,10 @@ async fn encrypt_and_write<W: AsyncWriteExt + Unpin>(
 
 fn is_eof_error(e: &NestGateError) -> bool {
     let msg = e.to_string();
-    msg.contains("UnexpectedEof") || msg.contains("unexpected eof")
+    msg.contains("UnexpectedEof")
+        || msg.contains("unexpected eof")
+        || msg.contains("early eof")
+        || msg.contains("unexpected end of file")
 }
 
 #[cfg(test)]
@@ -504,5 +505,37 @@ mod tests {
         assert_eq!(response["id"], 1);
 
         server_handle.await.expect("server task");
+    }
+
+    #[tokio::test]
+    async fn encrypted_loop_returns_err_on_corrupt_frame() {
+        let handshake_key = [0x42u8; 32];
+        let client_nonce = [3u8; 32];
+        let server_nonce = [4u8; 32];
+
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
+            .expect("server keys");
+
+        let (mut client_tx, server_rx) = duplex(8192);
+        let (server_tx, _client_rx) = duplex(8192);
+
+        let noop_dispatch = |_request: Value| async move {
+            serde_json::json!({"jsonrpc": "2.0", "result": null, "id": null})
+        };
+
+        let server_handle = tokio::spawn(async move {
+            let mut rx = server_rx;
+            let mut tx = server_tx;
+            run_encrypted_frame_loop(&mut rx, &mut tx, &server_keys, noop_dispatch).await
+        });
+
+        let garbage = vec![0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x11, 0x22, 0x33];
+        write_frame(&mut client_tx, &garbage)
+            .await
+            .expect("write garbage frame");
+        drop(client_tx);
+
+        let result = server_handle.await.expect("server task finished");
+        assert!(result.is_err(), "decrypt error should propagate as Err");
     }
 }
