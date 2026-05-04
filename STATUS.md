@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 3, 2026 (Session 52: Phase 3 transport hardening, JWT NUCLEUS bypass, BTSP client unification, dead features, beardog refs)  
+**Last Updated**: May 4, 2026 (Session 53: primalSpring audit triage, doc drift fix, workspace dep consistency)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,11 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 2, 2026
-Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of May 2, 2026
-Format:             CLEAN (cargo fmt --check passes), as of May 2, 2026
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 2, 2026
-Tests:              8,872 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 3, 2026
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 4, 2026
+Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of May 4, 2026
+Format:             CLEAN (cargo fmt --check passes), as of May 4, 2026
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 4, 2026
+Tests:              8,872 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 4, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code

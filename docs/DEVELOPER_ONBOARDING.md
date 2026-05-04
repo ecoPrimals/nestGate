@@ -278,7 +278,7 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 ```
 
 2. Wire up in HTTP server
-3. Add tests in `tests/api/`
+3. Add tests in the crate's `src/` (unit) or `tests/` (integration)
 4. Document in `docs/api/REST_API.md`
 
 ### **Add Environment Variable**:
@@ -290,7 +290,7 @@ pub async fn my_endpoint(req: MyRequest) -> Result<MyResponse> {
 
 ### **Add a New Service**:
 
-1. Create in `services/my_service/`
+1. Create module in `code/crates/nestgate-core/src/services/`
 2. Implement service trait
 3. Add configuration
 4. Add comprehensive tests

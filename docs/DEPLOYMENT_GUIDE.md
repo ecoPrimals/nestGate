@@ -398,8 +398,9 @@ sudo iptables -A INPUT -p tcp --dport 9090 -j ACCEPT
 
 ```bash
 # Enable ecosystem discovery
-NESTGATE_ECOSYSTEM_DISCOVERY=true
-NESTGATE_DISCOVERY_INTERVAL=60
+NESTGATE_DISCOVERY_ENABLED=true
+# Discovery endpoint (set by orchestration layer)
+# ECOSYSTEM_DISCOVERY_ENDPOINT=http://...
 
 # Configure service endpoints
 ORCHESTRATION_DISCOVERY_ENDPOINT=http://songbird:8081

@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 53: primalSpring audit triage, doc drift fix, deep debt sweep (May 4, 2026)
+
+- **primalSpring Phase 58 audit triage**: 5 items reviewed — Phase 3 transport
+  (Sessions 51-52), JWT NUCLEUS bypass (Session 52), and
+  `storage.fetch_external` (already wired) confirmed resolved. aarch64 musl
+  segfault addressed by existing `.cargo/config.toml` `relocation-model=static`.
+- **Doc drift fixed**: STATUS method counts corrected (HTTP 22→23, semantic
+  42→43). JSON-RPC server `info!` log now derives method count dynamically via
+  `module.method_names().count()` instead of hardcoded `"22"`.
+- **Workspace dep consistency**: `crossbeam` centralized from
+  nestgate-performance local `"0.8"` pin to `[workspace.dependencies]`.
+- **Attribute ordering**: `nestgate-env-process-shim` normalized to
+  SPDX → forbid → warn → docs convention.
+- **Debris removed**: Session 52 cleaned 9,837 lines (dead `code/tests/`,
+  orphaned `tests/chaos/` and `tests/common/` files, stale refs).
+- **Verification**: clippy PASS (0 warnings), 8,872 lib tests / 0 failures.
+
 ### Session 52: Phase 3 transport hardening, JWT NUCLEUS bypass, deep debt sweep (May 3, 2026)
 
 - **Phase 3 transport hardened**: `run_encrypted_frame_loop` now returns `Err`

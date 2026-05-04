@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-05-03)**  
+**Verification (as of 2026-05-04)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace --lib` — 8,872 passing, 0 failures, 60 ignored  
@@ -39,8 +39,10 @@
 - **Commented-out code removed**: pool.rs HTTP block, operations.rs S3 stub, production_capability_bridge.rs K8s/Consul futures
 - **Visibility narrowed**: `pub mod protocol` → `pub(crate)` in nestgate-rpc
 - **Migration commentary cleaned**: nestgate-api config.rs — 120 lines of duplicated alias banners collapsed
-- **BEARDOG refs evolved**: `SECURITY_SOCKET` added to discovery chain; doc/comment references updated to capability-agnostic language  
-**Last Updated**: May 3, 2026
+- **BEARDOG refs evolved**: `SECURITY_SOCKET` added to discovery chain; doc/comment references updated to capability-agnostic language
+- **Doc drift fixed**: STATUS method counts corrected (HTTP 22→23, semantic 42→43); JSON-RPC server info log dynamically derives method count via `module.method_names()`
+- **Workspace dep consistency**: `crossbeam` centralized from local pin to `[workspace.dependencies]`  
+**Last Updated**: May 4, 2026
 
 ---
 

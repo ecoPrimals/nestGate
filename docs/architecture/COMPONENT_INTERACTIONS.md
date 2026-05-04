@@ -181,7 +181,7 @@ Client Process         Unix Socket           NestGate Server        Storage
 3. Establish connections
 4. Maintain service registry
 
-### **5. Configuration System** (`config/environment.rs`)
+### **5. Configuration System** (`nestgate-config`)
 
 **Responsibility**: Environment-driven configuration
 

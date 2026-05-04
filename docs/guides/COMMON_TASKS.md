@@ -121,7 +121,7 @@ NESTGATE_ZFS_POOL=tank
 
 # Discovery
 NESTGATE_DISCOVERY_ENABLED=true
-NESTGATE_DISCOVERY_INTERVAL=30
+# NESTGATE_CONNECT_TIMEOUT=5  # optional: discovery timeout in seconds
 
 # Security
 NESTGATE_TLS_ENABLED=true
