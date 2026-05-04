@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 //! Thin wrappers around [`std::env::set_var`] and [`std::env::remove_var`].
@@ -15,8 +16,6 @@
 //! Unit tests in this crate intentionally use `temp_env` to scope **process** environment
 //! mutations while verifying the shim. Call-site tests that only need isolated reads should use the
 //! `MapEnv` / `EnvSource` pattern from `nestgate-types` instead of mutating the global environment.
-
-#![forbid(unsafe_code)]
 
 use std::ffi::OsStr;
 

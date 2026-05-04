@@ -21,6 +21,6 @@ nestgate-core = { path = "../nestgate-core" }
 bytes = { workspace = true }
 
 tracing = { workspace = true }
-crossbeam = "0.8"
+crossbeam = { workspace = true }
 dashmap = { workspace = true }
 tokio = { workspace = true }

@@ -136,6 +136,7 @@ toml = "0.8"
 regex = "1.10"
 
 # Concurrency and performance
+crossbeam = "0.8"
 dashmap = "6.1"
 parking_lot = "0.12"
 lru = "0.16"
