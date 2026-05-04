@@ -30,8 +30,8 @@ Auth mode bypass:   NESTGATE_AUTH_MODE=delegated|external — auth delegated to 
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
-IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 22 methods (JSON_RPC_CAPABILITIES_METHODS const)
-IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 42 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
+IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
+IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 43 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol, transport
 Emoji in logs/code: ZERO in production sources, module docs, and installer output — professional structured logging (Session 48)
@@ -67,7 +67,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ## Session 43 — Deep Debt Evolution & primalSpring Compliance (Apr 12, 2026)
 
 ### primalSpring Audit Response
-- **Doc drift**: STATUS.md method counts reconciled to code — per-surface: UDS 51 (`UNIX_SOCKET_SUPPORTED_METHODS`), HTTP 23 (`JSON_RPC_CAPABILITIES_METHODS`), tarpc semantic router 42 explicit routes (`semantic_router/mod.rs`)
+- **Doc drift**: STATUS.md method counts reconciled to code — per-surface: UDS 51 (`UNIX_SOCKET_SUPPORTED_METHODS`), HTTP 23 (`JSON_RPC_CAPABILITIES_METHODS`), tarpc semantic router 43 explicit routes (`semantic_router/mod.rs`)
 - **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
 - **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
 - **Deprecated APIs**: 210→187→114→0 (Session 43w: all 114 remaining deprecated attrs resolved — premature deprecations un-deprecated, dead code removed)

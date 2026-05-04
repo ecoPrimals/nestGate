@@ -178,13 +178,14 @@ impl<S: StorageBackend + 'static> JsonRpcServer<S> {
 
         // Create RPC module with all methods registered
         let module = Self::build_module(self.state)?;
+        let method_count = module.method_names().count();
 
         // Start server
         let handle = server.start(module);
 
         info!("NestGate JSON-RPC 2.0 server listening on {}", addr);
         info!("   Endpoint: http://{}/jsonrpc", addr);
-        info!("   Methods: 22 registered");
+        info!("   Methods: {} registered", method_count);
         info!("   Protocol: Primary=tarpc, Secondary=JSON-RPC");
 
         Ok((handle, addr))
