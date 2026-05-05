@@ -653,7 +653,7 @@ pub(super) async fn handle_beacon_list(state: &StorageState) -> HandlerResult {
     Ok(json!({ "peer_ids": peer_ids, "count": count }))
 }
 
-/// Wire Standard L2 envelope for `capabilities.list` / `discover_capabilities`.
+/// Wire Standard L3 envelope for `capabilities.list` / `discover_capabilities`.
 pub(super) fn capabilities_response() -> Value {
     json!({
         "primal": DEFAULT_SERVICE_NAME,
@@ -674,6 +674,8 @@ pub(super) fn capabilities_response() -> Value {
             "zfs.snapshot.list", "zfs.health",
             "health.check", "health.liveness", "health.readiness",
             "capabilities.list", "identity.get"
-        ]
+        ],
+        "protocol": "jsonrpc-2.0",
+        "transport": ["uds", "tcp", "http"]
     })
 }

@@ -322,7 +322,7 @@ pub fn capabilities_list() -> Result<Value> {
             }
         ],
         "protocol": "jsonrpc-2.0",
-        "transport": ["uds", "http"]
+        "transport": ["uds", "tcp", "http"]
     }))
 }
 

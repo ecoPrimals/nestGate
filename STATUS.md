@@ -33,7 +33,7 @@ IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, 
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 43 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
-Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol, transport
+Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"] — all four capabilities.list surfaces return L3 with protocol + transport fields
 Emoji in logs/code: ZERO in production sources, module docs, and installer output — professional structured logging (Session 48)
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
@@ -42,7 +42,8 @@ BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line d
 BTSP Phase 3:      PASS — `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); UDS + isomorphic IPC listeners; plaintext fallback; transport hardened (decrypt/read errors propagate as Err; Session 52)
 JWT NUCLEUS:       PASS — BTSP composition auto-detected via is_btsp_required(); JWT validation skipped when FAMILY_ID signals NUCLEUS stack (Session 52)
 is_btsp_required:  UNIFIED — client delegates to canonical server version (Session 52)
-TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS
+TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS; newline-delimited JSON-RPC 2.0; default port via DEFAULT_API_PORT (env-overridable)
+Discovery tiers:   Tier 3 (UDS filesystem convention: storage-{fid}.sock symlink), Tier 4 (capability_registry.toml manifest), Tier 5 (TCP probing when --port active). Tiers 1-2 (Songbird ipc.resolve, biomeOS capability.discover) handled by orchestration layer
 UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)

@@ -63,6 +63,8 @@ pub(super) fn capabilities_list(
             "session.delete",
             "capabilities.list",
             "identity.get"
-        ]
+        ],
+        "protocol": "jsonrpc-2.0",
+        "transport": ["uds", "tcp", "http"]
     }))
 }

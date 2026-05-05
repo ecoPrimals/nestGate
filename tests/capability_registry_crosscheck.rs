@@ -200,11 +200,13 @@ fn no_duplicate_methods_across_domains() {
 }
 
 #[test]
-fn transport_includes_uds() {
+fn transport_includes_uds_tcp_http() {
     let table: toml::Table = REGISTRY_TOML.parse().expect("valid TOML");
     let transport = table["primal"]["transport"]
         .as_array()
         .expect("transport array");
     let values: Vec<&str> = transport.iter().map(|v| v.as_str().unwrap()).collect();
     assert!(values.contains(&"uds"), "transport must include 'uds'");
+    assert!(values.contains(&"tcp"), "transport must include 'tcp'");
+    assert!(values.contains(&"http"), "transport must include 'http'");
 }

@@ -139,7 +139,7 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
         },
     ))?;
 
-    // capabilities.list — Wire Standard L2 envelope
+    // capabilities.list — Wire Standard L3 envelope (protocol + transport)
     map_jsonrpc_registration(module.register_async_method(
         "capabilities.list",
         |_params, _ctx, _ext| async move {
@@ -147,7 +147,9 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
                 "version": env!("CARGO_PKG_VERSION"),
-                "methods": JSON_RPC_CAPABILITIES_METHODS
+                "methods": JSON_RPC_CAPABILITIES_METHODS,
+                "protocol": "jsonrpc-2.0",
+                "transport": ["uds", "tcp", "http"]
             }))
         },
     ))?;
