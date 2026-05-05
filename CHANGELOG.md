@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 54: Wire Standard L3 all surfaces, protocol audit, deep debt (May 5, 2026)
+
+- **Wire Standard L3 on all `capabilities.list` surfaces**: All four implementations
+  (UDS legacy, HTTP jsonrpsee, semantic router, isomorphic IPC adapter) now return
+  `protocol` and `transport` fields. Previously only UDS legacy had them.
+- **Transport expanded**: `["uds", "http"]` → `["uds", "tcp", "http"]` across all
+  surfaces, `capability_registry.toml`, and cross-check tests to reflect
+  `TcpFallbackServer` support.
+- **`consumed_capabilities` aligned**: `"type": "discovery"` → `"type": "discovery_mesh"`
+  in `capabilities_list()` to match `capability_registry.toml` naming.
+- **`discover_capabilities` upgraded**: Now includes `protocol` and `transport` fields
+  (was missing Wire Standard L3 fields).
+- **`CAPABILITY_MAPPINGS.md` corrected**: Removed stale `"network"` consumed capability,
+  replaced with actual `security`/`discovery_mesh`/`crypto` entries; transport order
+  aligned to code.
+- **Discovery tiers documented**: STATUS.md now explicitly lists supported tiers (3-5
+  natively; 1-2 via orchestration layer).
+- **Verification**: clippy PASS (0 warnings), 8,872 lib tests / 0 failures.
+
 ### Session 53: primalSpring audit triage, doc drift fix, deep debt sweep (May 4, 2026)
 
 - **primalSpring Phase 58 audit triage**: 5 items reviewed — Phase 3 transport

@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-05-04)**  
+**Verification (as of 2026-05-05)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace --lib` — 8,872 passing, 0 failures, 60 ignored  
@@ -41,8 +41,11 @@
 - **Migration commentary cleaned**: nestgate-api config.rs — 120 lines of duplicated alias banners collapsed
 - **BEARDOG refs evolved**: `SECURITY_SOCKET` added to discovery chain; doc/comment references updated to capability-agnostic language
 - **Doc drift fixed**: STATUS method counts corrected (HTTP 22→23, semantic 42→43); JSON-RPC server info log dynamically derives method count via `module.method_names()`
-- **Workspace dep consistency**: `crossbeam` centralized from local pin to `[workspace.dependencies]`  
-**Last Updated**: May 4, 2026
+- **Workspace dep consistency**: `crossbeam` centralized from local pin to `[workspace.dependencies]`
+- **Wire Standard L3 on all surfaces**: `protocol` + `transport` fields added to ALL four `capabilities.list` implementations (UDS, HTTP, semantic router, isomorphic adapter); transport: `["uds", "tcp", "http"]`
+- **`consumed_capabilities` aligned**: `"discovery"` → `"discovery_mesh"` in code to match `capability_registry.toml`; stale `CAPABILITY_MAPPINGS.md` consumed entries corrected
+- **Discovery tiers documented**: Tier 3 (UDS convention), Tier 4 (manifest), Tier 5 (TCP probing) natively; Tiers 1-2 via orchestration  
+**Last Updated**: May 5, 2026
 
 ---
 
