@@ -311,7 +311,7 @@ pub fn capabilities_list() -> Result<Value> {
                 "required": false
             },
             {
-                "type": "discovery",
+                "type": "discovery_mesh",
                 "reason": "Service mesh registration and heartbeat (discovery capability provider)",
                 "required": false
             },
@@ -335,6 +335,8 @@ pub fn discover_capabilities() -> Result<Value> {
         "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
         "capabilities": UNIX_SOCKET_SUPPORTED_METHODS,
+        "protocol": "jsonrpc-2.0",
+        "transport": ["uds", "tcp", "http"],
         "backend": {
             "type": "filesystem",
             "features": {

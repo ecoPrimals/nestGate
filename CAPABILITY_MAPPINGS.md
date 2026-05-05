@@ -40,12 +40,12 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
     {"type": "zfs", "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"]}
   ],
   "consumed_capabilities": [
-    {"type": "security", "methods": ["verify_token", "encrypt", "decrypt"]},
-    {"type": "crypto", "methods": ["sign", "verify"]},
-    {"type": "network", "methods": ["resolve", "connect"]}
+    {"type": "security", "reason": "BTSP handshake crypto delegation", "required": false},
+    {"type": "discovery_mesh", "reason": "Service mesh registration and heartbeat", "required": false},
+    {"type": "crypto", "reason": "Content-addressed hashing, signature verification (delegated via IPC)", "required": false}
   ],
   "protocol": "jsonrpc-2.0",
-  "transport": ["uds", "http", "tcp"]
+  "transport": ["uds", "tcp", "http"]
 }
 ```
 
