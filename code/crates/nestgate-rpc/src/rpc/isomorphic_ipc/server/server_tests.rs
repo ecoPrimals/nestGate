@@ -109,7 +109,7 @@ async fn handle_unix_connection_exits_on_immediate_peer_close() {
 
 #[cfg(unix)]
 #[tokio::test]
-async fn handle_unix_connection_btsp_required_bypasses_handshake_when_json_first_byte() {
+async fn handle_unix_connection_btsp_bypass_allows_exempt_methods() {
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
     temp_env::async_with_vars(
@@ -123,7 +123,7 @@ async fn handle_unix_connection_btsp_required_bypasses_handshake_when_json_first
 
             let (mut read_half, mut write_half) = tokio::io::split(client_sock);
             let client = async {
-                let req = br#"{"jsonrpc":"2.0","method":"demo","id":7}"#;
+                let req = br#"{"jsonrpc":"2.0","method":"health.check","id":7}"#;
                 write_half.write_all(req).await.expect("write");
                 write_half.write_all(b"\n").await.expect("newline");
                 write_half.shutdown().await.expect("shutdown write half");
@@ -135,8 +135,49 @@ async fn handle_unix_connection_btsp_required_bypasses_handshake_when_json_first
                     .await
                     .expect("read response");
                 let v: Value = serde_json::from_str(line.trim()).expect("json");
-                assert_eq!(v["id"], 1);
+                assert_eq!(v["id"], 1, "exempt method should reach handler");
                 assert_eq!(v["result"], "ok");
+            };
+
+            let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+
+            tokio::join!(client, server).1.expect("server loop");
+        },
+    )
+    .await;
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn handle_unix_connection_btsp_bypass_rejects_gated_methods() {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+    temp_env::async_with_vars(
+        [
+            ("FAMILY_ID", Some("custom-prod-family")),
+            ("BIOMEOS_INSECURE", None::<&str>),
+        ],
+        async {
+            let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+            let handler = Arc::new(MockHandler);
+
+            let (mut read_half, mut write_half) = tokio::io::split(client_sock);
+            let client = async {
+                let req = br#"{"jsonrpc":"2.0","method":"storage.list","id":9}"#;
+                write_half.write_all(req).await.expect("write");
+                write_half.write_all(b"\n").await.expect("newline");
+                write_half.shutdown().await.expect("shutdown write half");
+
+                let mut buf_reader = BufReader::new(&mut read_half);
+                let mut line = String::new();
+                buf_reader
+                    .read_line(&mut line)
+                    .await
+                    .expect("read response");
+                let v: Value = serde_json::from_str(line.trim()).expect("json");
+                assert_eq!(v["error"]["code"], -32604, "gated method must be rejected");
+                assert_eq!(v["error"]["message"], "BTSP authentication required");
+                assert_eq!(v["error"]["data"]["method"], "storage.list");
             };
 
             let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
@@ -334,6 +375,7 @@ async fn json_rpc_keep_alive_loop_sends_idle_close_notification() {
             &mut buf_reader,
             &mut write_half,
             &handler,
+            true,
         )
         .await
         {

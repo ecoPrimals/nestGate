@@ -125,6 +125,32 @@ pub use isomorphic_ipc::{
     UnixSocketRpcHandler, connect_endpoint, discover_ipc_endpoint, is_platform_constraint,
 };
 
+/// Returns `true` if `method` may be served on a BTSP-required socket
+/// **without** completing a BTSP handshake.
+///
+/// Exempt methods are limited to read-only health/identity/capability
+/// discovery that exposes no user data and is required for primalSpring /
+/// biomeOS discovery probing.  Everything else (storage, session, bonding,
+/// templates, audit, NAT, ZFS, model) requires an authenticated connection.
+///
+/// The check is applied after `protocol::normalize_method`, so callers must
+/// strip any `nestgate.` prefix before calling.
+pub(crate) fn is_btsp_exempt_method(method: &str) -> bool {
+    matches!(
+        method,
+        "health"
+            | "health.check"
+            | "health.liveness"
+            | "health.readiness"
+            | "identity.get"
+            | "capabilities.list"
+            | "capability.list"
+            | "discover_capabilities"
+            | "discover.capabilities"
+            | "discovery.capability.register"
+    )
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -145,5 +171,52 @@ mod tests {
         )
         .expect("resolve");
         assert_eq!(cfg.source, SocketConfigSource::Environment);
+    }
+
+    #[test]
+    fn btsp_exempt_methods_cover_health_identity_capabilities() {
+        for method in [
+            "health",
+            "health.check",
+            "health.liveness",
+            "health.readiness",
+            "identity.get",
+            "capabilities.list",
+            "capability.list",
+            "discover_capabilities",
+            "discover.capabilities",
+            "discovery.capability.register",
+        ] {
+            assert!(
+                is_btsp_exempt_method(method),
+                "{method} should be BTSP-exempt"
+            );
+        }
+    }
+
+    #[test]
+    fn btsp_gated_methods_are_not_exempt() {
+        for method in [
+            "storage.list",
+            "storage.get",
+            "storage.put",
+            "storage.store",
+            "storage.retrieve",
+            "storage.delete",
+            "storage.exists",
+            "storage.stats",
+            "session.save",
+            "session.load",
+            "bonding.ledger.store",
+            "bonding.ledger.retrieve",
+            "templates.store",
+            "model.register",
+            "zfs.pool.list",
+        ] {
+            assert!(
+                !is_btsp_exempt_method(method),
+                "{method} should be BTSP-gated"
+            );
+        }
     }
 }

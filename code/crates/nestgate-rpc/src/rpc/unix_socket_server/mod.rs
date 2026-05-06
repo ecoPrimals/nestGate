@@ -349,8 +349,8 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
         };
 
         if is_json_rpc {
-            tracing::debug!("BTSP: first byte is '{{', bypassing handshake (JSON-RPC)");
-            return json_rpc_loop(&mut raw_reader, &mut writer, &state).await;
+            tracing::debug!("BTSP: first byte is '{{', bypassing handshake (restricted)");
+            return json_rpc_loop(&mut raw_reader, &mut writer, &state, false).await;
         }
 
         let family_id = state.family_id.as_deref().unwrap_or("default").to_string();
@@ -365,7 +365,7 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
         return post_handshake_phase3_or_plaintext(&mut raw_reader, &mut writer, &state).await;
     }
 
-    json_rpc_loop(&mut raw_reader, &mut writer, &state).await
+    json_rpc_loop(&mut raw_reader, &mut writer, &state, true).await
 }
 
 /// After a successful BTSP Phase 2 handshake, check whether the client
@@ -395,12 +395,12 @@ where
 
     let trimmed = first_line.as_slice().trim_ascii();
     if trimmed.is_empty() {
-        return json_rpc_loop(reader, writer, state).await;
+        return json_rpc_loop(reader, writer, state, true).await;
     }
 
     let parsed: Value = match serde_json::from_slice(trimmed) {
         Ok(v) => v,
-        Err(_) => return json_rpc_loop(reader, writer, state).await,
+        Err(_) => return json_rpc_loop(reader, writer, state, true).await,
     };
 
     let is_negotiate = parsed
@@ -424,14 +424,14 @@ where
             .flush()
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to flush: {e}")))?;
-        return json_rpc_loop(reader, writer, state).await;
+        return json_rpc_loop(reader, writer, state, true).await;
     }
 
     let keys =
         crate::rpc::btsp_phase3::transport::try_phase3_negotiate(&parsed, writer, true).await?;
 
     let Some(session_keys) = keys else {
-        return json_rpc_loop(reader, writer, state).await;
+        return json_rpc_loop(reader, writer, state, true).await;
     };
 
     info!("BTSP Phase 3: encrypted channel established, entering encrypted frame loop");
@@ -499,12 +499,49 @@ async fn dispatch_parsed_request(request: &Value, state: &StorageState) -> Value
 /// resets on every successful request so active connections are never reaped.
 const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
 
+/// Dispatch on an unauthenticated (BTSP-bypassed) connection.
+///
+/// Only BTSP-exempt methods are forwarded to the handler; everything else
+/// gets a `-32604 BTSP authentication required` error.
+async fn dispatch_or_reject_unauth(
+    request: JsonRpcRequest,
+    state: &StorageState,
+) -> JsonRpcResponse {
+    let method = crate::rpc::protocol::normalize_method(&request.method);
+    if crate::rpc::is_btsp_exempt_method(&method) {
+        return handle_request(request, state).await;
+    }
+    warn!(
+        method = request.method.as_ref(),
+        "Rejecting unauthenticated call to BTSP-gated method"
+    );
+    JsonRpcResponse {
+        jsonrpc: Arc::from("2.0"),
+        result: None,
+        error: Some(JsonRpcError {
+            code: -32604,
+            message: Cow::Borrowed("BTSP authentication required"),
+            data: Some(json!({"method": request.method})),
+        }),
+        id: request.id,
+    }
+}
+
 /// Event-driven JSON-RPC keep-alive loop.
 ///
 /// Uses `tokio::select!` to multiplex between I/O readiness and a resettable
 /// idle timer. On idle expiry the client receives a `connection.closing`
 /// notification before the socket is torn down.
-async fn json_rpc_loop<R, W>(reader: &mut R, writer: &mut W, state: &StorageState) -> Result<()>
+///
+/// When `btsp_authenticated` is `false` (BTSP required but the client sent
+/// plain JSON-RPC), only BTSP-exempt methods are dispatched; all others
+/// receive error -32604.
+async fn json_rpc_loop<R, W>(
+    reader: &mut R,
+    writer: &mut W,
+    state: &StorageState,
+    btsp_authenticated: bool,
+) -> Result<()>
 where
     R: tokio::io::AsyncBufReadExt + Unpin,
     W: tokio::io::AsyncWriteExt + Unpin,
@@ -536,7 +573,13 @@ where
                         debug!("Received request: {}", String::from_utf8_lossy(trimmed));
 
                         let response = match serde_json::from_slice::<JsonRpcRequest>(trimmed) {
-                            Ok(request) => handle_request(request, state).await,
+                            Ok(request) => {
+                                if btsp_authenticated {
+                                    handle_request(request, state).await
+                                } else {
+                                    dispatch_or_reject_unauth(request, state).await
+                                }
+                            }
                             Err(e) => {
                                 error!("Failed to parse JSON-RPC request: {}", e);
                                 JsonRpcResponse {

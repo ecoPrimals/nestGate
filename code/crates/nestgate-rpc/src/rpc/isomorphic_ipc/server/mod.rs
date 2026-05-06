@@ -288,9 +288,14 @@ impl IsomorphicIpcServer {
             };
 
             if is_plain_json_rpc {
-                tracing::debug!("BTSP: peeked JSON-RPC request, bypassing handshake");
-                return Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler)
-                    .await;
+                tracing::debug!("BTSP: peeked JSON-RPC request, bypassing handshake (restricted)");
+                return Self::json_rpc_keep_alive_loop(
+                    &mut raw_reader,
+                    &mut writer,
+                    &handler,
+                    false,
+                )
+                .await;
             }
 
             debug!("BTSP: non-JSON-RPC first line detected, starting handshake");
@@ -312,7 +317,7 @@ impl IsomorphicIpcServer {
             return Ok(());
         }
 
-        Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await
+        Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler, true).await
     }
 
     /// After Phase 2 handshake, intercept the first message to check for
@@ -339,12 +344,12 @@ impl IsomorphicIpcServer {
 
         let trimmed = first_line.as_slice().trim_ascii();
         if trimmed.is_empty() {
-            return Self::json_rpc_keep_alive_loop(reader, writer, handler).await;
+            return Self::json_rpc_keep_alive_loop(reader, writer, handler, true).await;
         }
 
         let parsed: Value = match serde_json::from_slice(trimmed) {
             Ok(v) => v,
-            Err(_) => return Self::json_rpc_keep_alive_loop(reader, writer, handler).await,
+            Err(_) => return Self::json_rpc_keep_alive_loop(reader, writer, handler, true).await,
         };
 
         let is_negotiate = parsed
@@ -358,7 +363,7 @@ impl IsomorphicIpcServer {
             writer.write_all(&response_bytes).await?;
             writer.write_all(b"\n").await?;
             writer.flush().await?;
-            return Self::json_rpc_keep_alive_loop(reader, writer, handler).await;
+            return Self::json_rpc_keep_alive_loop(reader, writer, handler, true).await;
         }
 
         let keys = crate::rpc::btsp_phase3::transport::try_phase3_negotiate(&parsed, writer, true)
@@ -366,7 +371,7 @@ impl IsomorphicIpcServer {
             .map_err(|e| anyhow::anyhow!("BTSP Phase 3 negotiate failed: {e}"))?;
 
         let Some(session_keys) = keys else {
-            return Self::json_rpc_keep_alive_loop(reader, writer, handler).await;
+            return Self::json_rpc_keep_alive_loop(reader, writer, handler, true).await;
         };
 
         info!("BTSP Phase 3: encrypted channel established (isomorphic IPC)");
@@ -401,10 +406,15 @@ impl IsomorphicIpcServer {
     /// timeout. On idle expiry the client receives a `connection.closing`
     /// JSON-RPC notification before the socket is torn down, giving it the
     /// opportunity to reconnect or flush pending work.
+    ///
+    /// When `btsp_authenticated` is `false` (BTSP required but the client
+    /// sent plain JSON-RPC), only BTSP-exempt methods (health, identity,
+    /// capabilities) are dispatched; all others receive error -32604.
     async fn json_rpc_keep_alive_loop<R, W>(
         reader: &mut R,
         writer: &mut W,
         handler: &Arc<dyn RpcHandler>,
+        btsp_authenticated: bool,
     ) -> Result<()>
     where
         R: tokio::io::AsyncBufReadExt + Unpin,
@@ -436,7 +446,14 @@ impl IsomorphicIpcServer {
                             requests_served += 1;
 
                             let response = match serde_json::from_slice::<Value>(trimmed) {
-                                Ok(request) => handler.handle_request(request).await,
+                                Ok(request) => {
+                                    if btsp_authenticated {
+                                        handler.handle_request(request).await
+                                    } else {
+                                        Self::dispatch_or_reject_unauth(request, handler)
+                                            .await
+                                    }
+                                }
                                 Err(e) => {
                                     warn!("Invalid JSON-RPC request: {}", e);
                                     serde_json::json!({
@@ -489,6 +506,38 @@ impl IsomorphicIpcServer {
 
         debug!(requests_served, "Connection closed");
         Ok(())
+    }
+
+    /// Dispatch a request on an unauthenticated (BTSP-bypassed) connection.
+    ///
+    /// Only BTSP-exempt methods are forwarded to the handler; everything else
+    /// gets a `-32604 BTSP authentication required` error.
+    async fn dispatch_or_reject_unauth(
+        request: Value,
+        handler: &Arc<dyn RpcHandler>,
+    ) -> Value {
+        let method_raw = request
+            .get("method")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let method = crate::rpc::protocol::normalize_method(method_raw);
+        if crate::rpc::is_btsp_exempt_method(&method) {
+            return handler.handle_request(request).await;
+        }
+        let id = request.get("id").cloned().unwrap_or(Value::Null);
+        warn!(
+            method = method_raw,
+            "Rejecting unauthenticated call to BTSP-gated method"
+        );
+        serde_json::json!({
+            "jsonrpc": "2.0",
+            "error": {
+                "code": -32604,
+                "message": "BTSP authentication required",
+                "data": { "method": method_raw }
+            },
+            "id": id
+        })
     }
 
     /// Get socket path (XDG-compliant)

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 5, 2026 (Session 54: Wire Standard L3 all surfaces, consumed_capabilities aligned, discovery tiers, primalSpring protocol audit)  
+**Last Updated**: May 6, 2026 (Session 55: BTSP method-level auth gating — PG-56 `storage.list` security fix)  
 **Version**: 4.7.0-dev
 
 ---
@@ -40,6 +40,7 @@ Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
 BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, security provider wire contract aligned: family_seed base64-encoded, session_token|session_id, btsp.session.verify on reused connection, btsp.negotiate eliminated; mode-aware error frames; persistent BufReader for multi-call relay; SECURITY_FAMILY_SEED canonical env var (backward-compat BEARDOG_FAMILY_SEED)
 BTSP Phase 3:      PASS — `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); UDS + isomorphic IPC listeners; plaintext fallback; transport hardened (decrypt/read errors propagate as Err; Session 52)
+BTSP method gate:  PASS — plain-JSON-RPC bypass (first-byte `{`) restricted to BTSP-exempt methods only (health, identity, capabilities, discovery); storage/session/bonding/model/template/audit/NAT/ZFS methods return -32604 without BTSP handshake (Session 55, PG-56)
 JWT NUCLEUS:       PASS — BTSP composition auto-detected via is_btsp_required(); JWT validation skipped when FAMILY_ID signals NUCLEUS stack (Session 52)
 is_btsp_required:  UNIFIED — client delegates to canonical server version (Session 52)
 TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS; newline-delimited JSON-RPC 2.0; default port via DEFAULT_API_PORT (env-overridable)

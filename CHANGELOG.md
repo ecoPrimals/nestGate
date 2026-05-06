@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 55: BTSP method-level auth gating — PG-56 security fix (May 6, 2026)
+
+- **SECURITY: BTSP method-level gating (PG-56 MEDIUM)**: When BTSP is required
+  and a client sends plain JSON-RPC (first-byte `{` bypass), only BTSP-exempt
+  methods (health, identity, capabilities, discovery) are now dispatched.
+  Previously *all* methods were accessible, allowing unauthenticated enumeration
+  of storage keys via `storage.list`.  Non-exempt methods now receive JSON-RPC
+  error `-32604 BTSP authentication required`.
+- **Both server paths hardened**: Isomorphic IPC server (`server/mod.rs`) and
+  legacy Unix socket server (`unix_socket_server/mod.rs`) both enforce the
+  same method allow-list via `is_btsp_exempt_method()`.
+- **New helper**: `rpc::is_btsp_exempt_method()` — shared constant allow-list
+  of 10 discovery/health methods, applied after `normalize_method()`.
+- **Tests**: 4 new tests — `btsp_exempt_methods_cover_health_identity_capabilities`,
+  `btsp_gated_methods_are_not_exempt`, `handle_unix_connection_btsp_bypass_allows_exempt_methods`,
+  `handle_unix_connection_btsp_bypass_rejects_gated_methods`.
+- **Verification**: clippy PASS (0 warnings in nestgate-rpc, nestgate-bin),
+  629 nestgate-rpc tests / 0 failures, workspace tests 0 failures.
+
 ### Session 54: Wire Standard L3 all surfaces, protocol audit, deep debt (May 5, 2026)
 
 - **Wire Standard L3 on all `capabilities.list` surfaces**: All four implementations
