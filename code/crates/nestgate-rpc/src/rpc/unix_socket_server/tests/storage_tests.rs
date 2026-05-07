@@ -3,6 +3,7 @@
 
 //! Direct storage/blob handler tests and JSON-RPC dispatch for storage methods.
 
+use super::super::connection::handle_connection;
 use super::super::*;
 use super::common::cleanup_family;
 

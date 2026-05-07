@@ -3,6 +3,7 @@
 
 //! Unix line framing, parse errors, legacy JSON-RPC adapter, and idle-timer behavior (transport-level).
 
+use super::super::connection::handle_connection;
 use super::super::*;
 use crate::rpc::isomorphic_ipc::RpcHandler;
 

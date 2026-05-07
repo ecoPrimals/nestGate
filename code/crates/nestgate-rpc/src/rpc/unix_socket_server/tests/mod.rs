@@ -5,8 +5,10 @@
 
 mod capability_tests;
 mod common;
+mod content_handler_tests;
 mod dispatch_coverage_tests;
 mod health_tests;
 mod nat_handlers_tests;
 mod rpc_transport_tests;
+mod storage_handler_tests;
 mod storage_tests;

@@ -3,6 +3,7 @@
 
 //! Extra dispatch, transport, and `nestgate.` method-prefix coverage for `unix_socket_server`.
 
+use super::super::connection::handle_connection;
 use super::super::*;
 use super::common::cleanup_family;
 

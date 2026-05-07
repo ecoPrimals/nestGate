@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 58: Deep debt sweep — module refactoring and constants consolidation (May 7, 2026)
+
+- **Test extraction**: Inline `#[cfg(test)]` modules moved from `storage_handlers.rs`
+  (836→345L) and `content_handlers.rs` (806→510L) into dedicated files under
+  `tests/`. Shared `mock_state`, `encrypted_state`, and `cleanup_family` helpers
+  consolidated into `tests/common.rs`.
+- **Connection extraction**: `unix_socket_server/mod.rs` (720→395L) split; connection
+  lifecycle (`handle_connection`, `post_handshake_phase3_or_plaintext`,
+  `json_rpc_loop`, idle-timer, BTSP dispatch) extracted to `connection.rs` (335L).
+- **Constants consolidation**: `network_hardcoded::ports` re-exports from
+  `runtime_fallback_ports` as single source of truth, eliminating duplicate
+  port constant definitions.
+- **Verification**: Zero files over 800 lines. Zero clippy warnings. Zero
+  `#[allow]` in production. Zero TODO/FIXME/HACK. Zero unsafe code. Zero mocks
+  in production. All workspace tests pass.
+
 ### Session 57: Content-addressed storage — NG-1 through NG-4 (May 7, 2026)
 
 - **NG-1 (High): Content-addressed storage**: New `content.put`, `content.get`,

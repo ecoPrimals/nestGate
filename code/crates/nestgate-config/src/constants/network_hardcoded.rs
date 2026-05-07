@@ -38,61 +38,36 @@ pub mod addresses {
 
 // ==================== PORT NUMBERS ====================
 
-/// Default network ports - extracted from hardcoded values
-/// Found in 133 locations across codebase
+/// Default network ports — single source of truth in `runtime_fallback_ports`.
+///
+/// These aliases preserve backward-compat for callers using the
+/// `_DEFAULT` naming convention. New code should prefer
+/// [`super::hardcoding::runtime_fallback_ports`] directly.
 pub mod ports {
-    /// Default HTTP port for development
-    pub const HTTP_DEFAULT: u16 = 8080;
+    use super::super::hardcoding::runtime_fallback_ports as fp;
 
-    /// Default HTTPS port
-    pub const HTTPS_DEFAULT: u16 = 8443;
-
-    /// Default API server port (found in multiple locations)
-    pub const API_DEFAULT: u16 = 3000;
-
-    /// Alternative API port
-    pub const API_ALT: u16 = 3001;
-
-    /// Default port for metrics endpoint (Prometheus-compatible)
-    ///
-    /// **Standard**: Port 9090 is the de facto standard for Prometheus metrics exporters.
-    /// Using this default enables zero-configuration monitoring integration.
-    ///
-    /// **Override**: `NESTGATE_METRICS_PORT` environment variable.
-    ///
-    /// **Evolution**: Will be discovered via capability announcement, allowing:
-    /// - Multiple exporters on same host
-    /// - Dynamic port allocation
-    /// - Service mesh integration
-    pub const METRICS_DEFAULT: u16 = 9090;
-
-    /// Default port for health check endpoint
-    ///
-    /// **Purpose**: Separate port from main API allows:
-    /// - Load balancer health checks without API authentication
-    /// - Monitoring when API is overloaded
-    /// - Independent firewall rules (health checks from monitoring network only)
-    ///
-    /// **Override**: `NESTGATE_HEALTH_PORT` environment variable.
-    ///
-    /// **Evolution**: Will support capability-based discovery for cloud environments
-    /// where health checks use service-specific mechanisms (k8s probes, ALB targets, etc.)
-    pub const HEALTH_CHECK_DEFAULT: u16 = 8081;
-
-    /// Alternate health check port (used by `network_defaults`)
-    pub const HEALTH_CHECK: u16 = 8082;
-
-    /// Development server port / Storage metrics port
-    pub const DEV_SERVER: u16 = 5000;
-
-    /// Storage metrics port (alias for `DEV_SERVER`)
-    pub const STORAGE_DEFAULT: u16 = 5000;
-
-    /// WebSocket port (used by `network_defaults`)
-    pub const WEBSOCKET_DEFAULT: u16 = 8081;
-
-    /// Admin interface port
-    pub const ADMIN_DEFAULT: u16 = 8082;
+    /// Default HTTP port for development.
+    pub const HTTP_DEFAULT: u16 = fp::HTTP;
+    /// Default HTTPS port.
+    pub const HTTPS_DEFAULT: u16 = fp::HTTPS;
+    /// Default API server port.
+    pub const API_DEFAULT: u16 = fp::API;
+    /// Alternative API port.
+    pub const API_ALT: u16 = fp::API_ALT;
+    /// Default port for metrics endpoint (Prometheus-compatible).
+    pub const METRICS_DEFAULT: u16 = fp::METRICS;
+    /// Default port for health check endpoint.
+    pub const HEALTH_CHECK_DEFAULT: u16 = fp::HEALTH;
+    /// Alternate health check port.
+    pub const HEALTH_CHECK: u16 = fp::WEBSOCKET;
+    /// Development server port / Storage metrics port.
+    pub const DEV_SERVER: u16 = fp::STORAGE;
+    /// Storage metrics port (alias for `DEV_SERVER`).
+    pub const STORAGE_DEFAULT: u16 = fp::STORAGE;
+    /// WebSocket port.
+    pub const WEBSOCKET_DEFAULT: u16 = fp::WEBSOCKET;
+    /// Admin interface port.
+    pub const ADMIN_DEFAULT: u16 = fp::ADMIN;
 }
 
 /// Default timeout values in milliseconds

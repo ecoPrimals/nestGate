@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 7, 2026 (Session 57: content-addressed storage NG-1–NG-4)  
+**Last Updated**: May 7, 2026 (Session 58: deep debt sweep — module refactoring + constants consolidation)  
 **Version**: 4.7.0-dev
 
 ---
@@ -14,7 +14,7 @@ Format:             CLEAN (cargo fmt --check passes), as of May 7, 2026
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 7, 2026
 Tests:              8,879 passing, 0 failures, 60 ignored (cargo test --workspace --lib); 12,353 full workspace — as of May 7, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
-Files > 800 lines:  1 (storage_handlers.rs 838L after extract to storage_paths.rs; all others under 800 LOC)
+Files > 800 lines:  ZERO — storage_handlers.rs (836→345L via test extraction), content_handlers.rs (806→510L), unix_socket_server/mod.rs (720→395L via connection.rs split)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots including nestgate-zfs unconditionally (zero exceptions — env-process-shim uses edition 2021 safe wrappers; nestgate-zfs was formerly `cfg_attr(not(test), forbid(...))`)
