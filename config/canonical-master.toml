@@ -1,10 +1,12 @@
-# 🏛️ **NESTGATE CANONICAL PRIMARY CONFIGURATION**
+# NESTGATE CANONICAL PRIMARY CONFIGURATION
+#
+# WARNING: This template predates current architecture (v4.7.0-dev, May 2026).
+# Many sections (NFS/SMB/iSCSI, cluster multicast, Consul/K8s discovery) reference
+# features that have been removed or delegated to capability providers. Treat as
+# illustrative. See README.md for the authoritative quick start.
 #
 # Single source of truth for all NestGate configuration.
-# **CANONICAL MODERNIZATION COMPLETE**: Unified configuration system.
-#
-# This file replaces all fragmented configuration files and provides
-# a comprehensive, well-structured configuration for all NestGate components.
+# This file provides a comprehensive template for all NestGate components.
 
 [system]
 # Core system configuration

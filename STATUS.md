@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 7, 2026 (Session 56: namespace on legacy dispatch, streaming retrieval audit confirmation)  
+**Last Updated**: May 7, 2026 (Session 56: namespace, BTSP gating, deep debt sweep)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,13 +8,13 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 5, 2026
-Clippy:             PASS — cargo clippy --workspace --all-targets -- -D warnings (zero warnings), as of May 5, 2026
-Format:             CLEAN (cargo fmt --check passes), as of May 5, 2026
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 5, 2026
-Tests:              8,872 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of May 5, 2026
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 7, 2026
+Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 7, 2026
+Format:             CLEAN (cargo fmt --check passes), as of May 7, 2026
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 7, 2026
+Tests:              8,879 passing, 0 failures, 60 ignored (cargo test --workspace --lib); 12,353 full workspace — as of May 7, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
-Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
+Files > 800 lines:  1 (storage_handlers.rs 838L after extract to storage_paths.rs; all others under 800 LOC)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots including nestgate-zfs unconditionally (zero exceptions — env-process-shim uses edition 2021 safe wrappers; nestgate-zfs was formerly `cfg_attr(not(test), forbid(...))`)
@@ -662,4 +662,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: May 2, 2026 (Session 51)
+**Latest**: May 7, 2026 (Session 56)

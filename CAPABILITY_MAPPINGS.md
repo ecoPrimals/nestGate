@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: April 30, 2026 (Session 50)
+**Last Updated**: May 7, 2026 (Session 56)
 
 ---
 
@@ -291,7 +291,7 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 
 ```rust
 // External HTTPS fetch is implemented in NestGate (e.g. storage handler → fetch_external):
-// reqwest + rustls; content addressing via blake3; no Songbird http.get hop for this path.
+// ureq + rustls-rustcrypto (pure Rust); no Songbird http.get hop for this path.
 ```
 
 **Status**: Implemented — NestGate terminates TLS for this fetch path
@@ -518,4 +518,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: April 30, 2026 (Session 50)
+**Last Updated**: May 7, 2026 (Session 56)

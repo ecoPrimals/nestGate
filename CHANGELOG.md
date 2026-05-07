@@ -33,6 +33,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `namespace_rejects_path_traversal`.
 - **Verification**: clippy PASS, 633 nestgate-rpc tests / 0 failures, workspace 0 failures.
 
+### Session 56 (cont'd): Deep debt sweep (May 7, 2026)
+
+- **Split `storage_handlers.rs`** (942L → 838L): Extracted shared path/namespace
+  helpers (`dataset_key_path`, `blob_key_path`, `extract_namespace`,
+  `ensure_parent_dirs`, `resolve_family_id`) into new `storage_paths.rs` (124L).
+  Updated 4 dependent modules (`blob_handlers`, `external_handlers`,
+  `session_handlers`, `bonding_handlers`).
+- **Lint reason attrs**: Added `reason = "..."` to all crate-root `#![expect]`
+  suppressions across `nestgate-core` (17 lints), `nestgate-zfs` (16),
+  `nestgate-api` (10), `nestgate-performance` (11).
+- **Commented-out code removed**: `nestgate-config/src/config/mod.rs` disabled
+  assertion and narrating comment on `defaults_additional_tests`.
+- **Placeholder stubs documented**: `ConsolidatedCanonicalAdapter::process_request`,
+  `start_discovery`, `start_health_monitoring`, `ObjectStorageBackend::list_datasets`,
+  `list_snapshots` — inline "pending" comments replaced with "deferred capability"
+  doc annotations.
+- **Hardcoded cleanup**: `PATH_STYLE_ENDPOINT_HINTS` constant extracted in object
+  storage backend; deprecated discovery migration log messages cleaned in
+  `registry.rs`.
+- **Verification**: clippy PASS (0 warnings), 8,879 lib / 12,353 full workspace, 0 failures.
+
 ### Session 55: BTSP method-level auth gating — PG-56 security fix (May 6, 2026)
 
 - **SECURITY: BTSP method-level gating (PG-56 MEDIUM)**: When BTSP is required

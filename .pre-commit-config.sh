@@ -13,11 +13,11 @@ if ! cargo fmt --all -- --check; then
     exit 1
 fi
 
-# Run clippy (check exit code; do not rely on grepping output)
+# Run clippy (exit on failure — zero warnings policy)
 echo "Running clippy..."
-if ! cargo clippy --workspace --all-targets --all-features --quiet -- -D warnings; then
-    echo "WARN: Clippy found issues (see above)"
-    echo "Run 'cargo clippy --workspace --all-targets --all-features' to see details"
+if ! cargo clippy --workspace --all-targets --quiet -- -D warnings; then
+    echo "FAIL: Clippy found issues. Run 'cargo clippy --workspace --all-targets' to see details."
+    exit 1
 fi
 
 # Quick build check

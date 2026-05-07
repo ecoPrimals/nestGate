@@ -2,16 +2,16 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-05-05)**  
+**Verification (as of 2026-05-07)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
-- **Clippy**: `cargo clippy --workspace --all-targets -- -D warnings` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,872 passing, 0 failures, 60 ignored  
+- **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
+- **Tests**: `cargo test --workspace --lib` — 8,879 passing, 0 failures, 60 ignored; full workspace 12,353  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,872 passing, 60 ignored, 0 failures  
+- **Tests (last recorded)**: 8,879 lib / 12,353 full workspace, 0 failures  
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -45,7 +45,7 @@
 - **Wire Standard L3 on all surfaces**: `protocol` + `transport` fields added to ALL four `capabilities.list` implementations (UDS, HTTP, semantic router, isomorphic adapter); transport: `["uds", "tcp", "http"]`
 - **`consumed_capabilities` aligned**: `"discovery"` → `"discovery_mesh"` in code to match `capability_registry.toml`; stale `CAPABILITY_MAPPINGS.md` consumed entries corrected
 - **Discovery tiers documented**: Tier 3 (UDS convention), Tier 4 (manifest), Tier 5 (TCP probing) natively; Tiers 1-2 via orchestration  
-**Last Updated**: May 5, 2026
+**Last Updated**: May 7, 2026
 
 ---
 
@@ -141,14 +141,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-30 (Session 50).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-07 (Session 56).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace --lib` — 8,841 passing, 0 failures, 60 ignored |
+| Tests | `cargo test --workspace --lib` — 8,879 passing, 0 failures, 60 ignored; 12,353 full workspace |
 | Coverage | 84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -296,4 +296,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 2026 (Session 50)
+**Latest**: May 2026 (Session 56)
