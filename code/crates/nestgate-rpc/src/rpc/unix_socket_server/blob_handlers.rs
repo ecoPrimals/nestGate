@@ -11,10 +11,12 @@ use tracing::debug;
 
 use super::StorageState;
 use super::storage_handlers::{
-    blob_key_path, dataset_key_path, ensure_parent_dirs, resolve_family_id,
+    blob_key_path, dataset_key_path, ensure_parent_dirs, extract_namespace, resolve_family_id,
 };
 
 /// `storage.store_blob` - Store binary blob (base64 encoded, filesystem-backed)
+///
+/// Accepts optional `namespace` for cross-spring scoped blob storage.
 pub(super) async fn storage_store_blob(
     params: Option<&Value>,
     state: &StorageState,
@@ -29,6 +31,7 @@ pub(super) async fn storage_store_blob(
         NestGateError::invalid_input_with_field("blob", "blob (base64 string) required")
     })?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
     let blob_data = STANDARD.decode(blob_base64).map_err(|e| {
         NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {e}"))
@@ -36,8 +39,8 @@ pub(super) async fn storage_store_blob(
 
     let original_size = blob_data.len();
     debug!(
-        "storage.store_blob: family_id='{}', key='{}', blob_size={} bytes",
-        family_id, key, original_size
+        "storage.store_blob: family_id='{}', namespace={:?}, key='{}', blob_size={} bytes",
+        family_id, namespace, key, original_size
     );
 
     let write_data = if let Some(ref enc) = state.encryption {
@@ -46,7 +49,7 @@ pub(super) async fn storage_store_blob(
         blob_data
     };
 
-    let blob_path = blob_key_path(family_id, key);
+    let blob_path = blob_key_path(family_id, namespace, key);
     ensure_parent_dirs(&blob_path).await?;
     tokio::fs::write(&blob_path, &write_data)
         .await
@@ -54,15 +57,22 @@ pub(super) async fn storage_store_blob(
             NestGateError::io_error(format!("Failed to write blob {family_id}/{key}: {e}"))
         })?;
 
-    Ok(json!({
+    let mut resp = json!({
         "status": "stored",
         "key": key,
         "family_id": family_id,
         "size": original_size
-    }))
+    });
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// `storage.retrieve_blob` - Retrieve binary blob (base64 encoded, filesystem-backed)
+///
+/// Accepts optional `namespace`. Falls back to flat legacy blob path when
+/// the namespaced path does not exist.
 pub(super) async fn storage_retrieve_blob(
     params: Option<&Value>,
     state: &StorageState,
@@ -74,13 +84,21 @@ pub(super) async fn storage_retrieve_blob(
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
-    let blob_path = blob_key_path(family_id, key);
-    if !blob_path.exists() {
+    let ns_blob = blob_key_path(family_id, namespace, key);
+    let resolved = if ns_blob.exists() {
+        ns_blob
+    } else if namespace.is_some() {
+        let flat = blob_key_path(family_id, None, key);
+        if flat.exists() { flat } else {
+            return Ok(json!({"blob": null, "key": key}));
+        }
+    } else {
         return Ok(json!({"blob": null, "key": key}));
-    }
+    };
 
-    let raw_data = tokio::fs::read(&blob_path).await.map_err(|e| {
+    let raw_data = tokio::fs::read(&resolved).await.map_err(|e| {
         NestGateError::io_error(format!("Failed to read blob {family_id}/{key}: {e}"))
     })?;
 
@@ -95,18 +113,25 @@ pub(super) async fn storage_retrieve_blob(
             raw_data
         };
 
-    Ok(json!({
+    let mut resp = json!({
         "blob": STANDARD.encode(&blob_data),
         "key": key,
         "family_id": family_id,
         "size": blob_data.len()
-    }))
+    });
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// `storage.retrieve_range` — byte-range read for large objects (streaming tensors, datasets).
 ///
 /// Callers read large blobs in chunks: first `storage.object.size` to learn the total,
 /// then N calls to `retrieve_range` with `{offset, length}`.
+///
+/// Accepts optional `namespace`. Tries namespaced blob/object paths first,
+/// falls back to flat legacy paths.
 pub(super) async fn storage_retrieve_range(
     params: Option<&Value>,
     state: &StorageState,
@@ -120,6 +145,7 @@ pub(super) async fn storage_retrieve_range(
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
     let offset = params["offset"].as_u64().unwrap_or(0);
     let raw_length = params["length"].as_u64().ok_or_else(|| {
@@ -127,13 +153,23 @@ pub(super) async fn storage_retrieve_range(
     })?;
     let length = usize::try_from(raw_length.min(MAX_CHUNK)).unwrap_or(usize::MAX);
 
-    let blob_path = blob_key_path(family_id, key);
-    let object_path = dataset_key_path(family_id, key);
+    let ns_blob = blob_key_path(family_id, namespace, key);
+    let ns_obj = dataset_key_path(family_id, namespace, key);
+    let flat_blob = blob_key_path(family_id, None, key);
+    let flat_obj = dataset_key_path(family_id, None, key);
 
-    let path = if blob_path.exists() {
-        blob_path
-    } else if object_path.exists() {
-        object_path
+    let path = if ns_blob.exists() {
+        ns_blob
+    } else if ns_obj.exists() {
+        ns_obj
+    } else if namespace.is_some() && flat_blob.exists() {
+        flat_blob
+    } else if namespace.is_some() && flat_obj.exists() {
+        flat_obj
+    } else if namespace.is_none() && flat_blob.exists() {
+        flat_blob
+    } else if namespace.is_none() && flat_obj.exists() {
+        flat_obj
     } else {
         return Ok(json!({"data": null, "key": key, "error": "not_found"}));
     };
@@ -161,7 +197,7 @@ pub(super) async fn storage_retrieve_range(
         .map_err(|e| NestGateError::io_error(format!("Failed to read {family_id}/{key}: {e}")))?;
     buf.truncate(bytes_read);
 
-    Ok(json!({
+    let mut resp = json!({
         "data": STANDARD.encode(&buf),
         "offset": offset,
         "length": bytes_read,
@@ -169,7 +205,11 @@ pub(super) async fn storage_retrieve_range(
         "key": key,
         "family_id": family_id,
         "encoding": "base64"
-    }))
+    });
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 #[cfg(test)]

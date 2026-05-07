@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 6, 2026 (Session 55: BTSP method-level auth gating — PG-56 `storage.list` security fix)  
+**Last Updated**: May 7, 2026 (Session 56: namespace on legacy dispatch, streaming retrieval audit confirmation)  
 **Version**: 4.7.0-dev
 
 ---

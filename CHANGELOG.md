@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 56: Namespace on legacy dispatch, streaming retrieval audit triage (May 7, 2026)
+
+- **Namespace parameter on legacy dispatch** (primalSpring P2 Item 2): All legacy
+  Unix socket handlers now accept an optional `namespace` parameter:
+  `storage.store`, `storage.retrieve`, `storage.exists`, `storage.delete`,
+  `storage.list`, `storage.stats`, `storage.store_blob`, `storage.retrieve_blob`,
+  `storage.retrieve_range`, `storage.object.size`.  When provided, data is scoped
+  to `{family}/{namespace}/{key}`; when omitted, the flat legacy layout
+  `{family}/{key}` is preserved.  Retrieve/exists paths fall back to the flat
+  layout for migration compatibility.  Path traversal on namespace is validated
+  (no `..`, `/`, `_`-prefix).
+- **Streaming retrieval audit triage** (primalSpring P2 Item 1): Confirmed fully
+  implemented — `retrieve_stream`, `retrieve_stream_chunk`, `retrieve_range`,
+  `object.size` all wired on all dispatch paths.  `storage.retrieve` caps at
+  64 MiB with error directing to streaming alternatives.
+- **New helper**: `extract_namespace()` in `storage_handlers.rs` — validates and
+  extracts the optional namespace parameter.
+- **Path helpers upgraded**: `dataset_key_path()` and `blob_key_path()` now accept
+  `Option<&str>` namespace parameter for layout selection.
+- **Tests**: 4 new tests — `namespace_store_and_retrieve_round_trip`,
+  `namespace_retrieve_falls_back_to_flat`, `namespace_list_scopes_to_namespace`,
+  `namespace_rejects_path_traversal`.
+- **Verification**: clippy PASS, 633 nestgate-rpc tests / 0 failures, workspace 0 failures.
+
 ### Session 55: BTSP method-level auth gating — PG-56 security fix (May 6, 2026)
 
 - **SECURITY: BTSP method-level gating (PG-56 MEDIUM)**: When BTSP is required

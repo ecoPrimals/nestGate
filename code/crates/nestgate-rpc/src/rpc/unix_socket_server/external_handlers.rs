@@ -11,13 +11,14 @@ use tracing::debug;
 
 use super::StorageState;
 use super::storage_handlers::{
-    blob_key_path, dataset_key_path, ensure_parent_dirs, resolve_family_id,
+    blob_key_path, dataset_key_path, ensure_parent_dirs, extract_namespace, resolve_family_id,
 };
 
 /// `storage.object.size` — get size of a stored object without reading its content.
 ///
 /// Returns `{size, exists, key, family_id, storage_type}` where `storage_type` is
-/// `"blob"`, `"object"`, or `"none"`.
+/// `"blob"`, `"object"`, or `"none"`. Accepts optional `namespace`; falls back
+/// to flat legacy paths when namespaced paths do not exist.
 pub(super) async fn storage_object_size(
     params: Option<&Value>,
     state: &StorageState,
@@ -29,17 +30,30 @@ pub(super) async fn storage_object_size(
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
-    let blob_path = blob_key_path(family_id, key);
-    let object_path = dataset_key_path(family_id, key);
+    let ns_blob = blob_key_path(family_id, namespace, key);
+    let ns_obj = dataset_key_path(family_id, namespace, key);
+    let flat_blob = blob_key_path(family_id, None, key);
+    let flat_obj = dataset_key_path(family_id, None, key);
 
-    let (exists, size, storage_type) = if blob_path.exists() {
-        let meta = tokio::fs::metadata(&blob_path).await.map_err(|e| {
+    let (exists, size, storage_type) = if ns_blob.exists() {
+        let meta = tokio::fs::metadata(&ns_blob).await.map_err(|e| {
             NestGateError::io_error(format!("Failed to stat blob {family_id}/{key}: {e}"))
         })?;
         (true, meta.len(), "blob")
-    } else if object_path.exists() {
-        let meta = tokio::fs::metadata(&object_path).await.map_err(|e| {
+    } else if ns_obj.exists() {
+        let meta = tokio::fs::metadata(&ns_obj).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to stat object {family_id}/{key}: {e}"))
+        })?;
+        (true, meta.len(), "object")
+    } else if namespace.is_some() && flat_blob.exists() {
+        let meta = tokio::fs::metadata(&flat_blob).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to stat blob {family_id}/{key}: {e}"))
+        })?;
+        (true, meta.len(), "blob")
+    } else if namespace.is_some() && flat_obj.exists() {
+        let meta = tokio::fs::metadata(&flat_obj).await.map_err(|e| {
             NestGateError::io_error(format!("Failed to stat object {family_id}/{key}: {e}"))
         })?;
         (true, meta.len(), "object")
@@ -47,13 +61,17 @@ pub(super) async fn storage_object_size(
         (false, 0, "none")
     };
 
-    Ok(json!({
+    let mut resp = json!({
         "exists": exists,
         "size": size,
         "key": key,
         "family_id": family_id,
         "storage_type": storage_type
-    }))
+    });
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// Build the filesystem path for an external-fetch cache entry.

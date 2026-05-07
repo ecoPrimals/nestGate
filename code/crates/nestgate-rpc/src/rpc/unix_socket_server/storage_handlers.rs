@@ -16,24 +16,67 @@ use super::StorageState;
 
 /// Build the filesystem path for a key in a family's dataset.
 ///
-/// Layout matches `nestgate-core` `operations::objects`: `{base}/datasets/{family}/{key}`.
-pub(in crate::rpc::unix_socket_server) fn dataset_key_path(family_id: &str, key: &str) -> PathBuf {
-    get_storage_base_path()
+/// When `namespace` is `Some`, uses the isomorphic layout:
+///   `{base}/datasets/{family}/{namespace}/{key}`
+/// When `None`, uses the flat legacy layout:
+///   `{base}/datasets/{family}/{key}`
+pub(in crate::rpc::unix_socket_server) fn dataset_key_path(
+    family_id: &str,
+    namespace: Option<&str>,
+    key: &str,
+) -> PathBuf {
+    let base = get_storage_base_path()
         .join("datasets")
-        .join(family_id)
-        .join(key)
+        .join(family_id);
+    namespace.map_or_else(|| base.join(key), |ns| base.join(ns).join(key))
 }
 
 /// Build the filesystem path for a binary blob.
 ///
-/// Blobs are stored separately under `{base}/datasets/{family}/_blobs/{key}` so list
-/// operations can distinguish JSON objects from raw blobs.
-pub(in crate::rpc::unix_socket_server) fn blob_key_path(family_id: &str, key: &str) -> PathBuf {
-    get_storage_base_path()
+/// When `namespace` is `Some`, uses the isomorphic layout:
+///   `{base}/datasets/{family}/{namespace}/_blobs/{key}`
+/// When `None`, uses the flat legacy layout:
+///   `{base}/datasets/{family}/_blobs/{key}`
+pub(in crate::rpc::unix_socket_server) fn blob_key_path(
+    family_id: &str,
+    namespace: Option<&str>,
+    key: &str,
+) -> PathBuf {
+    let base = get_storage_base_path()
         .join("datasets")
-        .join(family_id)
-        .join("_blobs")
-        .join(key)
+        .join(family_id);
+    namespace.map_or_else(
+        || base.join("_blobs").join(key),
+        |ns| base.join(ns).join("_blobs").join(key),
+    )
+}
+
+/// Extract and validate the optional `namespace` parameter.
+///
+/// Returns `Ok(None)` when omitted (backward-compatible flat layout).
+/// Returns `Ok(Some(ns))` when present and valid (namespaced layout).
+/// Returns `Err` when present but contains path separators, `..`, or
+/// starts with `.` or `_` (reserved for internal directories like `_blobs`).
+pub(in crate::rpc::unix_socket_server) fn extract_namespace(
+    params: &Value,
+) -> Result<Option<&str>> {
+    let Some(ns) = params.get("namespace").and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    if ns.is_empty()
+        || ns.contains('/')
+        || ns.contains('\\')
+        || ns.contains("..")
+        || ns.starts_with('.')
+        || ns.starts_with('_')
+    {
+        return Err(NestGateError::invalid_input_with_field(
+            "namespace",
+            "must be a non-empty simple name without path separators; \
+             cannot start with '.' or '_'",
+        ));
+    }
+    Ok(Some(ns))
 }
 
 /// Ensure all parent directories of `path` exist.
@@ -80,6 +123,8 @@ pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
 }
 
 /// storage.store - Store key-value data (filesystem-backed, durable)
+///
+/// Accepts optional `namespace` for cross-spring scoped storage.
 pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
@@ -100,6 +145,7 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
     };
 
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
     let serialized = serde_json::to_vec_pretty(data)
         .map_err(|e| NestGateError::io_error(format!("Failed to serialize value: {e}")))?;
@@ -111,19 +157,24 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
     };
 
     debug!(
-        "storage.store: family_id='{}', key='{}', value_size={} bytes",
+        "storage.store: family_id='{}', namespace={:?}, key='{}', value_size={} bytes",
         family_id,
+        namespace,
         key,
         bytes.len()
     );
 
-    let object_path = dataset_key_path(family_id, key);
+    let object_path = dataset_key_path(family_id, namespace, key);
     ensure_parent_dirs(&object_path).await?;
     tokio::fs::write(&object_path, &bytes)
         .await
         .map_err(|e| NestGateError::io_error(format!("Failed to write {family_id}/{key}: {e}")))?;
 
-    Ok(json!({"status": "stored", "key": key, "family_id": family_id}))
+    let mut resp = json!({"status": "stored", "key": key, "family_id": family_id});
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// Maximum payload size for in-memory `storage.retrieve` (64 MiB). Objects
@@ -132,6 +183,10 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
 const RETRIEVE_MAX_INLINE: u64 = 64 * 1024 * 1024;
 
 /// storage.retrieve - Retrieve data by key (filesystem-backed, durable)
+///
+/// Accepts optional `namespace` for cross-spring scoped storage.
+/// When namespace is provided and the namespaced path doesn't exist, falls
+/// back to the flat legacy path for migration compatibility.
 ///
 /// Returns an error for objects exceeding [`RETRIEVE_MAX_INLINE`] with
 /// guidance to use `storage.retrieve_stream` or `storage.retrieve_range`.
@@ -146,15 +201,26 @@ pub(super) async fn storage_retrieve(
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
-    debug!("storage.retrieve: family_id='{}', key='{}'", family_id, key);
+    debug!(
+        "storage.retrieve: family_id='{}', namespace={:?}, key='{}'",
+        family_id, namespace, key
+    );
 
-    let object_path = dataset_key_path(family_id, key);
-    if !object_path.exists() {
+    let object_path = dataset_key_path(family_id, namespace, key);
+    let resolved_path = if object_path.exists() {
+        object_path
+    } else if namespace.is_some() {
+        let flat = dataset_key_path(family_id, None, key);
+        if flat.exists() { flat } else {
+            return Ok(json!({"value": null, "data": null, "key": key}));
+        }
+    } else {
         return Ok(json!({"value": null, "data": null, "key": key}));
-    }
+    };
 
-    let metadata = tokio::fs::metadata(&object_path)
+    let metadata = tokio::fs::metadata(&resolved_path)
         .await
         .map_err(|e| NestGateError::io_error(format!("Failed to stat {family_id}/{key}: {e}")))?;
     if metadata.len() > RETRIEVE_MAX_INLINE {
@@ -165,7 +231,7 @@ pub(super) async fn storage_retrieve(
         )));
     }
 
-    let raw_bytes = tokio::fs::read(&object_path)
+    let raw_bytes = tokio::fs::read(&resolved_path)
         .await
         .map_err(|e| NestGateError::io_error(format!("Failed to read {family_id}/{key}: {e}")))?;
 
@@ -183,10 +249,17 @@ pub(super) async fn storage_retrieve(
     let value: Value = serde_json::from_slice(&bytes)
         .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()));
 
-    Ok(json!({"value": value, "data": value, "key": key, "family_id": family_id}))
+    let mut resp = json!({"value": value, "data": value, "key": key, "family_id": family_id});
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// storage.exists - Check if data exists by key (filesystem-backed)
+///
+/// Accepts optional `namespace`. Falls back to flat layout when namespaced
+/// path does not exist.
 pub(super) fn storage_exists(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
@@ -195,12 +268,23 @@ pub(super) fn storage_exists(params: Option<&Value>, state: &StorageState) -> Re
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
-    let object_path = dataset_key_path(family_id, key);
-    Ok(json!({"exists": object_path.exists(), "key": key, "family_id": family_id}))
+    let ns_path = dataset_key_path(family_id, namespace, key);
+    let exists = ns_path.exists()
+        || (namespace.is_some() && dataset_key_path(family_id, None, key).exists());
+
+    let mut resp = json!({"exists": exists, "key": key, "family_id": family_id});
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// storage.delete - Delete data by key (filesystem-backed)
+///
+/// Accepts optional `namespace`. When namespace is provided, deletes from
+/// the namespaced path; the flat legacy path is NOT deleted automatically.
 pub(super) async fn storage_delete(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
@@ -209,65 +293,89 @@ pub(super) async fn storage_delete(params: Option<&Value>, state: &StorageState)
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
-    let object_path = dataset_key_path(family_id, key);
+    let object_path = dataset_key_path(family_id, namespace, key);
     if object_path.exists() {
         tokio::fs::remove_file(&object_path).await.map_err(|e| {
             NestGateError::io_error(format!("Failed to delete {family_id}/{key}: {e}"))
         })?;
     }
-    Ok(json!({"status": "deleted", "key": key, "family_id": family_id}))
+    let mut resp = json!({"status": "deleted", "key": key, "family_id": family_id});
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// storage.list - List all keys with optional prefix
+///
+/// Accepts optional `namespace` to scope listing. When provided, lists only
+/// keys under `{family}/{namespace}/`. When omitted, lists all keys under
+/// `{family}/` (legacy behavior).
 pub(super) async fn storage_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
     let prefix = params["prefix"].as_str();
 
-    let dataset = family_id;
+    let family_root = get_storage_base_path()
+        .join("datasets")
+        .join(family_id);
+    let scan_root = namespace.map_or_else(|| family_root.clone(), |ns| family_root.join(ns));
 
-    // Scan the dataset directory — aligned with store_object's write path
-    // which writes to .../datasets/{dataset}/{key} (no "objects/" segment).
-    let dataset_path = get_storage_base_path().join("datasets").join(dataset);
-
-    let keys = list_keys_recursive(&dataset_path, &dataset_path, prefix).await;
+    let keys = list_keys_recursive(&scan_root, &scan_root, prefix).await;
 
     debug!(
-        "Listed {} keys for family '{}' (prefix: {:?})",
+        "Listed {} keys for family '{}', namespace={:?} (prefix: {:?})",
         keys.len(),
         family_id,
+        namespace,
         prefix
     );
 
-    Ok(json!({
-        "keys": keys
-    }))
+    let mut resp = json!({"keys": keys});
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// storage.stats - Get storage statistics
+///
+/// Accepts optional `namespace` to scope stats. When provided, counts only
+/// keys under `{family}/{namespace}/`.
 pub(super) async fn storage_stats(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
 
-    let dataset = family_id;
+    let family_root = get_storage_base_path()
+        .join("datasets")
+        .join(family_id);
+    let scan_root = namespace.map_or_else(|| family_root.clone(), |ns| family_root.join(ns));
 
-    let dataset_path = get_storage_base_path().join("datasets").join(dataset);
-
-    let keys = list_keys_recursive(&dataset_path, &dataset_path, None).await;
+    let keys = list_keys_recursive(&scan_root, &scan_root, None).await;
     let key_count = keys.len();
 
-    debug!("Stats for family '{}': {} objects", family_id, key_count);
+    debug!(
+        "Stats for family '{}', namespace={:?}: {} objects",
+        family_id, namespace, key_count
+    );
 
-    Ok(json!({
+    let mut resp = json!({
         "key_count": key_count,
         "blob_count": 0,
         "family_id": family_id
-    }))
+    });
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
 }
 
 /// Recursively list all file keys under a dataset directory.
@@ -685,7 +793,7 @@ mod tests {
         assert_eq!(val["value"]["msg"], "classified data");
 
         // Verify on-disk data is an encrypted envelope, not plaintext
-        let on_disk = tokio::fs::read(dataset_key_path(&family_id, "secret"))
+        let on_disk = tokio::fs::read(dataset_key_path(&family_id, None, "secret"))
             .await
             .expect("read disk");
         assert!(
@@ -723,5 +831,112 @@ mod tests {
         let _ =
             tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
                 .await;
+    }
+
+    #[tokio::test]
+    async fn namespace_store_and_retrieve_round_trip() {
+        let state = mock_state(Some("test-ns-rt")).await;
+        let family_id = format!("test-ns-rt-{}", uuid::Uuid::new_v4());
+
+        let store = json!({
+            "family_id": &family_id,
+            "namespace": "experiments",
+            "key": "run-42",
+            "value": {"accuracy": 0.95}
+        });
+        let result = storage_store(Some(&store), &state).await.unwrap();
+        assert_eq!(result["status"], "stored");
+        assert_eq!(result["namespace"], "experiments");
+
+        let retrieve = json!({
+            "family_id": &family_id,
+            "namespace": "experiments",
+            "key": "run-42"
+        });
+        let val = storage_retrieve(Some(&retrieve), &state).await.unwrap();
+        assert_eq!(val["value"]["accuracy"], 0.95);
+        assert_eq!(val["namespace"], "experiments");
+
+        let flat = json!({"family_id": &family_id, "key": "run-42"});
+        let flat_val = storage_retrieve(Some(&flat), &state).await.unwrap();
+        assert!(
+            flat_val["value"].is_null(),
+            "flat path should NOT find namespaced data"
+        );
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn namespace_retrieve_falls_back_to_flat() {
+        let state = mock_state(Some("test-ns-fb")).await;
+        let family_id = format!("test-ns-fb-{}", uuid::Uuid::new_v4());
+
+        let store_flat = json!({
+            "family_id": &family_id,
+            "key": "legacy-data",
+            "value": "old"
+        });
+        assert!(storage_store(Some(&store_flat), &state).await.is_ok());
+
+        let retrieve_ns = json!({
+            "family_id": &family_id,
+            "namespace": "shared",
+            "key": "legacy-data"
+        });
+        let val = storage_retrieve(Some(&retrieve_ns), &state).await.unwrap();
+        assert_eq!(
+            val["value"], "old",
+            "namespace retrieve should fall back to flat path"
+        );
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn namespace_list_scopes_to_namespace() {
+        let state = mock_state(Some("test-ns-list")).await;
+        let family_id = format!("test-ns-list-{}", uuid::Uuid::new_v4());
+
+        let s1 = json!({
+            "family_id": &family_id, "namespace": "alpha",
+            "key": "a1", "value": "x"
+        });
+        let s2 = json!({
+            "family_id": &family_id, "namespace": "beta",
+            "key": "b1", "value": "y"
+        });
+        assert!(storage_store(Some(&s1), &state).await.is_ok());
+        assert!(storage_store(Some(&s2), &state).await.is_ok());
+
+        let list_alpha = json!({"family_id": &family_id, "namespace": "alpha"});
+        let keys = storage_list(Some(&list_alpha), &state).await.unwrap();
+        let arr = keys["keys"].as_array().unwrap();
+        assert_eq!(arr.len(), 1, "alpha should have 1 key");
+        assert_eq!(arr[0], "a1");
+        assert_eq!(keys["namespace"], "alpha");
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn namespace_rejects_path_traversal() {
+        let params = json!({"namespace": "../escape"});
+        assert!(extract_namespace(&params).is_err());
+
+        let params = json!({"namespace": "_internal"});
+        assert!(extract_namespace(&params).is_err());
+
+        let params = json!({"namespace": "valid-name"});
+        assert_eq!(extract_namespace(&params).unwrap(), Some("valid-name"));
+
+        let params = json!({});
+        assert_eq!(extract_namespace(&params).unwrap(), None);
     }
 }
