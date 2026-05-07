@@ -10,7 +10,7 @@ use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tracing::debug;
 
 use super::StorageState;
-use super::storage_handlers::{
+use super::storage_paths::{
     blob_key_path, dataset_key_path, ensure_parent_dirs, extract_namespace, resolve_family_id,
 };
 

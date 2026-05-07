@@ -227,20 +227,24 @@ impl ObjectStorageBackend {
         StorageProvider::detect_from_endpoint(endpoint)
     }
 
-    /// Determine if path-style requests should be used
+    /// Endpoint substrings that indicate path-style S3 requests are needed.
     ///
-    /// **S3-COMPATIBLE**: Some providers require path-style requests.
-    /// Auto-detect based on endpoint characteristics.
+    /// MinIO and local dev endpoints typically require path-style addressing.
+    /// This list is intentionally kept small — operators with non-standard
+    /// providers should set `OBJECT_STORAGE_PATH_STYLE=true` explicitly.
+    const PATH_STYLE_ENDPOINT_HINTS: &[&str] =
+        &["min.io", "minio", LOCALHOST_NAME, LOCALHOST_IPV4, ":9000"];
+
+    /// Determine if path-style requests should be used.
+    ///
+    /// Auto-detects based on well-known endpoint patterns in
+    /// [`Self::PATH_STYLE_ENDPOINT_HINTS`]. Returns `true` for MinIO,
+    /// localhost, and the conventional `:9000` API port.
     fn should_use_path_style(endpoint: &str) -> bool {
         let endpoint_lower = endpoint.to_lowercase();
-
-        // MinIO and local endpoints typically require path-style. `:9000` and `localhost` match
-        // the well-known MinIO default API port / local dev convention (not universal for all S3 providers).
-        endpoint_lower.contains("min.io")
-            || endpoint_lower.contains("minio")
-            || endpoint_lower.contains(LOCALHOST_NAME)
-            || endpoint_lower.contains(LOCALHOST_IPV4)
-            || endpoint_lower.contains(":9000")
+        Self::PATH_STYLE_ENDPOINT_HINTS
+            .iter()
+            .any(|hint| endpoint_lower.contains(hint))
     }
 
     /// Get full bucket name with prefix

@@ -111,29 +111,22 @@ impl ServiceRegistryClient {
             return Ok(format!("{mesh_endpoint}/{service_name}"));
         }
 
-        // Check for Kubernetes service discovery
-        // DEPRECATED: Direct Kubernetes integration - migrate to capability-based orchestration
-        // Migration Guide: Use ORCHESTRATION_DISCOVERY_ENDPOINT instead of KUBERNETES_NAMESPACE
-        // Legacy compatibility maintained
         if let Some(k8s_namespace) = self.config.get_kubernetes_namespace() {
             tracing::warn!(
-                "DEPRECATED: KUBERNETES_NAMESPACE detected. Please migrate to ORCHESTRATION_DISCOVERY_ENDPOINT. \
-                This direct Kubernetes integration will be removed in version 4.0.0. \
-                Migration: Set ORCHESTRATION_DISCOVERY_ENDPOINT=http://orchestration-service:8080"
+                "DEPRECATED: KUBERNETES_NAMESPACE detected — migrate to \
+                 ORCHESTRATION_DISCOVERY_ENDPOINT (capability-based). \
+                 Direct Kubernetes integration will be removed in 4.0.0."
             );
             return Ok(format!("{service_name}.{k8s_namespace}.svc.cluster.local"));
         }
 
-        // DEPRECATED: Docker Compose service discovery - migrate to capability-based compute
-        // Migration Guide: Use COMPUTE_DISCOVERY_ENDPOINT instead of DOCKER_COMPOSE_PROJECT
-        // Legacy compatibility maintained
         if self.config.has_docker_compose_project() {
             tracing::warn!(
-                "DEPRECATED: DOCKER_COMPOSE_PROJECT detected. Please migrate to COMPUTE_DISCOVERY_ENDPOINT. \
-                This direct Docker integration will be removed in version 4.0.0. \
-                Migration: Set COMPUTE_DISCOVERY_ENDPOINT=http://compute-service:8080"
+                "DEPRECATED: DOCKER_COMPOSE_PROJECT detected — migrate to \
+                 COMPUTE_DISCOVERY_ENDPOINT (capability-based). \
+                 Direct Docker integration will be removed in 4.0.0."
             );
-            return Ok(service_name.to_string()); // Docker Compose DNS
+            return Ok(service_name.to_string());
         }
 
         // Modern capability-based discovery (preferred method)

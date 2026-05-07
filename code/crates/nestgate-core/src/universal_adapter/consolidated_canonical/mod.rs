@@ -214,17 +214,21 @@ impl ConsolidatedCanonicalAdapter {
         ]
     }
 
-    /// Start capability discovery
+    /// Start capability discovery (deferred capability).
+    ///
+    /// Currently a no-op. Background discovery tasks will be spawned here
+    /// once the adapter is promoted to the runtime composition path.
     fn start_discovery(&self) -> Result<()> {
         debug!("Starting capability discovery");
-        // Implementation would start background discovery tasks
         Ok(())
     }
 
-    /// Start health monitoring
+    /// Start health monitoring (deferred capability).
+    ///
+    /// Currently a no-op. Background health-check tasks will be spawned
+    /// here once the adapter is promoted to the runtime composition path.
     fn start_health_monitoring(&self) -> Result<()> {
         debug!("Starting health monitoring");
-        // Implementation would start background health check tasks
         Ok(())
     }
 
@@ -280,9 +284,13 @@ impl ConsolidatedCanonicalAdapter {
         result
     }
 
-    /// Process a capability request
+    /// Process a capability request (deferred capability).
+    ///
+    /// Returns a fixed success response. Full routing to downstream capability
+    /// providers will be implemented when the adapter is wired into the
+    /// isomorphic IPC capability dispatch path. The adapter compiles and
+    /// passes its contract tests in the meantime.
     fn process_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
-        // Simplified processing - in real implementation would route to appropriate provider
         Ok(CapabilityResponse {
             request_id: request.id.clone(),
             status: ResponseStatus::Success,

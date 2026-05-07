@@ -19,23 +19,51 @@
         clippy::needless_collect,
     )
 )]
+#![expect(dead_code, reason = "backend variants compiled but not all wired to CLI yet")]
 #![expect(
-    dead_code,
     clippy::missing_errors_doc,
-    clippy::doc_markdown,
+    reason = "doc coverage expanding incrementally; tracked in deep-debt backlog"
+)]
+#![expect(clippy::doc_markdown, reason = "product / tech names used unquoted in prose docs")]
+#![expect(
     clippy::module_name_repetitions,
+    reason = "type names include module context for external discoverability"
+)]
+#![expect(
     clippy::struct_excessive_bools,
+    reason = "ZFS feature-flag structs mirror CLI option shapes"
+)]
+#![expect(
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
+    reason = "ZFS size / offset casts are range-checked at call sites"
+)]
+#![expect(
     clippy::unnecessary_wraps,
-    clippy::unused_self,
+    reason = "Result return kept for API uniformity across backend trait impls"
+)]
+#![expect(clippy::unused_self, reason = "trait impls require &self on stub / deferred methods")]
+#![expect(
     clippy::unused_async,
+    reason = "async kept on trait methods for future I/O without signature churn"
+)]
+#![expect(
     clippy::needless_pass_by_value,
+    reason = "handler signatures accept owned types for ergonomic dispatch"
+)]
+#![expect(
     clippy::option_if_let_else,
+    reason = "kept for readability where map_or_else harms clarity"
+)]
+#![expect(
     clippy::implicit_hasher,
-    clippy::unreadable_literal,
-    clippy::used_underscore_items
+    reason = "public APIs accept HashMap without generic S — callers use default hasher"
+)]
+#![expect(clippy::unreadable_literal, reason = "ZFS magic numbers / byte sizes are canonical")]
+#![expect(
+    clippy::used_underscore_items,
+    reason = "underscore-prefixed fields used across module boundaries in backend structs"
 )]
 #![warn(rustdoc::broken_intra_doc_links)]
 

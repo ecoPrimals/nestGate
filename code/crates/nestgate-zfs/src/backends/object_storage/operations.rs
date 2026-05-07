@@ -189,35 +189,25 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         Ok(pool_list)
     }
 
-    /// List datasets (prefixes)
+    /// List datasets — prefix-based dataset discovery (deferred capability).
     ///
-    /// ## Deep Debt Solution: Prefix-Based Dataset Discovery
-    ///
-    /// Uses S3 `ListObjectsV2` with delimiter to discover dataset prefixes.
-    /// Works with any S3-compatible provider.
+    /// Returns an empty list. Full implementation will use S3 `ListObjectsV2`
+    /// with a delimiter to discover dataset prefixes once the pure-Rust S3
+    /// client is wired into the backend. Works with any S3-compatible provider.
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         debug!("Listing datasets for pool: {}", pool.name);
-
-        // Future: List objects in pool with delimiter to find prefixes (datasets)
-        // For now, return empty list (graceful degradation)
-
-        info!("Dataset listing (S3 SDK integration pending)");
+        info!("Dataset listing deferred — S3 client integration pending");
         Ok(Vec::new())
     }
 
-    /// List snapshots (versions)
+    /// List snapshots — marker-based snapshot discovery (deferred capability).
     ///
-    /// ## Deep Debt Solution: Marker-Based Snapshot Discovery
-    ///
-    /// Discovers snapshots by finding marker objects with snapshot prefix.
-    /// Future enhancement: Use S3 versioning API for native version support.
+    /// Returns an empty list. Full implementation will discover snapshots by
+    /// finding marker objects with a snapshot prefix, or via the S3 versioning
+    /// API for providers that support native version history.
     async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
         debug!("Listing snapshots for dataset: {}", dataset.name);
-
-        // Future: Search for snapshot markers in dataset prefix
-        // For now, return empty list (graceful degradation)
-
-        info!("Snapshot listing (S3 SDK integration pending)");
+        info!("Snapshot listing deferred — S3 client integration pending");
         Ok(Vec::new())
     }
 }

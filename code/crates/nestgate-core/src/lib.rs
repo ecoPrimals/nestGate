@@ -17,26 +17,45 @@
 
 #![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
-// Workspace enables pedantic/nursery clippy; child modules in separate files do not inherit a parent
-// module's `#!allow`, so these stay crate-level until fixed or replaced with per-file allows.
-// Lint hygiene (nestgate-core#lints): shrink this allow list as modules gain targeted attributes.
 #![expect(
     clippy::module_name_repetitions,
+    reason = "re-export hub — type names include module context for external discoverability"
+)]
+#![expect(
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
+    reason = "doc coverage expanding incrementally; tracked in deep-debt backlog"
+)]
+#![expect(
     clippy::struct_excessive_bools,
     clippy::struct_field_names,
+    reason = "config structs mirror JSON-RPC / env-var shapes — renaming breaks wire compat"
+)]
+#![expect(
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
+    reason = "metric / size casts are range-checked at call sites"
+)]
+#![expect(
     clippy::option_if_let_else,
+    reason = "kept for readability where map_or_else harms clarity"
+)]
+#![expect(
     clippy::needless_pass_by_value,
-    clippy::unused_self,
+    reason = "handler signatures accept owned types for ergonomic JSON-RPC dispatch"
+)]
+#![expect(clippy::unused_self, reason = "trait impls require &self on stub methods")]
+#![expect(
     clippy::implicit_hasher,
-    clippy::doc_markdown,
-    clippy::float_cmp,
-    clippy::inline_always,
-    clippy::redundant_closure_for_method_calls
+    reason = "public APIs accept HashMap without generic S — callers always use default hasher"
+)]
+#![expect(clippy::doc_markdown, reason = "product names used unquoted in prose doc comments")]
+#![expect(clippy::float_cmp, reason = "exact equality valid for sentinel / default checks")]
+#![expect(clippy::inline_always, reason = "hot-path helpers marked inline for LTO")]
+#![expect(
+    clippy::redundant_closure_for_method_calls,
+    reason = "closures kept where they clarify intent vs bare method refs"
 )]
 // `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
 #![cfg_attr(

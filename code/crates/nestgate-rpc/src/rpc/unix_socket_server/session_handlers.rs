@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use tracing::debug;
 
 use super::StorageState;
-use super::storage_handlers::resolve_family_id;
+use super::storage_paths::resolve_family_id;
 
 /// Build the filesystem path for a session key.
 ///

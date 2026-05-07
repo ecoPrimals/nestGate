@@ -5,15 +5,34 @@
 #![warn(missing_docs)]
 #![expect(
     clippy::missing_errors_doc,
+    reason = "doc coverage expanding incrementally; tracked in deep-debt backlog"
+)]
+#![expect(
     clippy::module_name_repetitions,
+    reason = "type names include module context for external discoverability"
+)]
+#![expect(
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
+    reason = "metric / payload size casts are range-checked at call sites"
+)]
+#![expect(
     clippy::needless_pass_by_value,
+    reason = "handler signatures accept owned types for ergonomic API dispatch"
+)]
+#![expect(
     clippy::option_if_let_else,
-    clippy::similar_names,
+    reason = "kept for readability where map_or_else harms clarity"
+)]
+#![expect(clippy::similar_names, reason = "req / res / resp naming is conventional in API layer")]
+#![expect(
     clippy::too_long_first_doc_paragraph,
-    clippy::implicit_hasher
+    reason = "API endpoint docs need full context in the summary line"
+)]
+#![expect(
+    clippy::implicit_hasher,
+    reason = "public APIs accept HashMap without generic S — callers use default hasher"
 )]
 #![cfg_attr(
     test,

@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use tracing::debug;
 
 use super::StorageState;
-use super::storage_handlers::{ensure_parent_dirs, resolve_family_id};
+use super::storage_paths::{ensure_parent_dirs, resolve_family_id};
 
 /// Build the filesystem path for a bonding ledger record.
 ///

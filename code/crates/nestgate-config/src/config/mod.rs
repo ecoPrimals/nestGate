@@ -270,9 +270,6 @@ mod tests {
     #[test]
     fn test_migration_validation() {
         let config = create_default_config();
-        // Migration validation temporarily disabled - module not available
-        // assert!(migration::validate_migration(&config).is_ok());
-        // Verify config has been properly initialized
         assert!(!config.system.instance_name.is_empty());
     }
 }
@@ -281,4 +278,4 @@ mod tests {
 mod defaults_tests;
 
 #[cfg(test)]
-mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Include comprehensive defaults tests
+mod defaults_additional_tests;
