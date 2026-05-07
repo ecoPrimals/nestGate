@@ -22,7 +22,7 @@
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-- **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p)  
+- **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p, 58)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate); JSON-line + length-prefixed dual framing; 6-tier security socket discovery; security provider wire contract aligned (`family_seed`, `session_token`, `btsp.session.verify` params); mode-aware error frames; `SECURITY_FAMILY_SEED` canonical env var (Session 45c)  

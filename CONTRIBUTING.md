@@ -181,4 +181,4 @@ The `tools/` directory is excluded from coverage — it contains development too
 
 ---
 
-**Last Updated**: May 7, 2026 (Session 56)
+**Last Updated**: May 7, 2026 (Session 58)

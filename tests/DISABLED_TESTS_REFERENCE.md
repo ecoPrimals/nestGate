@@ -48,10 +48,10 @@ See [README.md](README.md) for organization and **`cargo test --workspace`** (fu
 
 | Metric | Value |
 |--------|--------|
-| Passing (lib only) | 8,841 |
+| Passing (lib only) | 8,879 |
 | Failed | 0 |
 | Ignored (lib only) | 60 |
-| Workspace coverage (line) | ~80% |
+| Workspace coverage (line) | 84.12%+ |
 
 Re-run `cargo test --workspace` and `cargo llvm-cov` after large changes; numbers drift with the tree.
 
