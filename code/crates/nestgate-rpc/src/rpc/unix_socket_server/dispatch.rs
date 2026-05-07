@@ -15,8 +15,8 @@ use crate::rpc::protocol::normalize_method;
 
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
-    bonding_handlers, external_handlers, nat_handlers, session_handlers, storage_handlers,
-    template_handlers, zfs_handlers,
+    bonding_handlers, content_handlers, external_handlers, nat_handlers, session_handlers,
+    storage_handlers, template_handlers, zfs_handlers,
 };
 
 /// Handle JSON-RPC request
@@ -96,6 +96,12 @@ pub(super) async fn handle_request(
         "storage.retrieve_range" => {
             blob_handlers::storage_retrieve_range(request.params.as_ref(), state).await
         }
+        "storage.list_blobs" => {
+            blob_handlers::storage_list_blobs(request.params.as_ref(), state).await
+        }
+        "storage.blob_exists" => {
+            blob_handlers::storage_blob_exists(request.params.as_ref(), state).await
+        }
         "storage.store_stream" => {
             let params = request.params.clone().unwrap_or_else(|| json!({}));
             crate::rpc::storage_stream::storage_store_stream_begin(
@@ -128,6 +134,24 @@ pub(super) async fn handle_request(
         }
         "storage.fetch_external" => {
             external_handlers::storage_fetch_external(request.params.as_ref(), state).await
+        }
+        // Content-addressed storage (BLAKE3 hash-as-key, NG-1)
+        "content.put" => content_handlers::content_put(request.params.as_ref(), state).await,
+        "content.get" => content_handlers::content_get(request.params.as_ref(), state).await,
+        "content.exists" => content_handlers::content_exists(request.params.as_ref(), state).await,
+        "content.list" => content_handlers::content_list(request.params.as_ref(), state).await,
+        // Content manifests — versioned collections (NG-2)
+        "content.publish" => {
+            content_handlers::content_publish(request.params.as_ref(), state).await
+        }
+        "content.resolve" => {
+            content_handlers::content_resolve(request.params.as_ref(), state).await
+        }
+        "content.promote" => {
+            content_handlers::content_promote(request.params.as_ref(), state).await
+        }
+        "content.collections" => {
+            content_handlers::content_collections(request.params.as_ref(), state).await
         }
         // Ionic bond ledger persistence (on behalf of security capability provider)
         "bonding.ledger.store" => {

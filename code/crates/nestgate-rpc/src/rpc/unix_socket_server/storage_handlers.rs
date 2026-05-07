@@ -109,7 +109,9 @@ pub(super) async fn storage_retrieve(
         object_path
     } else if namespace.is_some() {
         let flat = dataset_key_path(family_id, None, key);
-        if flat.exists() { flat } else {
+        if flat.exists() {
+            flat
+        } else {
             return Ok(json!({"value": null, "data": null, "key": key}));
         }
     } else {
@@ -217,9 +219,7 @@ pub(super) async fn storage_list(params: Option<&Value>, state: &StorageState) -
     let namespace = extract_namespace(params)?;
     let prefix = params["prefix"].as_str();
 
-    let family_root = get_storage_base_path()
-        .join("datasets")
-        .join(family_id);
+    let family_root = get_storage_base_path().join("datasets").join(family_id);
     let scan_root = namespace.map_or_else(|| family_root.clone(), |ns| family_root.join(ns));
 
     let keys = list_keys_recursive(&scan_root, &scan_root, prefix).await;
@@ -250,9 +250,7 @@ pub(super) async fn storage_stats(params: Option<&Value>, state: &StorageState) 
     let family_id = resolve_family_id(params, state)?;
     let namespace = extract_namespace(params)?;
 
-    let family_root = get_storage_base_path()
-        .join("datasets")
-        .join(family_id);
+    let family_root = get_storage_base_path().join("datasets").join(family_id);
     let scan_root = namespace.map_or_else(|| family_root.clone(), |ns| family_root.join(ns));
 
     let keys = list_keys_recursive(&scan_root, &scan_root, None).await;

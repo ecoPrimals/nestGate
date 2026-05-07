@@ -512,14 +512,8 @@ impl IsomorphicIpcServer {
     ///
     /// Only BTSP-exempt methods are forwarded to the handler; everything else
     /// gets a `-32604 BTSP authentication required` error.
-    async fn dispatch_or_reject_unauth(
-        request: Value,
-        handler: &Arc<dyn RpcHandler>,
-    ) -> Value {
-        let method_raw = request
-            .get("method")
-            .and_then(Value::as_str)
-            .unwrap_or("");
+    async fn dispatch_or_reject_unauth(request: Value, handler: &Arc<dyn RpcHandler>) -> Value {
+        let method_raw = request.get("method").and_then(Value::as_str).unwrap_or("");
         let method = crate::rpc::protocol::normalize_method(method_raw);
         if crate::rpc::is_btsp_exempt_method(&method) {
             return handler.handle_request(request).await;

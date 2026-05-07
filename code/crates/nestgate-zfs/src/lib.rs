@@ -19,12 +19,18 @@
         clippy::needless_collect,
     )
 )]
-#![expect(dead_code, reason = "backend variants compiled but not all wired to CLI yet")]
+#![expect(
+    dead_code,
+    reason = "backend variants compiled but not all wired to CLI yet"
+)]
 #![expect(
     clippy::missing_errors_doc,
     reason = "doc coverage expanding incrementally; tracked in deep-debt backlog"
 )]
-#![expect(clippy::doc_markdown, reason = "product / tech names used unquoted in prose docs")]
+#![expect(
+    clippy::doc_markdown,
+    reason = "product / tech names used unquoted in prose docs"
+)]
 #![expect(
     clippy::module_name_repetitions,
     reason = "type names include module context for external discoverability"
@@ -43,7 +49,10 @@
     clippy::unnecessary_wraps,
     reason = "Result return kept for API uniformity across backend trait impls"
 )]
-#![expect(clippy::unused_self, reason = "trait impls require &self on stub / deferred methods")]
+#![expect(
+    clippy::unused_self,
+    reason = "trait impls require &self on stub / deferred methods"
+)]
 #![expect(
     clippy::unused_async,
     reason = "async kept on trait methods for future I/O without signature churn"
@@ -60,7 +69,10 @@
     clippy::implicit_hasher,
     reason = "public APIs accept HashMap without generic S — callers use default hasher"
 )]
-#![expect(clippy::unreadable_literal, reason = "ZFS magic numbers / byte sizes are canonical")]
+#![expect(
+    clippy::unreadable_literal,
+    reason = "ZFS magic numbers / byte sizes are canonical"
+)]
 #![expect(
     clippy::used_underscore_items,
     reason = "underscore-prefixed fields used across module boundaries in backend structs"

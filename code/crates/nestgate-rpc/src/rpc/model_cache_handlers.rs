@@ -194,6 +194,17 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "storage.object.size",
     "storage.namespaces.list",
     "storage.fetch_external",
+    "storage.list_blobs",
+    "storage.blob_exists",
+    // Content-addressed storage (BLAKE3 hash-as-key, NG-1)
+    "content.put",
+    "content.get",
+    "content.exists",
+    "content.list",
+    "content.publish",
+    "content.resolve",
+    "content.promote",
+    "content.collections",
     // Ionic bond ledger persistence (security capability provider)
     "bonding.ledger.store",
     "bonding.ledger.retrieve",
@@ -250,10 +261,17 @@ pub fn capabilities_list() -> Result<Value> {
                     "store", "retrieve", "exists", "delete", "list",
                     "stats", "store_blob", "retrieve_blob", "retrieve_range",
                     "store_stream", "store_stream_chunk", "retrieve_stream", "retrieve_stream_chunk",
-                    "object.size", "namespaces.list", "fetch_external"
+                    "object.size", "namespaces.list", "fetch_external",
+                    "list_blobs", "blob_exists"
                 ],
                 "version": env!("CARGO_PKG_VERSION"),
                 "description": "Filesystem-backed durable key-value, blob, and streaming storage with namespace isolation"
+            },
+            {
+                "type": "content",
+                "methods": ["put", "get", "exists", "list", "publish", "resolve", "promote", "collections"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Content-addressed storage with versioned manifests — BLAKE3 hash-as-key, automatic dedup, atomic deploys"
             },
             {
                 "type": "model",
@@ -342,6 +360,7 @@ pub fn discover_capabilities() -> Result<Value> {
             "features": {
                 "persistent": true,
                 "blob_storage": true,
+                "content_addressed": true,
                 "fetch_external": true,
                 "model_cache": true,
                 "templates": true,

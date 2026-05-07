@@ -24,22 +24,73 @@ methods = [
     "storage.store_blob", "storage.retrieve_blob", "storage.retrieve_range",
     "storage.object.size", "storage.namespaces.list",
     "storage.fetch_external",
+    "storage.list_blobs", "storage.blob_exists",
     "storage.store_stream", "storage.store_stream_chunk",
     "storage.retrieve_stream", "storage.retrieve_stream_chunk",
 ]
 
-# Streaming protocol (storage.store_stream / storage.retrieve_stream):
-# 1. Call storage.store_stream with {key, family_id?, dataset?} → {stream_id, chunk_size}
-# 2. Loop: storage.store_stream_chunk with {stream_id, data: "<base64>", is_last: bool}
-# 3. Call storage.retrieve_stream with {key, family_id?, dataset?} → {stream_id, total_size, chunk_size}
-# 4. Loop: storage.retrieve_stream_chunk with {stream_id, offset} → {data: "<base64>", is_last}
-# Max chunk: 4 MiB decoded (base64 encoded in JSON). Sessions expire after 1 hour.
+# ── Parameter naming notes (NG-3) ──────────────────────────────────
+# storage.store_blob uses `blob` (not `data`) for the base64 payload.
+# storage.fetch_external uses `cache_key` (not `key`) for the storage key.
+# All other storage methods use `key` for the object identifier and
+# `data` for the base64 payload. These asymmetries are preserved for
+# backward compatibility.
 
-# Common parameter: family_id
+# ── Streaming wire protocol (NG-4) ─────────────────────────────────
+#
+# ## Store stream (upload):
+# 1. storage.store_stream
+#    params:  {key, dataset?, family_id?, total_size?, content_type?}
+#    returns: {stream_id, chunk_size}
+# 2. storage.store_stream_chunk (loop until is_last)
+#    params:  {stream_id, offset, data: "<base64>", is_last: bool}
+#    returns: {stream_id, offset, bytes_written}
+#    Final chunk (is_last: true) returns: {stream_id, total_size, stored: true}
+#
+# ## Retrieve stream (download):
+# 3. storage.retrieve_stream
+#    params:  {key, dataset?, family_id?}
+#    returns: {stream_id, total_size, chunk_size}
+# 4. storage.retrieve_stream_chunk (loop until is_last)
+#    params:  {stream_id, offset}
+#    returns: {data: "<base64>", offset, length, total_size, is_last: bool}
+#
+# ## Constraints:
+# - Max chunk size: 4 MiB decoded (larger base64 in JSON wire format).
+# - Sessions expire after 1 hour of inactivity.
+# - stream_id is a UUID v4 scoped to the NestGate process lifetime.
+# - offset must be monotonically increasing per session.
+# - data is standard base64 (RFC 4648) with padding.
+
+# ── Common parameter: family_id ────────────────────────────────────
 # Optional when connecting via a family-scoped socket (nestgate-{family}.sock).
 # The server defaults to its own NESTGATE_FAMILY_ID / FAMILY_ID from the
 # environment. Explicit family_id in params always takes precedence.
 # Required only in standalone mode with no env var set.
+
+[capabilities.content]
+domain = "content"
+description = "Content-addressed storage with versioned manifests — BLAKE3 hash-as-key, automatic dedup, atomic deploys"
+methods = [
+    "content.put", "content.get", "content.exists", "content.list",
+    "content.publish", "content.resolve", "content.promote", "content.collections",
+]
+
+# ── Content-addressed storage protocol (NG-1) ──────────────────────
+# content.put:    {data: "<base64>", content_type?, family_id?} → {hash, size, stored, deduplicated}
+# content.get:    {hash: "<blake3_hex>", family_id?} → {data: "<base64>", hash, size, content_type?}
+# content.exists: {hash: "<blake3_hex>", family_id?} → {exists, hash, size?}
+# content.list:   {family_id?} → {hashes: [{hash, size}], count}
+# hash is the 64-char lowercase hex BLAKE3 digest of the raw (pre-base64) bytes.
+# Filesystem: {base}/datasets/{family}/_content/{hex[..2]}/{hex}
+#
+# ── Content manifests (NG-2) ────────────────────────────────────────
+# content.publish:     {collection, manifest: {path: hash, ...}, family_id?} → {collection, entry_count, stored}
+# content.resolve:     {collection, path, inline?, family_id?} → {hash, path, collection, data?, content_type?}
+# content.promote:     {collection, alias, family_id?} → {alias, target, promoted}
+# content.collections: {prefix?, family_id?} → {collections: [name, ...], count}
+# Manifests live at {base}/datasets/{family}/_manifests/{collection}.json
+# Aliases are thin JSON files with {"alias": true, "target": "<collection>"}
 
 [capabilities.model]
 domain = "model"

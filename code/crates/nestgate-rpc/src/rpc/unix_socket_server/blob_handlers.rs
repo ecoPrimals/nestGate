@@ -9,6 +9,8 @@ use serde_json::{Value, json};
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tracing::debug;
 
+use nestgate_config::config::storage_paths::get_storage_base_path;
+
 use super::StorageState;
 use super::storage_paths::{
     blob_key_path, dataset_key_path, ensure_parent_dirs, extract_namespace, resolve_family_id,
@@ -91,7 +93,9 @@ pub(super) async fn storage_retrieve_blob(
         ns_blob
     } else if namespace.is_some() {
         let flat = blob_key_path(family_id, None, key);
-        if flat.exists() { flat } else {
+        if flat.exists() {
+            flat
+        } else {
             return Ok(json!({"blob": null, "key": key}));
         }
     } else {
@@ -212,6 +216,76 @@ pub(super) async fn storage_retrieve_range(
     Ok(resp)
 }
 
+/// `storage.list_blobs` — enumerate blob keys within a family/namespace.
+///
+/// Walks the `_blobs/` directory and returns all stored keys.
+pub(super) async fn storage_list_blobs(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
+    let empty = json!({});
+    let params = params.unwrap_or(&empty);
+    let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
+
+    let base = get_storage_base_path().join("datasets").join(family_id);
+    let blobs_dir =
+        namespace.map_or_else(|| base.join("_blobs"), |ns| base.join(ns).join("_blobs"));
+
+    let prefix_filter = params["prefix"].as_str();
+
+    let mut keys: Vec<Value> = Vec::new();
+    if blobs_dir.exists() {
+        let mut entries = tokio::fs::read_dir(&blobs_dir).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to list blobs for {family_id}: {e}"))
+        })?;
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if let Some(pfx) = prefix_filter
+                && !name.starts_with(pfx)
+            {
+                continue;
+            }
+            let size = entry.metadata().await.map(|m| m.len()).unwrap_or(0);
+            keys.push(json!({"key": &*name, "size": size}));
+        }
+    }
+
+    let count = keys.len();
+    let mut resp = json!({"keys": keys, "count": count, "family_id": family_id});
+    if let Some(ns) = namespace {
+        resp["namespace"] = json!(ns);
+    }
+    Ok(resp)
+}
+
+/// `storage.blob_exists` — check whether a blob key exists.
+pub(super) async fn storage_blob_exists(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
+    let params = params
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let family_id = resolve_family_id(params, state)?;
+    let namespace = extract_namespace(params)?;
+
+    let path = blob_key_path(family_id, namespace, key);
+    if path.exists() {
+        let size = tokio::fs::metadata(&path)
+            .await
+            .map(|m| m.len())
+            .unwrap_or(0);
+        Ok(json!({"exists": true, "key": key, "size": size, "family_id": family_id}))
+    } else {
+        Ok(json!({"exists": false, "key": key, "family_id": family_id}))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -284,6 +358,50 @@ mod tests {
             .unwrap();
         assert!(result["data"].is_null());
         assert_eq!(result["error"], "not_found");
+    }
+
+    #[tokio::test]
+    async fn list_blobs_returns_stored_keys() {
+        let state = mock_state(Some("test-lb")).await;
+        let family_id = format!("test-lb-{}", uuid::Uuid::new_v4());
+
+        for i in 0..3 {
+            let encoded = STANDARD.encode(format!("blob-{i}").as_bytes());
+            let p = json!({"family_id": &family_id, "key": format!("file-{i}"), "blob": &encoded});
+            storage_store_blob(Some(&p), &state).await.unwrap();
+        }
+
+        let list_p = json!({"family_id": &family_id});
+        let result = storage_list_blobs(Some(&list_p), &state).await.unwrap();
+        assert_eq!(result["count"], 3);
+        assert_eq!(result["keys"].as_array().unwrap().len(), 3);
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn blob_exists_returns_correct_state() {
+        let state = mock_state(Some("test-be")).await;
+        let family_id = format!("test-be-{}", uuid::Uuid::new_v4());
+
+        let missing = json!({"family_id": &family_id, "key": "nope"});
+        let r = storage_blob_exists(Some(&missing), &state).await.unwrap();
+        assert_eq!(r["exists"], false);
+
+        let encoded = STANDARD.encode(b"data");
+        let store_p = json!({"family_id": &family_id, "key": "found", "blob": &encoded});
+        storage_store_blob(Some(&store_p), &state).await.unwrap();
+
+        let found = json!({"family_id": &family_id, "key": "found"});
+        let r = storage_blob_exists(Some(&found), &state).await.unwrap();
+        assert_eq!(r["exists"], true);
+        assert!(r["size"].as_u64().unwrap() > 0);
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
     }
 
     #[tokio::test]

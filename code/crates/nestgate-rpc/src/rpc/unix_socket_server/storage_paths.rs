@@ -26,9 +26,7 @@ pub(in crate::rpc::unix_socket_server) fn dataset_key_path(
     namespace: Option<&str>,
     key: &str,
 ) -> PathBuf {
-    let base = get_storage_base_path()
-        .join("datasets")
-        .join(family_id);
+    let base = get_storage_base_path().join("datasets").join(family_id);
     namespace.map_or_else(|| base.join(key), |ns| base.join(ns).join(key))
 }
 
@@ -43,9 +41,7 @@ pub(in crate::rpc::unix_socket_server) fn blob_key_path(
     namespace: Option<&str>,
     key: &str,
 ) -> PathBuf {
-    let base = get_storage_base_path()
-        .join("datasets")
-        .join(family_id);
+    let base = get_storage_base_path().join("datasets").join(family_id);
     namespace.map_or_else(
         || base.join("_blobs").join(key),
         |ns| base.join(ns).join("_blobs").join(key),
@@ -91,6 +87,36 @@ pub(in crate::rpc::unix_socket_server) async fn ensure_parent_dirs(path: &Path) 
         })?;
     }
     Ok(())
+}
+
+/// Build the filesystem path for a content-addressed object (BLAKE3 hash as key).
+///
+/// Layout: `{base}/datasets/{family}/_content/{hex[..2]}/{hex}`
+/// The 2-char prefix directory prevents flat-directory blowup at scale.
+pub(in crate::rpc::unix_socket_server) fn content_key_path(
+    family_id: &str,
+    blake3_hex: &str,
+) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join("_content")
+        .join(&blake3_hex[..2])
+        .join(blake3_hex)
+}
+
+/// Build the filesystem path for a content manifest (versioned collection).
+///
+/// Layout: `{base}/datasets/{family}/_manifests/{collection}.json`
+pub(in crate::rpc::unix_socket_server) fn manifest_path(
+    family_id: &str,
+    collection: &str,
+) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join("_manifests")
+        .join(format!("{collection}.json"))
 }
 
 /// Resolve `family_id`: explicit param wins, then server's socket-scoped default.

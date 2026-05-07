@@ -20,7 +20,10 @@
         clippy::type_complexity,
     )
 )]
-#![expect(missing_docs, reason = "perf internals; public doc coverage tracked in deep-debt backlog")]
+#![expect(
+    missing_docs,
+    reason = "perf internals; public doc coverage tracked in deep-debt backlog"
+)]
 #![expect(
     clippy::missing_errors_doc,
     reason = "doc coverage expanding incrementally; tracked in deep-debt backlog"
@@ -39,7 +42,10 @@
     clippy::cast_sign_loss,
     reason = "metric / stats casts are range-checked at call sites"
 )]
-#![expect(clippy::unused_self, reason = "trait impls require &self on stub methods")]
+#![expect(
+    clippy::unused_self,
+    reason = "trait impls require &self on stub methods"
+)]
 #![expect(
     clippy::option_if_let_else,
     reason = "kept for readability where map_or_else harms clarity"
@@ -48,7 +54,10 @@
     clippy::items_after_statements,
     reason = "local helper consts defined near usage for proximity clarity"
 )]
-#![expect(dead_code, reason = "SIMD / zero-copy paths compiled but not all wired yet")]
+#![expect(
+    dead_code,
+    reason = "SIMD / zero-copy paths compiled but not all wired yet"
+)]
 
 //! Performance optimization and monitoring for `NestGate`
 //!

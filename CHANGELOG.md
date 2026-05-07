@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 57: Content-addressed storage — NG-1 through NG-4 (May 7, 2026)
+
+- **NG-1 (High): Content-addressed storage**: New `content.put`, `content.get`,
+  `content.exists`, `content.list` methods. Stores content using BLAKE3 hash as
+  key, with automatic deduplication. 2-char prefix directories prevent flat-dir
+  blowup. Filesystem layout: `_content/{hex[..2]}/{hex}` with `.meta.json` sidecar.
+  Encrypt-at-rest support via existing `StorageEncryption`.
+- **NG-2 (Medium): Versioned content manifests**: New `content.publish`,
+  `content.resolve`, `content.promote`, `content.collections` methods. Manifests
+  map URL paths to content hashes for atomic deployments. `content.promote`
+  creates thin alias manifests for zero-downtime rollout. Referential integrity
+  validated on publish (all hashes must exist in `_content/`). `content.resolve`
+  supports `inline: true` for direct content retrieval.
+- **NG-3 (Medium): Blob namespace visibility**: New `storage.list_blobs` and
+  `storage.blob_exists` methods. Blob store entries are now enumerable and
+  checkable independently from KV store. Parameter naming differences documented
+  in `capability_registry.toml` (`blob` vs `data`, `cache_key` vs `key`).
+- **NG-4 (Low): Streaming wire protocol documentation**: Expanded streaming
+  protocol docs in `capability_registry.toml` with full param shapes for all 4
+  streaming methods, constraints (4 MiB chunks, 1-hour TTL, UUID v4 stream IDs),
+  and usage sequence diagrams.
+- **New files**: `content_handlers.rs` (content-addressed storage + manifests),
+  path helpers `content_key_path()` and `manifest_path()` in `storage_paths.rs`.
+- **Method count**: 63 UDS methods (was 51). New capability groups: `content` (8),
+  `storage` (+2: `list_blobs`, `blob_exists`).
+- **Tests**: 19 new tests — 12 content handler tests (7 NG-1 + 5 NG-2), 2 blob
+  handler tests, 5 dispatch/capability registration tests.
+- **Verification**: clippy PASS (pedantic+nursery, zero warnings), fmt PASS,
+  1648 lib tests / 0 failures. Pre-existing flaky `test_config_missing_required_env_vars`
+  confirmed not related (passes in isolation).
+
 ### Session 56: Namespace on legacy dispatch, streaming retrieval audit triage (May 7, 2026)
 
 - **Namespace parameter on legacy dispatch** (primalSpring P2 Item 2): All legacy

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 7, 2026 (Session 56: namespace, BTSP gating, deep debt sweep)  
+**Last Updated**: May 7, 2026 (Session 57: content-addressed storage NG-1–NG-4)  
 **Version**: 4.7.0-dev
 
 ---
@@ -29,7 +29,7 @@ Encrypt-at-rest:    ChaCha20-Poly1305 — implemented Session 48
 Auth mode bypass:   NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider (Session 48; beardog alias removed Session 51)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 63 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 43 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
@@ -662,4 +662,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: May 7, 2026 (Session 56)
+**Latest**: May 7, 2026 (Session 57)

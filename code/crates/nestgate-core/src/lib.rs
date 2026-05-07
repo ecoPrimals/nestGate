@@ -45,14 +45,26 @@
     clippy::needless_pass_by_value,
     reason = "handler signatures accept owned types for ergonomic JSON-RPC dispatch"
 )]
-#![expect(clippy::unused_self, reason = "trait impls require &self on stub methods")]
+#![expect(
+    clippy::unused_self,
+    reason = "trait impls require &self on stub methods"
+)]
 #![expect(
     clippy::implicit_hasher,
     reason = "public APIs accept HashMap without generic S — callers always use default hasher"
 )]
-#![expect(clippy::doc_markdown, reason = "product names used unquoted in prose doc comments")]
-#![expect(clippy::float_cmp, reason = "exact equality valid for sentinel / default checks")]
-#![expect(clippy::inline_always, reason = "hot-path helpers marked inline for LTO")]
+#![expect(
+    clippy::doc_markdown,
+    reason = "product names used unquoted in prose doc comments"
+)]
+#![expect(
+    clippy::float_cmp,
+    reason = "exact equality valid for sentinel / default checks"
+)]
+#![expect(
+    clippy::inline_always,
+    reason = "hot-path helpers marked inline for LTO"
+)]
 #![expect(
     clippy::redundant_closure_for_method_calls,
     reason = "closures kept where they clarify intent vs bare method refs"
