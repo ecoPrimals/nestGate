@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 7, 2026 (Session 58: deep debt sweep — module refactoring + constants consolidation)  
+**Last Updated**: May 8, 2026 (Session 59: JH-0 MethodGate pre-dispatch authorization)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 7, 2026
 Format:             CLEAN (cargo fmt --check passes), as of May 7, 2026
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 7, 2026
-Tests:              8,879 passing, 0 failures, 60 ignored (cargo test --workspace --lib); 12,353 full workspace — as of May 7, 2026
+Tests:              8,915 passing, 0 failures, 60 ignored (cargo test --workspace --lib) — as of May 8, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  ZERO — storage_handlers.rs (836→345L via test extraction), content_handlers.rs (806→510L), unix_socket_server/mod.rs (720→395L via connection.rs split)
 Unwrap/Expect:      ZERO in production library code
@@ -29,7 +29,7 @@ Encrypt-at-rest:    ChaCha20-Poly1305 — implemented Session 48
 Auth mode bypass:   NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider (Session 48; beardog alias removed Session 51)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 63 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.*, auth.* — 66 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 43 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
@@ -41,6 +41,7 @@ BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming,
 BTSP Phase 2:      PASS — server-side handshake (length-prefixed + JSON-line dual framing), 6-tier security socket discovery, security provider wire contract aligned: family_seed base64-encoded, session_token|session_id, btsp.session.verify on reused connection, btsp.negotiate eliminated; mode-aware error frames; persistent BufReader for multi-call relay; SECURITY_FAMILY_SEED canonical env var (backward-compat BEARDOG_FAMILY_SEED)
 BTSP Phase 3:      PASS — `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); UDS + isomorphic IPC listeners; plaintext fallback; transport hardened (decrypt/read errors propagate as Err; Session 52)
 BTSP method gate:  PASS — plain-JSON-RPC bypass (first-byte `{`) restricted to BTSP-exempt methods only (health, identity, capabilities, discovery); storage/session/bonding/model/template/audit/NAT/ZFS methods return -32604 without BTSP handshake (Session 55, PG-56)
+MethodGate JH-0:   PASS — pre-dispatch authorization gate classifies methods Public/Protected; NESTGATE_AUTH_MODE=enforced rejects unauthed protected calls with -32001; permissive default (Session 59)
 JWT NUCLEUS:       PASS — BTSP composition auto-detected via is_btsp_required(); JWT validation skipped when FAMILY_ID signals NUCLEUS stack (Session 52)
 is_btsp_required:  UNIFIED — client delegates to canonical server version (Session 52)
 TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS; newline-delimited JSON-RPC 2.0; default port via DEFAULT_API_PORT (env-overridable)

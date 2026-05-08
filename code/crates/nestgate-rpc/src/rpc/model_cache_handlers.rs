@@ -177,6 +177,10 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "capabilities.list",
     "discover_capabilities",
     "discovery.capability.register",
+    // Method gate introspection (JH-0)
+    "auth.check",
+    "auth.mode",
+    "auth.peer_info",
     // Storage operations (primary domain)
     "storage.store",
     "storage.retrieve",
@@ -320,6 +324,12 @@ pub fn capabilities_list() -> Result<Value> {
                 "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"],
                 "version": env!("CARGO_PKG_VERSION"),
                 "description": "ZFS storage management — pools, datasets, snapshots"
+            },
+            {
+                "type": "auth",
+                "methods": ["check", "mode", "peer_info"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Method gate introspection — enforcement mode, caller identity, authorization check (JH-0)"
             }
         ],
         "consumed_capabilities": [

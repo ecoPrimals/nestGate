@@ -181,6 +181,10 @@ mod tests {
             family_id: family_id.map(String::from),
             storage_initialized: true,
             encryption: None,
+            method_gate: crate::rpc::method_gate::MethodGate::new(
+                crate::rpc::method_gate::EnforcementMode::Permissive,
+            ),
+            caller_context: crate::rpc::method_gate::CallerContext::unix(),
         }
     }
 

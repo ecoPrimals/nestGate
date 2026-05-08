@@ -19,6 +19,10 @@ pub async fn mock_state(family_id: Option<&str>) -> StorageState {
         family_id: family_id.map(String::from),
         storage_initialized: true,
         encryption: None,
+        method_gate: crate::rpc::method_gate::MethodGate::new(
+            crate::rpc::method_gate::EnforcementMode::Permissive,
+        ),
+        caller_context: crate::rpc::method_gate::CallerContext::unix(),
     }
 }
 
@@ -36,5 +40,9 @@ pub fn encrypted_state(family_id: &str) -> StorageState {
         encryption: Some(std::sync::Arc::new(
             crate::rpc::storage_encryption::StorageEncryption::new(key),
         )),
+        method_gate: crate::rpc::method_gate::MethodGate::new(
+            crate::rpc::method_gate::EnforcementMode::Permissive,
+        ),
+        caller_context: crate::rpc::method_gate::CallerContext::unix(),
     }
 }

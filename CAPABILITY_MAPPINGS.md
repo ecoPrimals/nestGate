@@ -27,7 +27,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 {
   "primal": "nestgate",
   "version": "<semver>",
-  "methods": ["<63 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
+  "methods": ["<66 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
   "provided_capabilities": [
     {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external", "list_blobs", "blob_exists", "store_stream", "store_stream_chunk", "retrieve_stream", "retrieve_stream_chunk"]},
     {"type": "content", "methods": ["put", "get", "exists", "list", "publish", "resolve", "promote", "collections"]},
@@ -38,7 +38,8 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
     {"type": "nat", "methods": ["store_traversal_info", "retrieve_traversal_info"]},
     {"type": "beacon", "methods": ["store", "retrieve", "list", "delete"]},
     {"type": "bonding", "methods": ["ledger.store", "ledger.retrieve", "ledger.list"]},
-    {"type": "zfs", "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"]}
+    {"type": "zfs", "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"]},
+    {"type": "auth", "methods": ["check", "mode", "peer_info"]}
   ],
   "consumed_capabilities": [
     {"type": "security", "reason": "BTSP handshake crypto delegation", "required": false},
@@ -50,7 +51,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 }
 ```
 
-`capability_registry.toml` is the full **13**-group / **57**-method inventory (excluding `data.*`, which is wildcard-only). The `capabilities.list` `provided_capabilities` block in `model_cache_handlers.rs` groups **10** durability domains (storage, content, model through zfs); health, identity, and discovery appear in the top-level `methods` array and related handlers instead. `data.*` is not a NestGate-implemented feed surface.
+`capability_registry.toml` is the full **14**-group / **60**-method inventory (excluding `data.*`, which is wildcard-only). The `capabilities.list` `provided_capabilities` block in `model_cache_handlers.rs` groups **11** domains (storage, content, model through zfs, auth); health, identity, and discovery appear in the top-level `methods` array and related handlers instead. `data.*` is not a NestGate-implemented feed surface.
 
 `identity.get` returns `{primal, version, domain: "storage", license: "AGPL-3.0-or-later", family_id}`.
 

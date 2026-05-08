@@ -44,8 +44,9 @@
 - **Workspace dep consistency**: `crossbeam` centralized from local pin to `[workspace.dependencies]`
 - **Wire Standard L3 on all surfaces**: `protocol` + `transport` fields added to ALL four `capabilities.list` implementations (UDS, HTTP, semantic router, isomorphic adapter); transport: `["uds", "tcp", "http"]`
 - **`consumed_capabilities` aligned**: `"discovery"` → `"discovery_mesh"` in code to match `capability_registry.toml`; stale `CAPABILITY_MAPPINGS.md` consumed entries corrected
-- **Discovery tiers documented**: Tier 3 (UDS convention), Tier 4 (manifest), Tier 5 (TCP probing) natively; Tiers 1-2 via orchestration  
-**Last Updated**: May 7, 2026
+- **Discovery tiers documented**: Tier 3 (UDS convention), Tier 4 (manifest), Tier 5 (TCP probing) natively; Tiers 1-2 via orchestration
+- **MethodGate JH-0**: Pre-dispatch authorization gate — Public/Protected method classification, `NESTGATE_AUTH_MODE` enforcement, `auth.check`/`auth.mode`/`auth.peer_info` introspection (Session 59)  
+**Last Updated**: May 8, 2026
 
 ---
 

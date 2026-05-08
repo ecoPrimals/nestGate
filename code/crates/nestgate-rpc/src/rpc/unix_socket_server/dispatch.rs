@@ -10,6 +10,7 @@ use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::NestGateError;
 use serde_json::{Value, json};
 
+use crate::rpc::method_gate;
 use crate::rpc::model_cache_handlers;
 use crate::rpc::protocol::normalize_method;
 
@@ -42,6 +43,37 @@ pub(super) async fn handle_request(
     }
 
     let method = normalize_method(&request.method);
+
+    // JH-0: auth.* introspection methods (handled before dispatch table
+    // because they need gate + caller context).
+    if let Some(result) =
+        method_gate::auth_introspection(&method, &state.method_gate, &state.caller_context)
+    {
+        return JsonRpcResponse {
+            jsonrpc: Arc::from("2.0"),
+            result: Some(result),
+            error: None,
+            id: request.id,
+        };
+    }
+
+    // JH-0: pre-dispatch authorization gate.
+    if let Err(rejection) = state.method_gate.check(&method, &state.caller_context) {
+        return JsonRpcResponse {
+            jsonrpc: Arc::from("2.0"),
+            result: None,
+            error: Some(JsonRpcError {
+                code: rejection.code,
+                message: Cow::Owned(format!(
+                    "permission denied: method '{}' requires a capability token",
+                    rejection.method,
+                )),
+                data: Some(json!({"method": rejection.method})),
+            }),
+            id: request.id,
+        };
+    }
+
     let result = match method.as_ref() {
         // Health — wateringHole semantic names + legacy aliases
         "health.liveness" => Ok(json!({

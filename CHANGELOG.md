@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 59: JH-0 MethodGate pre-dispatch authorization (May 8, 2026)
+
+- **MethodGate adoption**: New `method_gate.rs` module implementing the ecosystem
+  pre-dispatch capability gate (JH-0, `wateringHole/METHOD_GATE_STANDARD.md`).
+  Classifies methods into Public (health, identity, capabilities, discovery, auth
+  introspection) and Protected (storage, content, session, bonding, templates,
+  audit, NAT, beacon, ZFS, model). Starts in permissive mode (backward-compatible).
+- **Auth introspection**: `auth.check`, `auth.mode`, `auth.peer_info` methods
+  registered and routed. `auth.mode` reports enforcement mode; `auth.check`
+  reports authentication status; `auth.peer_info` reports connection origin.
+- **Enforcement modes**: `NESTGATE_AUTH_MODE=enforced` rejects unauthenticated
+  calls to protected methods with `-32001 PERMISSION_DENIED`. Default: permissive
+  (log violations, allow all).
+- **Wiring**: Gate check runs at the top of `dispatch::handle_request()` after
+  JSON-RPC 2.0 validation and before the method dispatch table. Composes with
+  the existing BTSP transport-level gate — BTSP-rejected calls never reach
+  MethodGate.
+- **Capabilities**: `auth` capability group added to `capability_registry.toml`,
+  `UNIX_SOCKET_SUPPORTED_METHODS` (66 methods, up from 63), and L3
+  `provided_capabilities` envelope.
+- **Verification**: 8,915 lib tests passing (36 new), zero failures, zero clippy
+  warnings.
+
 ### Session 58: Deep debt sweep — module refactoring and constants consolidation (May 7, 2026)
 
 - **Test extraction**: Inline `#[cfg(test)]` modules moved from `storage_handlers.rs`

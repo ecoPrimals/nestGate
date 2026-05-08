@@ -165,6 +165,10 @@ pub(crate) struct StorageState {
     /// `storage.store` data is encrypted before writing to disk and
     /// `storage.retrieve` auto-decrypts envelope payloads.
     pub(crate) encryption: Option<Arc<crate::rpc::storage_encryption::StorageEncryption>>,
+    /// JH-0 pre-dispatch authorization gate (permissive default).
+    pub(crate) method_gate: crate::rpc::method_gate::MethodGate,
+    /// Caller identity for the current connection.
+    pub(crate) caller_context: crate::rpc::method_gate::CallerContext,
 }
 
 impl StorageState {
@@ -176,6 +180,8 @@ impl StorageState {
             family_id: None,
             storage_initialized: true,
             encryption: None,
+            method_gate: crate::rpc::method_gate::MethodGate::from_env(),
+            caller_context: crate::rpc::method_gate::CallerContext::unix(),
         })
     }
 }

@@ -69,6 +69,7 @@ pub mod btsp_server_handshake;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod metadata_backend;
+pub(crate) mod method_gate;
 #[cfg(any(feature = "dev-stubs", test))]
 pub mod orchestrator_registration;
 pub(crate) mod protocol;
@@ -127,6 +128,11 @@ pub use isomorphic_ipc::{
 
 /// Returns `true` if `method` may be served on a BTSP-required socket
 /// **without** completing a BTSP handshake.
+///
+/// This is the **transport-level** gate. The application-level
+/// [`method_gate::MethodGate`] runs after BTSP (or in place of it for
+/// non-BTSP connections) and provides finer-grained Public/Protected
+/// classification with enforcement modes.
 ///
 /// Exempt methods are limited to read-only health/identity/capability
 /// discovery that exposes no user data and is required for primalSpring /

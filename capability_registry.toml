@@ -154,6 +154,11 @@ domain = "discovery"
 description = "Capability advertisement and listing"
 methods = ["capabilities.list", "discover.capabilities"]
 
+[capabilities.auth]
+domain = "auth"
+description = "Method gate introspection — enforcement mode, caller identity, authorization check (JH-0)"
+methods = ["auth.check", "auth.mode", "auth.peer_info"]
+
 # Consumed capabilities — what NestGate needs from other primals
 [consumed_capabilities.security]
 reason = "BTSP handshake crypto delegation"
