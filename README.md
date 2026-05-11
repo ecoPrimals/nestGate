@@ -2,23 +2,23 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-05-07)**  
+**Verification (as of 2026-05-11)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,879 passing, 0 failures, 60 ignored; full workspace 12,353  
+- **Tests**: `cargo test --workspace --lib` — 8,915 passing, 0 failures, 60 ignored; full workspace 12,389  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
-- **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
+- **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,879 lib / 12,353 full workspace, 0 failures  
+- **Tests (last recorded)**: 8,915 lib / 12,389 full workspace, 0 failures
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
 - **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
-- **External deps**: Zero unused workspace deps; zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
+- **External deps**: Zero unused workspace deps (3 removed Session 61: `toml`, `async-stream`, `sha2`; `fastrand` → dev-dep); zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
@@ -45,8 +45,11 @@
 - **Wire Standard L3 on all surfaces**: `protocol` + `transport` fields added to ALL four `capabilities.list` implementations (UDS, HTTP, semantic router, isomorphic adapter); transport: `["uds", "tcp", "http"]`
 - **`consumed_capabilities` aligned**: `"discovery"` → `"discovery_mesh"` in code to match `capability_registry.toml`; stale `CAPABILITY_MAPPINGS.md` consumed entries corrected
 - **Discovery tiers documented**: Tier 3 (UDS convention), Tier 4 (manifest), Tier 5 (TCP probing) natively; Tiers 1-2 via orchestration
-- **MethodGate JH-0**: Pre-dispatch authorization gate — Public/Protected method classification, `NESTGATE_AUTH_MODE` enforcement, `auth.check`/`auth.mode`/`auth.peer_info` introspection (Session 59)  
-**Last Updated**: May 8, 2026
+- **MethodGate JH-0**: Pre-dispatch authorization gate — Public/Protected method classification, `NESTGATE_AUTH_MODE` enforcement, `auth.check`/`auth.mode`/`auth.peer_info` introspection (Session 59)
+- **content.* transport parity**: All 8 content-addressed methods routed through all transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API (Session 60)
+- **lifecycle.status**: Public primal status probe on all transport paths, BTSP-exempt (Session 60)
+- **Dep hygiene**: 3 unused deps removed from nestgate-api, `"biomeos"` socket-dir literal replaced with canonical `ecosystem_path_segment()` (Session 61)  
+**Last Updated**: May 11, 2026
 
 ---
 
@@ -142,14 +145,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-07 (Session 56).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-11 (Session 61).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace --lib` — 8,879 passing, 0 failures, 60 ignored; 12,353 full workspace |
+| Tests | `cargo test --workspace --lib` — 8,915 passing, 0 failures, 60 ignored; 12,389 full workspace |
 | Coverage | 84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -167,7 +170,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-07 (Se
 | ecoBin | Pass — pure Rust application code, socket-only default, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass — Wire Standard L3 (Composable): `{primal, version, methods}` envelope, `provided_capabilities`, `consumed_capabilities` |
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
-| Semantic naming | Pass — `health.*`, `storage.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*` |
+| Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — 84.12%+ line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
@@ -297,4 +300,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 56)
+**Latest**: May 2026 (Session 61)
