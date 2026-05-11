@@ -100,12 +100,13 @@ const SECURITY_SOCKET_CANDIDATES: &[&str] = &["security.sock", "crypto.sock"];
 
 /// Scans `$XDG_RUNTIME_DIR/{socket_dir}/` for a security capability provider socket.
 ///
-/// The socket subdirectory defaults to `biomeos` but can be overridden via
-/// `ECOSYSTEM_SOCKET_DIR` for alternative deployment layouts.
+/// The socket subdirectory is resolved via [`nestgate_config::constants::system::ecosystem_path_segment`]
+/// (`ECOSYSTEM_NAME` env → `BIOMEOS_SERVICE_NAME` env → `"biomeos"` default), or
+/// overridden with `ECOSYSTEM_SOCKET_DIR`.
 fn discover_security_socket_xdg() -> Option<PathBuf> {
     let runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok()?;
-    let socket_dir =
-        std::env::var("ECOSYSTEM_SOCKET_DIR").unwrap_or_else(|_| "biomeos".to_string());
+    let socket_dir = std::env::var("ECOSYSTEM_SOCKET_DIR")
+        .unwrap_or_else(|_| nestgate_config::constants::system::ecosystem_path_segment());
     let base = PathBuf::from(runtime_dir).join(socket_dir);
     for name in SECURITY_SOCKET_CANDIDATES {
         let candidate = base.join(name);

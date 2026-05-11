@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 61: deep debt sweep — dependency hygiene + clippy + hardcode cleanup (May 11, 2026)
+
+- **nestgate-api dep cleanup**: Removed 3 unused dependencies (`toml`, `async-stream`,
+  `sha2`); moved `fastrand` from `[dependencies]` to `[dev-dependencies]` (test-only usage).
+- **clippy: missing docs fixed**: Added documentation for all 16 undocumented trait methods
+  in `nestgate-api/handlers/zfs/native_async/traits.rs` (`NativeAsyncUniversalZfsService`).
+- **Hardcode elimination**: Replaced duplicated `"biomeos"` socket-dir fallback in
+  `btsp_client.rs` with delegation to the canonical
+  `nestgate_config::constants::system::ecosystem_path_segment()` — single source of truth.
+- **Verification**: Zero clippy warnings (workspace), cargo fmt clean, all tests pass.
+
 ### Session 60: content.* transport parity + lifecycle.status (May 11, 2026)
 
 - **CRITICAL transport parity**: `content.*` methods (put, get, exists, list,
