@@ -93,7 +93,7 @@ mod audit_handlers;
 mod blob_handlers;
 mod bonding_handlers;
 mod connection;
-mod content_handlers;
+pub(crate) mod content_handlers;
 mod dispatch;
 pub(crate) mod external_handlers;
 mod nat_handlers;

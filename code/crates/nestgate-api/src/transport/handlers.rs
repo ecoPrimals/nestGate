@@ -133,6 +133,19 @@ impl<S: StorageBackend + 'static> RpcMethodHandler for NestGateRpcHandler<S> {
             "storage.delete" => self.handle_delete(params).await,
             "storage.list" => self.handle_list(params).await,
 
+            // Content-addressed storage (BLAKE3 hash-as-key)
+            "content.put" => nestgate_core::rpc::content_ops::put(&params).await,
+            "content.get" => nestgate_core::rpc::content_ops::get(&params).await,
+            "content.exists" => nestgate_core::rpc::content_ops::exists(&params).await,
+            "content.list" => nestgate_core::rpc::content_ops::list(&params).await,
+            "content.publish" => nestgate_core::rpc::content_ops::publish(&params).await,
+            "content.resolve" => nestgate_core::rpc::content_ops::resolve(&params).await,
+            "content.promote" => nestgate_core::rpc::content_ops::promote(&params).await,
+            "content.collections" => nestgate_core::rpc::content_ops::collections(&params).await,
+
+            // Lifecycle
+            "lifecycle.status" => self.handle_lifecycle_status(),
+
             // Health methods
             "health.ping" => self.handle_ping(params),
             "health.status" => self.handle_status(params),
@@ -277,6 +290,20 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
             "uptime_seconds": get_uptime_seconds(),
             "transport": "unix-socket",
             "protocol": "jsonrpc-2.0"
+        }))
+    }
+
+    /// Handle `lifecycle.status` — public primal lifecycle probe.
+    #[expect(
+        clippy::unused_self,
+        reason = "Handler method: consistent with other handler signatures"
+    )]
+    fn handle_lifecycle_status(&self) -> Result<Value> {
+        Ok(serde_json::json!({
+            "status": "running",
+            "primal": self_primal_name(),
+            "version": env!("CARGO_PKG_VERSION"),
+            "uptime_seconds": get_uptime_seconds(),
         }))
     }
 }

@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 60: content.* transport parity + lifecycle.status (May 11, 2026)
+
+- **CRITICAL transport parity**: `content.*` methods (put, get, exists, list,
+  publish, resolve, promote, collections) now routed through **all** transport
+  paths — SemanticRouter, isomorphic IPC (UnixSocketRpcHandler), nestgate-api
+  HTTP (NestGateRpcHandler + NestGateJsonRpcHandler). Previously only reachable
+  via the primary `dispatch.rs` UDS path. Unblocks petalTongue
+  `backend=nestgate`, projectNUCLEUS Pillars 1-3, sovereign content pipeline.
+- **Public content_ops facade**: New `nestgate-rpc::rpc::content_ops` module
+  exposes stateless `put/get/exists/list/publish/resolve/promote/collections`
+  functions usable by any downstream crate (re-exported via `nestgate-core::rpc`).
+- **lifecycle.status handler**: Implemented on all transport paths (dispatch.rs,
+  SemanticRouter, isomorphic IPC, HTTP API). Classified public in MethodGate,
+  added to `is_btsp_exempt_method`, advertised in `UNIX_SOCKET_SUPPORTED_METHODS`.
+- **Capabilities updated**: All 4 `capabilities.list` surfaces (UDS dispatch,
+  SemanticRouter, isomorphic IPC, HTTP) now advertise `content.*` and
+  `lifecycle.status` methods. UDS dispatch: 67 methods (up from 66).
+- **Verification**: Zero clippy warnings (nestgate-rpc), cargo fmt clean, all
+  workspace tests pass, zero regressions.
+
 ### Session 59: JH-0 MethodGate pre-dispatch authorization (May 8, 2026)
 
 - **MethodGate adoption**: New `method_gate.rs` module implementing the ecosystem

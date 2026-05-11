@@ -22,7 +22,7 @@ use super::storage_paths::{
 };
 
 /// `content.put` — store content-addressed data (BLAKE3 hash as key, automatic dedup).
-pub(super) async fn content_put(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -102,7 +102,7 @@ pub(super) async fn content_put(params: Option<&Value>, state: &StorageState) ->
 }
 
 /// `content.get` — retrieve content by BLAKE3 hash.
-pub(super) async fn content_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -156,7 +156,7 @@ pub(super) async fn content_get(params: Option<&Value>, state: &StorageState) ->
 }
 
 /// `content.exists` — check if content hash exists.
-pub(super) async fn content_exists(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_exists(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -178,7 +178,7 @@ pub(super) async fn content_exists(params: Option<&Value>, state: &StorageState)
 }
 
 /// `content.list` — enumerate content-addressed objects.
-pub(super) async fn content_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let empty = json!({});
     let params = params.unwrap_or(&empty);
     let family_id = resolve_family_id(params, state)?;
@@ -233,7 +233,7 @@ pub(super) async fn content_list(params: Option<&Value>, state: &StorageState) -
 ///
 /// All referenced hashes must already exist in `_content/`. This is
 /// validated before the manifest is written, ensuring referential integrity.
-pub(super) async fn content_publish(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_publish(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -302,7 +302,7 @@ pub(super) async fn content_publish(params: Option<&Value>, state: &StorageState
 /// `content.resolve` — look up a content hash by path within a collection.
 ///
 /// When `inline: true`, the content bytes are returned alongside the hash.
-pub(super) async fn content_resolve(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_resolve(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -356,7 +356,7 @@ pub(super) async fn content_resolve(params: Option<&Value>, state: &StorageState
 ///
 /// Creates a thin alias manifest at `_manifests/{alias}.json` that points
 /// to the target collection. `content.resolve` follows the indirection.
-pub(super) async fn content_promote(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+pub async fn content_promote(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -403,10 +403,7 @@ pub(super) async fn content_promote(params: Option<&Value>, state: &StorageState
 }
 
 /// `content.collections` — list all manifests/aliases within a family.
-pub(super) async fn content_collections(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn content_collections(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let empty = json!({});
     let params = params.unwrap_or(&empty);
     let family_id = resolve_family_id(params, state)?;

@@ -92,6 +92,13 @@ impl NestGateJsonRpcHandler {
                 serde_json::to_value(result)
                     .map_err(|e| format!("Failed to serialize capabilities result: {e}"))
             }
+            // Content-addressed storage (delegates to canonical handlers)
+            m if m.starts_with("content.") => handle_content_method(m, &params).await,
+            "lifecycle.status" => Ok(json!({
+                "status": "running",
+                "primal": "nestgate",
+                "version": env!("CARGO_PKG_VERSION"),
+            })),
             m if m.starts_with("zfs.") => handle_zfs_method(m, &params).await,
             _ => Err(format!("Unknown method: {method}")),
         }
@@ -102,6 +109,32 @@ impl Default for NestGateJsonRpcHandler {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Ecosystem-standard `content.*` semantic methods — delegates to the canonical
+/// content-addressed storage handlers in `nestgate-rpc`.
+///
+/// # Errors
+///
+/// Returns `Err` for unknown content methods or handler failures.
+async fn handle_content_method(
+    method: &str,
+    params: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    use nestgate_core::rpc::content_ops;
+
+    let result = match method {
+        "content.put" => content_ops::put(params).await,
+        "content.get" => content_ops::get(params).await,
+        "content.exists" => content_ops::exists(params).await,
+        "content.list" => content_ops::list(params).await,
+        "content.publish" => content_ops::publish(params).await,
+        "content.resolve" => content_ops::resolve(params).await,
+        "content.promote" => content_ops::promote(params).await,
+        "content.collections" => content_ops::collections(params).await,
+        _ => return Err(format!("Unknown content method: {method}")),
+    };
+    result.map_err(|e| format!("{method} failed: {e}"))
 }
 
 /// Ecosystem-standard `zfs.*` semantic methods (GAP-MATRIX-04 alignment).

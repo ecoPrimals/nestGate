@@ -102,6 +102,7 @@ use tracing::{debug, warn};
 
 // Domain modules
 pub mod capabilities;
+pub mod content;
 pub mod crypto;
 pub mod discovery;
 pub mod health;
@@ -244,6 +245,16 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "storage.namespaces.list" => storage::storage_namespaces_list(self, params).await,
             "storage.fetch_external" => storage::storage_fetch_external(self, params).await,
 
+            // ==================== CONTENT DOMAIN ====================
+            "content.put" => content::content_put(self, params).await,
+            "content.get" => content::content_get(self, params).await,
+            "content.exists" => content::content_exists(self, params).await,
+            "content.list" => content::content_list(self, params).await,
+            "content.publish" => content::content_publish(self, params).await,
+            "content.resolve" => content::content_resolve(self, params).await,
+            "content.promote" => content::content_promote(self, params).await,
+            "content.collections" => content::content_collections(self, params).await,
+
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, &params),
             "discovery.query" => discovery::discovery_query(self, &params),
@@ -256,6 +267,9 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "health.readiness" => health::health_readiness(self, params).await,
             "health.metrics" => health::health_metrics(self, params).await,
             "health.info" => health::health_info(self, params).await,
+
+            // ==================== LIFECYCLE DOMAIN ====================
+            "lifecycle.status" => health::lifecycle_status(self, params),
 
             // ==================== CAPABILITIES DOMAIN ====================
             "capabilities.list" => capabilities::capabilities_list(self, params),

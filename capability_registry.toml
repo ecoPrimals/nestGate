@@ -154,6 +154,11 @@ domain = "discovery"
 description = "Capability advertisement and listing"
 methods = ["capabilities.list", "discover.capabilities"]
 
+[capabilities.lifecycle]
+domain = "lifecycle"
+description = "Primal lifecycle status probe (public, no auth required)"
+methods = ["lifecycle.status"]
+
 [capabilities.auth]
 domain = "auth"
 description = "Method gate introspection — enforcement mode, caller identity, authorization check (JH-0)"

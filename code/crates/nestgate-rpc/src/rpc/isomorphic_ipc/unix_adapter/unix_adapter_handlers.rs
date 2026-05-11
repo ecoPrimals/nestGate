@@ -653,6 +653,78 @@ pub(super) async fn handle_beacon_list(state: &StorageState) -> HandlerResult {
     Ok(json!({ "peer_ids": peer_ids, "count": count }))
 }
 
+// ── content.* delegation ───────────────────────────────────────────────
+//
+// Content-addressed storage uses the canonical handlers from
+// `unix_socket_server::content_handlers`, bridged through a shared
+// `unix_socket_server::StorageState`.
+
+use crate::rpc::unix_socket_server::{StorageState as ContentState, content_handlers};
+use std::sync::OnceLock;
+
+fn content_state() -> &'static ContentState {
+    static STATE: OnceLock<ContentState> = OnceLock::new();
+    STATE.get_or_init(|| {
+        #[expect(
+            clippy::expect_used,
+            reason = "ContentState::new only fails on unrecoverable I/O — crash is correct"
+        )]
+        ContentState::new().expect("ContentState initialization must not fail for content routing")
+    })
+}
+
+fn content_err(e: &nestgate_types::error::NestGateError) -> (i32, Cow<'static, str>) {
+    (-32603, Cow::Owned(e.to_string()))
+}
+
+pub(super) async fn handle_content_put(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_put(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_get(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_get(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_exists(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_exists(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_list(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_list(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_publish(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_publish(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_resolve(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_resolve(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_promote(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_promote(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_collections(request: &JsonRpcRequest) -> HandlerResult {
+    content_handlers::content_collections(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
 /// Wire Standard L3 envelope for `capabilities.list` / `discover_capabilities`.
 pub(super) fn capabilities_response() -> Value {
     json!({
@@ -666,6 +738,9 @@ pub(super) fn capabilities_response() -> Value {
             "storage.store_stream", "storage.store_stream_chunk",
             "storage.retrieve_stream", "storage.retrieve_stream_chunk",
             "storage.namespaces.list",
+            "content.put", "content.get", "content.exists", "content.list",
+            "content.publish", "content.resolve", "content.promote",
+            "content.collections",
             "session.save", "session.load",
             "nat.store_traversal_info", "nat.retrieve_traversal_info",
             "beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete",
@@ -673,7 +748,8 @@ pub(super) fn capabilities_response() -> Value {
             "zfs.dataset.list", "zfs.dataset.get",
             "zfs.snapshot.list", "zfs.health",
             "health.check", "health.liveness", "health.readiness",
-            "capabilities.list", "identity.get"
+            "capabilities.list", "identity.get",
+            "lifecycle.status"
         ],
         "protocol": "jsonrpc-2.0",
         "transport": ["uds", "tcp", "http"]

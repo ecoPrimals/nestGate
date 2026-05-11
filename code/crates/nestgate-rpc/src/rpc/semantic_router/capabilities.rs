@@ -39,6 +39,14 @@ pub(super) fn capabilities_list(
             "storage.dataset.get",
             "storage.dataset.list",
             "storage.dataset.delete",
+            "content.put",
+            "content.get",
+            "content.exists",
+            "content.list",
+            "content.publish",
+            "content.resolve",
+            "content.promote",
+            "content.collections",
             "discovery.announce",
             "discovery.query",
             "discovery.list",
@@ -62,7 +70,8 @@ pub(super) fn capabilities_list(
             "session.list",
             "session.delete",
             "capabilities.list",
-            "identity.get"
+            "identity.get",
+            "lifecycle.status"
         ],
         "protocol": "jsonrpc-2.0",
         "transport": ["uds", "tcp", "http"]

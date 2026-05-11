@@ -233,6 +233,12 @@ pub(super) async fn handle_request(
         }
         "beacon.delete" => nat_handlers::beacon_delete(request.params.as_ref(), state).await,
         // ZFS operations (subprocess-backed, resolves GAP-MATRIX-04)
+        "lifecycle.status" => Ok(json!({
+            "status": "running",
+            "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+            "version": env!("CARGO_PKG_VERSION"),
+            "storage_initialized": state.storage_initialized,
+        })),
         "zfs.pool.list" => zfs_handlers::zfs_pool_list(request.params.as_ref()).await,
         "zfs.pool.get" => zfs_handlers::zfs_pool_get(request.params.as_ref()).await,
         "zfs.pool.health" => zfs_handlers::zfs_pool_health(request.params.as_ref()).await,

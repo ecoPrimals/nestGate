@@ -244,6 +244,8 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "zfs.dataset.get",
     "zfs.snapshot.list",
     "zfs.health",
+    // Lifecycle
+    "lifecycle.status",
 ];
 
 /// capabilities.list — Wire Standard L3 compliant response.

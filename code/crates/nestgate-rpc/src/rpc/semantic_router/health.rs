@@ -88,6 +88,22 @@ pub(super) async fn health_readiness(
     }))
 }
 
+/// Route `lifecycle.status` → primal lifecycle probe (public, no auth required).
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "JSON-RPC semantic handlers use Result for uniform router dispatch"
+)]
+pub(super) fn lifecycle_status(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
+    Ok(json!({
+        "status": "running",
+        "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+        "version": env!("CARGO_PKG_VERSION"),
+    }))
+}
+
 #[cfg(test)]
 mod tests {
 

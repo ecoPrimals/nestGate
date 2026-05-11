@@ -66,6 +66,7 @@ pub mod audit_storage;
 pub mod btsp_client;
 pub mod btsp_phase3;
 pub mod btsp_server_handshake;
+pub mod content_ops;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod metadata_backend;
@@ -154,6 +155,7 @@ pub(crate) fn is_btsp_exempt_method(method: &str) -> bool {
             | "discover_capabilities"
             | "discover.capabilities"
             | "discovery.capability.register"
+            | "lifecycle.status"
     )
 }
 

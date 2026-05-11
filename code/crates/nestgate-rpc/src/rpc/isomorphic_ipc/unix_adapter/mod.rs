@@ -248,6 +248,13 @@ impl UnixSocketRpcHandler {
             "health.liveness" => Ok(json!({"alive": true})),
             "health.readiness" => unix_adapter_handlers::handle_health_readiness(state).await,
 
+            "lifecycle.status" => Ok(json!({
+                "status": "running",
+                "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+                "version": env!("CARGO_PKG_VERSION"),
+                "isomorphic": true
+            })),
+
             "version" => Ok(json!({
                 "version": env!("CARGO_PKG_VERSION"),
                 "ipc": "isomorphic"
@@ -269,6 +276,18 @@ impl UnixSocketRpcHandler {
             }
             "nat.retrieve_traversal_info" => {
                 unix_adapter_handlers::handle_nat_retrieve(state, &request).await
+            }
+
+            // ── content.* — content-addressed storage (BLAKE3) ──────────
+            "content.put" => unix_adapter_handlers::handle_content_put(&request).await,
+            "content.get" => unix_adapter_handlers::handle_content_get(&request).await,
+            "content.exists" => unix_adapter_handlers::handle_content_exists(&request).await,
+            "content.list" => unix_adapter_handlers::handle_content_list(&request).await,
+            "content.publish" => unix_adapter_handlers::handle_content_publish(&request).await,
+            "content.resolve" => unix_adapter_handlers::handle_content_resolve(&request).await,
+            "content.promote" => unix_adapter_handlers::handle_content_promote(&request).await,
+            "content.collections" => {
+                unix_adapter_handlers::handle_content_collections(&request).await
             }
 
             "beacon.store" => unix_adapter_handlers::handle_beacon_store(state, &request).await,

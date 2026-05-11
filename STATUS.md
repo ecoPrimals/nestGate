@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 8, 2026 (Session 59: JH-0 MethodGate pre-dispatch authorization)  
+**Last Updated**: May 11, 2026 (Session 60: content.* transport parity + lifecycle.status)  
 **Version**: 4.7.0-dev
 
 ---
@@ -29,9 +29,10 @@ Encrypt-at-rest:    ChaCha20-Poly1305 — implemented Session 48
 Auth mode bypass:   NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider (Session 48; beardog alias removed Session 51)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.*, auth.* — 66 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
-IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
-IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 43 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
+IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.* — 67 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (HTTP):  storage.*, content.*, health.*, capabilities.*, identity.*, system.*, lifecycle.* — HTTP NestGateRpcHandler + NestGateJsonRpcHandler
+IPC routes (tarpc): storage.*, content.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.*, lifecycle.* — 52 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
+content.* parity:   ALL transport paths — UDS dispatch, SemanticRouter, isomorphic IPC (UnixSocketRpcHandler), HTTP API (NestGateRpcHandler + NestGateJsonRpcHandler) — Session 60
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"] — all four capabilities.list surfaces return L3 with protocol + transport fields
 Emoji in logs/code: ZERO in production sources, module docs, and installer output — professional structured logging (Session 48)
