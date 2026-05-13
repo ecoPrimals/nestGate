@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 62: content provenance metadata (May 13, 2026)
+
+- **content.put provenance fields**: Accepts optional `source`, `pipeline`, `stored_by`
+  parameters, persisted in the `.meta.json` sidecar alongside `stored_at` and `content_type`.
+- **content.get provenance return**: Returns all sidecar metadata (`stored_at`, `source`,
+  `pipeline`, `stored_by`, `content_type`) when present — makes `content.get` the canonical
+  artifact provenance query. No separate `nestgate.artifact_query` method needed.
+- **content.exists provenance return**: Also returns sidecar metadata summary when the
+  `.meta.json` sidecar exists, enabling cheap provenance checks without content retrieval.
+- **DRY refactor**: Extracted `merge_sidecar_fields` helper and `SIDECAR_PROVENANCE_KEYS`
+  constant to avoid repeating field-merge logic across handlers.
+- **Verification**: Zero clippy warnings, cargo fmt clean, all tests pass.
+
 ### Session 61: deep debt sweep — dependency hygiene + clippy + hardcode cleanup (May 11, 2026)
 
 - **nestgate-api dep cleanup**: Removed 3 unused dependencies (`toml`, `async-stream`,

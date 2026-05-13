@@ -9,6 +9,14 @@
 //! Filesystem layout:
 //!   `{base}/datasets/{family}/_content/{hex[..2]}/{hex}`
 //!   `{base}/datasets/{family}/_content/{hex[..2]}/{hex}.meta.json`
+//!
+//! ## Provenance
+//!
+//! `content.put` accepts optional provenance fields (`source`, `pipeline`,
+//! `stored_by`) which are persisted in the `.meta.json` sidecar alongside
+//! `content_type` and `stored_at`. Both `content.get` and `content.exists`
+//! return all available provenance metadata, making `content.get` the
+//! canonical artifact provenance query (no separate method needed).
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
@@ -30,6 +38,9 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
         NestGateError::invalid_input_with_field("data", "data (base64 string) required")
     })?;
     let content_type = params["content_type"].as_str();
+    let source = params["source"].as_str();
+    let pipeline = params["pipeline"].as_str();
+    let stored_by = params["stored_by"].as_str();
     let family_id = resolve_family_id(params, state)?;
 
     let raw = STANDARD.decode(data_b64).map_err(|e| {
@@ -67,12 +78,21 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
             NestGateError::io_error(format!("Failed to write content {blake3_hex}: {e}"))
         })?;
 
-    let meta = json!({
+    let mut meta = json!({
         "hash": blake3_hex,
         "size": raw.len(),
         "content_type": content_type,
         "stored_at": chrono::Utc::now().to_rfc3339(),
     });
+    if let Some(s) = source {
+        meta["source"] = json!(s);
+    }
+    if let Some(p) = pipeline {
+        meta["pipeline"] = json!(p);
+    }
+    if let Some(by) = stored_by {
+        meta["stored_by"] = json!(by);
+    }
     let meta_path = object_path.with_extension("meta.json");
     tokio::fs::write(
         &meta_path,
@@ -133,12 +153,11 @@ pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result
         };
 
     let meta_path = object_path.with_extension("meta.json");
-    let content_type = if meta_path.exists() {
+    let sidecar: Option<Value> = if meta_path.exists() {
         tokio::fs::read(&meta_path)
             .await
             .ok()
-            .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-            .and_then(|v| v["content_type"].as_str().map(String::from))
+            .and_then(|b| serde_json::from_slice(&b).ok())
     } else {
         None
     };
@@ -149,8 +168,8 @@ pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result
         "size": plain.len(),
         "family_id": family_id
     });
-    if let Some(ct) = content_type {
-        resp["content_type"] = json!(ct);
+    if let Some(ref meta) = sidecar {
+        merge_sidecar_fields(&mut resp, meta);
     }
     Ok(resp)
 }
@@ -168,10 +187,19 @@ pub async fn content_exists(params: Option<&Value>, state: &StorageState) -> Res
 
     let object_path = content_key_path(family_id, hash);
     if object_path.exists() {
-        let meta = tokio::fs::metadata(&object_path)
+        let file_meta = tokio::fs::metadata(&object_path)
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to stat content {hash}: {e}")))?;
-        Ok(json!({"exists": true, "hash": hash, "size": meta.len(), "family_id": family_id}))
+        let mut resp =
+            json!({"exists": true, "hash": hash, "size": file_meta.len(), "family_id": family_id});
+
+        let sidecar_path = object_path.with_extension("meta.json");
+        if let Ok(raw) = tokio::fs::read(&sidecar_path).await
+            && let Ok(sidecar) = serde_json::from_slice::<Value>(&raw)
+        {
+            merge_sidecar_fields(&mut resp, &sidecar);
+        }
+        Ok(resp)
     } else {
         Ok(json!({"exists": false, "hash": hash, "family_id": family_id}))
     }
@@ -479,6 +507,26 @@ async fn resolve_manifest_target(
     }
 
     Ok(path)
+}
+
+/// Provenance fields carried in `.meta.json` sidecars.
+const SIDECAR_PROVENANCE_KEYS: &[&str] = &[
+    "content_type",
+    "stored_at",
+    "source",
+    "pipeline",
+    "stored_by",
+];
+
+/// Merge non-null provenance fields from a sidecar JSON object into `resp`.
+fn merge_sidecar_fields(resp: &mut Value, sidecar: &Value) {
+    for key in SIDECAR_PROVENANCE_KEYS {
+        if let Some(v) = sidecar.get(*key)
+            && !v.is_null()
+        {
+            resp[*key] = v.clone();
+        }
+    }
 }
 
 fn validate_blake3_hex(hash: &str) -> Result<()> {
