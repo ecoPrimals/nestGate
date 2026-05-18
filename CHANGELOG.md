@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 65: stale socket cleanup + graceful shutdown (May 18, 2026)
+
+- **Graceful shutdown**: `IsomorphicIpcServer` accept loop now uses `tokio::select!`
+  with `tokio::signal::ctrl_c()`. SIGINT/SIGTERM triggers orderly socket file removal
+  instead of relying on OS process teardown.
+- **`SocketCleanupGuard`**: RAII guard removes the Unix socket file on drop, preventing
+  stale sockets from accumulating after crashes or normal shutdown. Addresses wetSpring
+  production issue (50+ stale sockets on southGate causing 21 failed connections per
+  Barrick clone run).
+- **PID file**: Writes `{socket}.pid` alongside the Unix socket on startup; removed by
+  the cleanup guard. Enables instant `kill(pid, 0)` liveness checks without connect
+  overhead.
+- **Verification**: Zero clippy warnings, 669 RPC tests pass.
+
 ### Session 64: Wave 22 stadial gate readiness (May 17, 2026)
 
 - **`capabilities.list` Wire Standard alignment**: All four transport paths (SemanticRouter,

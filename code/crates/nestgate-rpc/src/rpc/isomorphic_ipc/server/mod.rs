@@ -81,11 +81,52 @@
 use anyhow::Result;
 use bytes::Bytes;
 use serde_json::Value;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 
 use super::platform_detection::is_platform_constraint;
 use super::tcp_fallback::{RpcHandler, TcpFallbackServer};
+
+/// RAII guard that removes a Unix socket file and its PID sidecar on drop.
+///
+/// Prevents stale sockets from accumulating after crashes or normal shutdown.
+/// See `CAPABILITY_BASED_DISCOVERY_STANDARD.md` v1.3.0 section 6.
+struct SocketCleanupGuard {
+    path: PathBuf,
+}
+
+impl Drop for SocketCleanupGuard {
+    fn drop(&mut self) {
+        remove_pid_file(&self.path);
+        if self.path.exists() {
+            if let Err(e) = std::fs::remove_file(&self.path) {
+                warn!("Failed to remove socket file {}: {e}", self.path.display());
+            } else {
+                info!("Removed socket file: {}", self.path.display());
+            }
+        }
+    }
+}
+
+/// Write a PID file alongside the socket (`{socket}.pid`) for liveness probing.
+fn write_pid_file(socket_path: &std::path::Path) {
+    let pid_path = socket_path.with_extension("pid");
+    let pid = std::process::id();
+    if let Err(e) = std::fs::write(&pid_path, pid.to_string()) {
+        warn!("Failed to write PID file {}: {e}", pid_path.display());
+    } else {
+        debug!("PID file written: {} (pid {})", pid_path.display(), pid);
+    }
+}
+
+/// Remove PID file sidecar for a socket path.
+fn remove_pid_file(socket_path: &std::path::Path) {
+    let pid_path = socket_path.with_extension("pid");
+    if pid_path.exists() {
+        let _ = std::fs::remove_file(&pid_path);
+    }
+}
 
 /// Isomorphic IPC server (Unix socket OR TCP fallback)
 ///
@@ -192,15 +233,13 @@ impl IsomorphicIpcServer {
         }
     }
 
-    /// Try to start Unix socket server
+    /// Try to start Unix socket server.
     ///
-    /// **INTEGRATED**: Now uses the existing Unix socket infrastructure
-    /// via the `UnixSocketRpcHandler` adapter.
+    /// Uses `tokio::signal::ctrl_c` so SIGINT/SIGTERM triggers graceful
+    /// shutdown with socket file cleanup (prevents stale socket accumulation).
     async fn try_unix_server(&self) -> Result<()> {
         use tokio::net::UnixListener;
 
-        // Prefer production [`SocketConfig`] (NESTGATE_SOCKET / BIOMEOS_SOCKET_DIR / XDG / tmp) so behavior
-        // matches [`crate::rpc::unix_socket_server::JsonRpcUnixServer`] and ecosystem clients.
         let (socket_path, family_id) =
             match crate::rpc::socket_config::SocketConfig::from_environment() {
                 Ok(cfg) => {
@@ -220,33 +259,50 @@ impl IsomorphicIpcServer {
                 }
             };
 
-        // Bind to Unix socket
         let listener = UnixListener::bind(&socket_path)
             .map_err(|e| anyhow::anyhow!("Failed to bind Unix socket: {e}"))?;
 
         info!("Unix socket bound: {}", socket_path.display());
 
+        let _socket_guard = SocketCleanupGuard {
+            path: socket_path.clone(),
+        };
+
+        write_pid_file(&socket_path);
+
         #[cfg(unix)]
         let _storage_capability_symlink_guard =
             crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path, &family_id);
 
-        // Accept connections
-        loop {
-            match listener.accept().await {
-                Ok((stream, _addr)) => {
-                    let handler = self.handler.clone();
+        let shutdown = tokio::signal::ctrl_c();
+        tokio::pin!(shutdown);
 
-                    tokio::spawn(async move {
-                        if let Err(e) = Self::handle_unix_connection(stream, handler).await {
-                            error!("Unix connection error: {}", e);
-                        }
-                    });
+        loop {
+            tokio::select! {
+                biased;
+                _ = &mut shutdown => {
+                    info!("Shutdown signal received, cleaning up socket");
+                    break;
                 }
-                Err(e) => {
-                    error!("Failed to accept Unix connection: {}", e);
+                accept = listener.accept() => {
+                    match accept {
+                        Ok((stream, _addr)) => {
+                            let handler = self.handler.clone();
+                            tokio::spawn(async move {
+                                if let Err(e) = Self::handle_unix_connection(stream, handler).await {
+                                    error!("Unix connection error: {}", e);
+                                }
+                            });
+                        }
+                        Err(e) => {
+                            error!("Failed to accept Unix connection: {}", e);
+                        }
+                    }
                 }
             }
         }
+
+        Ok(())
     }
 
     /// Handle Unix socket connection (persistent keep-alive).
