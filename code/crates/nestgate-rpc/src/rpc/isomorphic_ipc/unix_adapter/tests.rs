@@ -51,11 +51,12 @@ async fn test_capabilities_list() {
         .handle_request(json!({"jsonrpc":"2.0","method":"capabilities.list","id":1}))
         .await;
     assert_eq!(r["result"]["primal"], "nestgate");
-    let methods = r["result"]["methods"].as_array().unwrap();
-    assert!(methods.iter().any(|c| c == "health.liveness"));
-    assert!(methods.iter().any(|c| c == "health.readiness"));
-    assert!(methods.iter().any(|c| c == "session.save"));
-    assert!(methods.iter().any(|c| c == "identity.get"));
+    let caps = r["result"]["capabilities"].as_array().unwrap();
+    assert!(caps.iter().any(|c| c == "health.liveness"));
+    assert!(caps.iter().any(|c| c == "health.readiness"));
+    assert!(caps.iter().any(|c| c == "session.save"));
+    assert!(r["result"]["count"].is_number());
+    assert!(caps.iter().any(|c| c == "identity.get"));
 }
 
 #[tokio::test]
@@ -272,7 +273,7 @@ async fn test_discover_capabilities_legacy_method() {
         .handle_request(json!({"jsonrpc":"2.0","method":"discover_capabilities","id":1}))
         .await;
     assert_eq!(r["result"]["primal"], "nestgate");
-    assert!(r["result"]["methods"].is_array());
+    assert!(r["result"]["capabilities"].is_array());
 }
 
 // ── Streaming / blob tests ──────────────────────────────────────────
@@ -522,8 +523,8 @@ async fn test_capabilities_include_streaming_methods() {
     let r = h
         .handle_request(json!({"jsonrpc":"2.0","method":"capabilities.list","id":1}))
         .await;
-    let methods = r["result"]["methods"].as_array().unwrap();
-    let m: Vec<&str> = methods.iter().filter_map(|v| v.as_str()).collect();
+    let caps = r["result"]["capabilities"].as_array().unwrap();
+    let m: Vec<&str> = caps.iter().filter_map(|v| v.as_str()).collect();
     assert!(m.contains(&"storage.store_blob"));
     assert!(m.contains(&"storage.retrieve_blob"));
     assert!(m.contains(&"storage.retrieve_range"));

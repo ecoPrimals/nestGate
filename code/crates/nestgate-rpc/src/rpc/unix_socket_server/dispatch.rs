@@ -246,6 +246,15 @@ pub(super) async fn handle_request(
         "zfs.dataset.get" => zfs_handlers::zfs_dataset_get(request.params.as_ref()).await,
         "zfs.snapshot.list" => zfs_handlers::zfs_snapshot_list(request.params.as_ref()).await,
         "zfs.health" => zfs_handlers::zfs_health(request.params.as_ref()).await,
+        "btsp.capabilities" => Ok(json!({
+            "protocol": "btsp-v1",
+            "cipher": "chacha20-poly1305",
+            "kdf": "hkdf-sha256",
+            "handshake": "x25519-ephemeral",
+            "required": std::env::var("NESTGATE_FAMILY_ID")
+                .ok()
+                .is_some_and(|fid| !matches!(fid.as_str(), "" | "default" | "standalone")),
+        })),
         _ => {
             return JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),

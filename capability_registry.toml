@@ -5,6 +5,11 @@
 # This file is the single source of truth for NestGate's primal identity
 # and advertised capabilities. Wire Standard L3 responses and cross-check
 # tests derive from these definitions.
+#
+# Stability tiers:
+#   stable      — API surface frozen; breaking changes require major version bump
+#   provisional — API surface complete and tested but may evolve in minor versions
+#   experimental — early implementation; may change or be removed without notice
 
 [primal]
 name = "nestgate"
@@ -17,6 +22,7 @@ protocol = "jsonrpc-2.0"
 
 [capabilities.storage]
 domain = "storage"
+stability = "stable"
 description = "Filesystem-backed durable key-value and blob storage with namespace isolation"
 methods = [
     "storage.store", "storage.retrieve", "storage.exists",
@@ -70,6 +76,7 @@ methods = [
 
 [capabilities.content]
 domain = "content"
+stability = "stable"
 description = "Content-addressed storage with versioned manifests — BLAKE3 hash-as-key, automatic dedup, atomic deploys"
 methods = [
     "content.put", "content.get", "content.exists", "content.list",
@@ -94,31 +101,37 @@ methods = [
 
 [capabilities.model]
 domain = "model"
+stability = "provisional"
 description = "AI model cache — registration, lookup, metadata"
 methods = ["model.register", "model.exists", "model.locate", "model.metadata"]
 
 [capabilities.templates]
 domain = "templates"
+stability = "provisional"
 description = "Template persistence and community ranking"
 methods = ["templates.store", "templates.retrieve", "templates.list", "templates.community_top"]
 
 [capabilities.session]
 domain = "session"
+stability = "stable"
 description = "Game session persistence (convenience over storage.*)"
 methods = ["session.save", "session.load"]
 
 [capabilities.audit]
 domain = "audit"
+stability = "provisional"
 description = "Execution audit trail persistence"
 methods = ["audit.store_execution"]
 
 [capabilities.nat]
 domain = "nat"
+stability = "stable"
 description = "NAT traversal endpoint persistence"
 methods = ["nat.store_traversal_info", "nat.retrieve_traversal_info"]
 
 [capabilities.beacon]
 domain = "beacon"
+stability = "stable"
 description = "Known beacon persistence for mesh discovery"
 methods = ["beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete"]
 
@@ -127,11 +140,13 @@ methods = ["beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete"]
 
 [capabilities.bonding]
 domain = "bonding"
+stability = "stable"
 description = "Ionic bond ledger persistence for security capability provider"
 methods = ["bonding.ledger.store", "bonding.ledger.retrieve", "bonding.ledger.list"]
 
 [capabilities.zfs]
 domain = "zfs"
+stability = "provisional"
 description = "ZFS storage management — pools, datasets, snapshots"
 methods = [
     "zfs.pool.list", "zfs.pool.get", "zfs.pool.health",
@@ -141,28 +156,39 @@ methods = [
 
 [capabilities.health]
 domain = "health"
+stability = "stable"
 description = "Liveness, readiness, and health check endpoints"
 methods = ["health.liveness", "health.readiness", "health.check"]
 
 [capabilities.identity]
 domain = "identity"
+stability = "stable"
 description = "Primal identity and self-knowledge"
 methods = ["identity.get"]
 
 [capabilities.discovery]
 domain = "discovery"
+stability = "stable"
 description = "Capability advertisement and listing"
 methods = ["capabilities.list", "discover.capabilities"]
 
 [capabilities.lifecycle]
 domain = "lifecycle"
+stability = "stable"
 description = "Primal lifecycle status probe (public, no auth required)"
 methods = ["lifecycle.status"]
 
 [capabilities.auth]
 domain = "auth"
+stability = "stable"
 description = "Method gate introspection — enforcement mode, caller identity, authorization check (JH-0)"
 methods = ["auth.check", "auth.mode", "auth.peer_info"]
+
+[capabilities.btsp]
+domain = "btsp"
+stability = "stable"
+description = "BTSP security capabilities — protocol version, cipher suite, handshake requirement"
+methods = ["btsp.capabilities"]
 
 # Consumed capabilities — what NestGate needs from other primals
 [consumed_capabilities.security]

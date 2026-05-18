@@ -1,6 +1,12 @@
 # NestGate - Sovereign Storage & Permanence Primal
 
-**Version**: 4.7.0-dev  
+**Version**: 4.7.0-dev (internal iteration; workspace Cargo.toml `0.1.0`, binary `2.1.0`)  
+
+> **Versioning scheme**: `4.7.0-dev` is the internal iteration version tracking
+> 63+ development sessions. The workspace `Cargo.toml` uses `0.1.0` (pre-1.0 API
+> surface). The `nestgate-bin` crate uses `2.1.0` for the CLI binary. plasmidBin
+> `manifest.toml` tracks `0.1.0` (workspace root). These will unify on the first
+> tagged public release.  
 
 **Verification (as of 2026-05-11)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
@@ -20,7 +26,8 @@
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
 - **External deps**: Zero unused workspace deps (3 removed Session 61: `toml`, `async-stream`, `sha2`; `fastrand` → dev-dep); zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
-- **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
+- **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`
+- **Vendored crates** (`vendor/`): `rustls-rustcrypto` and `rustls-webpki` are vendored via `[patch.crates-io]` in the workspace `Cargo.toml`. Rationale: upstream `rustls-rustcrypto` optionally depends on `ring`; vendoring lets us build with pure-Rust crypto only, eliminating `ring` from the lockfile entirely. `rustls-webpki` is pinned at 0.103.12+ for RUSTSEC-2023-0071 mitigation. Both are consistent with `deny.toml` banning `ring`, `openssl`, `aws-lc-sys`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 - **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p, 58)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  

@@ -297,6 +297,22 @@ impl UnixSocketRpcHandler {
             "beacon.delete" => unix_adapter_handlers::handle_beacon_delete(state, &request).await,
             "beacon.list" => unix_adapter_handlers::handle_beacon_list(state).await,
 
+            m @ ("auth.check" | "auth.mode" | "auth.peer_info") => {
+                let gate = crate::rpc::method_gate::MethodGate::from_env();
+                let caller = crate::rpc::method_gate::CallerContext::unix();
+                crate::rpc::method_gate::auth_introspection(m, &gate, &caller)
+                    .ok_or((-32601, Cow::Borrowed("Method not found")))
+            }
+            "btsp.capabilities" => Ok(json!({
+                "protocol": "btsp-v1",
+                "cipher": "chacha20-poly1305",
+                "kdf": "hkdf-sha256",
+                "handshake": "x25519-ephemeral",
+                "required": std::env::var("NESTGATE_FAMILY_ID")
+                    .ok()
+                    .is_some_and(|fid| !matches!(fid.as_str(), "" | "default" | "standalone")),
+            })),
+
             _ => Err((
                 -32601,
                 Cow::Owned(format!("Method not found: {}", request.method)),

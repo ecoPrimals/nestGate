@@ -19,9 +19,10 @@ async fn handle_request_capabilities_list() {
     assert!(
         resp.result
             .as_ref()
-            .and_then(|v| v.get("methods"))
+            .and_then(|v| v.get("capabilities"))
             .is_some()
     );
+    assert!(resp.result.as_ref().and_then(|v| v.get("count")).is_some());
 }
 
 #[tokio::test]

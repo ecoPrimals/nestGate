@@ -147,7 +147,8 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
                 "version": env!("CARGO_PKG_VERSION"),
-                "methods": JSON_RPC_CAPABILITIES_METHODS,
+                "capabilities": JSON_RPC_CAPABILITIES_METHODS,
+                "count": JSON_RPC_CAPABILITIES_METHODS.len(),
                 "protocol": "jsonrpc-2.0",
                 "transport": ["uds", "tcp", "http"]
             }))
@@ -213,12 +214,13 @@ mod tests {
         };
         assert!(v.get("primal").is_some());
         assert!(v.get("version").is_some());
-        let methods = match v["methods"].as_array() {
+        assert!(v.get("count").is_some());
+        let caps = match v["capabilities"].as_array() {
             Some(a) => a,
-            None => panic!("expected methods array"),
+            None => panic!("expected capabilities array"),
         };
-        assert!(methods.iter().any(|m| m == "health.metrics"));
-        assert!(methods.iter().any(|m| m == "discovery.capability.query"));
+        assert!(caps.iter().any(|m| m == "health.metrics"));
+        assert!(caps.iter().any(|m| m == "discovery.capability.query"));
     }
 
     #[tokio::test]

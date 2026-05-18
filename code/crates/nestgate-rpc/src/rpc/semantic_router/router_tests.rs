@@ -56,15 +56,15 @@ async fn capabilities_list_includes_self_and_storage_methods() {
         Ok(x) => x,
         Err(e) => panic!("capabilities.list: {e}"),
     };
-    let methods = match v["methods"].as_array() {
+    assert!(v.get("count").is_some(), "expected count field");
+    let caps = match v["capabilities"].as_array() {
         Some(a) => a,
-        None => panic!("methods array"),
+        None => panic!("capabilities array"),
     };
-    assert!(methods.iter().any(|m| m == "capabilities.list"));
-    assert!(methods.iter().any(|m| m == "storage.put"));
+    assert!(caps.iter().any(|m| m == "capabilities.list"));
+    assert!(caps.iter().any(|m| m == "storage.put"));
     assert!(
-        methods
-            .iter()
+        caps.iter()
             .filter_map(|m| m.as_str())
             .all(|s| !s.starts_with("data.")),
         "NestGate must not advertise data.* in capabilities.list (storage primal; data is delegated)"

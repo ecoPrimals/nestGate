@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 64: Wave 22 stadial gate readiness (May 17, 2026)
+
+- **`capabilities.list` Wire Standard alignment**: All four transport paths (SemanticRouter,
+  UDS dispatch, JSON-RPC, isomorphic IPC) now return the standard `{capabilities, count, primal}`
+  envelope per `CAPABILITY_WIRE_STANDARD.md` (was `methods`, no `count`).
+- **`identity.get` + `auth.*` → SemanticRouter**: Added `identity.get`, `auth.check`,
+  `auth.mode`, `auth.peer_info` to the SemanticRouter dispatch — closes transport parity gap
+  (these were only on UDS/HTTP/JSON-RPC paths before).
+- **`btsp.capabilities` method**: New introspection endpoint returns protocol version
+  (`btsp-v1`), cipher (`chacha20-poly1305`), KDF, handshake, and whether BTSP is required.
+  Wired across all four transport paths and registered in `capability_registry.toml`.
+- **Version scheme documented**: README now explicitly documents the dual versioning scheme
+  (internal iteration `4.7.0-dev` vs workspace semver `0.1.0` vs binary `2.1.0`).
+- **Vendored crate rationale**: README documents why `rustls-rustcrypto` and `rustls-webpki`
+  are vendored (pure-Rust crypto, `ring` elimination, RUSTSEC mitigation).
+- **Method count**: 57 methods on SemanticRouter, 66 on UDS, 63 registered in
+  `capability_registry.toml` across 16 capability domains.
+- **Verification**: Zero clippy warnings, cargo fmt clean, 669 RPC tests + 11 registry
+  cross-checks pass.
+
 ### Session 62: content provenance metadata (May 13, 2026)
 
 - **content.put provenance fields**: Accepts optional `source`, `pipeline`, `stored_by`

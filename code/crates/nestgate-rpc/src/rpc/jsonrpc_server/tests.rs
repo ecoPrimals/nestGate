@@ -343,13 +343,12 @@ async fn test_handler_capabilities_list() {
         .call("capabilities.list", ArrayParams::new())
         .await
         .expect("capabilities.list");
-    let methods = result["methods"].as_array().expect("methods array");
-    assert!(methods.iter().any(|m| m.as_str() == Some("health.check")));
-    assert!(
-        methods
-            .iter()
-            .any(|m| m.as_str() == Some("capabilities.list"))
-    );
+    let caps = result["capabilities"]
+        .as_array()
+        .expect("capabilities array");
+    assert!(caps.iter().any(|m| m.as_str() == Some("health.check")));
+    assert!(caps.iter().any(|m| m.as_str() == Some("capabilities.list")));
+    assert!(result["count"].is_number());
 }
 
 #[tokio::test]

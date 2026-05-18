@@ -96,7 +96,7 @@ use crate::rpc::metadata_backend::{
     default_metadata_base_dir,
 };
 use nestgate_types::error::{NestGateError, Result};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::sync::Arc;
 use tracing::{debug, warn};
 
@@ -270,6 +270,35 @@ impl<M: MetadataBackend> SemanticRouter<M> {
 
             // ==================== LIFECYCLE DOMAIN ====================
             "lifecycle.status" => health::lifecycle_status(self, params),
+
+            // ==================== IDENTITY DOMAIN ====================
+            "identity.get" => Ok(json!({
+                "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+                "version": env!("CARGO_PKG_VERSION"),
+                "domain": "storage",
+                "license": "AGPL-3.0-or-later",
+                "family_id": std::env::var("NESTGATE_FAMILY_ID")
+                    .unwrap_or_else(|_| "default".into()),
+            })),
+
+            // ==================== AUTH DOMAIN ====================
+            m @ ("auth.check" | "auth.mode" | "auth.peer_info") => {
+                let gate = crate::rpc::method_gate::MethodGate::from_env();
+                let caller = crate::rpc::method_gate::CallerContext::unix();
+                crate::rpc::method_gate::auth_introspection(m, &gate, &caller)
+                    .ok_or_else(|| NestGateError::not_found(format!("semantic method `{m}`")))
+            }
+
+            // ==================== BTSP DOMAIN ====================
+            "btsp.capabilities" => Ok(json!({
+                "protocol": "btsp-v1",
+                "cipher": "chacha20-poly1305",
+                "kdf": "hkdf-sha256",
+                "handshake": "x25519-ephemeral",
+                "required": std::env::var("NESTGATE_FAMILY_ID")
+                    .ok()
+                    .is_some_and(|fid| !matches!(fid.as_str(), "" | "default" | "standalone")),
+            })),
 
             // ==================== CAPABILITIES DOMAIN ====================
             "capabilities.list" => capabilities::capabilities_list(self, params),

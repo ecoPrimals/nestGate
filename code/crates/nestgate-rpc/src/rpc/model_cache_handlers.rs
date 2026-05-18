@@ -246,11 +246,13 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "zfs.health",
     // Lifecycle
     "lifecycle.status",
+    // BTSP security introspection
+    "btsp.capabilities",
 ];
 
 /// capabilities.list — Wire Standard L3 compliant response.
 ///
-/// Returns the required `{primal, version, methods}` envelope (L2) plus
+/// Returns the required `{primal, version, capabilities, count}` envelope plus
 /// structured `provided_capabilities` grouping and `consumed_capabilities`
 /// declaration for composition completeness validation (L3).
 #[expect(clippy::unnecessary_wraps, reason = "Handler dispatch requires Result")]
@@ -259,7 +261,8 @@ pub fn capabilities_list() -> Result<Value> {
     Ok(json!({
         "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
-        "methods": UNIX_SOCKET_SUPPORTED_METHODS,
+        "capabilities": UNIX_SOCKET_SUPPORTED_METHODS,
+        "count": UNIX_SOCKET_SUPPORTED_METHODS.len(),
         "provided_capabilities": [
             {
                 "type": "storage",
@@ -365,6 +368,7 @@ pub fn discover_capabilities() -> Result<Value> {
         "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
         "capabilities": UNIX_SOCKET_SUPPORTED_METHODS,
+        "count": UNIX_SOCKET_SUPPORTED_METHODS.len(),
         "protocol": "jsonrpc-2.0",
         "transport": ["uds", "tcp", "http"],
         "backend": {
@@ -395,9 +399,10 @@ mod tests {
         let value = capabilities_list().unwrap();
         assert_eq!(value["primal"], "nestgate");
         assert_eq!(value["version"], env!("CARGO_PKG_VERSION"));
-        let methods = value["methods"].as_array().unwrap();
-        let names: Vec<&str> = methods.iter().filter_map(|v| v.as_str()).collect();
+        let caps = value["capabilities"].as_array().unwrap();
+        let names: Vec<&str> = caps.iter().filter_map(|v| v.as_str()).collect();
         assert_eq!(names, UNIX_SOCKET_SUPPORTED_METHODS);
+        assert_eq!(value["count"], UNIX_SOCKET_SUPPORTED_METHODS.len());
     }
 
     #[test]
@@ -406,9 +411,10 @@ mod tests {
         assert!(value["primal"].is_string(), "L2: primal field required");
         assert!(value["version"].is_string(), "L2: version field required");
         assert!(
-            value["methods"].is_array(),
-            "L2: methods flat array required"
+            value["capabilities"].is_array(),
+            "L2: capabilities flat array required"
         );
+        assert!(value["count"].is_number(), "L2: count field required");
     }
 
     #[test]

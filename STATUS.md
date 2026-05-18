@@ -1,18 +1,18 @@
 # NestGate - Current Status
 
-**Last Updated**: May 11, 2026 (Session 61: dep hygiene, clippy docs, hardcode cleanup)  
-**Version**: 4.7.0-dev
+**Last Updated**: May 17, 2026 (Session 64: Wave 22 stadial gate readiness)  
+**Version**: 4.7.0-dev (internal iteration; workspace `0.1.0`, binary `2.1.0`)
 
 ---
 
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 11, 2026
-Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 11, 2026
-Format:             CLEAN (cargo fmt --check passes), as of May 11, 2026
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 11, 2026
-Tests:              8,915 passing, 0 failures, 60 ignored (cargo test --workspace --lib); 12,389 full workspace — as of May 11, 2026
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 17, 2026
+Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 17, 2026
+Format:             CLEAN (cargo fmt --check passes), as of May 17, 2026
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 17, 2026
+Tests:              669 RPC lib + 11 registry cross-checks passing, 0 failures — as of May 17, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  ZERO — storage_handlers.rs (836→345L via test extraction), content_handlers.rs (806→510L), unix_socket_server/mod.rs (720→395L via connection.rs split)
 Unwrap/Expect:      ZERO in production library code
