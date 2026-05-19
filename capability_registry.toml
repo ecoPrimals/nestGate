@@ -85,7 +85,7 @@ methods = [
 
 # ── Content-addressed storage protocol (NG-1) ──────────────────────
 # content.put:    {data: "<base64>", content_type?, family_id?} → {hash, size, stored, deduplicated}
-# content.get:    {hash: "<blake3_hex>", family_id?} → {data: "<base64>", hash, size, content_type?}
+# content.get:    {hash: "<blake3_hex>", family_id?} → {data: "<base64>", hash, size, content_type?, retrieved_in_ms}
 # content.exists: {hash: "<blake3_hex>", family_id?} → {exists, hash, size?}
 # content.list:   {family_id?} → {hashes: [{hash, size}], count}
 # hash is the 64-char lowercase hex BLAKE3 digest of the raw (pre-base64) bytes.
@@ -93,7 +93,9 @@ methods = [
 #
 # ── Content manifests (NG-2) ────────────────────────────────────────
 # content.publish:     {collection, manifest: {path: hash, ...}, family_id?} → {collection, entry_count, stored}
-# content.resolve:     {collection, path, inline?, family_id?} → {hash, path, collection, data?, content_type?}
+# content.resolve:     {collection, path, inline?, family_id?} → {hash, path, collection, resolved_path?, resolved_in_ms, data?, content_type?}
+#   Path normalization: if exact path not found, tries {path}index.html (trailing /) or {path}/index.html (bare path).
+#   resolved_path is set only when a fallback was used.
 # content.promote:     {collection, alias, family_id?} → {alias, target, promoted}
 # content.collections: {prefix?, family_id?} → {collections: [name, ...], count}
 # Manifests live at {base}/datasets/{family}/_manifests/{collection}.json

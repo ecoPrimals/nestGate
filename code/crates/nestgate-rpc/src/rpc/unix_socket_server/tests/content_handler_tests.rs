@@ -277,3 +277,121 @@ async fn resolve_inline_returns_content() {
 
     cleanup_family(&family_id).await;
 }
+
+// ── Path normalization (index.html fallback for static sites) ──────────
+
+#[tokio::test]
+async fn resolve_trailing_slash_falls_back_to_index_html() {
+    let state = mock_state(Some("test-idx-slash")).await;
+    let family_id = format!("test-idx-slash-{}", uuid::Uuid::new_v4());
+
+    let h = put_test_content(&state, &family_id, b"<html>home</html>").await;
+
+    let pub_p = json!({
+        "family_id": &family_id,
+        "collection": "static-site",
+        "manifest": {"/index.html": &h}
+    });
+    content_publish(Some(&pub_p), &state).await.unwrap();
+
+    let resolve_p = json!({
+        "family_id": &family_id,
+        "collection": "static-site",
+        "path": "/"
+    });
+    let r = content_resolve(Some(&resolve_p), &state).await.unwrap();
+    assert_eq!(r["hash"], h, "/ should resolve to /index.html");
+    assert_eq!(r["resolved_path"], "/index.html");
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+async fn resolve_bare_path_falls_back_to_dir_index_html() {
+    let state = mock_state(Some("test-idx-bare")).await;
+    let family_id = format!("test-idx-bare-{}", uuid::Uuid::new_v4());
+
+    let h = put_test_content(&state, &family_id, b"<html>about</html>").await;
+
+    let pub_p = json!({
+        "family_id": &family_id,
+        "collection": "static-site",
+        "manifest": {"/about/index.html": &h}
+    });
+    content_publish(Some(&pub_p), &state).await.unwrap();
+
+    let resolve_p = json!({
+        "family_id": &family_id,
+        "collection": "static-site",
+        "path": "/about"
+    });
+    let r = content_resolve(Some(&resolve_p), &state).await.unwrap();
+    assert_eq!(r["hash"], h, "/about should resolve to /about/index.html");
+    assert_eq!(r["resolved_path"], "/about/index.html");
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+async fn resolve_exact_match_has_no_resolved_path() {
+    let state = mock_state(Some("test-idx-exact")).await;
+    let family_id = format!("test-idx-exact-{}", uuid::Uuid::new_v4());
+
+    let h = put_test_content(&state, &family_id, b"body{color:red}").await;
+
+    let pub_p = json!({
+        "family_id": &family_id,
+        "collection": "static-site",
+        "manifest": {"/style.css": &h}
+    });
+    content_publish(Some(&pub_p), &state).await.unwrap();
+
+    let resolve_p = json!({
+        "family_id": &family_id,
+        "collection": "static-site",
+        "path": "/style.css"
+    });
+    let r = content_resolve(Some(&resolve_p), &state).await.unwrap();
+    assert_eq!(r["hash"], h);
+    assert!(
+        r.get("resolved_path").is_none(),
+        "exact match should not have resolved_path"
+    );
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+async fn resolve_includes_timing_metadata() {
+    let state = mock_state(Some("test-timing")).await;
+    let family_id = format!("test-timing-{}", uuid::Uuid::new_v4());
+
+    let h = put_test_content(&state, &family_id, b"content").await;
+
+    let pub_p = json!({
+        "family_id": &family_id,
+        "collection": "timed",
+        "manifest": {"/x": &h}
+    });
+    content_publish(Some(&pub_p), &state).await.unwrap();
+
+    let resolve_p = json!({
+        "family_id": &family_id,
+        "collection": "timed",
+        "path": "/x"
+    });
+    let r = content_resolve(Some(&resolve_p), &state).await.unwrap();
+    assert!(
+        r["resolved_in_ms"].is_number(),
+        "should include resolved_in_ms"
+    );
+
+    let get_p = json!({"hash": &h, "family_id": &family_id});
+    let r = content_get(Some(&get_p), &state).await.unwrap();
+    assert!(
+        r["retrieved_in_ms"].is_number(),
+        "should include retrieved_in_ms"
+    );
+
+    cleanup_family(&family_id).await;
+}

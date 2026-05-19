@@ -122,7 +122,11 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
 }
 
 /// `content.get` — retrieve content by BLAKE3 hash.
+///
+/// Response includes `retrieved_in_ms` for shadow-run latency measurement.
 pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+    let t0 = std::time::Instant::now();
+
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -166,7 +170,8 @@ pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result
         "data": STANDARD.encode(&plain),
         "hash": hash,
         "size": plain.len(),
-        "family_id": family_id
+        "family_id": family_id,
+        "retrieved_in_ms": t0.elapsed().as_secs_f64() * 1000.0
     });
     if let Some(ref meta) = sidecar {
         merge_sidecar_fields(&mut resp, meta);
@@ -329,8 +334,19 @@ pub async fn content_publish(params: Option<&Value>, state: &StorageState) -> Re
 
 /// `content.resolve` — look up a content hash by path within a collection.
 ///
+/// Path normalization (static-site friendly): when an exact path match is not
+/// found, the following fallbacks are tried in order:
+///
+/// 1. `{path}index.html` (path ends with `/`, e.g. `/` → `/index.html`)
+/// 2. `{path}/index.html` (path does not end with `/`, e.g. `/about` → `/about/index.html`)
+///
 /// When `inline: true`, the content bytes are returned alongside the hash.
+///
+/// Response includes `resolved_path` when a fallback was used so the caller
+/// can distinguish exact hits from normalized matches.
 pub async fn content_resolve(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+    let t0 = std::time::Instant::now();
+
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -350,14 +366,19 @@ pub async fn content_resolve(params: Option<&Value>, state: &StorageState) -> Re
     let doc: Value = serde_json::from_slice(&raw)
         .map_err(|e| NestGateError::io_error(format!("Corrupt manifest {collection}: {e}")))?;
 
-    let hash = doc["entries"].get(path).and_then(Value::as_str);
+    let entries = &doc["entries"];
+
+    let (hash, resolved_path) = resolve_path_with_index(entries, path);
+
+    let elapsed_ms = t0.elapsed().as_secs_f64() * 1000.0;
 
     let Some(hash) = hash else {
         return Ok(json!({
             "hash": null,
             "path": path,
             "collection": collection,
-            "family_id": family_id
+            "family_id": family_id,
+            "resolved_in_ms": elapsed_ms
         }));
     };
 
@@ -365,8 +386,13 @@ pub async fn content_resolve(params: Option<&Value>, state: &StorageState) -> Re
         "hash": hash,
         "path": path,
         "collection": collection,
-        "family_id": family_id
+        "family_id": family_id,
+        "resolved_in_ms": elapsed_ms
     });
+
+    if let Some(rp) = resolved_path {
+        resp["resolved_path"] = json!(rp);
+    }
 
     if inline {
         let get_params = json!({"hash": hash, "family_id": family_id});
@@ -378,6 +404,31 @@ pub async fn content_resolve(params: Option<&Value>, state: &StorageState) -> Re
     }
 
     Ok(resp)
+}
+
+/// Try exact path, then index.html fallbacks for static-site resolution.
+///
+/// Returns `(Some(hash), None)` for exact matches, `(Some(hash), Some(resolved))`
+/// for fallback matches, or `(None, None)` for miss.
+fn resolve_path_with_index<'a>(
+    entries: &'a Value,
+    path: &str,
+) -> (Option<&'a str>, Option<String>) {
+    if let Some(hash) = entries.get(path).and_then(Value::as_str) {
+        return (Some(hash), None);
+    }
+
+    let index_candidate = if path.ends_with('/') {
+        format!("{path}index.html")
+    } else {
+        format!("{path}/index.html")
+    };
+
+    if let Some(hash) = entries.get(&index_candidate).and_then(Value::as_str) {
+        return (Some(hash), Some(index_candidate));
+    }
+
+    (None, None)
 }
 
 /// `content.promote` — alias one collection name to another (atomic deploy).

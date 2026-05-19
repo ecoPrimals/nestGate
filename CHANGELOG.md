@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 66: S3 shadow run readiness — content.resolve path normalization (May 19, 2026)
+
+- **Path normalization in `content.resolve`**: When an exact manifest path is not
+  found, the handler now tries `{path}index.html` (trailing-slash) or
+  `{path}/index.html` (bare path). This enables static-site manifests without
+  explicitly listing every URL variant (e.g. `/` resolves to `/index.html`).
+  Response includes `resolved_path` when a fallback was used.
+- **Timing metadata**: `content.resolve` returns `resolved_in_ms` and
+  `content.get` returns `retrieved_in_ms` — latency fields needed for
+  Wave 24 S3 shadow run TTFB measurement against GitHub Pages baseline.
+- **4 new tests**: path normalization (trailing slash, bare path, exact match)
+  and timing metadata assertions. 673 RPC tests pass.
+
 ### Session 65: stale socket cleanup + graceful shutdown (May 18, 2026)
 
 - **Graceful shutdown**: `IsomorphicIpcServer` accept loop now uses `tokio::select!`
