@@ -501,7 +501,7 @@ Once local testing is complete:
 
 - **Build Guide**: `BUILD_SUCCESS_REPORT.md`
 - **CLI Reference**: `docs/CLI_REFERENCE.md`
-- **Service Mesh**: `showcase/ECOSYSTEM_NETWORK_EFFECTS.md`
+- **Service Mesh**: *(fossilized — see `fossilRecord/wateringHole/nestgate/showcase-dec2025/`)*
 - **Songbird Integration**: `../songbird/INTEGRATION_GUIDE.md`
 
 ---
