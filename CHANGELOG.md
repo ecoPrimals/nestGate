@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 67: sporePrint pappusCast contribution (May 20, 2026)
+
+- **`sporeprint/validation-summary.md`**: Added sporePrint contribution for
+  Wave 28 pappusCast. Summarizes NestGate's current status: 12,393 tests, 23
+  crates, 16 capability domains, 4 transport surfaces, shadow run readiness,
+  consuming springs, and key capabilities.
+
 ### Session 66: S3 shadow run readiness — content.resolve path normalization (May 19, 2026)
 
 - **Path normalization in `content.resolve`**: When an exact manifest path is not
