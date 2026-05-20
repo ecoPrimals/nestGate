@@ -301,7 +301,10 @@ impl TemplateStorage {
                 .max()
                 .unwrap_or(1);
             // Template ranking denominator: usage counts normalized to float.
-            #[expect(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "template ranking denominator; display-only"
+            )]
             {
                 m as f64
             }

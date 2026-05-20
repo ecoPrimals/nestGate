@@ -18,7 +18,10 @@ use nestgate_core::error::{InternalErrorDetails, NestGateError};
 pub struct ZfsErrorBuilder;
 impl ZfsErrorBuilder {
     /// Create a generic ZFS error (for backward compatibility)
-    #[expect(clippy::new_ret_no_self)]
+    #[expect(
+        clippy::new_ret_no_self,
+        reason = "builder pattern returns NestGateError, not Self"
+    )]
     #[must_use]
     pub fn new(message: &str) -> NestGateError {
         NestGateError::internal_error(message.to_string(), "zfs-generic")

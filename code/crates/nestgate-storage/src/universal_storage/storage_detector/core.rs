@@ -80,7 +80,10 @@ impl StorageDetectorUtils {
 
     /// Calculate percentage with safe division
     #[must_use]
-    #[expect(clippy::cast_precision_loss)] // Display metric; totals from byte counters
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "display metric from byte counters; precision loss acceptable"
+    )]
     pub fn safe_percentage(used: u64, total: u64) -> f64 {
         if total == 0 {
             0.0

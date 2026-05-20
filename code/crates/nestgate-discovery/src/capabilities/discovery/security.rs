@@ -174,7 +174,7 @@ impl Default for SecurityCapabilityDiscovery {
 
 /// Get authentication endpoint for routing compatibility (replaces hardcoded security)
 pub async fn get_auth_endpoint(
-    #[expect(unused_variables)] _adapter: &(),
+    #[expect(unused_variables, reason = "adapter reserved for future capability-provider injection")] _adapter: &(),
 ) -> Result<String> {
     let discovery = SecurityCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;

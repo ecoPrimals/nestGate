@@ -65,7 +65,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_scenario_runner_new() {
         use super::super::config::LoadTestConfig;
         let config = LoadTestConfig::default();
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_scenario_runner_run() {
         use super::super::config::LoadTestConfig;
         let config = LoadTestConfig::default();

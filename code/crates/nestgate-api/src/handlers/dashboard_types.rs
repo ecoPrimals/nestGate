@@ -483,7 +483,7 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_dashboard_config_default() {
         let config = DashboardConfig::default();
 

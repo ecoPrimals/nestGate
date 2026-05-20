@@ -277,7 +277,7 @@ impl Default for PerformanceOptimizer {
     }
 }
 
-#[expect(dead_code)]
+#[expect(dead_code, reason = "dev stub — production uses ZFS native backend")]
 impl PerformanceOptimizer {
     /// Create a new performance optimizer instance
     #[must_use]
@@ -440,7 +440,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_production_zfs_manager_new() {
         let config = ZfsConfig::default();
         let pool_count = config.pools.len();
@@ -449,7 +452,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_list_pools() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -463,7 +469,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_create_dataset() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -472,7 +481,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_get_pool_status() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -483,7 +495,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_create_pool() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -689,7 +704,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_list_datasets() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -701,7 +719,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_create_dataset_with_tier() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -713,7 +734,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_list_snapshots() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -724,7 +748,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "testing backward-compatible deprecated dev stub API"
+    )]
     fn test_create_snapshot() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);

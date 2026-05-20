@@ -100,7 +100,10 @@ mod performance_validation_tests {
     }
 
     #[test]
-    #[expect(clippy::useless_vec)] // Testing vec-specific performance characteristics
+    #[expect(
+        clippy::useless_vec,
+        reason = "testing vec-specific performance characteristics"
+    )]
     fn test_vec_vs_slice_performance() {
         let data = vec![1, 2, 3, 4, 5];
 
@@ -132,7 +135,7 @@ mod performance_validation_tests {
         // Small allocations should be very fast
         let start = Instant::now();
 
-        #[expect(clippy::useless_vec)] // Testing heap allocation performance
+        #[expect(clippy::useless_vec, reason = "testing heap allocation performance")]
         for _ in 0..1000 {
             let _v = vec![1, 2, 3];
         }
@@ -206,7 +209,7 @@ mod concurrency_tests {
 #[cfg(test)]
 mod memory_safety_tests {
     #[test]
-    #[expect(clippy::useless_vec)] // Testing vec-specific borrowing rules
+    #[expect(clippy::useless_vec, reason = "testing vec-specific borrowing rules")]
     fn test_no_use_after_free() {
         let data = vec![1, 2, 3];
         let _reference = &data[0];

@@ -23,6 +23,9 @@ mod coverage_tests;
 
 pub use diagnostic::*;
 pub use manager::*;
-#[expect(ambiguous_glob_reexports)]
+#[expect(
+    ambiguous_glob_reexports,
+    reason = "metrics and types share names; explicit imports upstream"
+)]
 pub use metrics::*;
 pub use types::*;

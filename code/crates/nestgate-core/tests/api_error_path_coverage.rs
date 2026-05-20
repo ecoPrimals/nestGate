@@ -26,7 +26,7 @@ use nestgate_core::error::NestGateError;
 // ==================== REQUEST VALIDATION ====================
 
 #[test]
-#[expect(clippy::const_is_empty)]
+#[expect(clippy::const_is_empty, reason = "testing empty-collection edge cases")]
 fn test_empty_request_body() {
     let body = "";
     assert!(body.is_empty(), "Empty body should be detected");

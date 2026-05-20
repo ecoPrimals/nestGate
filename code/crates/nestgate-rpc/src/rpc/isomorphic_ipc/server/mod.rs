@@ -356,9 +356,8 @@ impl IsomorphicIpcServer {
 
             debug!("BTSP: non-JSON-RPC first line detected, starting handshake");
 
-            let family_id = std::env::var("FAMILY_ID")
-                .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
-                .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+            let family_id = std::env::var("NESTGATE_FAMILY_ID")
+                .or_else(|_| std::env::var("FAMILY_ID"))
                 .unwrap_or_default();
 
             let _session = crate::rpc::btsp_server_handshake::perform_handshake(

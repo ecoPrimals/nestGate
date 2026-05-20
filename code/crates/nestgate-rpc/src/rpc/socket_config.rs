@@ -258,7 +258,10 @@ impl SocketConfig {
     ///
     /// This resolver currently always returns [`Ok`]; the [`Result`] is reserved for future
     /// validation of socket paths and environment-derived identifiers.
-    #[expect(clippy::needless_pass_by_value)] // Stable public signature; callers pass owned env strings.
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "stable public API; callers pass owned env strings"
+    )]
     pub fn resolve(
         family_id: String,
         node_id: String,

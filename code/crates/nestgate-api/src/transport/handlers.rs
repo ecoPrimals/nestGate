@@ -249,8 +249,8 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
         reason = "Handler method: will use self for handler state"
     )]
     fn handle_identity(&self, _params: Value) -> Result<Value> {
-        let family_id = std::env::var("BIOMEOS_FAMILY_ID")
-            .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+        let family_id = std::env::var("NESTGATE_FAMILY_ID")
+            .or_else(|_| std::env::var("FAMILY_ID"))
             .unwrap_or_else(|_| "default".to_string());
         let primal = self_primal_name();
 

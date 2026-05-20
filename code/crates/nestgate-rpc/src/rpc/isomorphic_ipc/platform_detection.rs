@@ -55,7 +55,10 @@ use tracing::debug;
 ///
 /// * `true` - Error is a platform constraint (should adapt)
 /// * `false` - Error is a real failure (should report)
-#[expect(clippy::option_if_let_else)] // Readable IO-kind ladder; `map_or_else` obscures match flow.
+#[expect(
+    clippy::option_if_let_else,
+    reason = "IO-kind ladder reads better as if-let than map_or_else"
+)]
 pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
     if let Some(io_err) = error.downcast_ref::<std::io::Error>() {
         match io_err.kind() {

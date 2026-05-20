@@ -30,7 +30,10 @@ pub fn remove_var<K: AsRef<OsStr>>(key: K) {
 }
 
 #[cfg(test)]
-#[expect(clippy::expect_used)] // Tests assert env invariants; project prefers `expect` over `unwrap`.
+#[expect(
+    clippy::expect_used,
+    reason = "tests assert env invariants; expect preferred over unwrap"
+)]
 mod tests {
     use super::{remove_var, set_var};
     use std::ffi::OsString;

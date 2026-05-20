@@ -7,7 +7,10 @@ use crate::error::BinResult;
 use nestgate_core::services::storage::capabilities;
 
 /// Execute doctor diagnostics
-#[expect(clippy::too_many_lines)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "diagnostic output is sequential; splitting obscures flow"
+)]
 pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     println!("NestGate System Diagnostics");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");

@@ -113,7 +113,10 @@ pub struct SecurityConfig {
 
 /// Canonical Password Policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(clippy::struct_excessive_bools)] // Policy flags are semantically correct here
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "policy flags are semantically independent booleans"
+)]
 /// Passwordpolicy
 pub struct PasswordPolicy {
     /// Min Length

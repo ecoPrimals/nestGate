@@ -397,7 +397,10 @@ mod config_performance_tests {
         // Config creation should be reasonable relative to baseline
         // Allow up to 100x slower than baseline (accounts for actual work)
         // This is machine-independent and robust
-        #[expect(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "test assertion on display-only metric"
+        )]
         let ratio = actual.as_micros() as f64 / baseline.as_micros().max(1) as f64;
         assert!(
             actual <= baseline.saturating_mul(100) || actual.as_millis() < 100,

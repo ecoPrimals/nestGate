@@ -190,7 +190,7 @@ impl Default for BackupSettings {
 /// 
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[expect(deprecated)]
+#[expect(deprecated, reason = "backward-compatible alias during config migration")]
 pub type StorageBackendConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StorageBackendConfig (the deprecated struct) for now.

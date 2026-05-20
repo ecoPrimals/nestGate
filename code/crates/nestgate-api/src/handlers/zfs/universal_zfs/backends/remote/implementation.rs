@@ -672,7 +672,7 @@ mod implementation_tests {
     use std::time::Duration;
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(deprecated, reason = "testing backward-compatible deprecated remote ZFS API")]
     fn remote_zfs_service_exposes_metadata() {
         let cfg = RemoteConfig {
             endpoint: "http://127.0.0.1:65530".to_string(),

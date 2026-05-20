@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_analysis_config_default() {
         let config = AnalysisConfig::default();
         assert_eq!(config.interval_seconds, 0);

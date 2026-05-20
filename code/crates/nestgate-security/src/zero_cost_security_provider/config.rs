@@ -167,7 +167,10 @@ impl ZeroCostSecurityConfig {
 
 /// **Authentication configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(clippy::struct_excessive_bools)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "auth config flags are semantically independent booleans"
+)]
 /// Configuration for Authentication
 pub struct AuthenticationConfig {
     /// Enable password authentication

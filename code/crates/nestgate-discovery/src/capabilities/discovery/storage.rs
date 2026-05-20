@@ -150,7 +150,7 @@ impl Default for StorageCapabilityDiscovery {
 
 /// Get ZFS endpoint for routing compatibility (replaces hardcoded ZFS constants)
 pub async fn get_zfs_endpoint(
-    #[expect(unused_variables)] _adapter: &(),
+    #[expect(unused_variables, reason = "adapter reserved for future capability-provider injection")] _adapter: &(),
 ) -> Result<String> {
     let discovery = StorageCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;

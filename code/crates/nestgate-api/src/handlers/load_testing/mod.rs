@@ -188,7 +188,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_start_load_test() {
-        #[expect(deprecated)]
+        #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
         let config = LoadTestConfig::default();
         let result = start_load_test(Json(config)).await;
         assert!(result.is_ok());

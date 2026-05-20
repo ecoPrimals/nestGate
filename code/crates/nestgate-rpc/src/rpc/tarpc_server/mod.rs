@@ -137,7 +137,10 @@ impl<S: StorageBackend + 'static> NestGateRpcService<S> {
         let object_count: u64 = datasets.iter().map(|d| d.object_count).sum();
         let compression_sum: f64 = datasets.iter().map(|d| d.compression_ratio).sum();
         let avg_compression_ratio = if dataset_count > 0 {
-            #[expect(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "dataset count for average compression; display-only"
+            )]
             {
                 compression_sum / dataset_count as f64
             }

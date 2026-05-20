@@ -68,7 +68,10 @@ impl Default for ZeroCostSecurityMetadata {
 /// **Security capabilities**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Securitycapabilities
-#[expect(clippy::struct_excessive_bools)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "capability flags are semantically independent booleans"
+)]
 pub struct SecurityCapabilities {
     /// Supports hardware security modules
     pub hardware_security_module: bool,

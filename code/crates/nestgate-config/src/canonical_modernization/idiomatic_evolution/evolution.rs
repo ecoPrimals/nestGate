@@ -72,7 +72,10 @@ impl EvolutionTracker {
 
 /// Migration manager for handling evolution migrations
 #[derive(Debug, Clone, Default)]
-#[expect(clippy::struct_field_names)]
+#[expect(
+    clippy::struct_field_names,
+    reason = "migration_ prefix clarifies domain in mixed contexts"
+)]
 /// Manager for Migration operations
 pub struct MigrationManager {
     completed_migrations: HashMap<String, String>,

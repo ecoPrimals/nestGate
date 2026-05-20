@@ -211,7 +211,10 @@ impl DataDescriptor {
     ///
     /// Formatted size string (e.g., "1.5 GB")
     #[must_use]
-    #[expect(clippy::cast_precision_loss)] // Approximate human-readable units only
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "approximate human-readable size units; precision loss acceptable"
+    )]
     pub fn size_human_readable(&self) -> String {
         const KB: u64 = 1024;
         const MB: u64 = KB * 1024;

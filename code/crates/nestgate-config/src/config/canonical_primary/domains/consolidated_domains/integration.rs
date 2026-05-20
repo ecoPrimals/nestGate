@@ -73,7 +73,10 @@ pub struct ExternalHealthCheckConfig {}
 
 /// Container for all protocol-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[expect(clippy::zero_sized_map_values)]
+#[expect(
+    clippy::zero_sized_map_values,
+    reason = "protocol config map uses unit types as presence markers"
+)]
 pub struct ProtocolConfigs {
     /// HTTP/HTTPS configuration
     pub http: HttpProtocolConfig,

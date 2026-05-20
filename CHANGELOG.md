@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 68: `#[expect]` reason hygiene + env var precedence alignment (May 20, 2026)
+
+- **`#[expect(reason)]` sweep**: Added `reason = "..."` to all ~55 bare `#[expect]`
+  attributes across 42 files (production + test). Converts trailing `//` comments
+  to proper `reason =` syntax per ecosystem standard. Zero bare `#[expect]` remaining.
+- **Family ID env var precedence**: Unified `NESTGATE_FAMILY_ID` → `FAMILY_ID` →
+  default precedence across all transport paths. Previously `handlers.rs` read
+  `BIOMEOS_FAMILY_ID` first and `isomorphic_ipc/server` used a 3-tier chain
+  with non-standard order. Now consistent with `socket_config.rs` canonical resolver.
+- **Zero clippy warnings**, 673 RPC tests pass.
+
 ### Session 67: sporePrint pappusCast contribution (May 20, 2026)
 
 - **`sporeprint/validation-summary.md`**: Added sporePrint contribution for

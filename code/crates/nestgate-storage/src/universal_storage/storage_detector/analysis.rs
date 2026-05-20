@@ -307,7 +307,10 @@ impl StorageAnalyzer {
     /// Calculate storage efficiency score
     #[must_use]
     pub fn calculate_efficiency_score(&self, storage: &DetectedStorage) -> f64 {
-        #[expect(unused_assignments)] // Value is overwritten in calculations below
+        #[expect(
+            unused_assignments,
+            reason = "initial value overwritten by calculation branches below"
+        )]
         let mut efficiency = 0.0f64;
 
         // Performance efficiency (throughput per latency)

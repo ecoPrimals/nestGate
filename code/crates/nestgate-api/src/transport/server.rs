@@ -241,7 +241,10 @@ impl<H> Clone for JsonRpcHandler<H> {
 }
 
 #[cfg(test)]
-#[expect(deprecated)]
+#[expect(
+    deprecated,
+    reason = "testing backward-compatible deprecated transport API"
+)]
 mod tests {
     use super::*;
     use serde_json::Value;

@@ -460,7 +460,7 @@ mod tests {
 
     #[tokio::test]
     async fn universal_zfs_service_enum_native_trait_covers_remaining_methods() {
-        #[expect(deprecated)]
+        #[expect(deprecated, reason = "testing backward-compatible deprecated ZFS API")]
         use crate::handlers::zfs::universal_zfs_types::{DatasetConfig, SnapshotConfig};
 
         let svc = UniversalZfsServiceEnum::new_native();

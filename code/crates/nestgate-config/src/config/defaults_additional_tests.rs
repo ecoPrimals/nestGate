@@ -110,7 +110,10 @@ mod constants_validation_tests {
         // Network buffer size check (8KB)
         use crate::constants::network::NETWORK_BUFFER_SIZE;
         // Compile-time validation of buffer size constants
-        #[expect(clippy::assertions_on_constants)]
+        #[expect(
+            clippy::assertions_on_constants,
+            reason = "compile-time constant validation"
+        )]
         {
             assert!(NETWORK_BUFFER_SIZE >= 1024, "Network buffer too small");
             assert!(
@@ -123,7 +126,10 @@ mod constants_validation_tests {
     #[test]
     fn test_max_connections_is_positive() {
         // Compile-time validation of connection limits
-        #[expect(clippy::assertions_on_constants)]
+        #[expect(
+            clippy::assertions_on_constants,
+            reason = "compile-time constant validation"
+        )]
         {
             assert!(shared::DEFAULT_MAX_CONNECTIONS > 0);
             assert!(
@@ -138,7 +144,10 @@ mod constants_validation_tests {
         // Timeout migrated to canonical.rs
         use crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
         // Compile-time validation of timeout constants
-        #[expect(clippy::assertions_on_constants)]
+        #[expect(
+            clippy::assertions_on_constants,
+            reason = "compile-time constant validation"
+        )]
         {
             assert!(DEFAULT_TIMEOUT_MS > 0);
             assert!(

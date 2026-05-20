@@ -287,7 +287,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(clippy::unnecessary_literal_unwrap)]
+    #[expect(
+        clippy::unnecessary_literal_unwrap,
+        reason = "testing Result/Option unwrap semantics"
+    )]
     fn test_result_ok() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
@@ -586,7 +589,10 @@ mod tests {
     }
 
     #[test]
-    #[expect(clippy::unnecessary_literal_unwrap)]
+    #[expect(
+        clippy::unnecessary_literal_unwrap,
+        reason = "testing Result/Option unwrap semantics"
+    )]
     fn test_nestgate_result_with_ok() {
         let result: NestGateResult<String> = Ok("data".to_string());
         assert!(result.is_ok());
