@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 69: Wave 38 production hardening — SP-4 content.put compat (May 22, 2026)
+
+- **`content.put` SP-4 compatibility**: Accepts `content_base64` as an alias for
+  `data`, matching the `publish_sporeprint.sh` script's parameter name. Provenance
+  fields (`source`, `pipeline`, `stored_by`) now extracted from a nested `metadata`
+  object when top-level fields are absent. Top-level takes precedence over nested.
+- **VPS deployment audit**: ZFS storage detector confirmed safe on non-ZFS systems
+  (DigitalOcean ext4 block volumes). No panics — graceful degradation to filesystem
+  mode. ZFS HTTP APIs return 503 `zfs_unavailable`. Content-addressed storage
+  (`content.*`) is fully ZFS-independent.
+- **3 new tests**: `content_base64` alias, nested metadata extraction, top-level
+  provenance override. 676 RPC tests pass, zero clippy warnings.
+
 ### Session 68: `#[expect]` reason hygiene + env var precedence alignment (May 20, 2026)
 
 - **`#[expect(reason)]` sweep**: Added `reason = "..."` to all ~55 bare `#[expect]`

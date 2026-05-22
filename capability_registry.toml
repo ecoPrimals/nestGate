@@ -84,7 +84,9 @@ methods = [
 ]
 
 # ── Content-addressed storage protocol (NG-1) ──────────────────────
-# content.put:    {data: "<base64>", content_type?, family_id?} → {hash, size, stored, deduplicated}
+# content.put:    {data|content_base64: "<base64>", content_type?, source?, pipeline?, stored_by?, metadata?, family_id?} → {hash, size, stored, deduplicated}
+#   Accepts "content_base64" as alias for "data" (SP-4 compat).
+#   Provenance fields accepted at top level or nested in "metadata" object.
 # content.get:    {hash: "<blake3_hex>", family_id?} → {data: "<base64>", hash, size, content_type?, retrieved_in_ms}
 # content.exists: {hash: "<blake3_hex>", family_id?} → {exists, hash, size?}
 # content.list:   {family_id?} → {hashes: [{hash, size}], count}

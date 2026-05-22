@@ -30,17 +30,34 @@ use super::storage_paths::{
 };
 
 /// `content.put` — store content-addressed data (BLAKE3 hash as key, automatic dedup).
+///
+/// Accepts `data` or `content_base64` as the base64-encoded payload (SP-4 compat).
+/// Provenance fields (`source`, `pipeline`, `stored_by`) can appear at the top
+/// level or nested inside a `metadata` object (SP-4 compat).
 pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let data_b64 = params["data"].as_str().ok_or_else(|| {
-        NestGateError::invalid_input_with_field("data", "data (base64 string) required")
-    })?;
+    let data_b64 = params["data"]
+        .as_str()
+        .or_else(|| params["content_base64"].as_str())
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field(
+                "data",
+                "data or content_base64 (base64 string) required",
+            )
+        })?;
     let content_type = params["content_type"].as_str();
-    let source = params["source"].as_str();
-    let pipeline = params["pipeline"].as_str();
-    let stored_by = params["stored_by"].as_str();
+    let meta_obj = params.get("metadata");
+    let source = params["source"]
+        .as_str()
+        .or_else(|| meta_obj.and_then(|m| m["source"].as_str()));
+    let pipeline = params["pipeline"]
+        .as_str()
+        .or_else(|| meta_obj.and_then(|m| m["pipeline"].as_str()));
+    let stored_by = params["stored_by"]
+        .as_str()
+        .or_else(|| meta_obj.and_then(|m| m["stored_by"].as_str()));
     let family_id = resolve_family_id(params, state)?;
 
     let raw = STANDARD.decode(data_b64).map_err(|e| {

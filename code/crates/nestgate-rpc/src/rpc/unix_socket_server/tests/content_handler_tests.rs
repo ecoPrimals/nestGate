@@ -395,3 +395,84 @@ async fn resolve_includes_timing_metadata() {
 
     cleanup_family(&family_id).await;
 }
+
+// ── SP-4 compatibility: content_base64 alias + nested metadata ─────────
+
+#[tokio::test]
+async fn content_put_accepts_content_base64_alias() {
+    let state = mock_state(Some("test-sp4-alias")).await;
+    let family_id = format!("test-sp4-alias-{}", uuid::Uuid::new_v4());
+
+    let content = b"<html>SP-4 test</html>";
+    let encoded = STANDARD.encode(content);
+
+    let p = json!({
+        "family_id": &family_id,
+        "content_base64": &encoded,
+        "content_type": "text/html"
+    });
+    let r = content_put(Some(&p), &state).await.unwrap();
+    assert_eq!(r["stored"], true);
+    assert!(!r["hash"].as_str().unwrap().is_empty());
+
+    let hash = r["hash"].as_str().unwrap();
+    let get_p = json!({"hash": hash, "family_id": &family_id});
+    let r = content_get(Some(&get_p), &state).await.unwrap();
+    let decoded = STANDARD.decode(r["data"].as_str().unwrap()).unwrap();
+    assert_eq!(decoded, content);
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+async fn content_put_extracts_nested_metadata() {
+    let state = mock_state(Some("test-sp4-meta")).await;
+    let family_id = format!("test-sp4-meta-{}", uuid::Uuid::new_v4());
+
+    let encoded = STANDARD.encode(b"metadata-test");
+    let p = json!({
+        "family_id": &family_id,
+        "data": &encoded,
+        "content_type": "text/plain",
+        "metadata": {
+            "source": "primalSpring",
+            "pipeline": "SP-4"
+        }
+    });
+    let r = content_put(Some(&p), &state).await.unwrap();
+    assert_eq!(r["stored"], true);
+
+    let hash = r["hash"].as_str().unwrap();
+    let get_p = json!({"hash": hash, "family_id": &family_id});
+    let r = content_get(Some(&get_p), &state).await.unwrap();
+    assert_eq!(r["source"], "primalSpring");
+    assert_eq!(r["pipeline"], "SP-4");
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+async fn content_put_top_level_provenance_overrides_nested() {
+    let state = mock_state(Some("test-sp4-override")).await;
+    let family_id = format!("test-sp4-override-{}", uuid::Uuid::new_v4());
+
+    let encoded = STANDARD.encode(b"override-test");
+    let p = json!({
+        "family_id": &family_id,
+        "data": &encoded,
+        "source": "direct",
+        "metadata": {
+            "source": "nested-should-lose"
+        }
+    });
+    let r = content_put(Some(&p), &state).await.unwrap();
+    let hash = r["hash"].as_str().unwrap();
+    let get_p = json!({"hash": hash, "family_id": &family_id});
+    let r = content_get(Some(&get_p), &state).await.unwrap();
+    assert_eq!(
+        r["source"], "direct",
+        "top-level source should take precedence"
+    );
+
+    cleanup_family(&family_id).await;
+}
