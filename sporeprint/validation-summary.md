@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal — 12,393 tests, 23 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, content manifests, BTSP auth"
-date = 2026-05-20
+description = "Content-addressed storage primal — 12,399+ tests, 23 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, primal.announce, BTSP auth"
+date = 2026-05-23
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,13 +10,14 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,393 tests** passing (673 RPC, 11,720+ across 23 workspace crates), 0 failed, 0 clippy warnings
+- **12,399+ tests** passing (682 RPC, 11,720+ across 23 workspace crates), 0 failed, 0 clippy warnings
 - **23 crates** in the workspace (nestgate-rpc, nestgate-api, nestgate-core, nestgate-config, nestgate-types, nestgate-storage, nestgate-security, nestgate-zfs, nestgate-cache, nestgate-discovery, nestgate-bin, and 12 more)
 - **16 capability domains** registered in `capability_registry.toml` — storage, content, model, templates, session, audit, nat, beacon, bonding, zfs, health, identity, discovery, lifecycle, auth, btsp
 - **4 transport surfaces** with full parity: SemanticRouter, isomorphic IPC (UDS), primary UDS dispatch, HTTP JSON-RPC
 - **Content-addressed storage** (NG-1): BLAKE3 hash-as-key, automatic dedup, optional encrypt-at-rest, provenance metadata sidecars
 - **Content manifests** (NG-2): versioned path→hash manifests, atomic deploy via `content.promote` aliases, index.html path normalization
 - **MethodGate** adopted: Public/Protected method classification, BTSP auth gating
+- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup (Wave 43)
 - **Stale socket cleanup**: `SocketCleanupGuard` (RAII), `ctrl_c` graceful shutdown, PID sidecars
 - **Rust 2024 edition**, `#![forbid(unsafe_code)]`, `clippy::pedantic` + `clippy::nursery` clean
 - **`cargo deny check bans`** passing, pure-Rust crypto (no ring, no OpenSSL)

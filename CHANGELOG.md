@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 70: Wave 43 `primal.announce` — Neural API self-registration (May 23, 2026)
+
+- **`primal.announce` wired**: New `primal_announce` module sends a JSON-RPC
+  `primal.announce` call to biomeOS on startup (post-bind, background-spawned).
+  Payload follows the Wave 42 wire schema with `socket`, `pid`, `capabilities`,
+  `methods`, `signal_tiers`, `cost_hints`, and `latency_estimates`.
+- **biomeOS socket discovery**: Tiered lookup via `BIOMEOS_IPC_SOCKET` →
+  `BIOMEOS_SOCKET_DIR` → `$XDG_RUNTIME_DIR/<ecosystem>/biomeos.sock` →
+  `/tmp/biomeos.sock`. Also checks `neural-api.sock` under XDG.
+- **Best-effort semantics**: If biomeOS is unreachable, NestGate logs a debug
+  message and starts normally — announce never blocks the accept loop.
+- **6 new tests**: Payload field validation, capability filtering, signal tier
+  assertion, cost hints, discovery-returns-none. 682 RPC tests pass, zero
+  clippy warnings.
+
 ### Session 69: Wave 38 production hardening — SP-4 content.put compat (May 22, 2026)
 
 - **`content.put` SP-4 compatibility**: Accepts `content_base64` as an alias for

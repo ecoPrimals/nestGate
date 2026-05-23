@@ -194,6 +194,17 @@ stability = "stable"
 description = "BTSP security capabilities — protocol version, cipher suite, handshake requirement"
 methods = ["btsp.capabilities"]
 
+# Neural API announce — self-registration with biomeOS (Wave 43)
+[announce]
+method = "primal.announce"
+target = "biomeos"
+signal_tiers = ["nest"]
+capabilities = ["storage", "content"]
+cost_hints = { storage = 10.0, content = 15.0 }
+latency_estimates = { storage = 50, content = 20 }
+wire_schema = "WAVE42_NEURAL_API_DEPLOYMENT_GUIDE.md"
+trigger = "post-bind"
+
 # Consumed capabilities — what NestGate needs from other primals
 [consumed_capabilities.security]
 reason = "BTSP handshake crypto delegation"

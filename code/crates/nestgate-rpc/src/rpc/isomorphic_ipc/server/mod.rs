@@ -270,6 +270,17 @@ impl IsomorphicIpcServer {
 
         write_pid_file(&socket_path);
 
+        {
+            let announce_socket = socket_path.clone();
+            tokio::spawn(async move {
+                if let Err(e) =
+                    crate::rpc::primal_announce::announce_to_biomeos(&announce_socket).await
+                {
+                    warn!("primal.announce failed: {e}");
+                }
+            });
+        }
+
         #[cfg(unix)]
         let _storage_capability_symlink_guard =
             crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path, &family_id);

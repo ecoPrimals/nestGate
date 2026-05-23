@@ -73,6 +73,7 @@ pub mod metadata_backend;
 pub(crate) mod method_gate;
 #[cfg(any(feature = "dev-stubs", test))]
 pub mod orchestrator_registration;
+pub mod primal_announce;
 pub(crate) mod protocol;
 pub mod semantic_router;
 pub mod socket_config;
