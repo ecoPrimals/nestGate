@@ -8,16 +8,16 @@
 > `manifest.toml` tracks `0.1.0` (workspace root). These will unify on the first
 > tagged public release.  
 
-**Verification (as of 2026-05-11)**  
+**Verification (as of 2026-05-24, Session 72)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: `cargo test --workspace --lib` — 8,915 passing, 0 failures, 60 ignored; full workspace 12,389  
+- **Tests**: 682 RPC lib tests, 12,399+ full workspace — 0 failures  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,915 lib / 12,389 full workspace, 0 failures
+- **Tests (last recorded)**: 682 RPC / 12,399+ full workspace, 0 failures
 - **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -56,7 +56,13 @@
 - **content.* transport parity**: All 8 content-addressed methods routed through all transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API (Session 60)
 - **lifecycle.status**: Public primal status probe on all transport paths, BTSP-exempt (Session 60)
 - **Dep hygiene**: 3 unused deps removed from nestgate-api, `"biomeos"` socket-dir literal replaced with canonical `ecosystem_path_segment()` (Session 61)  
-**Last Updated**: May 11, 2026
+- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup — `capabilities`, `methods`, `signal_tiers`, `cost_hints`, `latency_estimates` (Session 70, Wave 43)
+- **`--socket PATH` CLI flag**: Uniform launcher convergence — sets `NESTGATE_SOCKET` env (Session 71, Wave 47)
+- **`health.liveness` normalized**: `{"status":"alive","primal":"nestgate"}` across all 5 transport surfaces (Session 71, Wave 47)
+- **`btsp.capabilities`**: New method wired on all transport paths (Session 69)
+- **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
+- **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)  
+**Last Updated**: May 24, 2026
 
 ---
 
@@ -96,7 +102,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz + root)
+nestgate/ (22 workspace packages: 20 code/crates + fuzz + root)
 │  default-members: root + nestgate-bin (cross-arch binary production)
 │
 │  Foundation Layer (zero internal deps, compiles first)
@@ -127,7 +133,7 @@ nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz +
 ├── nestgate-fsmonitor   Filesystem monitoring
 └── nestgate-performance Performance monitoring
 ```
-Deprecated/shed (removed from workspace): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
+Deprecated/shed (removed from workspace): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`, `tools/unwrap-migrator`.
 
 The core was decomposed across two phases from a 295K-line monolith (488s check)
 into 13 focused crates that compile in parallel. `nestgate-core` re-exports all
@@ -152,14 +158,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-11 (Session 61).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-24 (Session 72).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace --lib` — 8,915 passing, 0 failures, 60 ignored; 12,389 full workspace |
+| Tests | 682 RPC lib tests, 12,399+ full workspace — 0 failures |
 | Coverage | 84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -175,9 +181,9 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-11 (Se
 |----------|--------|
 | UniBin | Pass — single `nestgate` binary |
 | ecoBin | Pass — pure Rust application code, socket-only default, zero C crypto deps (ring/rustls/reqwest eliminated) |
-| JSON-RPC 2.0 | Pass — Wire Standard L3 (Composable): `{primal, version, methods}` envelope, `provided_capabilities`, `consumed_capabilities` |
+| JSON-RPC 2.0 | Pass — Wire Standard L3 (Composable): `{primal, version, capabilities}` envelope, `provided_capabilities`, `consumed_capabilities` |
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
-| Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*` |
+| Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*`, `btsp.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — 84.12%+ line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
@@ -221,7 +227,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo fmt --all
 
 # Code coverage
-cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
+cargo llvm-cov --workspace --summary-only
 
 # Documentation
 cargo doc --no-deps --workspace
@@ -307,4 +313,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 61)
+**Latest**: May 2026 (Session 72)

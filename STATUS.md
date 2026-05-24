@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 17, 2026 (Session 64: Wave 22 stadial gate readiness)  
+**Last Updated**: May 24, 2026 (Session 72: deep debt sweep, Wave 47 convergence)  
 **Version**: 4.7.0-dev (internal iteration; workspace `0.1.0`, binary `2.1.0`)
 
 ---
@@ -8,13 +8,13 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 17, 2026
-Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 17, 2026
-Format:             CLEAN (cargo fmt --check passes), as of May 17, 2026
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 17, 2026
-Tests:              669 RPC lib + 11 registry cross-checks passing, 0 failures — as of May 17, 2026
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of May 24, 2026
+Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 24, 2026
+Format:             CLEAN (cargo fmt --check passes), as of May 24, 2026
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 24, 2026
+Tests:              682 RPC lib tests, 12,399+ full workspace, 0 failures — as of May 24, 2026
 Coverage:           84.12%+ line (cargo llvm-cov --workspace --lib --summary-only; last measured 2026-04-16, +288 tests since) — wateringHole 80% met; 90% target pending
-Files > 800 lines:  ZERO — storage_handlers.rs (836→345L via test extraction), content_handlers.rs (806→510L), unix_socket_server/mod.rs (720→395L via connection.rs split)
+Files > 800 lines:  ZERO — unix_adapter_handlers.rs (790→440L + storage_handlers.rs 369L; Session 72)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots including nestgate-zfs unconditionally (zero exceptions — env-process-shim uses edition 2021 safe wrappers; nestgate-zfs was formerly `cfg_attr(not(test), forbid(...))`)
@@ -29,12 +29,12 @@ Encrypt-at-rest:    ChaCha20-Poly1305 — implemented Session 48
 Auth mode bypass:   NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider (Session 48; beardog alias removed Session 51)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider); 6-tier security socket discovery; capability-based socket candidates (Session 44b)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.* — 67 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 68 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
 IPC routes (HTTP):  storage.*, content.*, health.*, capabilities.*, identity.*, system.*, lifecycle.* — HTTP NestGateRpcHandler + NestGateJsonRpcHandler
 IPC routes (tarpc): storage.*, content.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.*, lifecycle.* — 52 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 content.* parity:   ALL transport paths — UDS dispatch, SemanticRouter, isomorphic IPC (UnixSocketRpcHandler), HTTP API (NestGateRpcHandler + NestGateJsonRpcHandler) — Session 60
 data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
-Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"] — all four capabilities.list surfaces return L3 with protocol + transport fields
+Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope, provided_capabilities, consumed_capabilities, protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"] — all four capabilities.list surfaces return L3 with protocol + transport fields
 Emoji in logs/code: ZERO in production sources, module docs, and installer output — professional structured logging (Session 48)
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
@@ -54,7 +54,7 @@ Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core d
 Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery (single import path)
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs in production code; XDG discovery uses capability names only (security.sock, crypto.sock); SECURITY_FAMILY_SEED canonical env var; runtime_fallback_ports named constants (JSONRPC, HTTP, TARPC, etc. — zero inline magic numbers)
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
-Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate); default-members: root + nestgate-bin (cross-arch binary production)
+Workspace members:  22 (20 code/crates + fuzz + root nestgate); default-members: root + nestgate-bin (cross-arch binary production)
 Serial tests:       #[serial]: scoped to ZFS command stub tests (temp_env::with_vars elsewhere)
 Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
 Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12 vendored ring-free, rand 0.9.x, CDLA-Permissive-2.0 allowed); config (crates.io) + urlencoding removed (unused)
@@ -587,10 +587,10 @@ sysinfo:       Optional, non-Linux only
 
 ## Architecture
 
-High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (**23** packages). MCP is not a workspace member (delegated to biomeOS `capability.call`).
+High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (**22** packages). MCP is not a workspace member (delegated to biomeOS `capability.call`).
 
 ```
-nestGate/ (23 workspace members: 20 code/crates + tools + fuzz + root)
+nestGate/ (22 workspace packages: 20 code/crates + fuzz + root)
 ├── nestgate-types / nestgate-platform / nestgate-env-process-shim  Foundation
 ├── nestgate-config / nestgate-storage / nestgate-rpc / nestgate-discovery
 ├── nestgate-security / nestgate-observe / nestgate-cache
@@ -604,9 +604,8 @@ nestGate/ (23 workspace members: 20 code/crates + tools + fuzz + root)
 ├── nestgate-nas        NAS integration
 ├── nestgate-fsmonitor  Filesystem monitoring
 ├── nestgate-performance Performance monitoring
-├── tools/unwrap-migrator  Helper CLI
 └── fuzz/               Fuzz targets
-Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation, nestgate-mcp
+Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation, nestgate-mcp, tools/unwrap-migrator
 ```
 
 ---
@@ -619,7 +618,7 @@ Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation,
 | ecoBin | PASS (pure Rust app code; ring/rustls/reqwest eliminated; sysinfo optional non-Linux only) |
 | JSON-RPC 2.0 | PASS — Wire Standard Level 3 (Composable) |
 | tarpc | PASS (feature-gated, version aligned) |
-| Semantic naming | PASS (storage.*, nat.*, beacon.*, health.*, capabilities.*, zfs.*, bonding.*, session.*, model.*, templates.*, audit.*, identity.*, discovery.*) |
+| Semantic naming | PASS (storage.*, nat.*, beacon.*, health.*, capabilities.*, zfs.*, bonding.*, session.*, model.*, templates.*, audit.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.*, content.*) |
 | File size (<1000 production) | PASS (max ~463 lines after Session 43 refactors) |
 | Sovereignty | PASS (capability-based discovery, storage.sock symlink, zero hardcoded primals) |
 | mDNS Discovery | Feature-gated (`mdns`); production via biomeOS |
@@ -664,4 +663,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: May 11, 2026 (Session 61)
+**Latest**: May 24, 2026 (Session 72)

@@ -4,8 +4,8 @@
 
 NestGate is in active development. Current metrics:
 
-- **Build**: 23/23 workspace members, 0 errors (`cargo check --workspace --all-features --all-targets`)
-- **Tests**: `cargo test --workspace --lib` — 8,915 passing, 60 ignored, 0 failures (see STATUS.md)
+- **Build**: 22/22 workspace packages, 0 errors (`cargo check --workspace --all-features --all-targets`)
+- **Tests**: 682 RPC lib tests, 12,399+ full workspace, 0 failures (see STATUS.md)
 - **Coverage**: 84.12%+ line (llvm-cov); 90% org target pending
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
 - **Safety**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)
@@ -136,10 +136,8 @@ Only use `temp_env` + `#[serial]` when you must test code that reads `std::env::
 ### Coverage
 
 ```bash
-cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
+cargo llvm-cov --workspace --summary-only
 ```
-
-The `tools/` directory is excluded from coverage — it contains development tooling, not production code.
 
 ---
 
@@ -181,4 +179,4 @@ The `tools/` directory is excluded from coverage — it contains development too
 
 ---
 
-**Last Updated**: May 11, 2026 (Session 61)
+**Last Updated**: May 24, 2026 (Session 72)

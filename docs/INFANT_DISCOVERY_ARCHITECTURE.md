@@ -1,3 +1,6 @@
+> **Fossil Record**: Written September 2025 (v3.0). Preserved for historical context.
+> Canonical spec: [specs/INFANT_DISCOVERY_ARCHITECTURE_SPEC.md](../specs/INFANT_DISCOVERY_ARCHITECTURE_SPEC.md) (v4.0).
+
 # INFANT DISCOVERY ARCHITECTURE
 
 **Version**: 3.0  

@@ -1,12 +1,12 @@
 # NestGate - Quick Reference
 
 **Version**: 4.7.0-dev  
-**Tests**: `cargo test --workspace --lib` — PASS, 0 failures (8,915 passing, 60 ignored — see STATUS.md)  
+**Tests**: 682 RPC lib, 12,399+ full workspace — 0 failures (see STATUS.md)  
 **Coverage**: 84.12%+ line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 61)  
-**Crates**: 23 workspace members (20 under `code/crates/` + `tools/unwrap-migrator` + `fuzz` + root)  
+**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 72)  
+**Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: May 11, 2026 (Session 61)
+**Last Updated**: May 24, 2026 (Session 72)
 
 ---
 
@@ -141,8 +141,8 @@ cargo bench                           # Benchmarks
 ### Coverage
 
 ```bash
-cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
-cargo llvm-cov --workspace --html --ignore-filename-regex 'tools/'  # HTML report
+cargo llvm-cov --workspace --summary-only
+cargo llvm-cov --workspace --html  # HTML report
 ```
 
 ---
@@ -222,4 +222,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: May 11, 2026 (Session 61)
+**Last Updated**: May 24, 2026 (Session 72)

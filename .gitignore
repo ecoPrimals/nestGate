@@ -148,7 +148,6 @@ nestgate-port-manager-*.tar.gz
 /monitoring/
 
 # Modernization artifacts
-/unwrap-migrator/target/
 /sporeHandoff/
 
 # Fuzz testing

@@ -1,3 +1,10 @@
+> **Fossil Record**: Written January 2026 (v0.2.0). Preserved for historical context.
+> Current JSON-RPC surface: see [capability_registry.toml](../../capability_registry.toml),
+> [CAPABILITY_MAPPINGS.md](../../CAPABILITY_MAPPINGS.md), and [STATUS.md](../../STATUS.md).
+> This document lists 14 legacy `nestgate.*` methods; the current surface has 68 UDS
+> methods using `{domain}.{operation}` semantic naming (e.g. `storage.store`,
+> `content.put`, `health.liveness`, `btsp.capabilities`, `primal.announce`).
+
 # NestGate JSON-RPC 2.0 API Documentation
 
 **Version**: 0.2.0  

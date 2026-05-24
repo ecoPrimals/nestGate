@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 61)
-Tests:       PASS — cargo test --workspace --lib, 0 failures (8,915 passing, 60 ignored — STATUS.md)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 72)
+Tests:       PASS — 682 RPC lib, 12,399+ workspace, 0 failures (STATUS.md)
 Coverage:    84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 61)
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 72)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -88,7 +88,7 @@ NEST Atomic = TOWER + nestgate + squirrel
 ## Architecture
 
 ```
-nestgate/ (23 workspace members — see README Architecture)
+nestgate/ (22 workspace packages — see README Architecture)
 ├── nestgate-types … nestgate-platform … (foundation)
 ├── nestgate-config, nestgate-storage, nestgate-rpc, nestgate-discovery, …
 ├── nestgate-core       Traits, network, services, adapters
@@ -101,8 +101,8 @@ nestgate/ (23 workspace members — see README Architecture)
 ├── nestgate-nas        NAS integration
 ├── nestgate-fsmonitor  Filesystem monitoring
 ├── nestgate-performance Performance monitoring
-└── tools/unwrap-migrator, fuzz (workspace)
-Note: nestgate-network, nestgate-automation, nestgate-mcp are deprecated/shed (removed from workspace).
+└── fuzz (workspace)
+Note: nestgate-network, nestgate-automation, nestgate-mcp, tools/unwrap-migrator are deprecated/shed (removed from workspace).
 ```
 
 ### Key Patterns
@@ -121,7 +121,7 @@ Note: nestgate-network, nestgate-automation, nestgate-mcp are deprecated/shed (r
 cargo test --workspace
 
 # Coverage
-cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
+cargo llvm-cov --workspace --summary-only
 
 # Linting
 cargo clippy --all-targets --all-features -- -D warnings
@@ -175,4 +175,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: May 11, 2026 (Session 61)
+**Last Updated**: May 24, 2026 (Session 72)

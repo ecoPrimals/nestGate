@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 73: Root doc refresh, fossil banners, debris cleanup (May 24, 2026)
+
+- **Root docs synchronized**: All 10 root markdown files updated to Session 72 /
+  Wave 47 metrics (682 RPC tests, 12,399+ workspace, 22 packages, 68 UDS methods,
+  16 capability domains). Removed stale `tools/unwrap-migrator` references.
+- **Fossil banners added**: 5 docs under `docs/` that were superseded by `specs/`
+  counterparts received fossil record banners with canonical links:
+  `JSONRPC_API_DOCUMENTATION.md`, `INFANT_DISCOVERY_ARCHITECTURE.md`,
+  `UNIVERSAL_ADAPTER_ARCHITECTURE.md`, `ZERO_COST_ARCHITECTURE_GUIDE.md`,
+  `UNIVERSAL_STORAGE_DESIGN.md`.
+- **sporeprint updated**: Fixed model/zfs method tables, added Wave 47 line,
+  corrected crate count from 23 to 22.
+- **`.gitignore` cleaned**: Removed stale `/unwrap-migrator/target/` entry.
+- **wateringHole handoff**: Created `NESTGATE_V470_SESSION72_DEEP_EVOLUTION_MAY24_2026.md`
+  covering Sessions 65–72 (Waves 24–47).
+
 ### Session 72: Deep debt sweep — file split, stub honesty, doc hygiene (May 24, 2026)
 
 - **Smart file split**: Extracted `storage_handlers.rs` (369 lines) from

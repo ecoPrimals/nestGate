@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: May 11, 2026 (Session 61)  
+**Last Updated**: May 24, 2026 (Session 72)  
 **Version**: 4.7.0-dev
 
 Paths linked below exist in this repository as of May 2026.
@@ -51,7 +51,7 @@ Session archives, planning docs, stale examples, old specs, and historical repor
 
 ```
 nestgate/
-├── code/crates/                    # 20 crates (23 workspace members: unwrap-migrator + fuzz + root)
+├── code/crates/                    # 20 crates (22 workspace packages: + fuzz + root)
 │   ├── nestgate-core/              # Core traits, services, adapters
 │   ├── nestgate-rpc/               # JSON-RPC 2.0 + tarpc IPC (storage.sock symlink)
 │   ├── nestgate-security/          # Crypto delegation (security capability provider)
@@ -78,6 +78,6 @@ nestgate/
 
 ---
 
-**Status**: Documentation cleaned and updated May 11, 2026 (Session 61).  
+**Status**: Documentation cleaned and updated May 24, 2026 (Session 72).  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: May 11, 2026 (Session 61)
+**Last Updated**: May 24, 2026 (Session 72)
