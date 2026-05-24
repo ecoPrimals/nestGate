@@ -5,10 +5,9 @@
 //!
 //! Hardware tuning functionality split into logical modules for better maintainability.
 //!
-//! **DEVELOPMENT STUBS**
-//!
-//! Handlers are only available with `dev-stubs` feature.
-//! Production builds use placeholders that return "not implemented".
+//! With `dev-stubs`: full handlers via [`handlers`] and [`handlers_production`].
+//! Without `dev-stubs` (production): read-only endpoints backed by `/proc` and
+//! ZFS kstat; service registration returns `501 Not Implemented`.
 
 // Development: Real stub handlers
 #[cfg(feature = "dev-stubs")]

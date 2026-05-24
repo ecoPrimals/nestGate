@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 72: Deep debt sweep — file split, stub honesty, doc hygiene (May 24, 2026)
+
+- **Smart file split**: Extracted `storage_handlers.rs` (369 lines) from
+  `unix_adapter_handlers.rs` (was 790 → now 440 lines). Storage handlers are a
+  natural cohesive unit; shared helpers remain in the parent module with
+  `pub(super)` visibility. No file in the codebase exceeds 800 lines.
+- **Fake-success stub removed**: `primal_sovereignty::execute_capability_request`
+  no longer returns a misleading `{ status: "success", data: null }`. Now returns
+  `NestGateError::not_implemented(...)` to honestly signal that runtime IPC dispatch
+  is required. `is_capability_healthy` now checks actual health status instead of
+  always returning `true`. `HealthStatus` gained `PartialEq + Eq` derives.
+- **Stale doc comments**: Updated `hardware_tuning/mod.rs` module docs to reflect
+  that production builds use `/proc`-backed handlers, not "not implemented" placeholders.
+- **Audit results**: Zero files >800L, zero unsafe, zero TODO/FIXME/HACK, zero
+  bare `#[allow]`, all `#[expect]` have reason strings. 682 RPC tests pass.
+
 ### Session 71: Wave 47 deployment behavioral convergence (May 24, 2026)
 
 - **`--socket PATH` CLI flag**: Added to `server`/`daemon` subcommand. Overrides

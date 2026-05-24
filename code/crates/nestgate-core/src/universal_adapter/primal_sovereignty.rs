@@ -56,8 +56,7 @@ pub struct DiscoveredCapability {
 }
 
 /// Health status of a discovered capability
-#[derive(Debug, Clone)]
-/// Status values for Health
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HealthStatus {
     /// Healthy
     Healthy,
@@ -297,12 +296,11 @@ impl UniversalAdapter {
     }
 
     /// Checks if Capability Healthy
-    const fn is_capability_healthy(
+    fn is_capability_healthy(
         &self,
-        _capability: &DiscoveredCapability,
+        capability: &DiscoveredCapability,
     ) -> Result<bool, NestGateError> {
-        // Health check implementation
-        Ok(true) // Simplified for now
+        Ok(capability.health_status == HealthStatus::Healthy)
     }
 
     /// Execute Capability Request
@@ -311,11 +309,9 @@ impl UniversalAdapter {
         _capability: &DiscoveredCapability,
         _request: CapabilityRequest,
     ) -> Result<CapabilityResponse, NestGateError> {
-        // Request execution implementation
-        Ok(CapabilityResponse {
-            status: "success".to_string(),
-            data: serde_json::Value::Null,
-        })
+        Err(NestGateError::not_implemented(
+            "Capability request execution requires runtime IPC dispatch (wire via primal.announce)",
+        ))
     }
 }
 

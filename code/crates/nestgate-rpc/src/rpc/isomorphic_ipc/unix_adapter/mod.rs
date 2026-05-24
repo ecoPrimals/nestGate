@@ -6,6 +6,7 @@
 //! `storage.*` methods are backed by the filesystem under `get_storage_base_path()/datasets/`.
 //! Each key is a file; values are JSON bytes on disk. This is `NestGate`'s actual storage backend.
 
+mod storage_handlers;
 mod unix_adapter_handlers;
 
 #[cfg(test)]
@@ -197,42 +198,40 @@ impl UnixSocketRpcHandler {
         let state = self.state.as_ref();
         let method = normalize_method(&request.method);
         let result = match method.as_ref() {
-            "storage.store" => unix_adapter_handlers::handle_storage_store(state, &request).await,
-            "storage.retrieve" => {
-                unix_adapter_handlers::handle_storage_retrieve(state, &request).await
-            }
-            "storage.list" => unix_adapter_handlers::handle_storage_list(state, &request).await,
-            "storage.delete" => unix_adapter_handlers::handle_storage_delete(state, &request).await,
-            "storage.exists" => unix_adapter_handlers::handle_storage_exists(state, &request),
+            "storage.store" => storage_handlers::handle_storage_store(state, &request).await,
+            "storage.retrieve" => storage_handlers::handle_storage_retrieve(state, &request).await,
+            "storage.list" => storage_handlers::handle_storage_list(state, &request).await,
+            "storage.delete" => storage_handlers::handle_storage_delete(state, &request).await,
+            "storage.exists" => storage_handlers::handle_storage_exists(state, &request),
             "storage.store_blob" => {
-                unix_adapter_handlers::handle_storage_store_blob(state, &request).await
+                storage_handlers::handle_storage_store_blob(state, &request).await
             }
             "storage.retrieve_blob" => {
-                unix_adapter_handlers::handle_storage_retrieve_blob(state, &request).await
+                storage_handlers::handle_storage_retrieve_blob(state, &request).await
             }
             "storage.retrieve_range" => {
-                unix_adapter_handlers::handle_storage_retrieve_range(state, &request).await
+                storage_handlers::handle_storage_retrieve_range(state, &request).await
             }
             "storage.store_stream" => {
-                unix_adapter_handlers::handle_storage_store_stream(state, &request).await
+                storage_handlers::handle_storage_store_stream(state, &request).await
             }
             "storage.store_stream_chunk" => {
-                unix_adapter_handlers::handle_storage_store_stream_chunk(&request).await
+                storage_handlers::handle_storage_store_stream_chunk(&request).await
             }
             "storage.retrieve_stream" => {
-                unix_adapter_handlers::handle_storage_retrieve_stream(state, &request).await
+                storage_handlers::handle_storage_retrieve_stream(state, &request).await
             }
             "storage.retrieve_stream_chunk" => {
-                unix_adapter_handlers::handle_storage_retrieve_stream_chunk(&request).await
+                storage_handlers::handle_storage_retrieve_stream_chunk(&request).await
             }
             "storage.object.size" => {
-                unix_adapter_handlers::handle_storage_object_size(state, &request).await
+                storage_handlers::handle_storage_object_size(state, &request).await
             }
             "storage.namespaces.list" => {
-                unix_adapter_handlers::handle_storage_namespaces_list(state).await
+                storage_handlers::handle_storage_namespaces_list(state).await
             }
             "storage.fetch_external" => {
-                unix_adapter_handlers::handle_storage_fetch_external(state, &request).await
+                storage_handlers::handle_storage_fetch_external(state, &request).await
             }
             "session.save" => unix_adapter_handlers::handle_session_save(state, &request).await,
             "session.load" => unix_adapter_handlers::handle_session_load(state, &request).await,
