@@ -50,6 +50,7 @@ impl Cli {
         match self.command {
             // UniBin: Server mode command (primary)
             Commands::Server {
+                socket,
                 port,
                 bind,
                 listen,
@@ -59,6 +60,15 @@ impl Cli {
                 socket_only: _,
                 r#abstract,
             } => {
+                // --socket flag overrides NESTGATE_SOCKET env
+                if let Some(ref sock_path) = socket {
+                    nestgate_core::env_process::set_var(
+                        "NESTGATE_SOCKET",
+                        sock_path.to_string_lossy().as_ref(),
+                    );
+                    tracing::info!("Socket path (CLI): {}", sock_path.display());
+                }
+
                 // Multi-family support: CLI flag > env var > default
                 let resolved_family_id =
                     resolve_family_id(family_id, std::env::var("NESTGATE_FAMILY_ID").ok());

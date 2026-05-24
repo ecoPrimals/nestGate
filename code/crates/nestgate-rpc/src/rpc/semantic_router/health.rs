@@ -35,8 +35,8 @@ pub(super) async fn health_liveness(
     router.client.version().await?;
 
     Ok(json!({
-        "alive": true,
-        "status": "ok"
+        "status": "alive",
+        "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME
     }))
 }
 
@@ -141,7 +141,8 @@ mod tests {
         assert_eq!(check["status"], "healthy");
 
         let live = health_liveness(&r, json!({})).await.expect("liveness");
-        assert_eq!(live["alive"], true);
+        assert_eq!(live["status"], "alive");
+        assert_eq!(live["primal"], "nestgate");
 
         let ready = health_readiness(&r, json!({})).await.expect("readiness");
         assert_eq!(ready["ready"], true);

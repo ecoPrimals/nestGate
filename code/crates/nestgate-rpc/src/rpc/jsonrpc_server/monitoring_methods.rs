@@ -38,16 +38,12 @@ pub(super) fn register_monitoring_methods<S: StorageBackend + 'static>(
 
     map_jsonrpc_registration(module.register_async_method(
         "health.liveness",
-        |_params, ctx, _ext| async move {
+        |_params, _ctx, _ext| async move {
             debug!("JSON-RPC: health.liveness()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let health = service_clone.health(tarpc::context::current()).await;
-
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "alive": true,
-                "status": health.status,
+                "status": "alive",
+                "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
             }))
         },
     ))?;
@@ -179,8 +175,8 @@ mod tests {
             Ok(x) => x,
             Err(e) => panic!("health.liveness: {e}"),
         };
-        assert_eq!(v["alive"], true);
-        assert!(v.get("status").is_some());
+        assert_eq!(v["status"], "alive");
+        assert_eq!(v["primal"], "nestgate");
     }
 
     #[tokio::test]

@@ -31,7 +31,8 @@ async fn test_health_liveness() {
     let r = h
         .handle_request(json!({"jsonrpc":"2.0","method":"health.liveness","id":1}))
         .await;
-    assert_eq!(r["result"]["alive"], true);
+    assert_eq!(r["result"]["status"], "alive");
+    assert_eq!(r["result"]["primal"], "nestgate");
 }
 
 #[tokio::test]

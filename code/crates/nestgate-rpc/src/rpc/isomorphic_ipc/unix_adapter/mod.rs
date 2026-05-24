@@ -245,7 +245,7 @@ impl UnixSocketRpcHandler {
                 "version": env!("CARGO_PKG_VERSION"),
                 "isomorphic": true
             })),
-            "health.liveness" => Ok(json!({"alive": true})),
+            "health.liveness" => Ok(json!({"status": "alive", "primal": DEFAULT_SERVICE_NAME})),
             "health.readiness" => unix_adapter_handlers::handle_health_readiness(state).await,
 
             "lifecycle.status" => Ok(json!({

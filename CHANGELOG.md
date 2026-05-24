@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 71: Wave 47 deployment behavioral convergence (May 24, 2026)
+
+- **`--socket PATH` CLI flag**: Added to `server`/`daemon` subcommand. Overrides
+  `NESTGATE_SOCKET` env var. Aligns with `DEPLOYMENT_BEHAVIOR_STANDARD.md` — every
+  UDS primal now accepts `--socket` uniformly for `start_primal.sh` / NUCLEUS launcher.
+- **`health.liveness` normalized**: All 5 transport surfaces now return the standard
+  `{"status":"alive","primal":"nestgate"}` response. Previously, 4 secondary surfaces
+  returned `{"alive":true}` or variants, which broke `jq -r .status` health sweeps.
+  Fixed: isomorphic IPC adapter, semantic router, jsonrpsee server, HTTP JSON-RPC handler.
+- **Tests updated**: 7 test assertions updated to match the new wire-standard shape.
+  682 RPC tests + 2,611 API tests pass, zero clippy warnings.
+
 ### Session 70: Wave 43 `primal.announce` — Neural API self-registration (May 23, 2026)
 
 - **`primal.announce` wired**: New `primal_announce` module sends a JSON-RPC

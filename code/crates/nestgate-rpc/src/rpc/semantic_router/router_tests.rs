@@ -335,8 +335,8 @@ async fn health_semantic_methods_with_live_tarpc_server() {
         Ok(x) => x,
         Err(e) => panic!("liveness: {e}"),
     };
-    assert_eq!(live["alive"], true);
-    assert_eq!(live["status"], "ok");
+    assert_eq!(live["status"], "alive");
+    assert_eq!(live["primal"], "nestgate");
 
     let ready = match router.call_method("health.readiness", json!({})).await {
         Ok(x) => x,

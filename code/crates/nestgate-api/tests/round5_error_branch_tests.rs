@@ -147,15 +147,22 @@ async fn nestgate_json_rpc_handler_serializes_list_pools() {
 }
 
 #[tokio::test]
-async fn nestgate_json_rpc_handler_health_aliases_equivalent() {
+async fn nestgate_json_rpc_handler_health_liveness_returns_alive() {
     let h = NestGateJsonRpcHandler::new();
-    let a = h
+    let v = h
         .handle("health.liveness", serde_json::Value::Null)
         .await
         .unwrap();
-    let b = h
+    assert_eq!(v["status"], "alive");
+    assert_eq!(v["primal"], "nestgate");
+}
+
+#[tokio::test]
+async fn nestgate_json_rpc_handler_health_check_returns_status() {
+    let h = NestGateJsonRpcHandler::new();
+    let v = h
         .handle("health.check", serde_json::Value::Null)
         .await
         .unwrap();
-    assert_eq!(a, b);
+    assert!(v.get("status").is_some());
 }

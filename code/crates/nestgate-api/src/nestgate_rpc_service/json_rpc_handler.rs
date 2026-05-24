@@ -60,7 +60,12 @@ impl NestGateJsonRpcHandler {
                 serde_json::to_value(result)
                     .map_err(|e| format!("Failed to serialize get_metrics result: {e}"))
             }
-            "health" | "health.liveness" | "health.check" => {
+            "health.liveness" => serde_json::to_value(serde_json::json!({
+                "status": "alive",
+                "primal": "nestgate",
+            }))
+            .map_err(|e| format!("Failed to serialize health.liveness result: {e}")),
+            "health" | "health.check" => {
                 let ctx = Context::current();
                 let result = self.server.clone().health(ctx).await;
                 serde_json::to_value(result)

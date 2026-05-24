@@ -14,6 +14,10 @@ pub enum Commands {
     #[command(name = "server", alias = "daemon")]
     #[command(about = "Run NestGate server")]
     Server {
+        /// Bind Unix domain socket at this path (overrides `NESTGATE_SOCKET` env).
+        /// Example: `--socket /run/user/1000/biomeos/nestgate.sock`
+        #[arg(long)]
+        socket: Option<PathBuf>,
         /// Port for TCP JSON-RPC listener (alongside Unix socket). When omitted, TCP activates if
         /// `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT` is explicitly set, or if
         /// `NESTGATE_JSONRPC_TCP` is truthy (`1`/`true`/`yes`/`on`) for the default API port

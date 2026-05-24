@@ -325,8 +325,8 @@ async fn test_handler_health_liveness_readiness() {
         .call("health.liveness", ArrayParams::new())
         .await
         .expect("liveness");
-    assert_eq!(live["alive"], true);
-    assert!(live["status"].as_str().is_some());
+    assert_eq!(live["status"], "alive");
+    assert_eq!(live["primal"], "nestgate");
 
     let ready: serde_json::Value = module
         .call("health.readiness", ArrayParams::new())
