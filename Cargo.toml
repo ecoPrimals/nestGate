@@ -78,7 +78,6 @@ members = [
     "code/crates/nestgate-rpc",
     "code/crates/nestgate-security",
     "code/crates/nestgate-storage",
-    "tools/unwrap-migrator",
     "fuzz"
 ]
 

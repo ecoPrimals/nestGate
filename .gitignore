@@ -73,6 +73,14 @@ pids/
 # Archive directory (moved root files)
 /archive/
 
+# Ecosystem repos (co-located, not tracked by NestGate)
+/primals/
+/springs/
+/infra/
+/gardens/
+/fossilRecord/
+/testing-secrets/
+
 # Large archives and packages (GitHub file size limits)
 *.tar.gz
 *.zip
