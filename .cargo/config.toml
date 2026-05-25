@@ -11,15 +11,17 @@ target-dir = "target"
 
 # ARM64 Linux (musl - static linking, fully portable)
 # Used for: USB LiveSpore, standalone Linux deployments
-# Rust 1.86+ uses rust-lld by default for musl targets — no external linker needed.
-# Previous `aarch64-linux-gnu-gcc` linker caused segfaults: GNU glibc CRT objects
-# conflict with musl startup code. Removing the explicit linker lets Rust use its
-# built-in rust-lld which handles musl CRT linkage correctly.
+# ld.lld: LLVM LLD linker — cross-arch capable, no gcc-aarch64 needed
+# link-self-contained=yes: musl CRT objects from Rust sysroot (not from system gcc)
+# Previous `aarch64-linux-gnu-gcc` linker with default CRT caused segfaults.
 # relocation-model=static prevents static-PIE segfault on musl ≤1.2.2
 [target.aarch64-unknown-linux-musl]
+linker = "ld.lld"
 rustflags = [
     "-C", "target-feature=+crt-static",
     "-C", "relocation-model=static",
+    "-C", "link-self-contained=yes",
+    "-C", "linker-flavor=ld",
 ]
 
 # ARM64 Android (via NDK)
@@ -43,13 +45,14 @@ linker = "aarch64-linux-gnu-gcc"
 
 # x86_64 Linux (musl - static linking)
 # Current primary deployment target
-# Rust 1.86+ uses rust-lld by default for musl targets — no musl-tools needed.
+# link-self-contained=yes: use Rust's bundled rust-lld + musl CRT (no musl-tools needed)
 # relocation-model=static prevents static-PIE which segfaults on musl ≤1.2.2
 # (Ubuntu 22.04 ships musl 1.2.2 — _start_c/dlstart.c crash in PIE mode)
 [target.x86_64-unknown-linux-musl]
 rustflags = [
     "-C", "target-feature=+crt-static",
     "-C", "relocation-model=static",
+    "-C", "link-self-contained=yes",
 ]
 
 # x86_64 Linux (gnu - for development)
@@ -116,10 +119,11 @@ build-x64 = "build --release --target x86_64-unknown-linux-musl"
 #    rustup target add aarch64-linux-android
 #    rustup target add x86_64-unknown-linux-musl
 #
-# 2. Install cross-compilation linkers (if needed):
-#    # Rust 1.86+ uses rust-lld for musl — no musl-tools/gcc-aarch64 needed!
-#    # For Android NDK targets only:
-#    export ANDROID_NDK_HOME="$HOME/Android/Sdk/ndk/26.0.10792818"
+# 2. Install cross-compilation tools:
+#    # aarch64-musl: needs lld (apt install lld) — no gcc-aarch64 needed
+#    # x86_64-musl:  self-contained, no external tools needed
+#    # Android NDK:  export ANDROID_NDK_HOME="$HOME/Android/Sdk/ndk/26.0.10792818"
+#    # Validation:   apt install qemu-user-static  (optional, for QEMU runtime test)
 #
 # 3. Build for specific target:
 #    cargo build --release --target aarch64-unknown-linux-musl

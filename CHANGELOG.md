@@ -9,18 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
-### Session 76: aarch64-musl segfault fix (May 25, 2026)
+### Session 76: aarch64-musl segfault fix — validated (May 25, 2026)
 
-- **Root cause identified**: `.cargo/config.toml` specified `linker = "aarch64-linux-gnu-gcc"`
-  (GNU glibc cross-compiler) for the `aarch64-unknown-linux-musl` target. The GNU linker
-  injected glibc CRT startup objects that conflicted with musl's `_start_c` / `dlstart.c`,
-  causing a segfault on aarch64 musl systems (reported as `nucleus-aarch64-mixed-tcp` cell blocker).
-- **Fix**: Removed explicit `linker` overrides from both `aarch64-unknown-linux-musl` and
-  `x86_64-unknown-linux-musl` targets. Rust 1.86+ uses `rust-lld` by default for musl
-  targets — no external linker needed. Also removed redundant `-C link-arg=-static`
-  (covered by `target-feature=+crt-static`).
-- **Sovereignty win**: Eliminates `musl-tools` and `gcc-aarch64-linux-gnu` build
-  dependencies — pure Rust toolchain for all musl cross-compilation.
+- **Root cause**: `.cargo/config.toml` specified `linker = "aarch64-linux-gnu-gcc"` (GNU
+  glibc cross-compiler) for the `aarch64-unknown-linux-musl` target. Without
+  `link-self-contained=yes`, the GNU linker provided glibc CRT startup objects instead of
+  musl's, causing a segfault on aarch64 musl systems (`nucleus-aarch64-mixed-tcp` cell blocker).
+- **Fix**: Replaced with `linker = "ld.lld"` + `linker-flavor=ld` + `link-self-contained=yes`.
+  LLVM LLD is cross-architecture capable; `link-self-contained=yes` provides musl CRT objects
+  from the Rust sysroot. x86_64-musl also updated to `link-self-contained=yes` (drops
+  `musl-gcc` dependency).
+- **Validated**: aarch64-musl binary built, inspected (`ELF 64-bit LSB executable, ARM aarch64,
+  statically linked, stripped, 6.8M, no dynamic section`), and run under QEMU (`--help` and
+  `version` subcommands execute correctly — no segfault). x86_64-musl also built and validated.
+  1,648 workspace tests pass on native host.
+- **Build deps**: aarch64-musl needs only `lld` (apt) + Rust target; x86_64-musl needs nothing
+  beyond Rust. Eliminates `musl-tools` and `gcc-aarch64-linux-gnu`.
 
 ### Session 75: Doc synchronization + final debris sweep (May 25, 2026)
 
