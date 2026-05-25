@@ -1,3 +1,7 @@
+> **Fossil Record**: Written circa January 2026 (v0.2.0). Preserved for historical context.
+> Current capability surface: see [capability_registry.toml](../capability_registry.toml)
+> and [CAPABILITY_MAPPINGS.md](../CAPABILITY_MAPPINGS.md).
+
 # Collaborative Intelligence API Reference
 
 **Complete API documentation for NestGate's Collaborative Intelligence features**

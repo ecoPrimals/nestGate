@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 75: Doc synchronization + final debris sweep (May 25, 2026)
+
+- **Root docs bumped to Session 74**: All 10 root markdown files + sporeprint date-stamped
+  to May 25, 2026 (Session 74). Wave 49 plasmidBin mandate reflected in README debt section.
+- **wateringHole handoff**: Created `NESTGATE_V470_SESSION74_WAVE49_TIGHTENING_MAY25_2026.md`
+  covering Sessions 73–74 (doc refresh + Wave 49 tightening).
+- **Additional fossil banners**: `API_COLLABORATIVE_INTELLIGENCE.md` and `API_REFERENCE.md`
+  received fossil record banners pointing to `capability_registry.toml`.
+- **`.gitignore` cleanup**: Updated stale `genomeBin` comment → `plasmidBin`.
+- **Zero stale metrics**: Verified no remaining `23 workspace`, `8,915 tests`, `669 RPC`,
+  `genomeBin`, or `Session 61` references in active docs.
+
 ### Session 74: Wave 49 ecosystem tightening (May 25, 2026)
 
 - **plasmidBin deployment pattern**: Root docs (README, QUICK_START, QUICK_REFERENCE,

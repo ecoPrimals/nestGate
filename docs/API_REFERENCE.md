@@ -1,3 +1,7 @@
+> **Fossil Record**: Undated API reference. Preserved for historical context.
+> Current API surface: see [capability_registry.toml](../capability_registry.toml),
+> [CAPABILITY_MAPPINGS.md](../CAPABILITY_MAPPINGS.md), and `cargo doc --workspace --no-deps`.
+
 # NestGate API Reference
 
 ## Overview

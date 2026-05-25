@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
 description = "Content-addressed storage primal — 12,399+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, primal.announce, BTSP auth, Wave 47 deployment convergence"
-date = 2026-05-24
+date = 2026-05-25
 
 [taxonomies]
 primals = ["nestgate"]
@@ -19,6 +19,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 - **MethodGate** adopted: Public/Protected method classification, BTSP auth gating
 - **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup (Wave 43)
 - **Wave 47 deployment convergence**: `--socket PATH` CLI flag, `health.liveness` normalized to `{"status":"alive","primal":"nestgate"}` across all transports
+- **Wave 49 ecosystem tightening**: `plasmidBin` sole binary channel documented, `genomeBin` terminology evolved, 3 dead fuzz targets removed, `notify-plasmidbin.yml` active
 - **Stale socket cleanup**: `SocketCleanupGuard` (RAII), `ctrl_c` graceful shutdown, PID sidecars
 - **Rust 2024 edition**, `#![forbid(unsafe_code)]`, `clippy::pedantic` + `clippy::nursery` clean
 - **`cargo deny check bans`** passing, pure-Rust crypto (no ring, no OpenSSL)

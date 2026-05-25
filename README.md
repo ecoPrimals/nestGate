@@ -8,7 +8,7 @@
 > `manifest.toml` tracks `0.1.0` (workspace root). These will unify on the first
 > tagged public release.  
 
-**Verification (as of 2026-05-24, Session 72)**  
+**Verification (as of 2026-05-25, Session 74)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
 - **Tests**: 682 RPC lib tests, 12,399+ full workspace — 0 failures  
@@ -61,8 +61,9 @@
 - **`health.liveness` normalized**: `{"status":"alive","primal":"nestgate"}` across all 5 transport surfaces (Session 71, Wave 47)
 - **`btsp.capabilities`**: New method wired on all transport paths (Session 69)
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
-- **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)  
-**Last Updated**: May 24, 2026
+- **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
+- **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
+**Last Updated**: May 25, 2026
 
 ---
 
@@ -162,7 +163,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-24 (Session 72).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-25 (Session 74).
 
 | Area | Status |
 |------|--------|
@@ -317,4 +318,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 72)
+**Latest**: May 2026 (Session 74)
