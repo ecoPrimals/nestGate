@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal — 12,399+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, primal.announce, BTSP auth, Wave 47 deployment convergence"
+description = "Content-addressed storage primal — 12,399+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, primal.announce, BTSP auth, Wave 49 aarch64-musl fix"
 date = 2026-05-25
 
 [taxonomies]
@@ -20,6 +20,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 - **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup (Wave 43)
 - **Wave 47 deployment convergence**: `--socket PATH` CLI flag, `health.liveness` normalized to `{"status":"alive","primal":"nestgate"}` across all transports
 - **Wave 49 ecosystem tightening**: `plasmidBin` sole binary channel documented, `genomeBin` terminology evolved, 3 dead fuzz targets removed, `notify-plasmidbin.yml` active
+- **aarch64-musl segfault fix**: Removed `aarch64-linux-gnu-gcc` linker override that caused GNU glibc CRT / musl startup conflict; Rust 1.86+ `rust-lld` default linker resolves the `nucleus-aarch64-mixed-tcp` cell segfault
 - **Stale socket cleanup**: `SocketCleanupGuard` (RAII), `ctrl_c` graceful shutdown, PID sidecars
 - **Rust 2024 edition**, `#![forbid(unsafe_code)]`, `clippy::pedantic` + `clippy::nursery` clean
 - **`cargo deny check bans`** passing, pure-Rust crypto (no ring, no OpenSSL)
