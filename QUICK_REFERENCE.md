@@ -12,6 +12,10 @@
 
 ## Quick Start
 
+**Production**: Use `plasmidBin` — see `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md`.
+
+**Local development**:
+
 ```bash
 # Build
 cargo build --release
@@ -19,9 +23,8 @@ cargo build --release
 # Run (socket-only by default — ecoBin compliant)
 ./target/release/nestgate daemon
 
-# Or with HTTP enabled:
-export NESTGATE_API_PORT=8085
-./target/release/nestgate daemon --enable-http
+# Or with explicit socket + HTTP:
+./target/release/nestgate daemon --socket /tmp/nestgate.sock --enable-http
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health

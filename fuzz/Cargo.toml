@@ -66,23 +66,4 @@ path = "fuzz_targets/fuzz_biomeos_manifests.rs"
 test = false
 doc = false
 
-# Disabled: harnesses contain substantial logic but need API/import fixes before they compile
-# cleanly against current nestgate-core / nestgate-zfs types (see file headers in each target).
-# [[bin]]
-# name = "fuzz_config_parsing"
-# path = "fuzz_targets/fuzz_config_parsing.rs"
-# test = false
-# doc = false
-
-# [[bin]]
-# name = "fuzz_unified_config_example"
-# path = "fuzz_targets/fuzz_unified_config_example.rs"
-# test = false
-# doc = false
-
-# [[bin]]
-# name = "fuzz_zfs_commands"
-# path = "fuzz_targets/fuzz_zfs_commands.rs"
-# test = false
-# doc = false
 

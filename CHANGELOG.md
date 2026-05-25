@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 74: Wave 49 ecosystem tightening (May 25, 2026)
+
+- **plasmidBin deployment pattern**: Root docs (README, QUICK_START, QUICK_REFERENCE,
+  START_HERE) now show `plasmidBin` as the production deployment channel alongside
+  local development `cargo build` instructions. Post-primordial mandate documented.
+- **Fossil banners added**: 6 additional docs under `docs/guides/` and `docs/integration/`
+  that were pre-Wave-49 CLI/deployment snapshots received fossil record banners:
+  `CLI_COMMANDS_WORKING.md`, `QUICK_TEST_COMMANDS.md`, `LOCAL_INSTANCE_SETUP.md`,
+  `LOCAL_TESTING_GUIDE.md`, `QUICK_START_BIOMEOS.md`, plus
+  `specs/SELF_CONTAINED_STORAGE_IMPLEMENTATION_PLAN.md`.
+- **DEPLOYMENT_GUIDE plasmidBin**: Added post-primordial deployment notice.
+- **genomeBin → plasmidBin**: Updated stale terminology in `.cargo/config.toml`
+  (comments + aliases) and `graphs/*.toml` deployment configs.
+- **Dead fuzz targets removed**: Deleted 3 disabled fuzz harnesses with broken imports
+  (`fuzz_config_parsing.rs`, `fuzz_unified_config_example.rs`, `fuzz_zfs_commands.rs`)
+  and their commented-out `Cargo.toml` entries.
+- **Wave 49 checklist**: No `showcase/`, no local `wateringHole/`, no `which nestgate`,
+  `notify-plasmidbin.yml` active and correctly configured.
+
 ### Session 73: Root doc refresh, fossil banners, debris cleanup (May 24, 2026)
 
 - **Root docs synchronized**: All 10 root markdown files updated to Session 72 /

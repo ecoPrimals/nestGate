@@ -16,7 +16,18 @@
 
 ---
 
-## Build
+## Production Deployment (plasmidBin)
+
+Post-primordial, all NUCLEUS primal binaries come from `plasmidBin`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ecoPrimals/plasmidBin/main/fetch.sh | bash
+# Binary: $XDG_DATA_HOME/ecoPrimals/plasmidBin/primals/{triple}/nestgate
+```
+
+See `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md` for composition details.
+
+## Build (Local Development)
 
 ```bash
 cargo build --release --workspace

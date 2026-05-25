@@ -1,3 +1,7 @@
+> **Fossil Record**: Undated local setup guide (references Songbird mesh discovery).
+> Preserved for historical context. Production deployment: `plasmidBin` (Wave 49+).
+> See [START_HERE.md](../../START_HERE.md) for current quick start.
+
 # **LOCAL NESTGATE INSTANCE SETUP**
 
 **Run NestGate locally and connect to Songbird service mesh**

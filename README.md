@@ -68,8 +68,24 @@
 
 ## Quick Start
 
+### Production (plasmidBin — post-primordial)
+
+All NUCLEUS primal binaries come from `plasmidBin`. No `target/release/`,
+`which`, or `cargo install` paths in production deployment.
+
 ```bash
-# Build
+# Fetch pre-built binary
+curl -sSL https://raw.githubusercontent.com/ecoPrimals/plasmidBin/main/fetch.sh | bash
+
+# Binary lands in $XDG_DATA_HOME/ecoPrimals/plasmidBin/primals/{triple}/nestgate
+# Or use primalSpring's composition launcher:
+COMPOSITION_NAME=nest primalSpring/tools/composition_nucleus.sh start
+```
+
+### Local Development
+
+```bash
+# Build from source
 cargo build --release
 
 # Configure
@@ -78,23 +94,11 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 # Run (socket-only by default — ecoBin compliant)
 ./target/release/nestgate daemon
 
-# Or with HTTP enabled:
-export NESTGATE_API_PORT=8085
-./target/release/nestgate daemon --enable-http
+# Or with explicit socket path and HTTP:
+./target/release/nestgate daemon --socket /tmp/nestgate.sock --enable-http
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health
-```
-
-### NEST Atomic Deployment
-
-```bash
-# Single-host deployment (all primals coexist)
-export NESTGATE_API_PORT=8085  # Avoids port conflicts
-export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
-./nestgate daemon &
-
-# Other primals discover NestGate via capability-based IPC
 ```
 
 ---

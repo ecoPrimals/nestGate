@@ -1,3 +1,7 @@
+> **Fossil Record**: Undated CLI snapshot. Preserved for historical context.
+> Current CLI: `nestgate daemon [--socket PATH] [--enable-http] [--port PORT]`.
+> Production binaries come from `plasmidBin` (Wave 49+). See [README.md](../../README.md).
+
 # **CLI COMMANDS NOW WORKING!**
 
 **All NestGate CLI commands are fully implemented and functional.**

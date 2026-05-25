@@ -5,7 +5,7 @@
 [[nodes]]
 id = "deploy_nestgate"
 type = "genome.deploy"
-description = "Deploy NestGate genomeBin with auto-detection"
+description = "Deploy NestGate plasmidBin with auto-detection"
 config = { 
     genome = "nestgate.genome", 
     target = "auto",

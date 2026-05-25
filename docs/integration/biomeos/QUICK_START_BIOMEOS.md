@@ -1,3 +1,8 @@
+> **Fossil Record**: Written January 2026 (v0.1.0). Preserved for historical context.
+> Current integration: NestGate sends `primal.announce` to biomeOS on startup (Wave 43).
+> `health.liveness` normalized to `{"status":"alive","primal":"nestgate"}` (Wave 47).
+> See [capability_registry.toml](../../../capability_registry.toml) for current surface.
+
 # NestGate biomeOS Integration - Quick Start Guide
 
 **Status**: Production Ready  

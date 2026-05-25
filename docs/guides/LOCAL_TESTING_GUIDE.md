@@ -1,3 +1,7 @@
+> **Fossil Record**: Undated testing guide (references Tower deployment pattern).
+> Preserved for historical context. Post-primordial deployment uses `plasmidBin`.
+> See [START_HERE.md](../../START_HERE.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).
+
 # **NESTGATE LOCAL TESTING GUIDE**
 
 **Build, Test, and Validate on Eastgate Before Tower Deployment**

@@ -1,12 +1,12 @@
 # NestGate Cross-Compilation Configuration
-# genomeBin Multi-Architecture Support
+# plasmidBin Multi-Architecture Support
 # Created: January 31, 2026
 
 [build]
 target-dir = "target"
 
 # ============================================================================
-# ARM64 Targets (Primary genomeBin Focus)
+# ARM64 Targets (Primary plasmidBin Focus)
 # ============================================================================
 
 # ARM64 Linux (musl - static linking, fully portable)
@@ -100,8 +100,8 @@ rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
 vcs = "git"
 
 [alias]
-# Convenience aliases for genomeBin builds
-build-all-genomes = "build --release --target x86_64-unknown-linux-musl --target aarch64-unknown-linux-musl --target aarch64-linux-android"
+# Convenience aliases for plasmidBin builds
+build-all-targets = "build --release --target x86_64-unknown-linux-musl --target aarch64-unknown-linux-musl --target aarch64-linux-android"
 build-arm64 = "build --release --target aarch64-unknown-linux-musl"
 build-android = "build --release --target aarch64-linux-android"
 build-x64 = "build --release --target x86_64-unknown-linux-musl"
@@ -130,4 +130,4 @@ build-x64 = "build --release --target x86_64-unknown-linux-musl"
 # 4. Use convenience aliases:
 #    cargo build-arm64
 #    cargo build-android
-#    cargo build-all-genomes
+#    cargo build-all-targets

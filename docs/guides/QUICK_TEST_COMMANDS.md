@@ -1,3 +1,6 @@
+> **Fossil Record**: Undated environment-specific snapshot (Eastgate + Songbird mesh).
+> Preserved for historical context. Current testing: see [START_HERE.md](../../START_HERE.md).
+
 # **QUICK TEST COMMANDS - CONNECTED NESTGATE**
 
 **System**: Eastgate (ext4 filesystem - no native ZFS)  

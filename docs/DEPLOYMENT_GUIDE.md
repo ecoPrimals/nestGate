@@ -2,6 +2,10 @@
 
 > **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: May 2026 (Session 58)
 >
+> **Post-primordial (Wave 49+)**: All NUCLEUS primal binaries come from `plasmidBin`.
+> Do not deploy from `target/release/` or `cargo install` in production. See
+> `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md` for the canonical deployment pattern.
+>
 > **Note**: References to `deploy/` directory paths below are aspirational — that directory has not been created yet. NestGate currently deploys as a single static binary (`nestgate daemon`). See README.md for current quick start.
 
 This guide provides comprehensive instructions for deploying NestGate 4.7.0-dev in production environments.

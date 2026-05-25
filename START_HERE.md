@@ -23,7 +23,11 @@ See [STATUS.md](./STATUS.md) for full measured metrics.
 
 ## Quick Start
 
-### 1. Build
+### Production Deployment
+
+Post-primordial, all NUCLEUS binaries come from `plasmidBin`. See `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md`.
+
+### 1. Build (Local Development)
 
 ```bash
 cargo build --release --workspace

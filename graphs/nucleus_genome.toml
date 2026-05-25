@@ -1,4 +1,4 @@
-# NUCLEUS Deployment (All 5 Primals via genomeBin)
+# NUCLEUS Deployment (All 5 Primals via plasmidBin)
 # BearDog + Songbird + Squirrel + Toadstool + NestGate
 # Use: biomeos deploy --graph graphs/nucleus_genome.toml --target any
 
