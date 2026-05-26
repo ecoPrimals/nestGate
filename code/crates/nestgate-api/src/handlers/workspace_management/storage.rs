@@ -353,6 +353,31 @@ mod tests {
     use super::*;
     use axum::extract::Path;
 
+    #[test]
+    fn valid_workspace_ids() {
+        assert!(is_valid_workspace_id("my-workspace"));
+        assert!(is_valid_workspace_id("work_space_123"));
+        assert!(is_valid_workspace_id("abc.def"));
+        assert!(is_valid_workspace_id("a"));
+    }
+
+    #[test]
+    fn invalid_workspace_ids() {
+        assert!(!is_valid_workspace_id(""));
+        assert!(!is_valid_workspace_id("../traversal"));
+        assert!(!is_valid_workspace_id("has spaces"));
+        assert!(!is_valid_workspace_id("has/slash"));
+        assert!(!is_valid_workspace_id("a..b"));
+        let long = "a".repeat(256);
+        assert!(!is_valid_workspace_id(&long));
+    }
+
+    #[test]
+    fn max_length_workspace_id() {
+        let exact = "a".repeat(255);
+        assert!(is_valid_workspace_id(&exact));
+    }
+
     #[tokio::test]
     async fn delete_workspace_rejects_invalid_id() {
         let err = delete_workspace(Path("../bad".into()))

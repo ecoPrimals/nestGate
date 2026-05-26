@@ -81,3 +81,79 @@ impl LocalTokenConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::MapEnv;
+
+    fn empty_env() -> MapEnv {
+        MapEnv::new()
+    }
+
+    fn env_with(pairs: &[(&str, &str)]) -> MapEnv {
+        let map = pairs.iter().map(|(k, v)| ((*k).to_string(), (*v).to_string())).collect();
+        MapEnv(map)
+    }
+
+    #[test]
+    fn auth_config_defaults_to_local_when_no_env() {
+        let cfg = AuthenticationConfig::default_from_env_source(&empty_env());
+        assert!(!cfg.use_external_auth);
+        assert!(cfg.external_auth_endpoint.is_none());
+        assert_eq!(cfg.max_auth_attempts, 3);
+        assert_eq!(cfg.auth_timeout, Duration::from_secs(30));
+    }
+
+    #[test]
+    fn auth_config_uses_capability_endpoint_first() {
+        let env = env_with(&[
+            ("AUTH_CAPABILITY_ENDPOINT", "http://cap:7777"),
+            ("NESTGATE_SECURITY_AUTH_ENDPOINT", "http://sec:8888"),
+            ("AUTH_PROVIDER_ENDPOINT", "http://legacy:9999"),
+        ]);
+        let cfg = AuthenticationConfig::default_from_env_source(&env);
+        assert!(cfg.use_external_auth);
+        assert_eq!(cfg.external_auth_endpoint.as_deref(), Some("http://cap:7777"));
+    }
+
+    #[test]
+    fn auth_config_falls_back_to_security_endpoint() {
+        let env = env_with(&[("NESTGATE_SECURITY_AUTH_ENDPOINT", "http://sec:8888")]);
+        let cfg = AuthenticationConfig::default_from_env_source(&env);
+        assert!(cfg.use_external_auth);
+        assert_eq!(cfg.external_auth_endpoint.as_deref(), Some("http://sec:8888"));
+    }
+
+    #[test]
+    fn auth_config_falls_back_to_legacy_endpoint() {
+        let env = env_with(&[("AUTH_PROVIDER_ENDPOINT", "http://legacy:9999")]);
+        let cfg = AuthenticationConfig::default_from_env_source(&env);
+        assert!(cfg.use_external_auth);
+        assert_eq!(cfg.external_auth_endpoint.as_deref(), Some("http://legacy:9999"));
+    }
+
+    #[test]
+    fn local_token_config_uses_default_key() {
+        let cfg = LocalTokenConfig::default_from_env_source(&empty_env());
+        assert_eq!(cfg.signing_key, "default-local-key");
+        assert_eq!(cfg.token_expiry, Duration::from_secs(3600));
+        assert!(cfg.enable_refresh);
+    }
+
+    #[test]
+    fn local_token_config_reads_custom_key() {
+        let env = env_with(&[("NESTGATE_TOKEN_KEY", "my-secret-key")]);
+        let cfg = LocalTokenConfig::default_from_env_source(&env);
+        assert_eq!(cfg.signing_key, "my-secret-key");
+    }
+
+    #[test]
+    fn auth_config_serializes_roundtrip() {
+        let cfg = AuthenticationConfig::default_from_env_source(&empty_env());
+        let json = serde_json::to_string(&cfg).unwrap();
+        let cfg2: AuthenticationConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(cfg.use_external_auth, cfg2.use_external_auth);
+        assert_eq!(cfg.max_auth_attempts, cfg2.max_auth_attempts);
+    }
+}

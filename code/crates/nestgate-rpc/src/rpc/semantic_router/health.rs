@@ -156,4 +156,13 @@ mod tests {
 
         server_handle.abort();
     }
+
+    #[test]
+    fn lifecycle_status_returns_running() {
+        let r = router();
+        let val = lifecycle_status(&r, json!({})).expect("lifecycle_status");
+        assert_eq!(val["status"], "running");
+        assert_eq!(val["primal"], "nestgate");
+        assert!(val.get("version").is_some());
+    }
 }

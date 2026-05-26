@@ -59,3 +59,56 @@ impl AuthTokenManager {
         Ok(format!("ws_{}_{}", workspace_id, uuid::Uuid::new_v4()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn manager() -> AuthTokenManager {
+        AuthTokenManager::new("test-signing-key".to_string())
+    }
+
+    #[test]
+    fn create_token_populates_user_and_permissions() {
+        let mgr = manager();
+        let token = mgr.create_token("alice", vec!["read".into(), "write".into()], Duration::from_secs(3600));
+        assert_eq!(token.user_id, "alice");
+        assert_eq!(token.permissions, vec!["read", "write"]);
+        assert!(token.token.starts_with("token_alice_"));
+    }
+
+    #[test]
+    fn create_token_generates_unique_ids() {
+        let mgr = manager();
+        let t1 = mgr.create_token("bob", vec![], Duration::from_secs(60));
+        let t2 = mgr.create_token("bob", vec![], Duration::from_secs(60));
+        assert_ne!(t1.token, t2.token);
+    }
+
+    #[test]
+    fn validate_token_rejects_empty() {
+        let mgr = manager();
+        assert!(!mgr.validate_token_signature(""));
+    }
+
+    #[test]
+    fn validate_token_accepts_nonempty() {
+        let mgr = manager();
+        assert!(mgr.validate_token_signature("some-token-string"));
+    }
+
+    #[test]
+    fn workspace_secret_contains_workspace_id() {
+        let mgr = manager();
+        let secret = mgr.create_workspace_secret("ws1").unwrap();
+        assert!(secret.starts_with("ws_ws1_"));
+    }
+
+    #[test]
+    fn workspace_secrets_are_unique() {
+        let mgr = manager();
+        let s1 = mgr.create_workspace_secret("ws1").unwrap();
+        let s2 = mgr.create_workspace_secret("ws1").unwrap();
+        assert_ne!(s1, s2);
+    }
+}

@@ -82,3 +82,74 @@ impl RetryExecutor {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs_types::UniversalZfsError as Err;
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    fn fast_retry_policy(max_attempts: u32) -> RetryPolicy {
+        RetryPolicy {
+            max_attempts,
+            initial_delay: Duration::from_millis(1),
+            max_delay: Duration::from_millis(10),
+            backoff_multiplier: 2.0,
+        }
+    }
+
+    #[tokio::test]
+    async fn succeeds_on_first_try() {
+        let executor = RetryExecutor::new(fast_retry_policy(3));
+        let result: UniversalZfsResult<&str> = executor.execute(|| async { Ok("ok") }).await;
+        assert_eq!(result.unwrap(), "ok");
+    }
+
+    #[tokio::test]
+    async fn retries_until_success() {
+        let executor = RetryExecutor::new(fast_retry_policy(3));
+        let counter = AtomicU32::new(0);
+        let result: UniversalZfsResult<&str> = executor
+            .execute(|| {
+                let attempt = counter.fetch_add(1, Ordering::SeqCst);
+                async move {
+                    if attempt < 2 {
+                        Result::Err(Err::internal("temporary"))
+                    } else {
+                        Ok("recovered")
+                    }
+                }
+            })
+            .await;
+        assert_eq!(result.unwrap(), "recovered");
+        assert_eq!(counter.load(Ordering::SeqCst), 3);
+    }
+
+    #[tokio::test]
+    async fn fails_after_max_attempts() {
+        let executor = RetryExecutor::new(fast_retry_policy(2));
+        let counter = AtomicU32::new(0);
+        let result: UniversalZfsResult<()> = executor
+            .execute(|| {
+                counter.fetch_add(1, Ordering::SeqCst);
+                async { Result::Err(Err::internal("permanent")) }
+            })
+            .await;
+        assert!(result.is_err());
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
+
+    #[tokio::test]
+    async fn single_attempt_does_not_retry() {
+        let executor = RetryExecutor::new(fast_retry_policy(1));
+        let counter = AtomicU32::new(0);
+        let result: UniversalZfsResult<()> = executor
+            .execute(|| {
+                counter.fetch_add(1, Ordering::SeqCst);
+                async { Result::Err(Err::internal("once")) }
+            })
+            .await;
+        assert!(result.is_err());
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+}

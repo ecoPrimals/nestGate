@@ -106,6 +106,79 @@ fn resolve_capability_from_env_source(
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::MapEnv;
+
+    fn env_with(pairs: &[(&str, &str)]) -> MapEnv {
+        let map = pairs.iter().map(|(k, v)| ((*k).to_string(), (*v).to_string())).collect();
+        MapEnv(map)
+    }
+
+    #[test]
+    fn resolves_https_url_with_explicit_port() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "https://storage.local:8443")]);
+        let svc = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap();
+        assert_eq!(svc.host, "storage.local");
+        assert_eq!(svc.port, 8443);
+        assert_eq!(&*svc.protocol, "https");
+        assert!(svc.capabilities.contains(&UnifiedCapability::Storage));
+    }
+
+    #[test]
+    fn resolves_https_url_with_default_port() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "https://storage.local")]);
+        let svc = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap();
+        assert_eq!(svc.port, 443);
+    }
+
+    #[test]
+    fn resolves_http_url_with_default_port() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "http://storage.local")]);
+        let svc = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap();
+        assert_eq!(svc.port, 80);
+    }
+
+    #[test]
+    fn resolves_grpc_url_with_default_port() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "grpc://storage.local")]);
+        let svc = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap();
+        assert_eq!(svc.port, 9090);
+        assert_eq!(&*svc.protocol, "grpc");
+    }
+
+    #[test]
+    fn resolves_host_colon_port_fallback() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "192.168.1.1:3000")]);
+        let svc = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap();
+        assert_eq!(svc.host, "192.168.1.1");
+        assert_eq!(svc.port, 3000);
+        assert_eq!(&*svc.protocol, "http");
+    }
+
+    #[test]
+    fn errors_on_missing_env_var() {
+        let env = MapEnv::new();
+        let err = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap_err();
+        assert!(err.to_string().contains("not configured"));
+    }
+
+    #[test]
+    fn errors_on_invalid_format() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "not-a-url")]);
+        let err = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap_err();
+        assert!(err.to_string().contains("Invalid"));
+    }
+
+    #[test]
+    fn errors_on_invalid_port_in_host_colon_port() {
+        let env = env_with(&[("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "host:abc")]);
+        let err = resolve_capability_from_env_source(&env, UnifiedCapability::Storage).unwrap_err();
+        assert!(err.to_string().contains("port"));
+    }
+}
+
 impl CapabilityResolver for EnvironmentResolver {
     fn resolve_capability(
         &self,

@@ -76,3 +76,26 @@ pub(super) fn crypto_verify_hash(
     tracing::debug!("crypto.verify_hash: delegating to security capability provider");
     Err(crypto_delegation_error("verify_hash"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn delegation_error_includes_operation_name() {
+        let ops = ["encrypt", "decrypt", "generate_key", "generate_nonce", "hash", "verify_hash"];
+        for op in &ops {
+            let err = crypto_delegation_error(op);
+            let msg = err.to_string();
+            assert!(msg.contains(&format!("crypto.{op}")), "missing operation in: {msg}");
+            assert!(msg.contains("discovery.query"), "missing discovery hint in: {msg}");
+            assert!(msg.contains("security"), "missing capability name in: {msg}");
+        }
+    }
+
+    #[test]
+    fn delegation_error_is_not_implemented() {
+        let err = crypto_delegation_error("encrypt");
+        assert!(matches!(err, NestGateError::NotImplemented(_)));
+    }
+}
