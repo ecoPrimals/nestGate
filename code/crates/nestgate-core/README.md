@@ -71,7 +71,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nestgate-core = "0.1.0"
+nestgate-core = "0.5.0"
 ```
 
 ## Documentation

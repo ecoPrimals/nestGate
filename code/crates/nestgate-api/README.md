@@ -313,7 +313,7 @@ GET /health
 {
     "status": "ok",
     "service": "nestgate-api",
-    "version": "0.1.0",
+    "version": "0.5.0",
     "communication_layers": {
         "websocket": true,
         "sse": true,

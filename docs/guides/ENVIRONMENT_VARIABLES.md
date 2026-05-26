@@ -294,8 +294,7 @@ export NESTGATE_STORAGE_PATH=$GITHUB_WORKSPACE/data
 
 - [Socket-Only Mode](../integration/biomeos/SOCKET_ONLY_MODE_JAN_30_2026.md)
 - [Socket Standardization](../integration/biomeos/SOCKET_STANDARDIZATION_JAN_30_2026.md)
-- [Configuration Guide](../config/README.md)
-- [Deployment Guide](../deployment/README.md)
+- [Deployment Guide](../DEPLOYMENT_GUIDE.md)
 
 ---
 

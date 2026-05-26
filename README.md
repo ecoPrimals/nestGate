@@ -2,17 +2,17 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-05-25, Session 74)**  
+**Verification (as of 2026-05-26, Session 78)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 682 RPC lib tests, 12,399+ full workspace — 0 failures  
+- **Tests**: 682 RPC lib tests, 12,467+ full workspace — 0 failures  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 682 RPC / 12,399+ full workspace, 0 failures
-- **Coverage**: 84.12%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
+- **Tests (last recorded)**: 682 RPC / 12,467+ full workspace, 0 failures
+- **Coverage**: 83.61% line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
@@ -157,15 +157,15 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-25 (Session 74).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-26 (Session 78).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 682 RPC lib tests, 12,399+ full workspace — 0 failures |
-| Coverage | 84.12%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| Tests | 682 RPC lib tests, 12,467+ full workspace — 0 failures |
+| Coverage | 83.61% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
 | unwrap/expect | Zero in production library code; tests may use |
@@ -312,4 +312,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 74)
+**Latest**: May 2026 (Session 78)

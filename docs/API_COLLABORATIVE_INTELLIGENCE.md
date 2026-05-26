@@ -568,9 +568,7 @@ println!("Audit ID: {}", response["result"]["audit_id"]);
 
 ## **Further Reading**
 
-- **[COLLABORATIVE_INTELLIGENCE_TRACKER.md](../COLLABORATIVE_INTELLIGENCE_TRACKER.md)** - Implementation progress
-- **[specs/COLLABORATIVE_INTELLIGENCE_IMPLEMENTATION.md](../specs/COLLABORATIVE_INTELLIGENCE_IMPLEMENTATION.md)** - Technical specification
-- **[QUICK_START_BIOMEOS.md](../QUICK_START_BIOMEOS.md)** - biomeOS integration guide
+- **[biomeOS Quick Start](integration/biomeos/QUICK_START_BIOMEOS.md)** — biomeOS integration guide (fossil record)
 
 ---
 
