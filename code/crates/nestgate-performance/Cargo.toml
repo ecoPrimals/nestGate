@@ -1,6 +1,6 @@
 [package]
 name = "nestgate-performance"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 authors = ["ecoPrimals Collective"]
 description = "Advanced performance optimization modules for NestGate - SIMD, zero-copy networking, lock-free structures, and adaptive optimization"

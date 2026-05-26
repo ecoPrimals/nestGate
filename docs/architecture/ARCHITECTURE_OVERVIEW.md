@@ -1,6 +1,6 @@
 > **Fossil Record**: Written November 8, 2025 (v0.11.0). Preserved for historical context.
 > Current architecture: see [CONTEXT.md](../../CONTEXT.md) and [STATUS.md](../../STATUS.md).
-> Current version: 4.7.0-dev (22 workspace packages, pure Rust, ureq + rustls-rustcrypto TLS).
+> Current version: 0.5.0 (22 workspace packages, pure Rust, ureq + rustls-rustcrypto TLS).
 
 # NestGate Architecture Overview
 

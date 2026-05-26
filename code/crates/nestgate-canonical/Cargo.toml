@@ -1,6 +1,6 @@
 [package]
 name = "nestgate-canonical"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 authors = ["ecoPrimals Collective"]
 description = "Canonical modernization patterns and unified interfaces for NestGate"

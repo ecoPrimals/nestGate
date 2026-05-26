@@ -1,6 +1,6 @@
 # NestGate Quick Start
 
-**Version**: 4.7.0-dev  
+**Version**: 0.5.0  
 **Last Updated**: May 25, 2026 (Session 74)
 
 ---

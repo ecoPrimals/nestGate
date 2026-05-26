@@ -1,6 +1,6 @@
 # NestGate Production Deployment Guide
 
-> **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: May 2026 (Session 58)
+> **Status**: Production Ready | **Version**: 0.5.0 | **Date**: May 2026
 >
 > **Post-primordial (Wave 49+)**: All NUCLEUS primal binaries come from `plasmidBin`.
 > Do not deploy from `target/release/` or `cargo install` in production. See
@@ -8,7 +8,7 @@
 >
 > **Note**: References to `deploy/` directory paths below are aspirational — that directory has not been created yet. NestGate currently deploys as a single static binary (`nestgate daemon`). See README.md for current quick start.
 
-This guide provides comprehensive instructions for deploying NestGate 4.7.0-dev in production environments.
+This guide provides comprehensive instructions for deploying NestGate in production environments.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ This guide provides comprehensive instructions for deploying NestGate 4.7.0-dev 
 
 ## Overview
 
-NestGate 4.7.0-dev features a completely modernized architecture designed for production deployment:
+NestGate features a completely modernized architecture designed for production deployment:
 
 ### Deployment Features
 
@@ -189,7 +189,7 @@ docker-compose -f deploy/production.yml down
 
 ```bash
 # Build image
-docker build -t nestgate:4.7.0-dev .
+docker build -t nestgate:0.5.0 .
 
 # Run container
 docker run -d \
@@ -554,4 +554,4 @@ curl -s http://localhost:8080/health/ecosystem
 
 ---
 
-**NestGate 4.7.0-dev - Production Ready** | **Built by the ecoPrimals team** 
+**NestGate 0.5.0 - Production Ready** | **Built by the ecoPrimals team** 

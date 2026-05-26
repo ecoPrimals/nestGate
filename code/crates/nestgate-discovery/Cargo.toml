@@ -1,6 +1,6 @@
 [package]
 name = "nestgate-discovery"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "AGPL-3.0-or-later"
 description = "Primal discovery, capability resolution, and service registry for NestGate"

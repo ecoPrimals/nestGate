@@ -1,6 +1,6 @@
 [package]
 name = "nestgate-security"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "AGPL-3.0-or-later"
 description = "Security delegation, certificate parsing, and zero-cost providers for NestGate — crypto operations delegated via IPC"

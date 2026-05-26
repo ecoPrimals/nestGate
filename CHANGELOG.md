@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 4.7.0-dev
+## [0.5.0] - 2026-05-26
+
+### Session 77: Version unification — Wave 53 (May 26, 2026)
+
+- **Version unified to 0.5.0**: All 21 workspace crates now inherit version from
+  `[workspace.package]`. Eliminates the three-way mismatch (`4.7.0-dev` internal /
+  `0.1.0` workspace / `2.1.0` binary). `nestgate --version` now prints `nestgate 0.5.0`.
+- **All `4.7.0-dev` references purged** from active documentation (README, STATUS,
+  QUICK_START, QUICK_REFERENCE, DOCUMENTATION_INDEX, CONTEXT, DEPLOYMENT_GUIDE,
+  OPERATIONS_RUNBOOK, ARCHITECTURE_OVERVIEW). Historical CHANGELOG entries preserved.
+- **plasmidBin alignment**: manifest updated from `0.1.0` to `0.5.0`.
 
 ### Session 76: aarch64-musl segfault fix — validated (May 25, 2026)
 
@@ -186,7 +196,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`btsp-v1`), cipher (`chacha20-poly1305`), KDF, handshake, and whether BTSP is required.
   Wired across all four transport paths and registered in `capability_registry.toml`.
 - **Version scheme documented**: README now explicitly documents the dual versioning scheme
-  (internal iteration `4.7.0-dev` vs workspace semver `0.1.0` vs binary `2.1.0`).
+  (unified to `0.5.0` in Session 77; was `4.7.0-dev` internal / `0.1.0` workspace / `2.1.0` binary).
 - **Vendored crate rationale**: README documents why `rustls-rustcrypto` and `rustls-webpki`
   are vendored (pure-Rust crypto, `ring` elimination, RUSTSEC mitigation).
 - **Method count**: 57 methods on SemanticRouter, 66 on UDS, 63 registered in
@@ -1887,7 +1897,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - **`Arc<str>`** for discovery and RPC identifier strings (fewer allocations, clearer ownership)
 - **`Cow<'static, str>`** for JSON-RPC wire types where appropriate
-- Root documentation (README, DOCUMENTATION_INDEX, QUICK_REFERENCE, QUICK_START, STATUS) aligned to 4.7.0-dev and current workspace layout (`code/crates/`, 25 workspace members)
+- Root documentation (README, DOCUMENTATION_INDEX, QUICK_REFERENCE, QUICK_START, STATUS) aligned to current workspace layout (`code/crates/`, 25 workspace members)
 
 ### Session 5: Phase 2 Modernization — Compilation Surface & Idiomatic Evolution (March 28, 2026)
 
@@ -2493,4 +2503,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 ---
 
 **Last Updated**: April 30, 2026  
-**Current Version**: 4.7.0-dev
+**Current Version**: 0.5.0

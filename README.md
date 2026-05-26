@@ -1,12 +1,6 @@
 # NestGate - Sovereign Storage & Permanence Primal
 
-**Version**: 4.7.0-dev (internal iteration; workspace Cargo.toml `0.1.0`, binary `2.1.0`)  
-
-> **Versioning scheme**: `4.7.0-dev` is the internal iteration version tracking
-> 63+ development sessions. The workspace `Cargo.toml` uses `0.1.0` (pre-1.0 API
-> surface). The `nestgate-bin` crate uses `2.1.0` for the CLI binary. plasmidBin
-> `manifest.toml` tracks `0.1.0` (workspace root). These will unify on the first
-> tagged public release.  
+**Version**: 0.5.0  
 
 **Verification (as of 2026-05-25, Session 74)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  

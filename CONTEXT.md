@@ -19,7 +19,7 @@ than by importing this crate graph.
 
 | Field | Value |
 |-------|--------|
-| **Version** | 4.7.0-dev (internal iteration; workspace `0.1.0`, binary `2.1.0`) |
+| **Version** | 0.5.0 |
 | **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
 | **Architecture** | 22 workspace packages: 20 `code/crates/*` + fuzz + root |

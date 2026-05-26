@@ -1,6 +1,6 @@
 [package]
 name = "nestgate-core"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 authors = ["ecoPrimals Collective"]
 description = "Core functionality and canonical patterns for the NestGate storage management system"

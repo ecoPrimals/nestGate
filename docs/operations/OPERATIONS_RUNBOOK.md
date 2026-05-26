@@ -3,7 +3,7 @@
 
 # NestGate Operations Runbook
 
-**Version**: 4.7.0-dev  
+**Version**: 0.5.0  
 **Grade**: A- (92/100)  
 **Status**: **PRODUCTION-READY**  
 **Last Updated**: March 29, 2026
@@ -608,5 +608,5 @@ find /var/crash -name "nestgate.*" -mtime -7
 
 ---
 
-*NestGate 4.7.0-dev - Production-Ready A- (92/100)*
+*NestGate 0.5.0 - Production-Ready A- (92/100)*
 

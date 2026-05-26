@@ -1,7 +1,7 @@
 # NestGate - Current Status
 
 **Last Updated**: May 25, 2026 (Session 74: Wave 49 ecosystem tightening)  
-**Version**: 4.7.0-dev (internal iteration; workspace `0.1.0`, binary `2.1.0`)
+**Version**: 0.5.0
 
 ---
 
@@ -281,7 +281,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 - **Clippy**: Cleanup pass — unnecessary `unsafe`, `Send` issues, trivial regex, bulk auto-fixes; warnings 8,227 → 4,642
 - **Types**: `Arc<str>` adoption for discovery/RPC identifiers; `Cow<'static, str>` for JSON-RPC wire types
 - **New crate**: `nestgate-env-process-shim` — safe env mutation for parallel tests (Rust 2024 `set_var` rules)
-- **Root docs**: README, DOCUMENTATION_INDEX, QUICK_REFERENCE, QUICK_START, STATUS, CHANGELOG aligned to 4.7.0-dev and paths under `code/crates/`, `docs/`, `config/`
+- **Root docs**: README, DOCUMENTATION_INDEX, QUICK_REFERENCE, QUICK_START, STATUS, CHANGELOG aligned to current layout under `code/crates/`, `docs/`, `config/`
 
 ---
 

@@ -1,6 +1,6 @@
 [package]
 name = "nestgate-rpc"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "AGPL-3.0-or-later"
 description = "JSON-RPC + tarpc IPC layer for primal-to-primal communication"
