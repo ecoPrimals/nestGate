@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-05-26
 
-### Session 77: Version unification — Wave 53 (May 26, 2026)
+### Session 77: Version unification + coverage push — Wave 53 (May 26, 2026)
 
 - **Version unified to 0.5.0**: All 21 workspace crates now inherit version from
   `[workspace.package]`. Eliminates the three-way mismatch (`4.7.0-dev` internal /
@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   QUICK_START, QUICK_REFERENCE, DOCUMENTATION_INDEX, CONTEXT, DEPLOYMENT_GUIDE,
   OPERATIONS_RUNBOOK, ARCHITECTURE_OVERVIEW). Historical CHANGELOG entries preserved.
 - **plasmidBin alignment**: manifest updated from `0.1.0` to `0.5.0`.
+- **Coverage push**: 83.02% → 83.24% line coverage. 35 new tests across 9 files:
+  auth token manager, auth config env priority, sovereignty config, capability resolver
+  URL parsing, semantic router capabilities/crypto/lifecycle, workspace ID validation,
+  retry executor. 12,434 total tests, 0 failures. 90% target is multi-session.
 
 ### Session 76: aarch64-musl segfault fix — validated (May 25, 2026)
 

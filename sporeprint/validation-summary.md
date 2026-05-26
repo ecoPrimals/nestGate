@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,399+ tests** passing (682 RPC, 11,720+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **12,434+ tests** passing (682 RPC, 11,750+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **v0.5.0**: Unified version across all 21 workspace crates (was `4.7.0-dev` internal / `0.1.0` workspace / `2.1.0` binary)
 - **22 workspace packages** (nestgate-rpc, nestgate-api, nestgate-core, nestgate-config, nestgate-types, nestgate-storage, nestgate-security, nestgate-zfs, nestgate-cache, nestgate-discovery, nestgate-bin, and 11 more)
 - **16 capability domains** registered in `capability_registry.toml` — storage, content, model, templates, session, audit, nat, beacon, bonding, zfs, health, identity, discovery, lifecycle, auth, btsp
 - **4 transport surfaces** with full parity: SemanticRouter, isomorphic IPC (UDS), primary UDS dispatch, HTTP JSON-RPC
