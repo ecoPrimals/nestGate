@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-05-26
 
+### Session 78: Deep debt sweep — hardcoding, stubs, idioms, coverage (May 26, 2026)
+
+- **Hardcoded ecosystem paths evolved**: `discover_biomeos_socket` now derives
+  socket names from `ecosystem_name(env)` instead of hardcoding `"biomeos.sock"`.
+  Ecosystem directory segment already used `ECOSYSTEM_NAME` env since Session 73;
+  this closes the socket filename gap.
+- **Production stub removed**: `adaptive_backend::execute_internal` no longer
+  returns simulated ZFS output — returns honest "ZFS unavailable" error so callers
+  degrade gracefully instead of consuming fake data.
+- **`impl Into<String>` modernization**: API error constructors (`ApiResponse`,
+  `Diagnostic`, `CircuitBreaker`, `create_zfs_error`, `NestGateBinError`) now accept
+  `impl Into<String>` — eliminates `.to_string()` allocation at call sites.
+- **`String::from()` migration**: ~50 `"literal".to_string()` patterns replaced
+  across security metadata, response utils, storage discovery, config modules.
+- **Allocation-free lookups**: `supports_auth_method/encryption/signing` use
+  iterator comparison instead of `Vec::contains(&String)`.
+- **33 new tests** (12,434 → 12,467): `RetryConfig` exponential backoff (8),
+  `CapabilityRouter` local/remote routing (9), ZFS dataset parsing (10),
+  `AutoConfigurator` pipeline (6). Coverage: 83.24% → 83.61%.
+- **Dep audit**: All external dependencies confirmed pure Rust — no C toolchain,
+  no `ring`, no OpenSSL. Ecosystem sovereignty standard satisfied.
+
 ### Session 77: Version unification + coverage push — Wave 53 (May 26, 2026)
 
 - **Version unified to 0.5.0**: All 21 workspace crates now inherit version from
