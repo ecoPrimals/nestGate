@@ -10,7 +10,6 @@
 //! The announcement is **best-effort**: if biomeOS is unreachable the server
 //! continues normally. Re-announcement happens on reconnect or version change.
 
-use nestgate_config::constants::system::ecosystem_path_segment;
 use nestgate_types::EnvSource;
 use nestgate_types::error::Result;
 use serde_json::{Value, json};
@@ -55,14 +54,20 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
     })
 }
 
-/// Discover biomeOS socket via standard ecosystem locations.
+/// Discover the ecosystem orchestrator socket via standard locations.
+///
+/// Socket names are capability-based, not primal-specific. The ecosystem
+/// directory segment is resolved via `ECOSYSTEM_NAME` / `BIOMEOS_SERVICE_NAME`
+/// env, defaulting to `"biomeos"`.
 ///
 /// Search order:
 /// 1. `BIOMEOS_IPC_SOCKET` (explicit override)
-/// 2. `BIOMEOS_SOCKET_DIR/biomeos.sock`
-/// 3. `$XDG_RUNTIME_DIR/<ecosystem>/biomeos.sock`
-/// 4. `/tmp/biomeos.sock`
+/// 2. `BIOMEOS_SOCKET_DIR/{ecosystem}.sock`
+/// 3. `$XDG_RUNTIME_DIR/{ecosystem}/{ecosystem}.sock` or `neural-api.sock`
+/// 4. `/tmp/{ecosystem}.sock`
 fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
+    let eco = nestgate_config::constants::system::ecosystem_name(env);
+
     if let Some(explicit) = env.get("BIOMEOS_IPC_SOCKET") {
         let p = PathBuf::from(explicit);
         if p.exists() {
@@ -71,15 +76,15 @@ fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
     }
 
     if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
-        let p = PathBuf::from(dir).join("biomeos.sock");
+        let p = PathBuf::from(dir).join(format!("{eco}.sock"));
         if p.exists() {
             return Some(p);
         }
     }
 
     if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
-        let eco = ecosystem_path_segment();
-        for name in &["biomeos.sock", "neural-api.sock"] {
+        let sock_name = format!("{eco}.sock");
+        for name in &[sock_name.as_str(), "neural-api.sock"] {
             let p = PathBuf::from(&xdg).join(&eco).join(name);
             if p.exists() {
                 return Some(p);
@@ -87,7 +92,7 @@ fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
         }
     }
 
-    let tmp = PathBuf::from("/tmp/biomeos.sock");
+    let tmp = PathBuf::from(format!("/tmp/{eco}.sock"));
     if tmp.exists() {
         return Some(tmp);
     }

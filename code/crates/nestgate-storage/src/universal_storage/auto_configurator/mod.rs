@@ -190,3 +190,72 @@ impl AutoConfigurator {
         Ok(ImplementationPlan::default())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_configurator_with_defaults() {
+        let cfg = AutoConfigurator::new(vec![]);
+        assert!(cfg.is_auto_tuning_enabled());
+    }
+
+    #[test]
+    fn with_settings_stores_config() {
+        let settings = ConfiguratorSettings {
+            enable_auto_tuning: false,
+            ..ConfiguratorSettings::default()
+        };
+        let cfg = AutoConfigurator::with_settings(vec![], settings);
+        assert!(!cfg.is_auto_tuning_enabled());
+    }
+
+    #[test]
+    fn update_config_changes_auto_tuning() {
+        let mut cfg = AutoConfigurator::new(vec![]);
+        assert!(cfg.is_auto_tuning_enabled());
+
+        let mut settings = cfg.config().clone();
+        settings.enable_auto_tuning = false;
+        cfg.update_config(settings);
+        assert!(!cfg.is_auto_tuning_enabled());
+    }
+
+    fn empty_requirements() -> StorageRequirements {
+        StorageRequirements {
+            min_throughput_mbps: None,
+            min_capacity_gb: None,
+            min_reliability_score: None,
+            max_monthly_cost_usd: None,
+            required_zfs_features: vec![],
+            redundancy_level: None,
+            cross_tier_redundancy: None,
+            use_case: StorageUseCase::Development,
+        }
+    }
+
+    #[test]
+    fn create_optimal_config_succeeds_with_empty_storage() {
+        let cfg = AutoConfigurator::new(vec![]);
+        let reqs = empty_requirements();
+        let result = cfg.create_optimal_config(&reqs).expect("should produce config");
+        assert!(result.confidence_score > 0.0);
+        assert!(result.confidence_score <= 1.0);
+    }
+
+    #[test]
+    fn optimal_config_has_implementation_plan() {
+        let cfg = AutoConfigurator::new(vec![]);
+        let reqs = empty_requirements();
+        let result = cfg.create_optimal_config(&reqs).expect("config");
+        let _plan = &result.implementation_plan;
+    }
+
+    #[test]
+    fn analyze_storage_landscape_returns_default() {
+        let cfg = AutoConfigurator::new(vec![]);
+        let analysis = cfg.analyze_storage_landscape().expect("analysis");
+        let _landscape = analysis;
+    }
+}

@@ -57,7 +57,7 @@ impl SubstrateTiers {
         }
 
         let base =
-            env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| "/mnt/nestgate".to_string());
+            env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| String::from("/mnt/nestgate"));
         let base = PathBuf::from(base);
 
         let mut warm_mounts = Vec::new();

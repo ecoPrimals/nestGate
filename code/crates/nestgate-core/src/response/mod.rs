@@ -95,7 +95,7 @@ pub mod utils {
         } else {
             ApiResponse::new_error_with_code(
                 format!("Batch operation completed with {} failures", failed.len()),
-                "PARTIAL_SUCCESS".to_string(),
+                "PARTIAL_SUCCESS",
             )
             .with_meta("batch_results", batch_info)
         }
@@ -122,7 +122,7 @@ pub mod utils {
         } else {
             ApiResponse::new_error_with_code(
                 format!("{service} health check failed"),
-                "HEALTH_CHECK_FAILED".to_string(),
+                "HEALTH_CHECK_FAILED",
             )
             .with_meta("health_details", health_data)
         }
@@ -250,15 +250,17 @@ pub mod validation {
     /// Validate API response structure
     pub fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), String> {
         if response.success && response.data.is_none() {
-            return Err("Successful response must have data".to_string());
+            return Err(String::from("Successful response must have data"));
         }
 
         if !response.success && response.error.is_none() {
-            return Err("Failed response must have error message".to_string());
+            return Err(String::from("Failed response must have error message"));
         }
 
         if response.success && response.error.is_some() {
-            return Err("Successful response cannot have error message".to_string());
+            return Err(String::from(
+                "Successful response cannot have error message",
+            ));
         }
         Ok(())
     }
@@ -269,7 +271,7 @@ pub mod validation {
     ) -> std::result::Result<(), String> {
         if response.component.is_empty() {
             // PEDANTIC: Fixed from service_name to component
-            response.component = "unknown".to_string();
+            response.component = String::from("unknown");
         }
         Ok(())
     }
@@ -279,7 +281,7 @@ pub mod validation {
         response: &SuccessResponse,
     ) -> std::result::Result<(), String> {
         if response.message.is_empty() {
-            return Err("Success response must have message".to_string());
+            return Err(String::from("Success response must have message"));
         }
         Ok(())
     }

@@ -156,3 +156,91 @@ impl RetryConfig {
 
 /// Backward compatibility alias for `UnifiedRetryConfig`
 pub type UnifiedRetryConfig = RetryConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_config_values() {
+        let cfg = RetryConfig::default();
+        assert_eq!(cfg.max_attempts, 3);
+        assert_eq!(cfg.base_delay, Duration::from_millis(100));
+        assert_eq!(cfg.max_delay, Duration::from_secs(30));
+        assert!(cfg.jitter_enabled);
+        assert!(cfg.exponential_backoff);
+    }
+
+    #[test]
+    fn attempt_zero_returns_zero_delay() {
+        let cfg = RetryConfig::default();
+        assert_eq!(cfg.delay_for_attempt(0), Duration::from_millis(0));
+    }
+
+    #[test]
+    fn exponential_backoff_increases_delay() {
+        let cfg = RetryConfig {
+            jitter_enabled: false,
+            ..RetryConfig::default()
+        };
+        let d1 = cfg.delay_for_attempt(1);
+        let d2 = cfg.delay_for_attempt(2);
+        let d3 = cfg.delay_for_attempt(3);
+        assert!(d2 > d1, "attempt 2 should be longer than attempt 1");
+        assert!(d3 > d2, "attempt 3 should be longer than attempt 2");
+    }
+
+    #[test]
+    fn delay_capped_at_max() {
+        let cfg = RetryConfig {
+            max_delay: Duration::from_millis(200),
+            jitter_enabled: false,
+            ..RetryConfig::default()
+        };
+        let d = cfg.delay_for_attempt(100);
+        assert!(d <= Duration::from_millis(200));
+    }
+
+    #[test]
+    fn linear_mode_constant_delay() {
+        let cfg = RetryConfig::linear();
+        let d1 = cfg.delay_for_attempt(1);
+        let d2 = cfg.delay_for_attempt(2);
+        let d3 = cfg.delay_for_attempt(3);
+        assert_eq!(d1, d2);
+        assert_eq!(d2, d3);
+    }
+
+    #[test]
+    fn jitter_adds_positive_offset() {
+        let no_jitter = RetryConfig {
+            jitter_enabled: false,
+            ..RetryConfig::default()
+        };
+        let with_jitter = RetryConfig::default();
+        let base = no_jitter.delay_for_attempt(1);
+        let jittered = with_jitter.delay_for_attempt(1);
+        assert!(jittered >= base, "jitter should not reduce delay");
+    }
+
+    #[test]
+    fn preset_constructors_have_distinct_settings() {
+        let fast = RetryConfig::fast();
+        let slow = RetryConfig::slow();
+        let hf = RetryConfig::high_frequency();
+        let crit = RetryConfig::critical_operations();
+
+        assert!(fast.base_delay < slow.base_delay);
+        assert!(hf.max_attempts > fast.max_attempts);
+        assert!(crit.max_attempts > slow.max_attempts);
+    }
+
+    #[test]
+    fn serde_roundtrip() {
+        let cfg = RetryConfig::fast();
+        let json = serde_json::to_string(&cfg).expect("serialize");
+        let decoded: RetryConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(decoded.max_attempts, cfg.max_attempts);
+        assert_eq!(decoded.base_delay, cfg.base_delay);
+    }
+}

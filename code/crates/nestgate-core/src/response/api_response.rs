@@ -67,13 +67,13 @@ impl<T> ApiResponse<T> {
 
     /// Create an error response using standardized builder
     #[must_use]
-    pub fn error(message: String) -> Self {
+    pub fn error(message: impl Into<String>) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
-            error: Some(message),
+            error: Some(message.into()),
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: Some(HashMap::new()),
@@ -83,18 +83,19 @@ impl<T> ApiResponse<T> {
 
     /// Create an error response with error code using standardized builder
     #[must_use]
-    pub fn error_with_code(message: String, code: String) -> Self {
+    pub fn error_with_code(message: impl Into<String>, code: impl Into<String>) -> Self {
+        let code = code.into();
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
-            error: Some(message),
+            error: Some(message.into()),
             error_code: Some(code.clone()),
             timestamp: chrono::Utc::now(),
             metadata: Some({
                 let mut meta = HashMap::new();
-                meta.insert("error_code".to_string(), serde_json::Value::String(code));
+                meta.insert(String::from("error_code"), serde_json::Value::String(code));
                 meta
             }),
             processing_time_ms: 0,
@@ -118,13 +119,13 @@ impl<T> ApiResponse<T> {
 
     /// Create a new error response directly
     #[must_use]
-    pub fn new_error(message: String) -> Self {
+    pub fn new_error(message: impl Into<String>) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
-            error: Some(message),
+            error: Some(message.into()),
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: None,
@@ -134,14 +135,14 @@ impl<T> ApiResponse<T> {
 
     /// Create a new error response with code directly
     #[must_use]
-    pub fn new_error_with_code(message: String, code: String) -> Self {
+    pub fn new_error_with_code(message: impl Into<String>, code: impl Into<String>) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
-            error: Some(message),
-            error_code: Some(code),
+            error: Some(message.into()),
+            error_code: Some(code.into()),
             timestamp: chrono::Utc::now(),
             metadata: None,
             processing_time_ms: 0,

@@ -72,7 +72,7 @@ pub struct CircuitBreaker {
 impl CircuitBreaker {
     /// Create a new circuit breaker
     #[must_use]
-    pub fn new(service_name: String, config: CircuitBreakerConfig) -> Self {
+    pub fn new(service_name: impl Into<String>, config: CircuitBreakerConfig) -> Self {
         Self {
             config,
             state: Arc::new(RwLock::new(CircuitState::Closed)),
@@ -80,7 +80,7 @@ impl CircuitBreaker {
             success_count: Arc::new(RwLock::new(0)),
             last_failure_time: Arc::new(RwLock::new(None)),
             window_start: Arc::new(RwLock::new(Instant::now())),
-            service_name,
+            service_name: service_name.into(),
         }
     }
 

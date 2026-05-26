@@ -33,17 +33,17 @@ fn component_type_display() {
 
 #[test]
 fn diagnostic_builders_resolve_and_age() {
-    let d = Diagnostic::warning(ComponentType::Network, "latency".into());
+    let d = Diagnostic::warning(ComponentType::Network, "latency");
     assert!(d.is_unresolved());
     assert!(!d.is_severe());
-    let mut crit = Diagnostic::critical(ComponentType::System, "down".into());
+    let mut crit = Diagnostic::critical(ComponentType::System, "down");
     assert!(crit.is_severe());
     crit.resolve();
     assert!(!crit.is_unresolved());
     assert!(crit.resolved_at.is_some());
 
-    let info = Diagnostic::info(ComponentType::Application, "ok".into())
-        .with_details("extra".into())
+    let info = Diagnostic::info(ComponentType::Application, "ok")
+        .with_details("extra")
         .with_resource("/cfg");
     assert_eq!(info.details.as_deref(), Some("extra"));
     assert_eq!(info.path.as_deref(), Some("/cfg"));
@@ -74,7 +74,7 @@ fn diagnostics_subscribe_channel_exists() {
 #[tokio::test]
 async fn diagnostics_clear_resolved_removes_resolved_entries() {
     let mgr = DiagnosticsManager::new();
-    let mut d = Diagnostic::info(ComponentType::System, "note".into());
+    let mut d = Diagnostic::info(ComponentType::System, "note");
     d.resolve();
     mgr.add_diagnostic(d).await.unwrap();
     assert_eq!(mgr.clear_resolved().await.unwrap(), 1);
@@ -84,7 +84,7 @@ async fn diagnostics_clear_resolved_removes_resolved_entries() {
 #[tokio::test]
 async fn diagnostics_unresolved_info_only_stays_healthy() {
     let mgr = DiagnosticsManager::new();
-    mgr.add_diagnostic(Diagnostic::info(ComponentType::Application, "i".into()))
+    mgr.add_diagnostic(Diagnostic::info(ComponentType::Application, "i"))
         .await
         .unwrap();
     assert_eq!(
@@ -96,7 +96,7 @@ async fn diagnostics_unresolved_info_only_stays_healthy() {
 #[tokio::test]
 async fn diagnostics_manager_unresolved_severity_order() {
     let mgr = DiagnosticsManager::new();
-    mgr.add_diagnostic(Diagnostic::warning(ComponentType::Storage, "w".into()))
+    mgr.add_diagnostic(Diagnostic::warning(ComponentType::Storage, "w"))
         .await
         .unwrap();
     assert_eq!(
@@ -105,7 +105,7 @@ async fn diagnostics_manager_unresolved_severity_order() {
     );
 
     let mgr = DiagnosticsManager::new();
-    mgr.add_diagnostic(Diagnostic::error(ComponentType::Cache, "e".into()))
+    mgr.add_diagnostic(Diagnostic::error(ComponentType::Cache, "e"))
         .await
         .unwrap();
     assert_eq!(
@@ -114,7 +114,7 @@ async fn diagnostics_manager_unresolved_severity_order() {
     );
 
     let mgr = DiagnosticsManager::new();
-    mgr.add_diagnostic(Diagnostic::critical(ComponentType::Memory, "c".into()))
+    mgr.add_diagnostic(Diagnostic::critical(ComponentType::Memory, "c"))
         .await
         .unwrap();
     assert_eq!(

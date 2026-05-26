@@ -281,32 +281,21 @@ impl GracefulZfsOperations {
         (result.0, result.1, false)
     }
 
-    /// Execute using `NestGate`'s internal ZFS implementation
+    /// Fallback when system ZFS tools are unavailable.
+    ///
+    /// Returns a structured failure indicating ZFS is not available rather than
+    /// simulating output, so callers can degrade gracefully.
     fn execute_internal(command: &str, args: &[&str]) -> (bool, String) {
-        // This would call into NestGate's internal ZFS implementation
-        // For now, return a placeholder that indicates we're using internal impl
-        debug!("Internal ZFS implementation: {} {:?}", command, args);
-
-        // Return simulated success for basic commands
-        match command {
-            "zfs" if args.first() == Some(&"version") => {
-                (true, "NestGate Internal ZFS v1.0.0\n".to_string())
-            }
-            "zpool" if args.first() == Some(&"version") => {
-                (true, "NestGate Internal ZPool v1.0.0\n".to_string())
-            }
-            "zpool" if args.first() == Some(&"list") => {
-                // Return empty pool list (internal implementation would provide real data)
-                (true, "no pools available\n".to_string())
-            }
-            _ => {
-                // Internal implementation would handle all commands
-                (
-                    true,
-                    format!("Internal ZFS: {command} {args:?} (not yet implemented)\n"),
-                )
-            }
-        }
+        warn!(
+            "ZFS tools unavailable — cannot execute {command} {args:?}; \
+             install zfs-utils or deploy on a ZFS-capable host"
+        );
+        (
+            false,
+            format!(
+                "ZFS unavailable: {command} requires system ZFS tools (zfs/zpool userland)\n"
+            ),
+        )
     }
 }
 
@@ -344,12 +333,16 @@ mod tests {
     #[tokio::test]
     async fn test_graceful_execution() {
         let capabilities = AdaptiveZfsBackend::detect().await;
-        let (success, output, _used_system) =
+        let (_success, output, used_system) =
             GracefulZfsOperations::execute_with_fallback("zfs", &["version"], &capabilities).await;
 
-        // Should always succeed (either system or internal)
-        assert!(success);
         assert!(!output.is_empty());
+        if !used_system {
+            assert!(
+                output.contains("ZFS unavailable"),
+                "internal fallback should report unavailability"
+            );
+        }
     }
 
     #[test]

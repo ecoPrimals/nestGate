@@ -231,3 +231,108 @@ impl Default for CapabilityRouter {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn router() -> CapabilityRouter {
+        CapabilityRouter::new()
+    }
+
+    fn storage_request(op: &str) -> CapabilityRequest {
+        CapabilityRequest {
+            request_id: uuid::Uuid::new_v4(),
+            category: CapabilityCategory::Storage,
+            operation: String::from(op),
+            parameters: HashMap::new(),
+            timeout_seconds: 30,
+            required: true,
+        }
+    }
+
+    #[test]
+    fn default_router_has_no_service_registry() {
+        let r = router();
+        assert!(r.service_registry.is_none());
+    }
+
+    #[test]
+    fn handle_storage_create_dataset() {
+        let r = router();
+        let req = storage_request("create_dataset");
+        let resp = r.handle_storage_capability(req).expect("create_dataset");
+        assert!(resp.success);
+        assert!(resp.data["dataset_id"].is_string());
+        assert_eq!(resp.data["status"], "created");
+    }
+
+    #[test]
+    fn handle_storage_list_datasets() {
+        let r = router();
+        let req = storage_request("list_datasets");
+        let resp = r.handle_storage_capability(req).expect("list_datasets");
+        assert!(resp.success);
+        assert!(resp.data["datasets"].is_array());
+    }
+
+    #[test]
+    fn handle_storage_unknown_op_returns_error() {
+        let r = router();
+        let req = storage_request("destroy_everything");
+        let err = r.handle_storage_capability(req).unwrap_err();
+        assert!(err.to_string().contains("destroy_everything"));
+    }
+
+    #[test]
+    fn handle_locally_routes_storage_correctly() {
+        let r = router();
+        let req = storage_request("list_datasets");
+        let resp = r.handle_locally(req).expect("handle_locally");
+        assert!(resp.success);
+    }
+
+    fn security_request(op: &str) -> CapabilityRequest {
+        CapabilityRequest {
+            request_id: uuid::Uuid::new_v4(),
+            category: CapabilityCategory::Security,
+            operation: String::from(op),
+            parameters: HashMap::new(),
+            timeout_seconds: 30,
+            required: true,
+        }
+    }
+
+    #[test]
+    fn handle_locally_rejects_non_storage_category() {
+        let r = router();
+        let req = security_request("encrypt");
+        let err = r.handle_locally(req).unwrap_err();
+        assert!(err.to_string().contains("Security"));
+    }
+
+    #[tokio::test]
+    async fn route_storage_locally_when_self_capable() {
+        let r = router();
+        let req = storage_request("create_dataset");
+        let resp = r.route_capability_request(req).await.expect("route");
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn route_unknown_capability_discovers_empty() {
+        let r = router();
+        let req = security_request("encrypt");
+        let err = r.route_capability_request(req).await.unwrap_err();
+        assert!(err.to_string().contains("No capable services"));
+    }
+
+    #[test]
+    fn response_preserves_request_id() {
+        let r = router();
+        let req = storage_request("list_datasets");
+        let req_id = req.request_id;
+        let resp = r.handle_locally(req).expect("response");
+        assert_eq!(resp.request_id, req_id);
+    }
+}

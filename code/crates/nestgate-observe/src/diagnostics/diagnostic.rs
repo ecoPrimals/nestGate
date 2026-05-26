@@ -33,12 +33,12 @@ pub struct Diagnostic {
 impl Diagnostic {
     /// Create a new diagnostic using standardized builder
     #[must_use]
-    pub fn new(level: DiagnosticLevel, component: ComponentType, message: String) -> Self {
+    pub fn new(level: DiagnosticLevel, component: ComponentType, message: impl Into<String>) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             level,
             component,
-            message,
+            message: message.into(),
             timestamp: std::time::SystemTime::now(),
             details: None,
             path: None,
@@ -49,39 +49,39 @@ impl Diagnostic {
 
     /// Create a new info diagnostic
     #[must_use]
-    pub fn info(component: ComponentType, message: String) -> Self {
+    pub fn info(component: ComponentType, message: impl Into<String>) -> Self {
         Self::new(DiagnosticLevel::Info, component, message)
     }
 
     /// Create a new warning diagnostic
     #[must_use]
-    pub fn warning(component: ComponentType, message: String) -> Self {
+    pub fn warning(component: ComponentType, message: impl Into<String>) -> Self {
         Self::new(DiagnosticLevel::Warning, component, message)
     }
 
     /// Create a new error diagnostic
     #[must_use]
-    pub fn error(component: ComponentType, message: String) -> Self {
+    pub fn error(component: ComponentType, message: impl Into<String>) -> Self {
         Self::new(DiagnosticLevel::Error, component, message)
     }
 
     /// Create a new critical diagnostic
     #[must_use]
-    pub fn critical(component: ComponentType, message: String) -> Self {
+    pub fn critical(component: ComponentType, message: impl Into<String>) -> Self {
         Self::new(DiagnosticLevel::Critical, component, message)
     }
 
     /// Set the details for the diagnostic
     #[must_use]
-    pub fn with_details(mut self, details: String) -> Self {
-        self.details = Some(details);
+    pub fn with_details(mut self, details: impl Into<String>) -> Self {
+        self.details = Some(details.into());
         self
     }
 
     /// Set the resource for the diagnostic
     #[must_use]
-    pub fn with_resource(mut self, path: &str) -> Self {
-        self.path = Some(path.to_string());
+    pub fn with_resource(mut self, path: impl Into<String>) -> Self {
+        self.path = Some(path.into());
         self
     }
 

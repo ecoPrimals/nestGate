@@ -146,9 +146,9 @@ pub fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
 
 /// Create ZFS error with operation context - helper function
 #[must_use]
-pub fn create_zfs_error(message: String, operation: ZfsOperation) -> NestGateError {
+pub fn create_zfs_error(message: impl Into<String>, operation: ZfsOperation) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: message.into(),
+        message: message.into().into(),
         component: "zfs-core".into(),
         location: Some(format!("{operation:?}").to_lowercase().into()),
         context: None,

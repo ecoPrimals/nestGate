@@ -34,32 +34,32 @@ impl Default for ZeroCostSecurityMetadata {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            provider_type: "zero-cost-security-provider".to_string(),
+            provider_type: String::from("zero-cost-security-provider"),
             supported_auth_methods: vec![
-                "password".to_string(),
-                "token".to_string(),
-                "certificate".to_string(),
-                "multi_factor".to_string(),
+                String::from("password"),
+                String::from("token"),
+                String::from("certificate"),
+                String::from("multi_factor"),
             ],
             supported_encryption: vec![
-                "AES-256-GCM".to_string(),
-                "ChaCha20-Poly1305".to_string(),
-                "AES-128-GCM".to_string(),
+                String::from("AES-256-GCM"),
+                String::from("ChaCha20-Poly1305"),
+                String::from("AES-128-GCM"),
             ],
             supported_signing: vec![
-                "ECDSA-P256".to_string(),
-                "ECDSA-P384".to_string(),
-                "RSA-PSS-2048".to_string(),
-                "Ed25519".to_string(),
+                String::from("ECDSA-P256"),
+                String::from("ECDSA-P384"),
+                String::from("RSA-PSS-2048"),
+                String::from("Ed25519"),
             ],
-            compliance_level: "enterprise".to_string(),
-            version: "2.0.0-zero-cost".to_string(),
+            compliance_level: String::from("enterprise"),
+            version: String::from("2.0.0-zero-cost"),
             capabilities: SecurityCapabilities::default(),
             performance: PerformanceCharacteristics::default(),
             certifications: vec![
-                "FIPS-140-2".to_string(),
-                "Common Criteria".to_string(),
-                "SOC 2".to_string(),
+                String::from("FIPS-140-2"),
+                String::from("Common Criteria"),
+                String::from("SOC 2"),
             ],
         }
     }
@@ -181,7 +181,7 @@ impl Default for SecurityProviderHealth {
             last_authentication: None,
             security_events: 0,
             key_rotation_count: 0,
-            status: "healthy".to_string(),
+            status: String::from("healthy"),
         }
     }
 }
@@ -438,19 +438,19 @@ impl ZeroCostSecurityMetadata {
     /// Check if authentication method is supported
     #[must_use]
     pub fn supports_auth_method(&self, method: &str) -> bool {
-        self.supported_auth_methods.contains(&method.to_string())
+        self.supported_auth_methods.iter().any(|m| m == method)
     }
 
     /// Check if encryption algorithm is supported
     #[must_use]
     pub fn supports_encryption(&self, algorithm: &str) -> bool {
-        self.supported_encryption.contains(&algorithm.to_string())
+        self.supported_encryption.iter().any(|a| a == algorithm)
     }
 
     /// Check if signing algorithm is supported
     #[must_use]
     pub fn supports_signing(&self, algorithm: &str) -> bool {
-        self.supported_signing.contains(&algorithm.to_string())
+        self.supported_signing.iter().any(|s| s == algorithm)
     }
 
     /// Get compliance level

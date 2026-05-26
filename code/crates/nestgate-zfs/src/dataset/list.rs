@@ -85,7 +85,7 @@ impl ZfsDatasetManager {
             .output()
             .await
             .map_err(|_e| {
-                create_zfs_error("Failed to list datasets".to_string(), ZfsOperation::Command)
+                create_zfs_error("Failed to list datasets", ZfsOperation::Command)
             })?;
 
         if !output.status.success() {

@@ -103,7 +103,7 @@ impl ServiceManager {
         let addr: SocketAddr = format!("{host}:{p}").parse().map_err(|e| {
             NestGateBinError::service_init_error(
                 format!("Invalid TCP bind address: {e}"),
-                Some("tcp-addr".to_string()),
+                Some(String::from("tcp-addr")),
             )
         })?;
         Ok(Some(addr))

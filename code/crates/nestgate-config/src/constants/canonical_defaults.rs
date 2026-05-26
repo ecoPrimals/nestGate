@@ -34,7 +34,7 @@ pub mod network {
                     "Canonical default URL: NESTGATE_DEV_HOST and NESTGATE_DISCOVERY_FALLBACK_HOST unset; \
                      using host `localhost`. Set explicit capability endpoints or discovery env vars for production."
                 );
-                "localhost".to_string()
+                String::from("localhost")
             })
     }
 

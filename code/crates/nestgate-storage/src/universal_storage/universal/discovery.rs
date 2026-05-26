@@ -97,11 +97,11 @@ impl UniversalStorageDiscovery {
     /// Reserved for future I/O failures when probing local paths; currently always succeeds.
     pub fn discover_local() -> Result<Vec<DiscoveredStorage>> {
         let local = DiscoveredStorage {
-            name: "local".to_string(),
-            endpoint: "file://./storage".to_string(),
+            name: String::from("local"),
+            endpoint: String::from("file://./storage"),
             protocol: DiscoveredProtocol::new(
                 TransportProtocol::UnixSocket {
-                    path: "./storage".to_string(),
+                    path: String::from("./storage"),
                 },
                 StorageOperationPattern::FileSystem {
                     path_separator: '/',
@@ -246,9 +246,9 @@ impl UniversalStorageDiscovery {
                 key_id: access_key,
                 secret_key: SecretString::new(secret_key),
                 headers_to_sign: vec![
-                    "host".to_string(),
-                    "x-amz-date".to_string(),
-                    "authorization".to_string(),
+                    String::from("host"),
+                    String::from("x-amz-date"),
+                    String::from("authorization"),
                 ],
                 session_token,
             });
@@ -259,7 +259,7 @@ impl UniversalStorageDiscovery {
         if let Some(token) = env.get(&token_var) {
             return Some(AuthenticationPattern::BearerToken {
                 token: SecretString::new(token),
-                token_type: "Bearer".to_string(),
+                token_type: String::from("Bearer"),
             });
         }
 
@@ -269,7 +269,7 @@ impl UniversalStorageDiscovery {
             return Some(AuthenticationPattern::ApiKey {
                 key: SecretString::new(api_key),
                 location: ApiKeyLocation::Header {
-                    name: "X-API-Key".to_string(),
+                    name: String::from("X-API-Key"),
                 },
             });
         }

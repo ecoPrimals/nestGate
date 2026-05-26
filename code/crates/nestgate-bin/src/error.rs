@@ -217,8 +217,8 @@ impl From<NestGateBinError> for NestGateError {
 /// Provides consistent error creation patterns following canonical conventions
 impl NestGateBinError {
     /// Create a command execution error with rich context
-    pub fn command_failed<S: Into<String>>(
-        message: S,
+    pub fn command_failed(
+        message: impl Into<String>,
         command: Option<String>,
         exit_code: Option<i32>,
     ) -> Self {
@@ -230,7 +230,7 @@ impl NestGateBinError {
     }
 
     /// Create a configuration error with optional path context
-    pub fn config_error<S: Into<String>>(message: S, config_path: Option<String>) -> Self {
+    pub fn config_error(message: impl Into<String>, config_path: Option<String>) -> Self {
         Self::ConfigurationError {
             message: message.into(),
             config_path,
@@ -238,7 +238,7 @@ impl NestGateBinError {
     }
 
     /// Create an argument parsing error with optional argument context
-    pub fn argument_error<S: Into<String>>(message: S, argument: Option<String>) -> Self {
+    pub fn argument_error(message: impl Into<String>, argument: Option<String>) -> Self {
         Self::ArgumentParsingError {
             message: message.into(),
             argument,
@@ -246,7 +246,7 @@ impl NestGateBinError {
     }
 
     /// Create a service initialization error with service context
-    pub fn service_init_error<S: Into<String>>(message: S, service_name: Option<String>) -> Self {
+    pub fn service_init_error(message: impl Into<String>, service_name: Option<String>) -> Self {
         Self::ServiceInitializationError {
             message: message.into(),
             service_name,
@@ -254,7 +254,7 @@ impl NestGateBinError {
     }
 
     /// Create a runtime error with operation context
-    pub fn runtime_error<S: Into<String>>(message: S, operation: Option<String>) -> Self {
+    pub fn runtime_error(message: impl Into<String>, operation: Option<String>) -> Self {
         Self::RuntimeError {
             message: message.into(),
             operation,
