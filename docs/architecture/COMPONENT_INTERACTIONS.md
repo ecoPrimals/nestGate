@@ -171,8 +171,7 @@ Client Process         Unix Socket           NestGate Server        Storage
 **Features**:
 - Zero-knowledge startup
 - Auto-detect discovery mechanism
-- mDNS for bare metal
-- Consul for cloud
+- Capability-based IPC (JSON-RPC `primal.announce`)
 - Capability queries (not names!)
 
 **Flow**:
@@ -269,7 +268,7 @@ NestGate                   Orchestrator
    └─> Initialize quota system
 
 3. Start Discovery
-   ├─> Auto-detect mechanism (mDNS/Consul/K8s)
+   ├─> Capability-based discovery (JSON-RPC primal.announce)
    ├─> Announce own capabilities
    ├─> Build self-knowledge
    └─> Start background discovery loop
@@ -465,7 +464,7 @@ Data ──>┌──────────┐──> BearDog ──>┌──
 1. NestGate startup
    │
 2. Initialize discovery
-   ├─> Auto-detect mechanism (mDNS/Consul/K8s)
+   ├─> Capability-based discovery (primal.announce)
    ├─> Create RuntimeDiscovery
    │
 3. Announce self
@@ -547,8 +546,8 @@ Client ──────────>│Load Balancer │
 │                       │                                       │
 │                       v                                       │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
-│  │ Songbird │<──>│   ZFS    │<──>│  mDNS    │              │
-│  │  (IPC)   │    │ Backend  │    │Discovery │              │
+│  │ Security │<──>│   ZFS    │<──>│Discovery │              │
+│  │  (IPC)   │    │ Backend  │    │(IPC/UDS) │              │
 │  └──────────┘    └──────────┘    └──────────┘              │
 │                                                               │
 └───────────────────────────────────────────────────────────-──┘

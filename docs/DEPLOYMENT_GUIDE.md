@@ -406,10 +406,9 @@ NESTGATE_DISCOVERY_ENABLED=true
 # Discovery endpoint (set by orchestration layer)
 # ECOSYSTEM_DISCOVERY_ENDPOINT=http://...
 
-# Configure service endpoints
-ORCHESTRATION_DISCOVERY_ENDPOINT=http://songbird:8081
-SECURITY_DISCOVERY_ENDPOINT=http://beardog:8082
-MANAGEMENT_DISCOVERY_ENDPOINT=http://biomeos:8083
+# Service endpoints are discovered at runtime via capability-based IPC
+# (primal.announce / capability.call). No hardcoded peer addresses needed.
+# See capability_registry.toml for self-knowledge.
 ```
 
 ### Integration Validation

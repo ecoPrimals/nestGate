@@ -5,8 +5,8 @@
 NestGate is in active development. Current metrics:
 
 - **Build**: 22/22 workspace packages, 0 errors (`cargo check --workspace --all-features --all-targets`)
-- **Tests**: 682 RPC lib tests, 12,467+ full workspace, 0 failures (see STATUS.md)
-- **Coverage**: 83.61% line (llvm-cov); 90% org target pending
+- **Tests**: 682 RPC lib tests, 12,500+ full workspace, 0 failures (see STATUS.md)
+- **Coverage**: 83.61%+ line (llvm-cov); 90% org target pending
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
 - **Safety**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)
 - **Serial tests**: Scoped to ZFS stub tests; prefer `EnvSource` / `MapEnv`; `temp_env` elsewhere for code that reads process env
@@ -179,4 +179,4 @@ cargo llvm-cov --workspace --summary-only
 
 ---
 
-**Last Updated**: May 26, 2026 (Session 78)
+**Last Updated**: May 29, 2026 (Session 81)

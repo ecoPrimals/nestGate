@@ -273,9 +273,9 @@ Then start with:
    - Northgate: Hot cache
 
 4. **Ecosystem Integration**
-   - BearDog for security
-   - Toadstool/Squirrel for AI/compute
-   - Full ecoPrimals stack
+   - Security via capability-based IPC (runtime discovery)
+   - AI/compute via capability-based IPC (runtime discovery)
+   - Full ecoPrimals stack via `primal.announce`
 
 ---
 

@@ -55,10 +55,8 @@
 
 ### **Service Discovery**
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NESTGATE_DISCOVERY_BACKEND` | `mdns` | Discovery backend (mdns/consul/k8s) |
-| `CONSUL_ADDR` | `127.0.0.1:8500` | Consul server address |
+Discovery uses capability-based IPC (JSON-RPC `primal.announce` / `capability.call`).
+External backends (mDNS, Consul) were removed in the April 2026 sovereignty cleanup.
 
 ---
 

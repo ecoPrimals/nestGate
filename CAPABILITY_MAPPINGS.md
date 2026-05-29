@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: May 26, 2026 (Session 78)
+**Last Updated**: May 29, 2026 (Session 81)
 
 ---
 
@@ -30,7 +30,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
   "capabilities": ["<68 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
   "provided_capabilities": [
     {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external", "list_blobs", "blob_exists", "store_stream", "store_stream_chunk", "retrieve_stream", "retrieve_stream_chunk"]},
-    {"type": "content", "methods": ["put", "get", "exists", "list", "publish", "resolve", "promote", "collections"]},
+    {"type": "content", "methods": ["put", "get", "exists", "list", "publish", "resolve", "promote", "collections", "fetch_heads", "push", "replicate", "sync"]},
     {"type": "model", "methods": ["register", "exists", "locate", "metadata"]},
     {"type": "templates", "methods": ["store", "retrieve", "list", "community_top"]},
     {"type": "session", "methods": ["save", "load"]},
@@ -521,4 +521,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: May 26, 2026 (Session 78)
+**Last Updated**: May 29, 2026 (Session 81)
