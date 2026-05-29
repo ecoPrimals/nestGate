@@ -138,3 +138,62 @@ pub async fn replicate(params: &Value) -> Result<Value> {
 pub async fn sync(params: &Value) -> Result<Value> {
     content_federation_handlers::content_sync(Some(params), shared_state()).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn put_then_get_roundtrip() {
+        let params = json!({"data": "aGVsbG8gd29ybGQ=", "family_id": "test-roundtrip"});
+        let put_result = put(&params).await.expect("put should succeed");
+        let hash = put_result["hash"].as_str().expect("hash field present");
+
+        let get_params = json!({"hash": hash, "family_id": "test-roundtrip"});
+        let get_result = get(&get_params).await.expect("get should succeed");
+        assert_eq!(get_result["data"].as_str().unwrap(), "aGVsbG8gd29ybGQ=");
+    }
+
+    #[tokio::test]
+    async fn exists_returns_false_for_unknown() {
+        let params = json!({"hash": "0000000000000000000000000000000000000000000000000000000000000000", "family_id": "test-exists"});
+        let result = exists(&params).await.expect("exists should succeed");
+        assert_eq!(result["exists"].as_bool(), Some(false));
+    }
+
+    #[tokio::test]
+    async fn list_returns_hashes_array() {
+        let params = json!({"family_id": "test-list-empty"});
+        let result = list(&params).await.expect("list should succeed");
+        assert!(result["hashes"].is_array());
+    }
+
+    #[tokio::test]
+    async fn fetch_heads_missing_params_errors() {
+        let params = json!({});
+        let err = fetch_heads(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn push_missing_path_errors() {
+        let params = json!({});
+        let err = push(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn replicate_missing_cids_errors() {
+        let params = json!({"target": "/tmp/nonexistent.sock"});
+        let err = replicate(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn sync_missing_repos_errors() {
+        let params = json!({});
+        let err = sync(&params).await;
+        assert!(err.is_err());
+    }
+}

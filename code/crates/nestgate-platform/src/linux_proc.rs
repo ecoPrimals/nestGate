@@ -291,3 +291,106 @@ pub fn kernel_version_line() -> Option<String> {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn logical_cpu_count_is_nonzero() {
+        assert!(logical_cpu_count() >= 1);
+    }
+
+    #[test]
+    fn physical_cpu_count_is_nonzero() {
+        assert!(physical_cpu_count() >= 1);
+    }
+
+    #[test]
+    fn physical_does_not_exceed_logical() {
+        assert!(physical_cpu_count() <= logical_cpu_count());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn available_memory_returns_value() {
+        let bytes = available_memory_bytes();
+        assert!(bytes.is_some());
+        assert!(bytes.unwrap() > 0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn total_memory_returns_value() {
+        let bytes = total_memory_bytes();
+        assert!(bytes.is_some());
+        assert!(bytes.unwrap() > 0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn used_memory_within_bounds() {
+        let total = total_memory_bytes().unwrap();
+        let used = used_memory_bytes().unwrap();
+        assert!(used <= total);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn memory_usage_percent_in_range() {
+        let pct = memory_usage_percent().unwrap();
+        assert!(pct >= 0.0 && pct <= 100.0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn globalcpu_usage_in_range() {
+        let pct = globalcpu_usage_percent_from_stat().unwrap();
+        assert!(pct >= 0.0 && pct <= 100.0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn network_rx_tx_returns_some() {
+        let (rx, tx) = network_rx_tx_bytes_sum().unwrap();
+        assert!(rx > 0 || tx > 0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn diskstats_entry_count_positive() {
+        let n = diskstats_entry_count().unwrap();
+        assert!(n >= 1.0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn statvfs_root_returns_values() {
+        let (total, avail) = statvfs_space(std::path::Path::new("/")).unwrap();
+        assert!(total > 0);
+        assert!(avail <= total);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn uptime_is_positive() {
+        let secs = uptime_secs().unwrap();
+        assert!(secs > 0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn load_averages_are_nonnegative() {
+        let (one, five, fifteen) = load_averages().unwrap();
+        assert!(one >= 0.0);
+        assert!(five >= 0.0);
+        assert!(fifteen >= 0.0);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn kernel_version_contains_linux() {
+        let kv = kernel_version_line().unwrap();
+        assert!(kv.contains("Linux"));
+    }
+}

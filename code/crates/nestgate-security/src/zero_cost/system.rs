@@ -10,7 +10,7 @@
 //! Migration to canonical traits is tracked but not yet scheduled.
 
 use super::constants::{
-    ZERO_COST_PLACEHOLDER_AVERAGE_LATENCY_NS, ZERO_COST_PLACEHOLDER_REQUESTS_PROCESSED,
+    ZERO_COST_LATENCY_NOT_TRACKED, ZERO_COST_REQUESTS_NOT_TRACKED,
 };
 use super::traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 use super::types::{ZeroCostError, ZeroCostMetrics, ZeroCostRequest, ZeroCostResponse};
@@ -75,11 +75,11 @@ where
         })
     }
 
-    /// Get system metrics
+    /// Returns zero metrics — the const-fn zero-cost stack cannot track runtime state.
     pub const fn metrics(&self) -> ZeroCostMetrics {
         ZeroCostMetrics {
-            requests_processed: ZERO_COST_PLACEHOLDER_REQUESTS_PROCESSED,
-            average_latency_ns: ZERO_COST_PLACEHOLDER_AVERAGE_LATENCY_NS,
+            requests_processed: ZERO_COST_REQUESTS_NOT_TRACKED,
+            average_latency_ns: ZERO_COST_LATENCY_NOT_TRACKED,
         }
     }
 
@@ -249,8 +249,8 @@ mod tests {
         );
 
         let metrics = system.metrics();
-        assert!(metrics.requests_processed > 0);
-        assert!(metrics.average_latency_ns > 0);
+        assert_eq!(metrics.requests_processed, 0, "const-fn stack cannot track runtime state");
+        assert_eq!(metrics.average_latency_ns, 0, "const-fn stack cannot measure latency");
     }
 
     #[test]

@@ -20,8 +20,10 @@ fn not_implemented(feature: &str) -> (StatusCode, Json<Value>) {
         StatusCode::NOT_IMPLEMENTED,
         Json(json!({
             "status": "not_implemented",
+            "code": "NOT_IMPLEMENTED",
             "feature": feature,
-            "message": format!("{feature} is not yet wired to a real ZFS backend"),
+            "message": format!("{feature} is not yet wired — requires ZFS capability on this host"),
+            "hint": "Use capability.call via JSON-RPC to discover if this host supports ZFS operations",
         })),
     )
 }

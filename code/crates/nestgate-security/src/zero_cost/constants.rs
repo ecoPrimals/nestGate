@@ -3,11 +3,11 @@
 
 //! Named compile-time values for the zero-cost stack (placeholder metrics and tests).
 
-/// Placeholder request count until real accounting exists.
-pub const ZERO_COST_PLACEHOLDER_REQUESTS_PROCESSED: u64 = 1000;
+/// Zero value — the const-fn zero-cost stack cannot track runtime request counts.
+pub const ZERO_COST_REQUESTS_NOT_TRACKED: u64 = 0;
 
-/// Placeholder average latency (nanoseconds) until measured.
-pub const ZERO_COST_PLACEHOLDER_AVERAGE_LATENCY_NS: u64 = 50_000;
+/// Zero value — the const-fn zero-cost stack cannot measure runtime latency.
+pub const ZERO_COST_LATENCY_NOT_TRACKED: u64 = 0;
 
 #[cfg(test)]
 /// Test-only compile-time timeout (1s) for zero-cost generic parameters.

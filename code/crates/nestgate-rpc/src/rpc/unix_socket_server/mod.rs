@@ -95,6 +95,7 @@ mod bonding_handlers;
 mod connection;
 pub(crate) mod content_federation_handlers;
 pub(crate) mod content_handlers;
+mod federation_ops;
 mod dispatch;
 pub(crate) mod external_handlers;
 mod nat_handlers;

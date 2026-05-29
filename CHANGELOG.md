@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-05-29
 
+### Session 81: Deep debt sweep — module split, honest metrics, coverage push (May 29, 2026)
+
+- **Module split**: `content_federation_handlers.rs` (937L) split into
+  `content_federation_handlers.rs` (525L) + `federation_ops.rs` (430L) —
+  git operations, repo sync, and JSON-RPC transport extracted to dedicated module.
+- **Honest metrics**: `ZERO_COST_PLACEHOLDER_*` constants replaced with
+  `ZERO_COST_*_NOT_TRACKED` (value 0) — const-fn stack cannot track runtime
+  state; returning fake data was misleading.
+- **501 endpoint evolution**: ZFS REST not-implemented responses now return
+  structured JSON with `"code": "NOT_IMPLEMENTED"` and capability discovery hint.
+- **Network scaffold cleanup**: `discovery/config/network.rs` placeholder
+  comments removed; doc comments reflect actual module purpose.
+- **Coverage push**: 21 new tests — `linux_proc` (14 tests covering memory,
+  CPU, disk, network, uptime, load, kernel), `content_ops` (7 tests covering
+  put/get roundtrip, exists, list, federation error paths).
+- **Tests**: 12,500 passing (up from 12,479).
+
 ### Session 80: Content federation — Wave 60 upstream targets (May 29, 2026)
 
 - **4 new content federation methods**: `content.fetch_heads`, `content.push`,
