@@ -7,7 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.5.0] - 2026-05-26
+## [0.5.0] - 2026-05-29
+
+### Session 80: Content federation — Wave 60 upstream targets (May 29, 2026)
+
+- **4 new content federation methods**: `content.fetch_heads`, `content.push`,
+  `content.replicate`, `content.sync` — HIGH priority for waterFall / rootPulse
+  signal graph graduation from bash to Neural API.
+- **`content.fetch_heads`** (ecosystem.check): read-only drift detection via
+  `git ls-remote`; returns local/remote HEAD, behind/ahead counts, drift status.
+- **`content.push`** (ecosystem.push): push to Forgejo periplasm or other remotes
+  via system `git push`; reports per-repo success/failure.
+- **`content.replicate`** (rootpulse.federate): cross-gate content blob transfer
+  by BLAKE3 CID; diff-based (skips blobs the remote already has); supports both
+  UDS and TCP targets.
+- **`content.sync`** (ecosystem.pull): cascade-pull from remote sources; Neural
+  API equivalent of `cascade-pull.sh`; `--ff-only` pulls with configurable
+  parallelism, auto-remote resolution (forgejo-first, origin fallback), and
+  optional `clone_missing` for new repos.
+- **Full transport parity**: all 4 methods wired on all 4 surfaces — primary UDS
+  dispatch, SemanticRouter, isomorphic IPC adapter, and HTTP API.
+- **12 new tests**: input validation, error paths, parallel limits, missing repos.
+- **capability_registry.toml**: content domain expanded from 8 to 12 methods with
+  full param/return documentation.
+- **DH-1 /tmp audit**: NestGate confirmed clean — not among the 8 offending primals.
+- **Tests**: 12,479 passing (up from 12,467).
+
+### Session 79: Documentation hygiene sweep (May 26, 2026)
+
+- 9 root docs synchronized to Session 78 metrics (12,467+ tests, 83.61% coverage).
+- Fixed stale `0.1.0` version refs in crate READMEs (`nestgate-core`, `nestgate-api`).
+- Removed broken doc links in `ENVIRONMENT_VARIABLES.md`, `API_COLLABORATIVE_INTELLIGENCE.md`.
+- Cleaned `benches/README.md` (legacy DashMap migration tracker replaced with concise note).
+- Corrected stale "188 deprecated markers" claim in constants `MIGRATION_GUIDE.md`.
 
 ### Session 78: Deep debt sweep — hardcoding, stubs, idioms, coverage (May 26, 2026)
 

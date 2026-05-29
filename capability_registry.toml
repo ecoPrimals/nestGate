@@ -81,6 +81,7 @@ description = "Content-addressed storage with versioned manifests — BLAKE3 has
 methods = [
     "content.put", "content.get", "content.exists", "content.list",
     "content.publish", "content.resolve", "content.promote", "content.collections",
+    "content.fetch_heads", "content.push", "content.replicate", "content.sync",
 ]
 
 # ── Content-addressed storage protocol (NG-1) ──────────────────────
@@ -102,6 +103,16 @@ methods = [
 # content.collections: {prefix?, family_id?} → {collections: [name, ...], count}
 # Manifests live at {base}/datasets/{family}/_manifests/{collection}.json
 # Aliases are thin JSON files with {"alias": true, "target": "<collection>"}
+#
+# ── Content federation (Wave 60 — waterFall / rootPulse) ─────────────
+# content.fetch_heads: {repos: [{path, remote?, branch?}]} → {heads: [{path, local_head, remote_head, drift, behind, ahead}], checked_at}
+#   Read-only freshness check — git ls-remote without pulling. Serves ecosystem.check.
+# content.push:        {repos: [{path, remote?, branch?}]} → {results: [{path, pushed, already_up_to_date?, error?}], pushed_count}
+#   Push to Forgejo (periplasm) or other remote. Serves ecosystem.push.
+# content.replicate:   {cids: ["<blake3_hex>"], target: "<socket_or_tcp>", family_id?} → {replicated: [{cid, transferred, size?}], total_bytes}
+#   Cross-gate content blob transfer. Diff-based: skips blobs the remote already has. Serves rootpulse.federate.
+# content.sync:        {repos: [{path, remote?, branch?, clone_url?}], parallel?, source?, clone_missing?} → {results: [{path, synced, action, commits_pulled?}], synced_count}
+#   Cascade-pull from remote sources (Neural API equivalent of cascade-pull.sh). Serves ecosystem.pull.
 
 [capabilities.model]
 domain = "model"

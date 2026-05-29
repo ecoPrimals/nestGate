@@ -209,6 +209,10 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "content.resolve",
     "content.promote",
     "content.collections",
+    "content.fetch_heads",
+    "content.push",
+    "content.replicate",
+    "content.sync",
     // Ionic bond ledger persistence (security capability provider)
     "bonding.ledger.store",
     "bonding.ledger.retrieve",

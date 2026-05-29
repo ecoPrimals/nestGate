@@ -13,6 +13,8 @@ use nestgate_types::error::Result;
 use serde_json::Value;
 use std::sync::OnceLock;
 
+use crate::rpc::unix_socket_server::content_federation_handlers;
+
 /// Cached [`StorageState`] for content handler delegation.
 ///
 /// Content operations are stateless filesystem ops keyed by `family_id` and
@@ -94,4 +96,36 @@ pub(super) async fn content_collections(
     params: Value,
 ) -> Result<Value> {
     content_handlers::content_collections(Some(&params), shared_state()).await
+}
+
+/// Route `content.fetch_heads` → read-only freshness check against remote repos.
+pub(super) async fn content_fetch_heads(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_federation_handlers::content_fetch_heads(Some(&params), shared_state()).await
+}
+
+/// Route `content.push` → push local content to a remote.
+pub(super) async fn content_push(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_federation_handlers::content_push(Some(&params), shared_state()).await
+}
+
+/// Route `content.replicate` → transfer content blobs to a remote `NestGate`.
+pub(super) async fn content_replicate(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_federation_handlers::content_replicate(Some(&params), shared_state()).await
+}
+
+/// Route `content.sync` → cascade-pull from remote sources.
+pub(super) async fn content_sync(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_federation_handlers::content_sync(Some(&params), shared_state()).await
 }

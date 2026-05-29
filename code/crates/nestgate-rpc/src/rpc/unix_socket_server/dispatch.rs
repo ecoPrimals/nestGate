@@ -16,8 +16,8 @@ use crate::rpc::protocol::normalize_method;
 
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
-    bonding_handlers, content_handlers, external_handlers, nat_handlers, session_handlers,
-    storage_handlers, template_handlers, zfs_handlers,
+    bonding_handlers, content_federation_handlers, content_handlers, external_handlers,
+    nat_handlers, session_handlers, storage_handlers, template_handlers, zfs_handlers,
 };
 
 /// Handle JSON-RPC request
@@ -184,6 +184,19 @@ pub(super) async fn handle_request(
         }
         "content.collections" => {
             content_handlers::content_collections(request.params.as_ref(), state).await
+        }
+        // Content federation (Wave 60 — waterFall / rootPulse signal graphs)
+        "content.fetch_heads" => {
+            content_federation_handlers::content_fetch_heads(request.params.as_ref(), state).await
+        }
+        "content.push" => {
+            content_federation_handlers::content_push(request.params.as_ref(), state).await
+        }
+        "content.replicate" => {
+            content_federation_handlers::content_replicate(request.params.as_ref(), state).await
+        }
+        "content.sync" => {
+            content_federation_handlers::content_sync(request.params.as_ref(), state).await
         }
         // Ionic bond ledger persistence (on behalf of security capability provider)
         "bonding.ledger.store" => {

@@ -375,6 +375,32 @@ pub(super) async fn handle_content_collections(request: &JsonRpcRequest) -> Hand
         .map_err(|e| content_err(&e))
 }
 
+use crate::rpc::unix_socket_server::content_federation_handlers;
+
+pub(super) async fn handle_content_fetch_heads(request: &JsonRpcRequest) -> HandlerResult {
+    content_federation_handlers::content_fetch_heads(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_push(request: &JsonRpcRequest) -> HandlerResult {
+    content_federation_handlers::content_push(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_replicate(request: &JsonRpcRequest) -> HandlerResult {
+    content_federation_handlers::content_replicate(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
+pub(super) async fn handle_content_sync(request: &JsonRpcRequest) -> HandlerResult {
+    content_federation_handlers::content_sync(request.params.as_ref(), content_state())
+        .await
+        .map_err(|e| content_err(&e))
+}
+
 /// All methods advertised by the isomorphic IPC adapter.
 const ISOMORPHIC_IPC_METHODS: &[&str] = &[
     "storage.store",
@@ -400,6 +426,10 @@ const ISOMORPHIC_IPC_METHODS: &[&str] = &[
     "content.resolve",
     "content.promote",
     "content.collections",
+    "content.fetch_heads",
+    "content.push",
+    "content.replicate",
+    "content.sync",
     "session.save",
     "session.load",
     "nat.store_traversal_info",

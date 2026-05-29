@@ -137,6 +137,10 @@ async fn handle_content_method(
         "content.resolve" => content_ops::resolve(params).await,
         "content.promote" => content_ops::promote(params).await,
         "content.collections" => content_ops::collections(params).await,
+        "content.fetch_heads" => content_ops::fetch_heads(params).await,
+        "content.push" => content_ops::push(params).await,
+        "content.replicate" => content_ops::replicate(params).await,
+        "content.sync" => content_ops::sync(params).await,
         _ => return Err(format!("Unknown content method: {method}")),
     };
     result.map_err(|e| format!("{method} failed: {e}"))

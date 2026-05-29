@@ -254,6 +254,10 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "content.resolve" => content::content_resolve(self, params).await,
             "content.promote" => content::content_promote(self, params).await,
             "content.collections" => content::content_collections(self, params).await,
+            "content.fetch_heads" => content::content_fetch_heads(self, params).await,
+            "content.push" => content::content_push(self, params).await,
+            "content.replicate" => content::content_replicate(self, params).await,
+            "content.sync" => content::content_sync(self, params).await,
 
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, &params),

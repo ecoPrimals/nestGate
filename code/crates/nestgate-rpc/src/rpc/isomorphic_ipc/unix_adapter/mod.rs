@@ -288,6 +288,18 @@ impl UnixSocketRpcHandler {
             "content.collections" => {
                 unix_adapter_handlers::handle_content_collections(&request).await
             }
+            "content.fetch_heads" => {
+                unix_adapter_handlers::handle_content_fetch_heads(&request).await
+            }
+            "content.push" => {
+                unix_adapter_handlers::handle_content_push(&request).await
+            }
+            "content.replicate" => {
+                unix_adapter_handlers::handle_content_replicate(&request).await
+            }
+            "content.sync" => {
+                unix_adapter_handlers::handle_content_sync(&request).await
+            }
 
             "beacon.store" => unix_adapter_handlers::handle_beacon_store(state, &request).await,
             "beacon.retrieve" => {

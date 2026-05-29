@@ -142,6 +142,10 @@ impl<S: StorageBackend + 'static> RpcMethodHandler for NestGateRpcHandler<S> {
             "content.resolve" => nestgate_core::rpc::content_ops::resolve(&params).await,
             "content.promote" => nestgate_core::rpc::content_ops::promote(&params).await,
             "content.collections" => nestgate_core::rpc::content_ops::collections(&params).await,
+            "content.fetch_heads" => nestgate_core::rpc::content_ops::fetch_heads(&params).await,
+            "content.push" => nestgate_core::rpc::content_ops::push(&params).await,
+            "content.replicate" => nestgate_core::rpc::content_ops::replicate(&params).await,
+            "content.sync" => nestgate_core::rpc::content_ops::sync(&params).await,
 
             // Lifecycle
             "lifecycle.status" => self.handle_lifecycle_status(),

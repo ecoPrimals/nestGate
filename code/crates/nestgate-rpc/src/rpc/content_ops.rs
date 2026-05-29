@@ -15,7 +15,7 @@
 //! All functions return [`nestgate_types::error::NestGateError`] on invalid
 //! parameters, missing content, or I/O failure.
 
-use crate::rpc::unix_socket_server::{StorageState, content_handlers};
+use crate::rpc::unix_socket_server::{StorageState, content_federation_handlers, content_handlers};
 use nestgate_types::error::Result;
 use serde_json::Value;
 use std::sync::OnceLock;
@@ -101,4 +101,40 @@ pub async fn promote(params: &Value) -> Result<Value> {
 /// Returns error on I/O failure reading the manifests directory.
 pub async fn collections(params: &Value) -> Result<Value> {
     content_handlers::content_collections(Some(params), shared_state()).await
+}
+
+/// `content.fetch_heads` — read-only freshness check against remote repos.
+///
+/// # Errors
+///
+/// Returns error on missing params or if git is unavailable.
+pub async fn fetch_heads(params: &Value) -> Result<Value> {
+    content_federation_handlers::content_fetch_heads(Some(params), shared_state()).await
+}
+
+/// `content.push` — push local content to a remote.
+///
+/// # Errors
+///
+/// Returns error on missing params or if git is unavailable.
+pub async fn push(params: &Value) -> Result<Value> {
+    content_federation_handlers::content_push(Some(params), shared_state()).await
+}
+
+/// `content.replicate` — transfer content blobs to a remote `NestGate`.
+///
+/// # Errors
+///
+/// Returns error on missing params, invalid CIDs, or remote connection failure.
+pub async fn replicate(params: &Value) -> Result<Value> {
+    content_federation_handlers::content_replicate(Some(params), shared_state()).await
+}
+
+/// `content.sync` — cascade-pull from remote sources.
+///
+/// # Errors
+///
+/// Returns error on missing params or if git is unavailable.
+pub async fn sync(params: &Value) -> Result<Value> {
+    content_federation_handlers::content_sync(Some(params), shared_state()).await
 }
