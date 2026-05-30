@@ -114,6 +114,39 @@ methods = [
 # content.sync:        {repos: [{path, remote?, branch?, clone_url?}], parallel?, source?, clone_missing?} → {results: [{path, synced, action, commits_pulled?}], synced_count}
 #   Cascade-pull from remote sources (Neural API equivalent of cascade-pull.sh). Serves ecosystem.pull.
 
+[capabilities.repo]
+domain = "content"
+stability = "provisional"
+description = "Sovereign Forgejo repository management — create, list, delete repos on the inner membrane forge"
+methods = ["content.repo.create", "content.repo.list", "content.repo.delete"]
+
+# ── Repo management protocol (shadow — Wave 61) ─────────────────
+# content.repo.create: {org, name} → {name, full_name, mirror, default_branch}
+#   Creates a new repository on the Forgejo inner membrane forge.
+# content.repo.list:   {org?} → {repos: [{name, full_name, mirror, description}], count}
+#   Lists all repos in a Forgejo org. Default org: ecoPrimals.
+# content.repo.delete: {full_name} → {deleted: true}
+#   Deletes a repository from Forgejo. Irreversible.
+#
+# Shadow implementation: membrane-shadow crate (cellMembrane).
+# These methods proxy to the Forgejo API via HTTPS and will
+# eventually be implemented natively when nestGate gains direct
+# Forgejo integration.
+
+[capabilities.mirror]
+domain = "content"
+stability = "provisional"
+description = "Forgejo pull mirror management — trigger sync, check status of GitHub→Forgejo mirrors"
+methods = ["content.mirror.sync", "content.mirror.status"]
+
+# ── Mirror protocol (shadow — Wave 61) ──────────────────────────
+# content.mirror.sync:   {full_name} → {repo, triggered, http_code}
+#   Triggers immediate pull-mirror sync from GitHub on a single repo.
+# content.mirror.status: {full_name} → {name, full_name, mirror, mirror_interval, mirror_updated}
+#   Returns mirror configuration and last sync timestamp.
+#
+# Shadow implementation: membrane-shadow crate (cellMembrane).
+
 [capabilities.model]
 domain = "model"
 stability = "provisional"
