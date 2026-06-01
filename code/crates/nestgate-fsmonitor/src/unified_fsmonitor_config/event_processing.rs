@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-/// Event handling and processing configuration - extracted from monolithic config
-/// Handles all aspects of file system event processing, batching, and queuing
+//! Event handling and processing configuration — batching, queuing, error handling.
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
+
+use super::fsmonitor_data_dir;
 /// Event processing settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventProcessingSettings {
@@ -173,7 +175,7 @@ impl Default for QueuePersistenceSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            file_path: std::path::PathBuf::from("/tmp/fsmonitor_queue.dat"),
+            file_path: fsmonitor_data_dir().join("queue.dat"),
             sync_frequency: Duration::from_secs(30),
         }
     }
@@ -222,7 +224,7 @@ impl Default for DeadLetterQueueSettings {
     fn default() -> Self {
         Self {
             enabled: true,
-            file_path: std::path::PathBuf::from("/tmp/fsmonitor_dlq.dat"),
+            file_path: fsmonitor_data_dir().join("dlq.dat"),
             max_size: 1000,
         }
     }
@@ -240,7 +242,6 @@ impl Default for ErrorLoggingSettings {
 }
 
 impl Default for ErrorNotificationSettings {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -248,5 +249,83 @@ impl Default for ErrorNotificationSettings {
             error_threshold: 10,
             frequency_limit: Duration::from_secs(5 * 60),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn event_processing_default_is_enabled() {
+        let settings = EventProcessingSettings::default();
+        assert!(settings.enabled);
+        assert!(settings.batching.enabled);
+        assert!(settings.pipeline.enabled);
+    }
+
+    #[test]
+    fn default_batch_size_is_reasonable() {
+        let settings = EventBatchingSettings::default();
+        assert!(settings.max_events_per_batch >= 10);
+        assert!(settings.max_events_per_batch <= 10_000);
+    }
+
+    #[test]
+    fn default_queue_size_is_reasonable() {
+        let settings = EventQueueSettings::default();
+        assert!(settings.max_queue_size >= 100);
+    }
+
+    #[test]
+    fn queue_persistence_disabled_by_default() {
+        let settings = QueuePersistenceSettings::default();
+        assert!(!settings.enabled);
+    }
+
+    #[test]
+    fn queue_persistence_path_is_not_tmp() {
+        let settings = QueuePersistenceSettings::default();
+        assert!(
+            !settings.file_path.starts_with("/tmp"),
+            "must not default to /tmp — got {:?}",
+            settings.file_path
+        );
+    }
+
+    #[test]
+    fn dlq_path_is_not_tmp() {
+        let settings = DeadLetterQueueSettings::default();
+        assert!(
+            !settings.file_path.starts_with("/tmp"),
+            "must not default to /tmp — got {:?}",
+            settings.file_path
+        );
+    }
+
+    #[test]
+    fn retry_policy_default_limits() {
+        let policy = RetryPolicy::default();
+        assert!(policy.enabled);
+        assert!(policy.max_attempts >= 1 && policy.max_attempts <= 10);
+    }
+
+    #[test]
+    fn error_notification_disabled_by_default() {
+        let settings = ErrorNotificationSettings::default();
+        assert!(!settings.enabled);
+    }
+
+    #[test]
+    fn settings_serialization_roundtrip() {
+        let original = EventProcessingSettings::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let deserialized: EventProcessingSettings =
+            serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.enabled, deserialized.enabled);
+        assert_eq!(
+            original.batching.max_events_per_batch,
+            deserialized.batching.max_events_per_batch
+        );
     }
 }

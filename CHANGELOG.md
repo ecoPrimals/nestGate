@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.5.0] - 2026-05-29
+## [0.5.0] - 2026-06-01
+
+### Session 82: Wave 67 audit response — version fix, coverage push, /tmp hardcoding (Jun 1, 2026)
+
+- **Version regression fix**: Restored `version = "0.5.0"` to `[workspace.package]`
+  and `version.workspace = true` on root `[package]` — upstream commits had regressed
+  this to `0.1.0`, breaking all 21 crate builds.
+- **DH-1 /tmp hardcoding fix**: Removed 3 hardcoded `/tmp/` paths in
+  `nestgate-fsmonitor` config defaults (`queue.dat`, `dlq.dat`, backup location) —
+  now uses XDG-compliant `fsmonitor_data_dir()` helper.
+- **Coverage push** (27 new tests):
+  - `federation_ops.rs`: 12 tests — git helpers (rev-parse, divergence, remote
+    resolution), sync error paths, JSON-RPC transport error paths.
+  - `fsmonitor/event_processing.rs`: 10 tests — defaults, serialization roundtrip,
+    /tmp path assertions.
+  - `fsmonitor/security.rs`: 5 tests — defaults, path assertions, serialization.
+- **Tests**: 12,512 passing (up from 12,500).
 
 ### Session 81: Deep debt sweep — module split, honest metrics, coverage push (May 29, 2026)
 

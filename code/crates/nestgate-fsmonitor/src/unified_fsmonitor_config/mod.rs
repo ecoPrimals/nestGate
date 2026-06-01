@@ -1,10 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Unified Fsmonitor Config module
+//! Unified Fsmonitor Config module.
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as StandardDomainConfig;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
+/// XDG-compliant data directory for fsmonitor persistence.
+///
+/// Returns `$XDG_DATA_HOME/nestgate/fsmonitor` when set,
+/// otherwise `$HOME/.local/share/nestgate/fsmonitor`.
+pub(crate) fn fsmonitor_data_dir() -> PathBuf {
+    if let Ok(xdg) = std::env::var("XDG_DATA_HOME") {
+        return PathBuf::from(xdg).join("nestgate").join("fsmonitor");
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        return PathBuf::from(home)
+            .join(".local/share/nestgate/fsmonitor");
+    }
+    PathBuf::from("/var/lib/nestgate/fsmonitor")
+}
 
 // Re-export types from config.rs for backward compatibility
 pub use crate::config::FsEventType;

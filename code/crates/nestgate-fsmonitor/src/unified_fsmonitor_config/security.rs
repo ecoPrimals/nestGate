@@ -232,14 +232,60 @@ impl Default for AuthenticationSettings {
 }
 
 impl Default for AuthorizationSettings {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
-            model: "rbac".to_string(),
-            default_permissions: vec!["read".to_string()],
+            model: String::from("rbac"),
+            default_permissions: vec![String::from("read")],
             cache_timeout: Duration::from_secs(300),
             roles: HashMap::new(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn security_disabled_by_default() {
+        let settings = FsMonitorSecuritySettings::default();
+        assert!(!settings.enabled);
+    }
+
+    #[test]
+    fn audit_log_path_is_not_tmp() {
+        let settings = AuditLoggingSettings::default();
+        assert!(
+            !settings.log_file.starts_with("/tmp"),
+            "audit log must not default to /tmp — got {:?}",
+            settings.log_file
+        );
+    }
+
+    #[test]
+    fn key_storage_not_tmp() {
+        let settings = EncryptionSettings::default();
+        assert!(
+            !settings.storage_location.starts_with("/tmp"),
+            "key storage must not default to /tmp — got {:?}",
+            settings.storage_location
+        );
+    }
+
+    #[test]
+    fn authorization_defaults_to_rbac() {
+        let settings = AuthorizationSettings::default();
+        assert_eq!(settings.model, "rbac");
+        assert!(settings.default_permissions.contains(&String::from("read")));
+    }
+
+    #[test]
+    fn security_serialization_roundtrip() {
+        let original = FsMonitorSecuritySettings::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let deserialized: FsMonitorSecuritySettings =
+            serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.enabled, deserialized.enabled);
     }
 }

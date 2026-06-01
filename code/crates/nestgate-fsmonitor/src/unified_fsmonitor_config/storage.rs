@@ -175,7 +175,7 @@ impl Default for BackupSettings {
         Self {
             enabled: false,
             interval: Duration::from_secs(86400), // Daily
-            location: PathBuf::from("/tmp/fsmonitor_backup"),
+            location: super::fsmonitor_data_dir().join("backup"),
             retention_count: 7,
             compress: true,
         }

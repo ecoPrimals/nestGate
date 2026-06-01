@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,500+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, content federation, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 12,512+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, content federation, BTSP auth"
 date = 2026-05-29
 
 [taxonomies]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,500+ tests** passing (682 RPC, 11,818+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **12,512+ tests** passing (682 RPC, 11,830+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **Wave 67 audit response (Session 82)**: version regression fix, /tmp hardcoding removal, 27 new tests (federation_ops, fsmonitor config)
 - **Deep debt sweep (Session 81)**: module split (937L → 525+430), placeholder metrics → honest zeroes, 501 endpoint evolution, 21 new tests
 - **Content federation (Wave 60)**: `content.fetch_heads`, `content.push`, `content.replicate`, `content.sync` — 4 new methods enabling waterFall / rootPulse signal graphs to graduate from bash to Neural API
 - **v0.5.0**: Unified version across all 21 workspace crates (was `4.7.0-dev` internal / `0.1.0` workspace / `2.1.0` binary)
