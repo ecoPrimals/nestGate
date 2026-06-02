@@ -37,7 +37,7 @@
 //! Writes ephemeral port to discovery file:
 //! ```text
 //! Format: tcp:127.0.0.1:PORT
-//! Locations: $XDG_RUNTIME_DIR, $HOME/.local/share, /tmp
+//! Locations: $XDG_RUNTIME_DIR, $HOME/.local/share, temp_dir()
 //! ```
 //!
 //! Clients discover endpoint automatically (zero configuration).
@@ -308,7 +308,7 @@ impl TcpFallbackServer {
     /// **Locations**: Try in order:
     /// 1. `$XDG_RUNTIME_DIR/{service}-ipc-port` (preferred)
     /// 2. `$HOME/.local/share/{service}-ipc-port` (fallback)
-    /// 3. `/tmp/{service}-ipc-port` (last resort)
+    /// 3. `temp_dir()/{service}-ipc-port` (last resort)
     ///
     /// **Clients** read this file to discover TCP endpoint automatically.
     fn write_tcp_discovery_file(&self, addr: &SocketAddr) -> Result<()> {
@@ -325,7 +325,7 @@ impl TcpFallbackServer {
         let discovery_dirs: [Option<String>; 3] = [
             env.get("XDG_RUNTIME_DIR"),
             env.get("HOME").map(|h| format!("{h}/.local/share")),
-            Some("/tmp".to_string()),
+            Some(std::env::temp_dir().to_string_lossy().into_owned()),
         ];
 
         for dir in discovery_dirs
@@ -353,7 +353,7 @@ impl TcpFallbackServer {
         }
 
         warn!("Could not write TCP discovery file (clients may not find endpoint)");
-        warn!("   Tried: XDG_RUNTIME_DIR, HOME/.local/share, /tmp");
+        warn!("   Tried: XDG_RUNTIME_DIR, HOME/.local/share, temp_dir");
         Ok(())
     }
 }

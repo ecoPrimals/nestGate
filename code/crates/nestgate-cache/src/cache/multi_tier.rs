@@ -469,12 +469,17 @@ impl CacheProvider<String, Vec<u8>> for InMemoryCache {
     }
 }
 
-/// Resolve cache base directory from env / XDG, falling back to `/tmp/nestgate`.
+/// Resolve cache base directory from env / XDG, falling back to system temp dir.
 #[must_use]
 pub fn resolve_cache_base() -> String {
     std::env::var("NESTGATE_CACHE_DIR")
         .or_else(|_| std::env::var("XDG_CACHE_HOME").map(|xdg| format!("{xdg}/nestgate")))
-        .unwrap_or_else(|_| "/tmp/nestgate".to_string())
+        .unwrap_or_else(|_| {
+            std::env::temp_dir()
+                .join("nestgate")
+                .to_string_lossy()
+                .into_owned()
+        })
 }
 
 impl Default for MultiTierCacheConfig {

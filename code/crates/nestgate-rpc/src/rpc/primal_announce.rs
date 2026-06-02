@@ -64,7 +64,7 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
 /// 1. `BIOMEOS_IPC_SOCKET` (explicit override)
 /// 2. `BIOMEOS_SOCKET_DIR/{ecosystem}.sock`
 /// 3. `$XDG_RUNTIME_DIR/{ecosystem}/{ecosystem}.sock` or `neural-api.sock`
-/// 4. `/tmp/{ecosystem}.sock`
+/// 4. `temp_dir()/{ecosystem}.sock`
 fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
     let eco = nestgate_config::constants::system::ecosystem_name(env);
 
@@ -92,7 +92,7 @@ fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
         }
     }
 
-    let tmp = PathBuf::from(format!("/tmp/{eco}.sock"));
+    let tmp = std::env::temp_dir().join(format!("{eco}.sock"));
     if tmp.exists() {
         return Some(tmp);
     }

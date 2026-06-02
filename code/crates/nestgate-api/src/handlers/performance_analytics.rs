@@ -98,10 +98,10 @@ pub struct PerformanceRecommendation {
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
 pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, StatusCode> {
     let mut metrics = HashMap::new();
-    metrics.insert("cpu_usage".to_string(), 45.2);
-    metrics.insert("memory_usage".to_string(), 67.8);
-    metrics.insert("disk_io".to_string(), 120.5);
-    metrics.insert("network_io".to_string(), 85.3);
+    metrics.insert(String::from("cpu_usage"), 45.2);
+    metrics.insert(String::from("memory_usage"), 67.8);
+    metrics.insert(String::from("disk_io"), 120.5);
+    metrics.insert(String::from("network_io"), 85.3);
 
     let response = PerformanceMetricsResponse {
         metrics,
@@ -121,15 +121,15 @@ pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse
 pub async fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCode> {
     let alerts = vec![
         PerformanceAlert {
-            id: "alert_001".to_string(),
-            message: "High CPU usage detected".to_string(),
-            severity: "warning".to_string(),
+            id: String::from("alert_001"),
+            message: String::from("High CPU usage detected"),
+            severity: String::from("warning"),
             timestamp: std::time::SystemTime::now(),
         },
         PerformanceAlert {
-            id: "alert_002".to_string(),
-            message: "Memory usage approaching threshold".to_string(),
-            severity: "info".to_string(),
+            id: String::from("alert_002"),
+            message: String::from("Memory usage approaching threshold"),
+            severity: String::from("info"),
             timestamp: std::time::SystemTime::now(),
         },
     ];
@@ -144,17 +144,17 @@ pub async fn get_performance_recommendations()
 -> Result<Json<Vec<PerformanceRecommendation>>, StatusCode> {
     let recommendations = vec![
         PerformanceRecommendation {
-            id: "rec_001".to_string(),
-            title: "Optimize CPU scheduling".to_string(),
-            description: "Adjust CPU governor settings for better performance".to_string(),
-            impact: "5-10% performance improvement".to_string(),
+            id: String::from("rec_001"),
+            title: String::from("Optimize CPU scheduling"),
+            description: String::from("Adjust CPU governor settings for better performance"),
+            impact: String::from("5-10% performance improvement"),
             priority: 2,
         },
         PerformanceRecommendation {
-            id: "rec_002".to_string(),
-            title: "Increase buffer cache".to_string(),
-            description: "Allocate more memory for disk buffer cache".to_string(),
-            impact: "15-20% I/O performance improvement".to_string(),
+            id: String::from("rec_002"),
+            title: String::from("Increase buffer cache"),
+            description: String::from("Allocate more memory for disk buffer cache"),
+            impact: String::from("15-20% I/O performance improvement"),
             priority: 1,
         },
     ];

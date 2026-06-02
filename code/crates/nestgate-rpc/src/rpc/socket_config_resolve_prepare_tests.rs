@@ -440,7 +440,7 @@ fn log_summary_covers_all_sources() {
         ),
         (
             SocketConfigSource::TempDirectory,
-            PathBuf::from("/tmp/nestgate-x-y.sock"),
+            std::env::temp_dir().join("nestgate-x-y.sock"),
         ),
     ] {
         let c = SocketConfig {
@@ -451,4 +451,27 @@ fn log_summary_covers_all_sources() {
         };
         c.log_summary();
     }
+}
+
+#[test]
+fn tier4_fallback_uses_system_temp_dir() {
+    let config = SocketConfig::resolve(
+        String::from("fam"),
+        String::from("nod"),
+        None,
+        None,
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(config.source, SocketConfigSource::TempDirectory);
+    assert!(
+        config.socket_path.starts_with(std::env::temp_dir()),
+        "tier 4 fallback {:?} should be under std::env::temp_dir()",
+        config.socket_path
+    );
+    assert!(config
+        .socket_path
+        .to_string_lossy()
+        .contains("nestgate-fam-nod.sock"));
 }

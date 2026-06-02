@@ -192,7 +192,11 @@ async fn benchmark_storage_from_env_source(
     println!("  Test Size:  {size_mb} MB");
     println!();
 
-    let storage_path = env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/tmp/nestgate-benchmark");
+    let default_bench_path = std::env::temp_dir()
+        .join("nestgate-benchmark")
+        .to_string_lossy()
+        .into_owned();
+    let storage_path = env_var_or_default(env, "NESTGATE_STORAGE_PATH", &default_bench_path);
     let bench_dir = std::path::PathBuf::from(&storage_path).join("benchmark");
     tokio::fs::create_dir_all(&bench_dir).await?;
 

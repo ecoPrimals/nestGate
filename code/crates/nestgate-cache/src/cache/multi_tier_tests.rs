@@ -374,3 +374,47 @@ async fn test_tier_promotion_simulation() -> nestgate_types::Result<()> {
     assert_eq!(stats.promotion_events, 0);
     Ok(())
 }
+
+#[test]
+fn resolve_cache_base_fallback_uses_system_temp_dir() {
+    temp_env::with_vars(
+        [
+            ("NESTGATE_CACHE_DIR", None::<&str>),
+            ("XDG_CACHE_HOME", None::<&str>),
+        ],
+        || {
+            let base = super::resolve_cache_base();
+            let temp = std::env::temp_dir().to_string_lossy().into_owned();
+            assert!(
+                base.starts_with(&temp),
+                "cache base {base:?} should start with system temp dir {temp:?}"
+            );
+            assert!(base.ends_with("nestgate"));
+        },
+    );
+}
+
+#[test]
+fn resolve_cache_base_prefers_env_var() {
+    temp_env::with_vars(
+        [("NESTGATE_CACHE_DIR", Some("/opt/cache"))],
+        || {
+            let base = super::resolve_cache_base();
+            assert_eq!(base, "/opt/cache");
+        },
+    );
+}
+
+#[test]
+fn resolve_cache_base_prefers_xdg_cache_home() {
+    temp_env::with_vars(
+        [
+            ("NESTGATE_CACHE_DIR", None::<&str>),
+            ("XDG_CACHE_HOME", Some("/xdg/cache")),
+        ],
+        || {
+            let base = super::resolve_cache_base();
+            assert_eq!(base, "/xdg/cache/nestgate");
+        },
+    );
+}

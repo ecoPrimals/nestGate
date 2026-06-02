@@ -267,7 +267,7 @@ pub async fn is_nestgate_running() -> bool {
 /// Follows XDG Base Directory Specification:
 /// 1. `$XDG_RUNTIME_DIR/nestgate.sock` (preferred)
 /// 2. `$HOME/.local/share/nestgate/nestgate.sock` (fallback)
-/// 3. `/tmp/nestgate-{uid}.sock` (last resort)
+/// 3. `temp_dir()/nestgate-{uid}.sock` (last resort)
 ///
 /// ## Example
 ///
@@ -313,14 +313,14 @@ pub fn get_nestgate_socket_path_from_env_source(
         return Ok(path);
     }
 
-    // Priority 3: /tmp with UID (system fallback)
+    // Priority 3: system temp dir with UID (system fallback)
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
         let uid = std::fs::metadata("/proc/self")
             .ok()
-            .map_or(1000, |m| m.uid()); // fallback UID
-        let path = PathBuf::from("/tmp").join(format!("{NESTGATE_SERVICE_NAME}-{uid}.sock"));
+            .map_or(1000, |m| m.uid());
+        let path = std::env::temp_dir().join(format!("{NESTGATE_SERVICE_NAME}-{uid}.sock"));
         Ok(path)
     }
 
@@ -381,8 +381,8 @@ pub fn get_nestgate_tcp_discovery_path_from_env_source(
         return Ok(path);
     }
 
-    // Priority 3: /tmp
-    let path = PathBuf::from("/tmp").join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));
+    // Priority 3: system temp dir
+    let path = std::env::temp_dir().join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));
     Ok(path)
 }
 
@@ -400,7 +400,7 @@ mod tests {
     fn get_tcp_discovery_path_uses_tmp_when_xdg_and_home_missing() {
         let env = MapEnv::new();
         let p = get_nestgate_tcp_discovery_path_from_env_source(&env).expect("path");
-        assert!(p.starts_with("/tmp/nestgate-ipc-port"));
+        assert!(p.starts_with(std::env::temp_dir()));
     }
 
     #[test]

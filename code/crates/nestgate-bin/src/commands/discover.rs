@@ -199,9 +199,8 @@ fn discover_socket_dir_from_env_source(
         }
     }
 
-    // Fallback: check /tmp for sockets
-    let tmp_dir = std::path::PathBuf::from("/tmp");
-    Some(tmp_dir)
+    // Fallback: system temp directory
+    Some(std::env::temp_dir())
 }
 
 #[cfg(test)]

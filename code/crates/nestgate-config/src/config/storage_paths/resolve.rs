@@ -141,8 +141,9 @@ pub fn resolve_temp_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Path
         return path;
     }
 
-    debug!("Temp dir using system fallback: /tmp/nestgate");
-    PathBuf::from("/tmp/nestgate")
+    let fallback = std::env::temp_dir().join("nestgate");
+    debug!("Temp dir using system fallback: {}", fallback.display());
+    fallback
 }
 
 /// Resolve runtime directory from an injectable [`EnvSource`].
@@ -159,8 +160,9 @@ pub fn resolve_runtime_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> P
         return path;
     }
 
-    warn!("Runtime dir using fallback: /tmp/nestgate-runtime");
-    PathBuf::from("/tmp/nestgate-runtime")
+    let fallback = std::env::temp_dir().join("nestgate-runtime");
+    warn!("Runtime dir using fallback: {}", fallback.display());
+    fallback
 }
 
 #[cfg(test)]
@@ -217,5 +219,58 @@ mod tests {
         ]);
         let p = resolve_log_dir_from_env_source(&env);
         assert_eq!(p, PathBuf::from("/logs/here"));
+    }
+
+    #[test]
+    fn temp_dir_fallback_uses_system_temp_dir() {
+        let env = MapEnv::new();
+        let p = resolve_temp_dir_from_env_source(&env);
+        assert!(
+            p.starts_with(std::env::temp_dir()),
+            "fallback temp dir {p:?} should be under system temp dir"
+        );
+        assert!(p.ends_with("nestgate"));
+    }
+
+    #[test]
+    fn temp_dir_prefers_nestgate_env_var() {
+        let env = MapEnv::from([("NESTGATE_TEMP_DIR", "/opt/nestgate/tmp")]);
+        let p = resolve_temp_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/opt/nestgate/tmp"));
+    }
+
+    #[test]
+    fn temp_dir_uses_tmpdir_env_when_nestgate_unset() {
+        let env = MapEnv::from([("TMPDIR", "/custom/tmp")]);
+        let p = resolve_temp_dir_from_env_source(&env);
+        assert_eq!(p, PathBuf::from("/custom/tmp/nestgate"));
+    }
+
+    #[test]
+    fn runtime_dir_fallback_uses_system_temp_dir() {
+        let env = MapEnv::new();
+        let p = resolve_runtime_dir_from_env_source(&env);
+        assert!(
+            p.starts_with(std::env::temp_dir()),
+            "fallback runtime dir {p:?} should be under system temp dir"
+        );
+        assert!(p.ends_with("nestgate-runtime"));
+    }
+
+    #[test]
+    fn no_hardcoded_tmp_in_temp_fallback() {
+        let env = MapEnv::new();
+        let temp = resolve_temp_dir_from_env_source(&env);
+        let runtime = resolve_runtime_dir_from_env_source(&env);
+        let temp_str = temp.to_string_lossy();
+        let runtime_str = runtime.to_string_lossy();
+        assert!(
+            !temp_str.contains("/tmp/") || temp_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
+            "temp path should use std::env::temp_dir(), not hardcoded /tmp"
+        );
+        assert!(
+            !runtime_str.contains("/tmp/") || runtime_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
+            "runtime path should use std::env::temp_dir(), not hardcoded /tmp"
+        );
     }
 }

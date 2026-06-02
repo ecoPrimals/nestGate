@@ -20,7 +20,7 @@
 //! 1. **`NESTGATE_SOCKET`** env var (explicit override, highest priority)
 //! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate[-{fid}].sock` (ecosystem standard layout)
 //! 3. **`$XDG_RUNTIME_DIR/<ecosystem>/nestgate[-{fid}].sock`** (preferred; `<ecosystem>` from [`nestgate_config::constants::system::ecosystem_path_segment`], reads the actual `XDG_RUNTIME_DIR` env var)
-//! 4. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
+//! 4. **Temp Directory**: `std::env::temp_dir()/nestgate-{family}-{node}.sock` (fallback, least secure)
 //!
 //! ## Environment Variables
 //!
@@ -36,7 +36,7 @@
 //! - **Agnostic**: Works in any environment (XDG, tmpfs, custom)
 //! - **Self-Knowledge**: Derives path from own identity
 //! - **Buildable**: Creates directories, cleans old sockets
-//! - **Secure**: Prefers XDG runtime directory over /tmp
+//! - **Secure**: Prefers XDG runtime directory over temp dir
 //! - **Atomic-Ready**: Supports multiple instances with unique paths
 //!
 //! ## Capability-domain symlink (`storage.sock`)
@@ -237,7 +237,7 @@ pub enum SocketConfigSource {
     BiomeOSDirectory,
     /// `$XDG_RUNTIME_DIR/<ecosystem>/nestgate[-{fid}].sock` (see [`nestgate_config::constants::system::ecosystem_path_segment`])
     XdgRuntime,
-    /// Temporary directory fallback (/tmp)
+    /// System temporary directory fallback (`std::env::temp_dir()`)
     TempDirectory,
 }
 
@@ -252,7 +252,7 @@ impl SocketConfig {
     /// 1. `socket_override` (if `Some`, use as-is)
     /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate[-{fid}].sock`)
     /// 3. XDG runtime: `{xdg_runtime_dir}/<ecosystem>/nestgate[-{fid}].sock` when `xdg_runtime_dir` is set and exists
-    /// 4. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
+    /// 4. Temp fallback: `temp_dir()/nestgate-{family}-{node}.sock`
     ///
     /// # Errors
     ///
@@ -323,15 +323,16 @@ impl SocketConfig {
             });
         }
 
-        // Tier 4: Fallback to /tmp (least secure, but always available)
-        let socket_path = PathBuf::from(format!("/tmp/nestgate-{family_id}-{node_id}.sock"));
+        // Tier 4: Fallback to system temp dir (least secure, but always available)
+        let socket_path = std::env::temp_dir()
+            .join(format!("nestgate-{family_id}-{node_id}.sock"));
 
         warn!(
-            "XDG runtime directory unavailable or not set, falling back to /tmp: {}",
+            "XDG runtime directory unavailable, falling back to temp dir: {}",
             socket_path.display()
         );
         warn!(
-            "Note: /tmp is less secure than $XDG_RUNTIME_DIR/{}/nestgate.sock",
+            "Note: temp dir is less secure than $XDG_RUNTIME_DIR/{}/nestgate.sock",
             nestgate_config::constants::system::ecosystem_path_segment()
         );
 
@@ -377,7 +378,7 @@ impl SocketConfig {
             .or_else(|| env.get("FAMILY_ID"))
             .unwrap_or_else(|| {
                 warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
-                "standalone".to_string()
+                String::from("standalone")
             });
 
         // BTSP guard: FAMILY_ID + BIOMEOS_INSECURE is a conflicting configuration.
@@ -500,7 +501,7 @@ impl SocketConfig {
                 SocketConfigSource::BiomeOSDirectory =>
                     "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
                 SocketConfigSource::XdgRuntime => xdg_layout.as_str(),
-                SocketConfigSource::TempDirectory => "/tmp fallback (insecure)",
+                SocketConfigSource::TempDirectory => "temp dir fallback (insecure)",
             }
         );
         info!("═══════════════════════════════════════════════════════════");

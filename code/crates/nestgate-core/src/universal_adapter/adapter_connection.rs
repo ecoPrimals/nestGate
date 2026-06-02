@@ -102,16 +102,16 @@ impl UniversalAdapter {
             .get_discovery_endpoint("orchestration")
         {
             let capability = CapabilityInfo {
-                category: "orchestration".to_string(),
-                provider: "dynamic-orchestration".to_string(),
+                category: String::from("orchestration"),
+                provider: String::from("dynamic-orchestration"),
                 endpoint: endpoint.to_string(),
-                performance_tier: "standard".to_string(),
+                performance_tier: String::from("standard"),
                 availability: 99.5,
                 metadata: HashMap::new(),
                 discovered_at: SystemTime::now(),
             };
             self.capabilities
-                .insert("orchestration".to_string(), capability);
+                .insert(String::from("orchestration"), capability);
         }
         Ok(())
     }
@@ -120,15 +120,16 @@ impl UniversalAdapter {
     fn discover_compute_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("compute") {
             let capability = CapabilityInfo {
-                category: "compute".to_string(),
-                provider: "dynamic-compute".to_string(),
+                category: String::from("compute"),
+                provider: String::from("dynamic-compute"),
                 endpoint: endpoint.to_string(),
-                performance_tier: "high_performance".to_string(),
+                performance_tier: String::from("high_performance"),
                 availability: 98.5,
                 metadata: HashMap::new(),
                 discovered_at: SystemTime::now(),
             };
-            self.capabilities.insert("compute".to_string(), capability);
+            self.capabilities
+                .insert(String::from("compute"), capability);
         }
         Ok(())
     }
@@ -137,15 +138,16 @@ impl UniversalAdapter {
     fn discover_security_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("security") {
             let capability = CapabilityInfo {
-                category: "security".to_string(),
-                provider: "dynamic-security".to_string(),
+                category: String::from("security"),
+                provider: String::from("dynamic-security"),
                 endpoint: endpoint.to_string(),
-                performance_tier: "enterprise".to_string(),
+                performance_tier: String::from("enterprise"),
                 availability: 99.9,
                 metadata: HashMap::new(),
                 discovered_at: SystemTime::now(),
             };
-            self.capabilities.insert("security".to_string(), capability);
+            self.capabilities
+                .insert(String::from("security"), capability);
         }
         Ok(())
     }
@@ -157,16 +159,16 @@ impl UniversalAdapter {
             .get_discovery_endpoint("artificial_intelligence")
         {
             let capability = CapabilityInfo {
-                category: "artificial_intelligence".to_string(),
-                provider: "dynamic-ai".to_string(),
+                category: String::from("artificial_intelligence"),
+                provider: String::from("dynamic-ai"),
                 endpoint: endpoint.to_string(),
-                performance_tier: "standard".to_string(),
+                performance_tier: String::from("standard"),
                 availability: 97.5,
                 metadata: HashMap::new(),
                 discovered_at: SystemTime::now(),
             };
             self.capabilities
-                .insert("artificial_intelligence".to_string(), capability);
+                .insert(String::from("artificial_intelligence"), capability);
         }
         Ok(())
     }
@@ -175,15 +177,16 @@ impl UniversalAdapter {
     fn discover_storage_capabilities(&mut self) -> Result<(), String> {
         // NestGate knows its own storage capabilities
         let capability = CapabilityInfo {
-            category: "storage".to_string(),
-            provider: "nestgate-native".to_string(),
-            endpoint: "internal://nestgate/storage".to_string(),
-            performance_tier: "enterprise".to_string(),
+            category: String::from("storage"),
+            provider: String::from("nestgate-native"),
+            endpoint: String::from("internal://nestgate/storage"),
+            performance_tier: String::from("enterprise"),
             availability: 99.9,
             metadata: HashMap::new(),
             discovered_at: SystemTime::now(),
         };
-        self.capabilities.insert("storage".to_string(), capability);
+        self.capabilities
+            .insert(String::from("storage"), capability);
         Ok(())
     }
 
@@ -191,16 +194,16 @@ impl UniversalAdapter {
     fn discover_ecosystem_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("ecosystem") {
             let capability = CapabilityInfo {
-                category: "ecosystem".to_string(),
-                provider: "dynamic-ecosystem".to_string(),
+                category: String::from("ecosystem"),
+                provider: String::from("dynamic-ecosystem"),
                 endpoint: endpoint.to_string(),
-                performance_tier: "standard".to_string(),
+                performance_tier: String::from("standard"),
                 availability: 99.0,
                 metadata: HashMap::new(),
                 discovered_at: SystemTime::now(),
             };
             self.capabilities
-                .insert("ecosystem".to_string(), capability);
+                .insert(String::from("ecosystem"), capability);
         }
         Ok(())
     }

@@ -25,7 +25,7 @@
 //!
 //! 1. **Try Unix Socket** (optimal):
 //!    - Check `XDG_RUNTIME_DIR`
-//!    - Fallback to /tmp
+//!    - Fallback to system temp dir
 //!    - Verify socket file exists
 //!
 //! 2. **Try TCP Discovery File** (fallback):
@@ -160,7 +160,7 @@ pub fn discover_ipc_endpoint_from_env(
 ///
 /// **Tries** (in order):
 /// 1. `$XDG_RUNTIME_DIR/{service}.sock` (preferred)
-/// 2. `/tmp/{service}.sock` (fallback)
+/// 2. `temp_dir()/{service}.sock` (fallback)
 ///
 /// # Arguments
 ///
@@ -181,8 +181,8 @@ fn discover_unix_socket_from_env(
         return Ok(socket_path);
     }
 
-    // Fallback to /tmp
-    let socket_path = PathBuf::from(format!("/tmp/{service_name}.sock"));
+    // Fallback to system temp dir
+    let socket_path = std::env::temp_dir().join(format!("{service_name}.sock"));
     debug!(
         "   Unix socket candidate (fallback): {}",
         socket_path.display()
@@ -197,7 +197,7 @@ fn discover_unix_socket_from_env(
 /// **Locations** (tried in order):
 /// 1. `$XDG_RUNTIME_DIR/{service}-ipc-port`
 /// 2. `$HOME/.local/share/{service}-ipc-port`
-/// 3. `/tmp/{service}-ipc-port`
+/// 3. `temp_dir()/{service}-ipc-port`
 ///
 /// # Arguments
 ///
@@ -238,7 +238,7 @@ fn discover_tcp_endpoint_from_env(
 /// **Returns** (in order of preference):
 /// 1. `$XDG_RUNTIME_DIR/{service}-ipc-port`
 /// 2. `$HOME/.local/share/{service}-ipc-port`
-/// 3. `/tmp/{service}-ipc-port`
+/// 3. `temp_dir()/{service}-ipc-port`
 fn get_tcp_discovery_file_candidates_from_env(
     env: &(impl EnvSource + ?Sized),
     service_name: &str,
@@ -259,8 +259,8 @@ fn get_tcp_discovery_file_candidates_from_env(
         )));
     }
 
-    // /tmp (last resort)
-    candidates.push(PathBuf::from(format!("/tmp/{service_name}-ipc-port")));
+    // System temp dir (last resort)
+    candidates.push(std::env::temp_dir().join(format!("{service_name}-ipc-port")));
 
     candidates
 }
@@ -287,12 +287,12 @@ mod tests {
     fn test_discovery_file_candidates() {
         let candidates = get_tcp_discovery_file_candidates_from_env(&ProcessEnv, "nestgate");
 
-        // Should have at least /tmp fallback
+        // Should have at least temp dir fallback
         assert!(!candidates.is_empty());
 
-        // Last candidate should be /tmp
+        // Last candidate should be in temp dir
         let last = candidates.last().unwrap();
-        assert!(last.to_string_lossy().starts_with("/tmp/"));
+        assert!(last.starts_with(std::env::temp_dir()));
 
         // All should contain service name
         for candidate in &candidates {

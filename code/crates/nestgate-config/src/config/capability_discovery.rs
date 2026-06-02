@@ -258,7 +258,7 @@ pub fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> R
 /// Directory where capability manifests are written for peer discovery.
 ///
 /// Resolution: `$XDG_RUNTIME_DIR/<ecosystem>/nestgate/capabilities/` (see [`ecosystem_path_segment`]) or
-/// `/tmp/nestgate-capabilities/` as fallback.
+/// `temp_dir()/nestgate-capabilities/` as fallback.
 fn capability_manifest_dir() -> std::path::PathBuf {
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
         let p = std::path::Path::new(&xdg);
@@ -269,7 +269,7 @@ fn capability_manifest_dir() -> std::path::PathBuf {
                 .join("capabilities");
         }
     }
-    std::path::PathBuf::from("/tmp/nestgate-capabilities")
+    std::env::temp_dir().join("nestgate-capabilities")
 }
 
 // ==================== INTERNAL DISCOVERY METHODS ====================

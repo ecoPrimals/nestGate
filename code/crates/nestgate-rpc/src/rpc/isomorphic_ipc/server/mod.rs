@@ -255,7 +255,7 @@ impl IsomorphicIpcServer {
                     );
                     let socket_path = self.get_socket_path()?;
                     Self::prepare_socket_path(&socket_path)?;
-                    (socket_path, "standalone".to_string())
+                    (socket_path, String::from("standalone"))
                 }
             };
 
@@ -610,11 +610,8 @@ impl IsomorphicIpcServer {
             )));
         }
 
-        // Fallback to /tmp
-        Ok(std::path::PathBuf::from(format!(
-            "/tmp/{}.sock",
-            self.service_name
-        )))
+        // Fallback to system temp dir
+        Ok(std::env::temp_dir().join(format!("{}.sock", self.service_name)))
     }
 
     /// Prepare socket path (create dirs, remove old socket)
