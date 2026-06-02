@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: May 29, 2026 (Session 81)  
+**Last Updated**: Jun 2, 2026 (Session 84)  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of May 2026.
@@ -16,8 +16,7 @@ Paths linked below exist in this repository as of May 2026.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Development guidelines
 
 ### Configuration
-- [config/](./config/) - Production configuration templates
-- [production.env.example](./config/production.env.example) — Environment variable examples
+- [docs/guides/ENVIRONMENT_VARIABLES.md](./docs/guides/ENVIRONMENT_VARIABLES.md) — Environment variable reference
 
 ---
 
@@ -27,7 +26,7 @@ Paths linked below exist in this repository as of May 2026.
 - [docs/api/](./docs/api/) - Complete API reference
 - [docs/architecture/](./docs/architecture/) - System design & patterns
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) - Primal capability mappings
-- [specs/](./specs/) - Protocol specifications
+- Protocol specifications archived to git history (pre-evolution design docs)
 
 ### Guides
 - [docs/guides/](./docs/guides/) - How-to guides and tutorials
@@ -62,10 +61,7 @@ nestgate/
 │   └── ...                         # 14 additional crates
 ├── docs/                           # Documentation (api, architecture, guides)
 ├── tests/                          # Integration tests
-├── benches/                        # Performance benchmarks
-├── config/                         # Configuration templates
-├── scripts/                        # Setup and utility scripts
-└── specs/                          # Protocol specifications
+└── benches/                        # Performance benchmarks (pointer to crate-level benches)
 ```
 
 ---
@@ -78,6 +74,6 @@ nestgate/
 
 ---
 
-**Status**: Documentation cleaned and updated May 29, 2026 (Session 81).  
+**Status**: Documentation cleaned and updated Jun 2, 2026 (Session 84).  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: May 29, 2026 (Session 81)
+**Last Updated**: Jun 2, 2026 (Session 84)

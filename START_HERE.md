@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 81)
-Tests:       PASS — 682 RPC lib, 12,500+ workspace, 0 failures (STATUS.md)
-Coverage:    83.61%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 81)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 84)
+Tests:       PASS — 682 RPC lib, 12,522+ workspace, 0 failures (STATUS.md)
+Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 84)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -179,4 +179,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: May 29, 2026 (Session 81)
+**Last Updated**: Jun 2, 2026 (Session 84)

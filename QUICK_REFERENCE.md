@@ -1,12 +1,12 @@
 # NestGate - Quick Reference
 
 **Version**: 0.5.0  
-**Tests**: 682 RPC lib, 12,500+ full workspace — 0 failures (see STATUS.md)  
-**Coverage**: 83.61%+ line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 81)  
+**Tests**: 682 RPC lib, 12,522+ full workspace — 0 failures (see STATUS.md)  
+**Coverage**: 84%+ line (llvm-cov); target 90%  
+**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 84)  
 **Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: May 29, 2026 (Session 81)
+**Last Updated**: Jun 2, 2026 (Session 84)
 
 ---
 
@@ -24,7 +24,7 @@ cargo build --release
 ./target/release/nestgate daemon
 
 # Or with explicit socket + HTTP:
-./target/release/nestgate daemon --socket /tmp/nestgate.sock --enable-http
+./target/release/nestgate daemon --socket "$XDG_RUNTIME_DIR/nestgate.sock" --enable-http
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health
@@ -225,4 +225,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: May 29, 2026 (Session 81)
+**Last Updated**: Jun 2, 2026 (Session 84)

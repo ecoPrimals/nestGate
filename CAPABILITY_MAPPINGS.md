@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: May 29, 2026 (Session 81)
+**Last Updated**: Jun 2, 2026 (Session 84)
 
 ---
 
@@ -515,10 +515,10 @@ self.call_method("storage.put", json!({
 **Status**: Semantic naming complete. Streaming storage methods wired. TCP transport active.
 
 **Next Steps**:
-1. Push coverage 84.12% → 90%
+1. Push coverage 84% → 90%
 2. Test cross-primal integration with streaming tensors
 3. Track vendored `rustls-rustcrypto` + `rustls-webpki` upstream for drop opportunity
 
 ---
 
-**Last Updated**: May 29, 2026 (Session 81)
+**Last Updated**: Jun 2, 2026 (Session 84)

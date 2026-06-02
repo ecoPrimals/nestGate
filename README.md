@@ -2,17 +2,17 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-05-29, Session 81)**  
+**Verification (as of 2026-06-02, Session 84)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 682 RPC lib tests, 12,500+ full workspace — 0 failures  
+- **Tests**: 682 RPC lib tests, 12,522+ full workspace — 0 failures  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 682 RPC / 12,500+ full workspace, 0 failures
-- **Coverage**: 83.61%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
+- **Tests (last recorded)**: 682 RPC / 12,522+ full workspace, 0 failures
+- **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: May 25, 2026
+**Last Updated**: Jun 2, 2026
 
 ---
 
@@ -90,7 +90,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ./target/release/nestgate daemon
 
 # Or with explicit socket path and HTTP:
-./target/release/nestgate daemon --socket /tmp/nestgate.sock --enable-http
+./target/release/nestgate daemon --socket "$XDG_RUNTIME_DIR/nestgate.sock" --enable-http
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health
@@ -157,15 +157,15 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-29 (Session 81).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-02 (Session 84).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 682 RPC lib tests, 12,500+ full workspace — 0 failures |
-| Coverage | 83.61%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| Tests | 682 RPC lib tests, 12,522+ full workspace — 0 failures |
+| Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
 | unwrap/expect | Zero in production library code; tests may use |
@@ -184,7 +184,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-05-29 (Se
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*`, `btsp.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
-| Coverage (80%+) | Pass — 84.12%+ line (wateringHole 80% met; 90% target pending) |
+| Coverage (80%+) | Pass — 84%+ line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
 | BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
@@ -290,7 +290,7 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 84.12%+)
+1. Push test coverage toward 90% target (currently 84%+)
 2. Track vendored `rustls-rustcrypto` + `rustls-webpki` upstream for drop opportunity
 3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Cross-gate replication (multi-node data orchestration)
@@ -312,4 +312,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 81)
+**Latest**: May 2026 (Session 84)

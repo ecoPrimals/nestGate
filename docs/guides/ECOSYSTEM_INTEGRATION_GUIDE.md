@@ -20,7 +20,7 @@ cd /path/to/beardog
 
 # Terminal 2: Run tests
 cd /path/to/nestgate
-./scripts/test-live-integration.sh
+cargo test --workspace
 ```
 
 **Expected**: All tests pass, live integration verified

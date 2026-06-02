@@ -4,7 +4,7 @@
 //! Common test utilities and types
 
 pub mod concurrent_test_framework;
-pub mod config;
+
 pub mod env_isolation;
 pub mod isolated_context;
 pub mod isolated_test_runner;

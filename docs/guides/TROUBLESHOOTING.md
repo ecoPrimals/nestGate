@@ -345,25 +345,23 @@ valgrind --leak-check=full ./nestgate
 
 ## Discovery Issues
 
-### **Issue: mDNS Not Working**
+### **Issue: Peer Primal Not Found**
+
+NestGate uses capability-based IPC discovery via Unix domain sockets.
+mDNS and Consul backends were removed in April 2026.
 
 **Solutions**:
 
 ```bash
-# Install Avahi (Linux)
-sudo apt install avahi-daemon
-sudo systemctl start avahi-daemon
+# Verify socket directory
+ls "$XDG_RUNTIME_DIR"/nestgate*.sock
 
-# Check mDNS
-avahi-browse -a
+# Check ecosystem socket dir
+echo "$BIOMEOS_SOCKET_DIR"
 
-# Use Consul instead
-export CONSUL_HTTP_ADDR=http://localhost:8500
-./nestgate
-
-# Or disable discovery
-export NESTGATE_DISCOVERY_ENABLED=false
-./nestgate
+# Verify primal announced
+socat - UNIX-CONNECT:"$XDG_RUNTIME_DIR/nestgate.sock" <<< \
+  '{"jsonrpc":"2.0","method":"lifecycle.status","id":1}'
 ```
 
 ---

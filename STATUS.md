@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: May 29, 2026 (Session 81: Deep debt sweep + module split + coverage push)  
+**Last Updated**: Jun 2, 2026 (Session 84)  
 **Version**: 0.5.0
 
 ---
@@ -12,8 +12,8 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of May 29, 2026
 Format:             CLEAN (cargo fmt --check passes), as of May 29, 2026
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of May 29, 2026
-Tests:              682 RPC lib tests, 12,500+ full workspace, 0 failures — as of May 29, 2026
-Coverage:           83.61%+ line (cargo llvm-cov --workspace; measured May 26, 2026) — wateringHole 80% met; 90% target pending
+Tests:              682 RPC lib tests, 12,522+ full workspace, 0 failures — as of May 29, 2026
+Coverage:           84%+ line (cargo llvm-cov --workspace; measured May 26, 2026) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  ZERO — unix_adapter_handlers.rs (790→440L + storage_handlers.rs 369L; Session 72)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
@@ -113,7 +113,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-features -- -D warnings` / `cargo fmt --all --check` / `cargo test --workspace` / `cargo deny check bans` / `cargo doc --workspace --no-deps`.
 
 - **Production file size**: All production `.rs` files under **750** lines. Session 43 refactored 4 largest: `jsonrpc_server/mod.rs` 794→185, `storage_handlers.rs` 771→446, `crud.rs` 762→433, `tarpc_types/mod.rs` 738→463.
-- **Workspace**: **23** members (20 code/crates + tools + fuzz + root). Zero clippy warnings. Zero C-FFI `-sys` crates in production.
+- **Workspace**: **22** members (20 code/crates + fuzz + root). Zero clippy warnings. Zero C-FFI `-sys` crates in production.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
 - **Testing**: Zero `thread::sleep` waits (except chaos/timeout). `#[serial]`: **0**. `EnvSource` trait injection for env isolation. Fake-ZFS tests have `can_spawn_fake_zfs` pre-flight checks for stability under parallel load.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
@@ -549,7 +549,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
-| Coverage gap to 90% | ~5.9 pp remaining (84.12% current; Sessions 43–43w targeted low-coverage files, deprecated cleanup) |
+| Coverage gap to 90% | ~5.9 pp remaining (84% current; Sessions 43–43w targeted low-coverage files, deprecated cleanup) |
 | Semantic router | COMPILED & WIRED — `nat.*`, `beacon.*` routes active; `data.*` removed; discovery modules active |
 | `#[allow(dead_code)]` | 0 production `#[allow(dead_code)]` — dead code removed rather than suppressed |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
@@ -560,8 +560,8 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 ### Coverage
 
 ```
-Current:  84.12%+ line coverage (llvm-cov, last measured Apr 16 2026; +288 tests since)
-          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7% → 82.06% → 82.94% → 83.86% → 84.12%+)
+Current:  84%+ line coverage (llvm-cov, last measured Apr 16 2026; +288 tests since)
+          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7% → 82.06% → 82.94% → 83.86% → 84%+)
 Target:   90% line coverage
 Gap:      ~5.9 percentage points
 Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary entrypoints
@@ -663,4 +663,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: May 29, 2026 (Session 81)
+**Latest**: Jun 2, 2026 (Session 84)
