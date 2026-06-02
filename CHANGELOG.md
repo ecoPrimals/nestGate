@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.5.0] - 2026-06-01
+## [0.5.0] - 2026-06-02
+
+### Session 84: Deep debt — /tmp centralization, idiomatic Rust, coverage (Jun 2, 2026)
+
+- **`/tmp` hardcoding elimination** (12 production sites across 10 files):
+  All socket, discovery, storage, and cache path fallbacks now use
+  `std::env::temp_dir()` instead of hardcoded `/tmp/`. Affected crates:
+  `nestgate-rpc` (socket_config, primal_announce, isomorphic_ipc/{discovery,
+  launcher, server, tcp_fallback}), `nestgate-api` (transport/config),
+  `nestgate-config` (storage_paths/resolve, capability_discovery),
+  `nestgate-cache` (multi_tier), `nestgate-bin` (storage, discover).
+- **Idiomatic `String::from()` migration**: Converted literal `.to_string()`
+  calls to `String::from()` in production code paths — `adapter_connection.rs`
+  (25 instances), `performance_analytics.rs` (18), `transport/config.rs` (3),
+  `socket_config.rs` (1), `isomorphic_ipc/server/mod.rs` (1).
+- **Coverage push** (10 new tests):
+  - `storage_paths/resolve.rs`: 5 tests — temp_dir fallback, env var priority,
+    TMPDIR passthrough, runtime_dir fallback, no-hardcoded-/tmp assertion.
+  - `multi_tier_tests.rs`: 3 tests — cache base env var, XDG_CACHE_HOME, fallback.
+  - `socket_config_resolve_prepare_tests.rs`: 1 test — tier 4 temp_dir.
+  - Updated existing tests to assert `std::env::temp_dir()` instead of `/tmp/`.
+- **Doc comment hygiene**: All updated modules have doc comments reflecting
+  `std::env::temp_dir()` instead of literal `/tmp/` paths.
+- **Zero clippy warnings**, all tests pass (12,500+).
 
 ### Session 82: Wave 67 audit response — version fix, coverage push, /tmp hardcoding (Jun 1, 2026)
 

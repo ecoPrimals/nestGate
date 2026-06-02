@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,512+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, content federation, BTSP auth"
-date = 2026-05-29
+description = "Content-addressed storage primal v0.5.0 — 12,522+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, content federation, BTSP auth"
+date = 2026-06-02
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,512+ tests** passing (682 RPC, 11,830+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **12,522+ tests** passing (682 RPC, 11,840+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **Deep debt /tmp centralization (Session 84)**: 12 production sites evolved to `std::env::temp_dir()`, idiomatic `String::from()` migration, 10 new tests
 - **Wave 67 audit response (Session 82)**: version regression fix, /tmp hardcoding removal, 27 new tests (federation_ops, fsmonitor config)
 - **Deep debt sweep (Session 81)**: module split (937L → 525+430), placeholder metrics → honest zeroes, 501 endpoint evolution, 21 new tests
 - **Content federation (Wave 60)**: `content.fetch_heads`, `content.push`, `content.replicate`, `content.sync` — 4 new methods enabling waterFall / rootPulse signal graphs to graduate from bash to Neural API
