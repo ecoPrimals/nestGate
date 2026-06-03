@@ -313,7 +313,7 @@ mod tests {
     async fn create_pool_circuit_open_without_fallback_errors() {
         let svc = service_with_open_circuit_no_fallback().await;
         let cfg = PoolConfig {
-            name: "test_pool".to_string(),
+            name: String::from("test_pool"),
             devices: vec![],
             mountpoint: None,
             compression: false,

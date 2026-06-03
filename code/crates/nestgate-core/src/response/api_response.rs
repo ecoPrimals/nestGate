@@ -212,7 +212,7 @@ impl<T> Default for ApiResponse<T> {
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
-            error: Some("Unknown error".to_string()),
+            error: Some(String::from("Unknown error")),
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: None,

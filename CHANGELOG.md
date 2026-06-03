@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 87: Deep debt sweep — modularization, honesty, idioms (Jun 3, 2026)
+
+- **`storage_stream.rs` split (1,101L → 676 + 455)**: Extracted content-addressed
+  CAS streaming into `content_stream.rs`. Shared session infrastructure (maps,
+  TTL, upload/retrieve types) is `pub` in `storage_stream`; CAS-specific handlers
+  (BLAKE3 finalize, CAS path layout) live in `content_stream`. Both under 800L.
+- **CapabilityRouter honesty**: Replaced fake `"zfs-dataset-123"` success responses
+  and silent `send_universal_request` success with explicit `NotImplemented` errors
+  directing callers to JSON-RPC transport (UDS/TCP) or mesh relay. Removed stale
+  `#[expect(clippy::unnecessary_wraps)]` from capability system module.
+- **`String::from()` migration**: Batch-converted `"literal".to_string()` →
+  `String::from("literal")` across 454 production files for ecosystem idiom
+  consistency.
+- **dispatch.rs param extraction**: Replaced 8 repeated `request.params.clone()
+  .unwrap_or_else(|| json!({}))` patterns with shared `take_params()` helper.
+  Merged identical `storage.retrieve_stream_chunk` / `content.retrieve_stream_chunk`
+  match arms.
+- **fsmonitor security defaults**: Evolved hardcoded `/etc/nestgate/keys` and
+  `/var/log/nestgate/audit.log` to XDG-compliant resolution chains
+  (`NESTGATE_CONFIG_DIR` → `XDG_CONFIG_HOME` → `$HOME/.config` → FHS fallback).
+  Added 2 new tests for env-override behavior.
+- **1,607 tests passing**, zero clippy warnings.
+
 ### Session 86: Wave 74 — ZFS integration tests, content streaming, snapshot RPC (Jun 3, 2026)
 
 - **Cross-gate integration tests (P1)**: 7 new tests validating the full CAS

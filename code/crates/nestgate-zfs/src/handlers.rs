@@ -335,11 +335,11 @@ impl ZfsRequestHandler {
             warn!("ZFS not available, using development environment simulation");
             let pools = vec![PoolInfo {
                 name: pool_name.clone(),
-                state: "ONLINE".to_string(),
-                size: "1TB".to_string(),
-                allocated: "500GB".to_string(),
-                free: "500GB".to_string(),
-                devices: vec!["sda".to_string(), "sdb".to_string()],
+                state: String::from("ONLINE"),
+                size: String::from("1TB"),
+                allocated: String::from("500GB"),
+                free: String::from("500GB"),
+                devices: vec![String::from("sda"), String::from("sdb")],
             }];
             Ok(ZfsResponse::PoolStatus { pools })
         }
@@ -358,11 +358,11 @@ impl ZfsRequestHandler {
             // Fallback to development environment simulation
             warn!("ZFS not available, using development environment simulation");
             let datasets = vec![DatasetInfo {
-                name: "tank/data".to_string(),
-                used: "100GB".to_string(),
-                available: "400GB".to_string(),
-                referenced: "100GB".to_string(),
-                mountpoint: "/tank/data".to_string(),
+                name: String::from("tank/data"),
+                used: String::from("100GB"),
+                available: String::from("400GB"),
+                referenced: String::from("100GB"),
+                mountpoint: String::from("/tank/data"),
             }];
             Ok(ZfsResponse::DatasetList { datasets })
         }
@@ -378,10 +378,10 @@ impl ZfsRequestHandler {
             // Fallback to development environment simulation
             warn!("ZFS not available, using development environment simulation");
             let snapshots = vec![SnapshotInfo {
-                name: "tank/data@snapshot1".to_string(),
-                used: "1GB".to_string(),
-                referenced: "100GB".to_string(),
-                creation: "2025-01-30T12:00:00Z".to_string(),
+                name: String::from("tank/data@snapshot1"),
+                used: String::from("1GB"),
+                referenced: String::from("100GB"),
+                creation: String::from("2025-01-30T12:00:00Z"),
             }];
 
             Ok(ZfsResponse::SnapshotList { snapshots })
@@ -391,12 +391,12 @@ impl ZfsRequestHandler {
     /// Handles  Health Check
     fn handle_health_check(&self) -> Result<ZfsResponse> {
         let mut details = HashMap::new();
-        details.insert("pools".to_string(), "1".to_string());
-        details.insert("datasets".to_string(), "1".to_string());
-        details.insert("snapshots".to_string(), "1".to_string());
+        details.insert(String::from("pools"), String::from("1"));
+        details.insert(String::from("datasets"), String::from("1"));
+        details.insert(String::from("snapshots"), String::from("1"));
 
         Ok(ZfsResponse::Health {
-            status: "healthy".to_string(),
+            status: String::from("healthy"),
             details,
         })
     }
@@ -414,7 +414,7 @@ mod tests {
     fn zfs_health_info_round_trips_json() {
         let t = std::time::SystemTime::UNIX_EPOCH;
         let h = ZfsHealthInfo {
-            status: "healthy".to_string(),
+            status: String::from("healthy"),
             pools_count: 2,
             datasets_count: 5,
             snapshots_count: 1,
@@ -429,13 +429,13 @@ mod tests {
     #[test]
     fn zfs_request_and_response_variants_serialize() {
         let req = ZfsRequest::PoolCreate {
-            name: "p".to_string(),
-            devices: vec!["/dev/sda".to_string()],
+            name: String::from("p"),
+            devices: vec![String::from("/dev/sda")],
         };
         let _ = serde_json::to_string(&req).expect("req json");
 
         let resp = ZfsResponse::Success {
-            message: "ok".to_string(),
+            message: String::from("ok"),
         };
         let _ = serde_json::to_string(&resp).expect("resp json");
     }
@@ -450,7 +450,7 @@ mod tests {
         match out {
             ZfsResponse::Health { status, details } => {
                 assert_eq!(status, "healthy");
-                assert_eq!(details.get("pools"), Some(&"1".to_string()));
+                assert_eq!(details.get("pools"), Some(&String::from("1")));
             }
             other => panic!("unexpected response: {other:?}"),
         }
@@ -461,7 +461,7 @@ mod tests {
         let handler = ZfsRequestHandler::new(ZfsConfig::default());
         let result = handler
             .handle_zfs_request(ZfsRequest::PoolDestroy {
-                name: "gone".to_string(),
+                name: String::from("gone"),
             })
             .await;
         assert!(result.is_err(), "unimplemented mutations must return Err");

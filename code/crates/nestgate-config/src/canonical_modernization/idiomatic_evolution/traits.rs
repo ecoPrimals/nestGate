@@ -72,7 +72,7 @@ pub trait EvolutionCompatible {
 
     /// Get evolution version information
     fn get_evolution_version(&self) -> String {
-        "1.0.0".to_string()
+        String::from("1.0.0")
     }
 
     /// Apply evolution compatibility fixes
@@ -162,7 +162,7 @@ mod tests {
     fn smart_default_extension_methods() {
         assert_eq!(String::smart_default_with_context("ctx"), String::new());
         assert!(!String::can_derive_default());
-        let s = "hi".to_string();
+        let s = String::from("hi");
         assert_eq!(s.smart_clone_with_context("c"), "hi");
     }
 

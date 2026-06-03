@@ -57,7 +57,7 @@ impl Default for EncryptionSecurityConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            algorithms: vec!["AES-256-GCM".to_string()],
+            algorithms: vec![String::from("AES-256-GCM")],
             key_management: KeyManagementConfig::default(),
         }
     }
@@ -68,7 +68,7 @@ impl Default for KeyManagementConfig {
     fn default() -> Self {
         Self {
             auto_rotation: true,
-            key_store: "vault".to_string(),
+            key_store: String::from("vault"),
         }
     }
 }

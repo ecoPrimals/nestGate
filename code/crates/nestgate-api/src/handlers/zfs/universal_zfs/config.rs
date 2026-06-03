@@ -60,7 +60,7 @@ pub fn zfs_config_from_env() -> ZfsHandlerConfig {
 /// Validate ZFS configuration using canonical system
 pub fn validate_zfs_config(config: &ZfsHandlerConfig) -> Result<(), String> {
     if config.service_name.is_empty() {
-        return Err("Service name cannot be empty".to_string());
+        return Err(String::from("Service name cannot be empty"));
     }
     Ok(())
 }

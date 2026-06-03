@@ -14,8 +14,8 @@ const MEMORY_ALERT_THRESHOLD_PERCENT: f64 = 85.0;
 
 fn push_dataset_count_alert(alerts: &mut Vec<Alert>, total_datasets: usize) {
     alerts.push(Alert {
-        id: "alert_001".to_string(),
-        name: "High Dataset Count".to_string(),
+        id: String::from("alert_001"),
+        name: String::from("High Dataset Count"),
         description: format!("System has {total_datasets} datasets, consider consolidation"),
         message: format!("High dataset count detected: {total_datasets}"),
         severity: AlertSeverity::Warning,
@@ -23,24 +23,24 @@ fn push_dataset_count_alert(alerts: &mut Vec<Alert>, total_datasets: usize) {
         created_at: chrono::Utc::now() - chrono::Duration::minutes(20),
         triggered_at: chrono::Utc::now() - chrono::Duration::minutes(15),
         conditions: vec![AlertCondition {
-            metric_name: "total_datasets".to_string(),
+            metric_name: String::from("total_datasets"),
             operator: ComparisonOperator::GreaterThan,
             threshold: 10.0,
             duration_seconds: 300,
             currentvalue: total_datasets as f64,
         }],
         suggested_actions: vec![
-            "Review dataset organization".to_string(),
-            "Consider consolidating similar datasets".to_string(),
-            "Implement dataset archival policy".to_string(),
+            String::from("Review dataset organization"),
+            String::from("Consider consolidating similar datasets"),
+            String::from("Implement dataset archival policy"),
         ],
     });
 }
 
 fn pushcpu_usage_alert(alerts: &mut Vec<Alert>, current_cpu: f64) {
     alerts.push(Alert {
-        id: "alert_002".to_string(),
-        name: "High CPU Usage".to_string(),
+        id: String::from("alert_002"),
+        name: String::from("High CPU Usage"),
         description: format!("CPU usage is at {current_cpu:.1}%"),
         message: format!("High CPU usage alert: {current_cpu:.1}%"),
         severity: if current_cpu > 95.0 {
@@ -52,24 +52,24 @@ fn pushcpu_usage_alert(alerts: &mut Vec<Alert>, current_cpu: f64) {
         created_at: chrono::Utc::now() - chrono::Duration::minutes(10),
         triggered_at: chrono::Utc::now() - chrono::Duration::minutes(5),
         conditions: vec![AlertCondition {
-            metric_name: "cpu_usage_percent".to_string(),
+            metric_name: String::from("cpu_usage_percent"),
             operator: ComparisonOperator::GreaterThan,
             threshold: CPU_ALERT_THRESHOLD_PERCENT,
             duration_seconds: 300,
             currentvalue: current_cpu,
         }],
         suggested_actions: vec![
-            "Check for resource-intensive processes".to_string(),
-            "Consider scaling resources".to_string(),
-            "Review system performance".to_string(),
+            String::from("Check for resource-intensive processes"),
+            String::from("Consider scaling resources"),
+            String::from("Review system performance"),
         ],
     });
 }
 
 fn push_memory_usage_alert(alerts: &mut Vec<Alert>, current_memory: f64) {
     alerts.push(Alert {
-        id: "alert_003".to_string(),
-        name: "High Memory Usage".to_string(),
+        id: String::from("alert_003"),
+        name: String::from("High Memory Usage"),
         description: format!("Memory usage is at {current_memory:.1}%"),
         message: format!("High memory usage alert: {current_memory:.1}%"),
         severity: if current_memory > 95.0 {
@@ -81,16 +81,16 @@ fn push_memory_usage_alert(alerts: &mut Vec<Alert>, current_memory: f64) {
         created_at: chrono::Utc::now() - chrono::Duration::minutes(12),
         triggered_at: chrono::Utc::now() - chrono::Duration::minutes(8),
         conditions: vec![AlertCondition {
-            metric_name: "memory_usage_percent".to_string(),
+            metric_name: String::from("memory_usage_percent"),
             operator: ComparisonOperator::GreaterThan,
             threshold: MEMORY_ALERT_THRESHOLD_PERCENT,
             duration_seconds: 300,
             currentvalue: current_memory,
         }],
         suggested_actions: vec![
-            "Clear memory caches".to_string(),
-            "Restart memory-intensive services".to_string(),
-            "Add more RAM if consistently high".to_string(),
+            String::from("Clear memory caches"),
+            String::from("Restart memory-intensive services"),
+            String::from("Add more RAM if consistently high"),
         ],
     });
 }
@@ -118,8 +118,8 @@ fn push_storage_usage_alert(alerts: &mut Vec<Alert>) {
         }
 
         alerts.push(Alert {
-            id: "alert_004".to_string(),
-            name: "High Storage Usage".to_string(),
+            id: String::from("alert_004"),
+            name: String::from("High Storage Usage"),
             description: format!("Storage usage is at {usage_percent:.1}%"),
             message: format!("High storage usage alert: {usage_percent:.1}%"),
             severity: if usage_percent > 95.0 {
@@ -131,17 +131,17 @@ fn push_storage_usage_alert(alerts: &mut Vec<Alert>) {
             created_at: chrono::Utc::now() - chrono::Duration::minutes(15),
             triggered_at: chrono::Utc::now() - chrono::Duration::minutes(12),
             conditions: vec![AlertCondition {
-                metric_name: "storage_usage_percent".to_string(),
+                metric_name: String::from("storage_usage_percent"),
                 operator: ComparisonOperator::GreaterThan,
                 threshold: 80.0,
                 duration_seconds: 300,
                 currentvalue: usage_percent,
             }],
             suggested_actions: vec![
-                "Clean up old snapshots".to_string(),
-                "Enable compression on datasets".to_string(),
-                "Add additional storage capacity".to_string(),
-                "Archive old data".to_string(),
+                String::from("Clean up old snapshots"),
+                String::from("Enable compression on datasets"),
+                String::from("Add additional storage capacity"),
+                String::from("Archive old data"),
             ],
         });
     }
@@ -149,24 +149,24 @@ fn push_storage_usage_alert(alerts: &mut Vec<Alert>) {
 
 fn push_resolved_network_example(alerts: &mut Vec<Alert>) {
     alerts.push(Alert {
-        id: "alert_005".to_string(),
-        name: "Network Connectivity".to_string(),
-        description: "Network connectivity was temporarily degraded".to_string(),
-        message: "Network connectivity issue resolved".to_string(),
+        id: String::from("alert_005"),
+        name: String::from("Network Connectivity"),
+        description: String::from("Network connectivity was temporarily degraded"),
+        message: String::from("Network connectivity issue resolved"),
         severity: AlertSeverity::Warning,
         status: AlertStatus::Resolved,
         created_at: chrono::Utc::now() - chrono::Duration::hours(2) - chrono::Duration::minutes(5),
         triggered_at: chrono::Utc::now() - chrono::Duration::hours(2),
         conditions: vec![AlertCondition {
-            metric_name: "network_latency_ms".to_string(),
+            metric_name: String::from("network_latency_ms"),
             operator: ComparisonOperator::GreaterThan,
             threshold: 100.0,
             duration_seconds: 300,
             currentvalue: 15.0,
         }],
         suggested_actions: vec![
-            "Monitor network performance".to_string(),
-            "Check network infrastructure".to_string(),
+            String::from("Monitor network performance"),
+            String::from("Check network infrastructure"),
         ],
     });
 }

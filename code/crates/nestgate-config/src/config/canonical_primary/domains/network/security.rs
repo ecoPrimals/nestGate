@@ -40,7 +40,7 @@ impl NetworkSecurityConfig {
     pub fn production_hardened() -> Self {
         Self {
             firewall_enabled: true,
-            allowed_ips: vec!["10.0.0.0/8".to_string()],
+            allowed_ips: vec![String::from("10.0.0.0/8")],
             blocked_ips: vec![],
         }
     }

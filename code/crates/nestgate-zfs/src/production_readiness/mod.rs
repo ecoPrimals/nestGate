@@ -369,7 +369,7 @@ impl ProductionReadinessValidator {
         let secure_mode = self
             .env
             .get("NESTGATE_SECURE_MODE")
-            .unwrap_or_else(|| "false".to_string())
+            .unwrap_or_else(|| String::from("false"))
             .parse::<bool>()
             .unwrap_or(false);
 
@@ -384,11 +384,11 @@ impl ProductionReadinessValidator {
         let data_dir = self
             .env
             .get("NESTGATE_DATA_DIR")
-            .unwrap_or_else(|| "./data".to_string());
+            .unwrap_or_else(|| String::from("./data"));
         let config_dir = self
             .env
             .get("NESTGATE_CONFIG_DIR")
-            .unwrap_or_else(|| "./config".to_string());
+            .unwrap_or_else(|| String::from("./config"));
 
         // Verify directories exist or can be created
         let result = std::fs::create_dir_all(&data_dir).is_ok()

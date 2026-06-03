@@ -59,7 +59,7 @@ pub(super) async fn workspace_apply_compression(
             ));
         }
         Err(_e) => {
-            errors.push("Compression update command failed".to_string());
+            errors.push(String::from("Compression update command failed"));
         }
     }
 }
@@ -89,7 +89,7 @@ pub(super) async fn workspace_apply_name(
             ));
         }
         Err(_e) => {
-            errors.push("Name update command failed".to_string());
+            errors.push(String::from("Name update command failed"));
         }
     }
 }

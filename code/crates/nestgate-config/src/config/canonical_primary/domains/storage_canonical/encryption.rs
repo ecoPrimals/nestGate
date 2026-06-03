@@ -80,12 +80,12 @@ impl Default for StorageEncryptionConfig {
         Self {
             encryption: EncryptionConfig { enabled: false },
             key_management: KeyManagementStorageConfig {
-                provider: "local".to_string(),
+                provider: String::from("local"),
             },
             data_encryption: DataEncryptionConfig { enabled: false },
             transit_encryption: TransitEncryptionConfig { enabled: true },
             algorithm: EncryptionAlgorithmStorageConfig {
-                algorithm: "AES-256-GCM".to_string(),
+                algorithm: String::from("AES-256-GCM"),
             },
         }
     }

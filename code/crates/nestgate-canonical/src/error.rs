@@ -170,7 +170,7 @@ impl NestGateError {
     pub fn internal(message: impl Into<String>) -> Self {
         Self::Internal {
             message: message.into(),
-            component: "unknown".to_string(),
+            component: String::from("unknown"),
         }
     }
 
@@ -178,7 +178,7 @@ impl NestGateError {
     pub fn validation(message: impl Into<String>) -> Self {
         Self::Validation {
             message: message.into(),
-            field: "unknown".to_string(),
+            field: String::from("unknown"),
         }
     }
 
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_nestgate_result_type() {
-        let result: NestGateResult<String> = Ok("success".to_string());
+        let result: NestGateResult<String> = Ok(String::from("success"));
         assert!(result.is_ok());
     }
 
@@ -314,7 +314,7 @@ mod tests {
     #[test]
     fn test_configuration_error_without_field() {
         let err = NestGateError::Configuration {
-            message: "general error".to_string(),
+            message: String::from("general error"),
             field: None,
         };
         let msg = err.to_string();
@@ -325,7 +325,7 @@ mod tests {
     #[test]
     fn test_network_error_without_endpoint() {
         let err = NestGateError::Network {
-            message: "network unavailable".to_string(),
+            message: String::from("network unavailable"),
             endpoint: None,
         };
         let msg = err.to_string();
@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn test_storage_error_without_path() {
         let err = NestGateError::Storage {
-            message: "storage failure".to_string(),
+            message: String::from("storage failure"),
             path: None,
         };
         let msg = err.to_string();
@@ -347,8 +347,8 @@ mod tests {
     #[test]
     fn test_security_error_with_details() {
         let err = NestGateError::Security {
-            message: "auth failed".to_string(),
-            details: Some("invalid token".to_string()),
+            message: String::from("auth failed"),
+            details: Some(String::from("invalid token")),
         };
         let msg = err.to_string();
         assert!(msg.contains("Security Error"));
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_security_error_without_details() {
         let err = NestGateError::Security {
-            message: "unauthorized".to_string(),
+            message: String::from("unauthorized"),
             details: None,
         };
         let msg = err.to_string();
@@ -370,8 +370,8 @@ mod tests {
     #[test]
     fn test_internal_error_component() {
         let err = NestGateError::Internal {
-            message: "crash".to_string(),
-            component: "database".to_string(),
+            message: String::from("crash"),
+            component: String::from("database"),
         };
         let msg = err.to_string();
         assert!(msg.contains("Internal Error"));
@@ -382,8 +382,8 @@ mod tests {
     #[test]
     fn test_validation_error_field() {
         let err = NestGateError::Validation {
-            message: "invalid format".to_string(),
-            field: "email".to_string(),
+            message: String::from("invalid format"),
+            field: String::from("email"),
         };
         let msg = err.to_string();
         assert!(msg.contains("Validation Error"));
@@ -540,7 +540,7 @@ mod tests {
 
     #[test]
     fn test_result_ok_value() {
-        let result: Result<String> = Ok("success".to_string());
+        let result: Result<String> = Ok(String::from("success"));
         assert!(result.is_ok());
         let Ok(value) = result else {
             panic!("expected Ok");
@@ -594,7 +594,7 @@ mod tests {
         reason = "testing Result/Option unwrap semantics"
     )]
     fn test_nestgate_result_with_ok() {
-        let result: NestGateResult<String> = Ok("data".to_string());
+        let result: NestGateResult<String> = Ok(String::from("data"));
         assert!(result.is_ok());
         assert_eq!(result.expect("Operation failed"), "data");
     }
@@ -618,8 +618,8 @@ mod tests {
     #[test]
     fn round5_canonical_error_serde_internal() {
         let e = NestGateError::Internal {
-            message: "m".to_string(),
-            component: "c".to_string(),
+            message: String::from("m"),
+            component: String::from("c"),
         };
         let json = serde_json::to_string(&e).unwrap();
         let back: NestGateError = serde_json::from_str(&json).unwrap();
@@ -629,8 +629,8 @@ mod tests {
     #[test]
     fn round5_canonical_error_serde_validation() {
         let e = NestGateError::Validation {
-            message: "bad".to_string(),
-            field: "f".to_string(),
+            message: String::from("bad"),
+            field: String::from("f"),
         };
         let json = serde_json::to_string(&e).unwrap();
         let back: NestGateError = serde_json::from_str(&json).unwrap();

@@ -183,7 +183,7 @@ impl ServiceRegistryClient {
         self.config.get_adapter_port(&adapter_key).map_or_else(
             || {
                 Err(NestGateError::configuration_error_detailed(
-                    "adapter_configuration".to_string(),
+                    String::from("adapter_configuration"),
                     format!("No adapter configuration found for {service_name}:{port_type}"),
                     None,
                     Some(
@@ -214,7 +214,7 @@ impl ServiceRegistryClient {
 
         // Check if registry URL is configured
         health.insert(
-            "registry_configured".to_string(),
+            String::from("registry_configured"),
             self.base_url.is_some().to_string(),
         );
 
@@ -234,10 +234,10 @@ impl ServiceRegistryClient {
         }
 
         health.insert(
-            "cache_size".to_string(),
+            String::from("cache_size"),
             self.registry_cache.len().to_string(),
         );
-        health.insert("timeout".to_string(), format!("{:?}", self.timeout));
+        health.insert(String::from("timeout"), format!("{:?}", self.timeout));
 
         Ok(health)
     }
@@ -255,20 +255,20 @@ impl ServiceRegistryClient {
 
         // Check for basic configuration
         if self.base_url.is_none() {
-            warnings.push("No registry URL configured - using fallback discovery".to_string());
+            warnings.push(String::from("No registry URL configured - using fallback discovery"));
         }
 
         // Check for service mesh configuration (from config)
         if !self.config.has_service_mesh() {
             warnings.push(
-                "No service mesh configuration detected - using localhost fallback".to_string(),
+                String::from("No service mesh configuration detected - using localhost fallback"),
             );
         }
 
         // Check timeout configuration
         if self.timeout > Duration::from_secs(30) {
             warnings
-                .push("Registry timeout is very high - may impact startup performance".to_string());
+                .push(String::from("Registry timeout is very high - may impact startup performance"));
         }
 
         Ok(warnings)
@@ -286,20 +286,20 @@ impl ServiceRegistryClient {
         let mut config = HashMap::new();
 
         config.insert(
-            "registry_url".to_string(),
+            String::from("registry_url"),
             self.base_url
                 .clone()
-                .unwrap_or_else(|| "not_configured".to_string()),
+                .unwrap_or_else(|| String::from("not_configured")),
         );
-        config.insert("timeout".to_string(), format!("{:?}", self.timeout));
+        config.insert(String::from("timeout"), format!("{:?}", self.timeout));
         config.insert(
-            "cache_entries".to_string(),
+            String::from("cache_entries"),
             self.registry_cache.len().to_string(),
         );
 
         // Add discovery method availability (from config)
         config.insert(
-            "service_mesh_available".to_string(),
+            String::from("service_mesh_available"),
             self.config
                 .has_env_var("NESTGATE_SERVICE_MESH_ENDPOINT")
                 .to_string(),
@@ -307,13 +307,13 @@ impl ServiceRegistryClient {
         config.insert(
             // DEPRECATED: Kubernetes orchestration - migrate to capability-based orchestration
             // Capability-based discovery implemented
-            "kubernetes_available".to_string(),
+            String::from("kubernetes_available"),
             self.config.has_env_var("KUBERNETES_NAMESPACE").to_string(),
         );
         config.insert(
             // DEPRECATED: Docker containerization - migrate to capability-based container runtime
             // Capability-based discovery implemented
-            "docker_compose_available".to_string(),
+            String::from("docker_compose_available"),
             self.config
                 .has_env_var("DOCKER_COMPOSE_PROJECT")
                 .to_string(),
@@ -444,7 +444,7 @@ mod tests {
         let health = result.unwrap();
         assert_eq!(
             health.get("registry_configured"),
-            Some(&"false".to_string())
+            Some(&String::from("false"))
         );
     }
 
@@ -489,7 +489,7 @@ mod tests {
         let summary = result.unwrap();
         assert_eq!(
             summary.get("registry_url"),
-            Some(&"not_configured".to_string())
+            Some(&String::from("not_configured"))
         );
     }
 

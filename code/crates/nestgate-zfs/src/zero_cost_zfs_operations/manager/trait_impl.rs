@@ -81,15 +81,15 @@ mod tests {
         |args: &[&str]| -> Result<String> {
             match args.first().copied() {
                 Some("get") => {
-                    Ok("used\t64\navailable\t1024\nmountpoint\t/tmp\nsize\t1088\n".to_string())
+                    Ok(String::from("used\t64\navailable\t1024\nmountpoint\t/tmp\nsize\t1088\n"))
                 }
                 Some("list") => {
                     if args.contains(&"snapshot") {
-                        Ok("tank/ds@s1\t128\n".to_string())
+                        Ok(String::from("tank/ds@s1\t128\n"))
                     } else if args.contains(&"-r") {
-                        Ok("tank/ds\t10\t90\t/mnt\n".to_string())
+                        Ok(String::from("tank/ds\t10\t90\t/mnt\n"))
                     } else {
-                        Ok("tank\t1000\t100\t900\tONLINE\n".to_string())
+                        Ok(String::from("tank\t1000\t100\t900\tONLINE\n"))
                     }
                 }
                 _ => Ok(String::new()),

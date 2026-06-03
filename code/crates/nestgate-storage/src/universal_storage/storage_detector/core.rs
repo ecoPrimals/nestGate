@@ -42,7 +42,7 @@ impl StorageDetectorUtils {
         // Remove trailing slashes and normalize path separators
         let normalized = path.trim_end_matches('/').replace('\\', "/");
         if normalized.is_empty() {
-            "/".to_string()
+            String::from("/")
         } else {
             normalized
         }

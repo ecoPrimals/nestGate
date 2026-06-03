@@ -124,8 +124,8 @@ impl SimdOperation<f32> for SafeSimdArrayMultiply {
     fn execute(&self, _engine: &SimdEngine, input: &[f32]) -> Result<Vec<f32>> {
         if !input.len().is_multiple_of(2) {
             return Err(NestGateUnifiedError::system(
-                "Array multiply requires even number of elements".to_string(),
-                "safe_simd_array_multiply".to_string(),
+                String::from("Array multiply requires even number of elements"),
+                String::from("safe_simd_array_multiply"),
             ));
         }
 

@@ -20,6 +20,11 @@ use super::{
     nat_handlers, session_handlers, storage_handlers, template_handlers, zfs_handlers,
 };
 
+/// Extract owned params from a request, defaulting to `{}`.
+fn take_params(request: &JsonRpcRequest) -> Value {
+    request.params.clone().unwrap_or_else(|| json!({}))
+}
+
 /// Handle JSON-RPC request
 #[expect(
     clippy::too_many_lines,
@@ -137,7 +142,7 @@ pub(super) async fn handle_request(
             blob_handlers::storage_blob_exists(request.params.as_ref(), state).await
         }
         "storage.store_stream" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            let params = take_params(&request);
             crate::rpc::storage_stream::storage_store_stream_begin(
                 params,
                 state.family_id.as_deref(),
@@ -145,19 +150,19 @@ pub(super) async fn handle_request(
             .await
         }
         "storage.store_stream_chunk" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            let params = take_params(&request);
             crate::rpc::storage_stream::storage_store_stream_chunk(params).await
         }
         "storage.retrieve_stream" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            let params = take_params(&request);
             crate::rpc::storage_stream::storage_retrieve_stream_begin(
                 params,
                 state.family_id.as_deref(),
             )
             .await
         }
-        "storage.retrieve_stream_chunk" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
+        "storage.retrieve_stream_chunk" | "content.retrieve_stream_chunk" => {
+            let params = take_params(&request);
             crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
         }
         "storage.object.size" => {
@@ -189,28 +194,24 @@ pub(super) async fn handle_request(
         }
         // Content streaming (Wave 74 — chunked CAS for large blobs)
         "content.store_stream" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
-            crate::rpc::storage_stream::content_store_stream_begin(
+            let params = take_params(&request);
+            crate::rpc::content_stream::content_store_stream_begin(
                 params,
                 state.family_id.as_deref(),
             )
             .await
         }
         "content.store_stream_chunk" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
-            crate::rpc::storage_stream::content_store_stream_chunk(params).await
+            let params = take_params(&request);
+            crate::rpc::content_stream::content_store_stream_chunk(params).await
         }
         "content.retrieve_stream" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
-            crate::rpc::storage_stream::content_retrieve_stream_begin(
+            let params = take_params(&request);
+            crate::rpc::content_stream::content_retrieve_stream_begin(
                 params,
                 state.family_id.as_deref(),
             )
             .await
-        }
-        "content.retrieve_stream_chunk" => {
-            let params = request.params.clone().unwrap_or_else(|| json!({}));
-            crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
         }
         // Content federation (Wave 60 — waterFall / rootPulse signal graphs)
         "content.fetch_heads" => {

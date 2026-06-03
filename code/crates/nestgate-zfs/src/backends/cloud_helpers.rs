@@ -31,10 +31,10 @@ pub fn config_source_custom_value(source: &CloudConfigSource) -> String {
         CloudConfigSource::CapabilityDiscovered { service_id } => {
             format!("capability:{service_id}")
         }
-        CloudConfigSource::Environment => "environment".to_string(),
+        CloudConfigSource::Environment => String::from("environment"),
         CloudConfigSource::Explicit { detail } => match detail {
             Some(d) => format!("explicit:{d}"),
-            None => "explicit".to_string(),
+            None => String::from("explicit"),
         },
     }
 }

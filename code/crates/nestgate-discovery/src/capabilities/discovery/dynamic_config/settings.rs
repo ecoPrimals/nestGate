@@ -200,7 +200,7 @@ impl Default for CertificateDiscoverySettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            cert_paths: vec!["/etc/ssl/certs".to_string()],
+            cert_paths: vec![String::from("/etc/ssl/certs")],
             renewal_threshold_days: 30,
         }
     }

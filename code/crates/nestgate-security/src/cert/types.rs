@@ -224,15 +224,15 @@ mod tests {
     /// Creates  Test Certificate
     fn create_test_certificate() -> Certificate {
         Certificate {
-            id: "cert-001".to_string(),
+            id: String::from("cert-001"),
             cert_type: CertificateType::Server,
-            principal: "CN=example.com".to_string(),
-            issuer: "CN=Test CA".to_string(),
+            principal: String::from("CN=example.com"),
+            issuer: String::from("CN=Test CA"),
             data: vec![1, 2, 3, 4],
-            not_before: "2024-01-01".to_string(),
-            not_after: "9999999999".to_string(), // Far future
-            serial_number: "123456".to_string(),
-            fingerprint: "abcdef123456".to_string(),
+            not_before: String::from("2024-01-01"),
+            not_after: String::from("9999999999"), // Far future
+            serial_number: String::from("123456"),
+            fingerprint: String::from("abcdef123456"),
             metadata: HashMap::new(),
         }
     }
@@ -275,8 +275,8 @@ mod tests {
     #[test]
     fn test_cert_mode_custom() {
         let mut rules = HashMap::new();
-        rules.insert("check_expiry".to_string(), true);
-        rules.insert("check_revocation".to_string(), false);
+        rules.insert(String::from("check_expiry"), true);
+        rules.insert(String::from("check_revocation"), false);
 
         let mode = CertMode::Custom(rules.clone());
 
@@ -298,7 +298,7 @@ mod tests {
     #[test]
     fn test_certificate_is_expired() {
         let mut cert = create_test_certificate();
-        cert.not_after = "1".to_string(); // Expired
+        cert.not_after = String::from("1"); // Expired
         assert!(cert.is_expired());
         assert!(!cert.is_valid());
     }
@@ -306,7 +306,7 @@ mod tests {
     #[test]
     fn test_certificate_expired_by_name() {
         let mut cert = create_test_certificate();
-        cert.principal = "CN=expired-cert".to_string();
+        cert.principal = String::from("CN=expired-cert");
         assert!(cert.is_expired());
         assert!(!cert.is_valid());
     }
@@ -326,11 +326,11 @@ mod tests {
     #[test]
     fn test_certificate_info_serialization() {
         let info = CertificateInfo {
-            id: "cert-001".to_string(),
-            principal: "CN=example.com".to_string(),
-            issuer: "CN=Test CA".to_string(),
-            valid_from: "2024-01-01".to_string(),
-            valid_until: "2025-01-01".to_string(),
+            id: String::from("cert-001"),
+            principal: String::from("CN=example.com"),
+            issuer: String::from("CN=Test CA"),
+            valid_from: String::from("2024-01-01"),
+            valid_until: String::from("2025-01-01"),
             is_valid: true,
             cert_type: CertificateType::Server,
         };
@@ -356,8 +356,8 @@ mod tests {
     fn test_validation_result_with_errors() {
         let result = ValidationResult {
             valid: false,
-            errors: vec!["Certificate expired".to_string()],
-            warnings: vec!["Weak signature".to_string()],
+            errors: vec![String::from("Certificate expired")],
+            warnings: vec![String::from("Weak signature")],
         };
 
         assert!(!result.valid);
@@ -392,11 +392,11 @@ mod tests {
     #[test]
     fn test_cert_request() {
         let request = CertRequest {
-            common_name: "example.com".to_string(),
-            subject_alt_names: vec!["www.example.com".to_string(), "api.example.com".to_string()],
+            common_name: String::from("example.com"),
+            subject_alt_names: vec![String::from("www.example.com"), String::from("api.example.com")],
             key_usage: vec![
-                "digitalSignature".to_string(),
-                "keyEncipherment".to_string(),
+                String::from("digitalSignature"),
+                String::from("keyEncipherment"),
             ],
             validity_days: 365,
         };
@@ -410,12 +410,12 @@ mod tests {
     #[test]
     fn test_cert_info() {
         let info = CertInfo {
-            principal: "CN=example.com".to_string(),
-            issuer: "CN=Test CA".to_string(),
-            serial_number: "123456".to_string(),
-            not_before: "2024-01-01".to_string(),
-            not_after: "2025-01-01".to_string(),
-            fingerprint: "abcdef".to_string(),
+            principal: String::from("CN=example.com"),
+            issuer: String::from("CN=Test CA"),
+            serial_number: String::from("123456"),
+            not_before: String::from("2024-01-01"),
+            not_after: String::from("2025-01-01"),
+            fingerprint: String::from("abcdef"),
         };
 
         assert_eq!(info.principal, "CN=example.com");
@@ -427,12 +427,12 @@ mod tests {
     #[test]
     fn test_integration_status() {
         let mut metadata = HashMap::new();
-        metadata.insert("provider".to_string(), "acme".to_string());
+        metadata.insert(String::from("provider"), String::from("acme"));
 
         let status = IntegrationStatus {
-            integration: "SecurityCapability".to_string(),
+            integration: String::from("SecurityCapability"),
             active: true,
-            last_validated: Some("2024-01-01".to_string()),
+            last_validated: Some(String::from("2024-01-01")),
             validation_result: Some(true),
             error_message: None,
             metadata,
@@ -448,17 +448,17 @@ mod tests {
     #[test]
     fn test_integration_status_with_error() {
         let status = IntegrationStatus {
-            integration: "FailedIntegration".to_string(),
+            integration: String::from("FailedIntegration"),
             active: false,
             last_validated: None,
             validation_result: Some(false),
-            error_message: Some("Connection timeout".to_string()),
+            error_message: Some(String::from("Connection timeout")),
             metadata: HashMap::new(),
         };
 
         assert!(!status.active);
         assert_eq!(status.validation_result, Some(false));
-        assert_eq!(status.error_message, Some("Connection timeout".to_string()));
+        assert_eq!(status.error_message, Some(String::from("Connection timeout")));
     }
 
     #[test]

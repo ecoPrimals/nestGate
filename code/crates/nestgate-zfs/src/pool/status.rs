@@ -62,7 +62,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    "Failed to execute zpool status: error details".to_string(),
+                    String::from("Failed to execute zpool status: error details"),
                     ZfsOperation::Command,
                 )
             })?;

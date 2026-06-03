@@ -206,7 +206,7 @@ async fn login(
             token: Some(token.token),
             expires_at: Some(token.expires_at),
             permissions: Some(token.permissions),
-            message: "Authentication successful".to_string(),
+            message: String::from("Authentication successful"),
         })
         .into_response(),
         Err(e) => {
@@ -231,7 +231,7 @@ async fn set_mode(
         "standalone" => Json(SetModeResponse {
             success: true,
             mode: "standalone",
-            message: "Authentication mode switched to standalone".to_string(),
+            message: String::from("Authentication mode switched to standalone"),
         }),
         "security_primal" => {
             let auth_service = AuthService::new();
@@ -239,20 +239,20 @@ async fn set_mode(
                 Json(SetModeResponse {
                     success: true,
                     mode: "security_primal",
-                    message: "Authentication mode switched to security primal".to_string(),
+                    message: String::from("Authentication mode switched to security primal"),
                 })
             } else {
                 Json(SetModeResponse {
                     success: false,
                     mode: "standalone",
-                    message: "No security capability endpoint configured (set AUTH_CAPABILITY_ENDPOINT, NESTGATE_SECURITY_AUTH_ENDPOINT, or AUTH_PROVIDER_ENDPOINT)".to_string(),
+                    message: String::from("No security capability endpoint configured (set AUTH_CAPABILITY_ENDPOINT, NESTGATE_SECURITY_AUTH_ENDPOINT, or AUTH_PROVIDER_ENDPOINT)"),
                 })
             }
         }
         "hybrid" => Json(SetModeResponse {
             success: true,
             mode: "hybrid",
-            message: "Authentication mode switched to hybrid".to_string(),
+            message: String::from("Authentication mode switched to hybrid"),
         }),
         _ => {
             let auth_service = AuthService::new();
@@ -263,7 +263,7 @@ async fn set_mode(
                     AuthMode::Production => "production",
                     AuthMode::Testing => "testing",
                 },
-                message: "Supported modes: standalone, security_primal, hybrid".to_string(),
+                message: String::from("Supported modes: standalone, security_primal, hybrid"),
             })
         }
     }
@@ -437,8 +437,8 @@ mod tests {
         let service = AuthService::new();
 
         let credentials = nestgate_core::universal_traits::Credentials {
-            username: "admin".to_string(),
-            password: "nestgate".to_string(),
+            username: String::from("admin"),
+            password: String::from("nestgate"),
             mfa_token: None,
             client_info: None,
         };
@@ -461,8 +461,8 @@ mod tests {
         let service = AuthService::new();
 
         let credentials = nestgate_core::universal_traits::Credentials {
-            username: "invalid".to_string(),
-            password: "wrong".to_string(),
+            username: String::from("invalid"),
+            password: String::from("wrong"),
             mfa_token: None,
             client_info: None,
         };

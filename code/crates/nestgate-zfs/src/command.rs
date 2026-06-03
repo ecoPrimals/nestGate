@@ -140,7 +140,7 @@ impl ZfsCommand {
             .args(args)
             .output()
             .await
-            .with_context(|| "Failed to execute error details command".to_string())?;
+            .with_context(|| String::from("Failed to execute error details command"))?;
 
         // Convert command output to strings
         let stdout_result = if output.stdout.is_empty() {
@@ -338,15 +338,15 @@ impl ZfsOperations {
         Ok(PoolStatus {
             name: pool_name.to_string(),
             state: if healthy {
-                "ONLINE".to_string()
+                String::from("ONLINE")
             } else {
-                "DEGRADED".to_string()
+                String::from("DEGRADED")
             },
             scan: extract_scan_status(&output),
             errors: if errors {
-                "Yes".to_string()
+                String::from("Yes")
             } else {
-                "No".to_string()
+                String::from("No")
             },
             raw_output: output,
         })
@@ -508,7 +508,7 @@ fn extract_scan_status(output: &str) -> String {
             return line.strip_prefix("scan:").unwrap_or("").trim().to_string();
         }
     }
-    "none requested".to_string()
+    String::from("none requested")
 }
 
 /// ZFS Pool information
@@ -586,8 +586,8 @@ mod tests {
     fn command_result_helpers() {
         let result = CommandResult {
             success: true,
-            stdout: "a\nb\n".to_string(),
-            stderr: "e1\ne2".to_string(),
+            stdout: String::from("a\nb\n"),
+            stderr: String::from("e1\ne2"),
             exit_code: 0,
         };
         assert!(result.is_success());
@@ -599,22 +599,22 @@ mod tests {
     fn command_result_parse_properties_tab_and_space() {
         let tab = CommandResult {
             success: true,
-            stdout: "k1\tv1\n# skip\nk2 v2".to_string(),
+            stdout: String::from("k1\tv1\n# skip\nk2 v2"),
             stderr: String::new(),
             exit_code: 0,
         };
         let map = tab
             .parse_properties()
             .expect("test: parse tab-separated properties");
-        assert_eq!(map.get("k1"), Some(&"v1".to_string()));
-        assert_eq!(map.get("k2"), Some(&"v2".to_string()));
+        assert_eq!(map.get("k1"), Some(&String::from("v1")));
+        assert_eq!(map.get("k2"), Some(&String::from("v2")));
     }
 
     #[test]
     fn command_result_parse_table_rows_and_malformed_skip() {
         let result = CommandResult {
             success: true,
-            stdout: "c1 c2\nv1 v2\nbad\nv3 v4 v5".to_string(),
+            stdout: String::from("c1 c2\nv1 v2\nbad\nv3 v4 v5"),
             stderr: String::new(),
             exit_code: 0,
         };
@@ -669,7 +669,7 @@ mod tests {
     async fn command_result_parse_table_tab_separated() {
         let result = CommandResult {
             success: true,
-            stdout: "name\tsize\talloc\npool1\t1T\t500G\npool2\t2T\t1T".to_string(),
+            stdout: String::from("name\tsize\talloc\npool1\t1T\t500G\npool2\t2T\t1T"),
             stderr: String::new(),
             exit_code: 0,
         };

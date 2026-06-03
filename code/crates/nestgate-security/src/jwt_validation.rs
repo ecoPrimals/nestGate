@@ -218,8 +218,8 @@ mod tests {
     #[test]
     fn round5_jwt_secret_error_display_impl() {
         let err = JwtSecretError {
-            message: "bad".to_string(),
-            help: "fix it".to_string(),
+            message: String::from("bad"),
+            help: String::from("fix it"),
         };
         let s = err.to_string();
         assert!(s.contains("JWT Security Error"));

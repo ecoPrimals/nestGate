@@ -31,7 +31,7 @@ impl AccessControlConfig {
     pub fn development_optimized() -> Self {
         Self {
             enabled: false,
-            default_policy: "allow_all".to_string(),
+            default_policy: String::from("allow_all"),
         }
     }
 
@@ -40,7 +40,7 @@ impl AccessControlConfig {
     pub fn compliance_focused() -> Self {
         Self {
             enabled: true,
-            default_policy: "deny_all".to_string(),
+            default_policy: String::from("deny_all"),
         }
     }
 
@@ -49,7 +49,7 @@ impl AccessControlConfig {
     pub fn production_hardened() -> Self {
         Self {
             enabled: true,
-            default_policy: "strict_deny".to_string(),
+            default_policy: String::from("strict_deny"),
         }
     }
 
@@ -103,7 +103,7 @@ impl Default for AccessControlConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            default_policy: "deny".to_string(),
+            default_policy: String::from("deny"),
         }
     }
 }
@@ -212,12 +212,12 @@ mod tests {
         let original = AuthorizationConfig {
             access_control: AccessControlConfig::development_optimized(),
             roles: vec![RoleConfig {
-                name: "admin".to_string(),
-                permissions: vec!["*".to_string()],
+                name: String::from("admin"),
+                permissions: vec![String::from("*")],
             }],
             permissions: vec![PermissionConfig {
-                name: "read".to_string(),
-                description: "read access".to_string(),
+                name: String::from("read"),
+                description: String::from("read access"),
             }],
         };
         let json = serde_json::to_string(&original).expect("serialize");
@@ -233,12 +233,12 @@ mod tests {
     #[test]
     fn resource_and_policy_config_serde_roundtrip() {
         let r = ResourceConfig {
-            name: "pool".to_string(),
-            type_name: "zfs".to_string(),
+            name: String::from("pool"),
+            type_name: String::from("zfs"),
         };
         let p = PolicyConfig {
-            name: "default".to_string(),
-            rules: vec!["allow read".to_string()],
+            name: String::from("default"),
+            rules: vec![String::from("allow read")],
         };
         let jr = serde_json::to_string(&r).expect("serialize resource");
         let rr: ResourceConfig = serde_json::from_str(&jr).expect("deserialize resource");

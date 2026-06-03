@@ -37,99 +37,99 @@ impl UnifiedRpcRouter {
     fn initialize_routing_rules(&mut self) {
         // Security-related methods route to security via tarpc
         self.method_rules
-            .insert("encrypt_data".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("encrypt_data"), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert("decrypt_data".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("decrypt_data"), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert("generate_key".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("generate_key"), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert("authenticate_user".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("authenticate_user"), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert("get_security_status".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("get_security_status"), RpcConnectionType::Tarpc);
         self.method_rules.insert(
-            "stream_security_events".to_string(),
+            String::from("stream_security_events"),
             RpcConnectionType::Tarpc,
         );
         self.method_rules.insert(
-            "stream_threat_detection".to_string(),
+            String::from("stream_threat_detection"),
             RpcConnectionType::Tarpc,
         );
         self.method_rules
-            .insert("stream_audit_logs".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("stream_audit_logs"), RpcConnectionType::Tarpc);
 
         // Orchestration-related methods route to orchestration via JSON RPC
         self.method_rules
-            .insert("register_service".to_string(), RpcConnectionType::JsonRpc);
+            .insert(String::from("register_service"), RpcConnectionType::JsonRpc);
         self.method_rules
-            .insert("discover_services".to_string(), RpcConnectionType::JsonRpc);
+            .insert(String::from("discover_services"), RpcConnectionType::JsonRpc);
         self.method_rules.insert(
-            "coordinate_workflow".to_string(),
+            String::from("coordinate_workflow"),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules
-            .insert("get_service_status".to_string(), RpcConnectionType::JsonRpc);
+            .insert(String::from("get_service_status"), RpcConnectionType::JsonRpc);
         self.method_rules
-            .insert("allocate_port".to_string(), RpcConnectionType::JsonRpc);
+            .insert(String::from("allocate_port"), RpcConnectionType::JsonRpc);
         self.method_rules.insert(
-            "stream_service_events".to_string(),
+            String::from("stream_service_events"),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules.insert(
-            "stream_workflow_status".to_string(),
+            String::from("stream_workflow_status"),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules.insert(
-            "stream_network_topology".to_string(),
+            String::from("stream_network_topology"),
             RpcConnectionType::JsonRpc,
         );
 
         // Real-time data methods route to WebSocket
         self.method_rules.insert(
-            "get_real_time_metrics".to_string(),
+            String::from("get_real_time_metrics"),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            "start_metrics_stream".to_string(),
+            String::from("start_metrics_stream"),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            "stream_realtime_metrics".to_string(),
+            String::from("stream_realtime_metrics"),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            "stream_zfs_events".to_string(),
+            String::from("stream_zfs_events"),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            "stream_storage_events".to_string(),
+            String::from("stream_storage_events"),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            "stream_system_logs".to_string(),
+            String::from("stream_system_logs"),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            "stream_performance_data".to_string(),
+            String::from("stream_performance_data"),
             RpcConnectionType::WebSocket,
         );
 
         // Capability-based service routing (sovereignty compliant)
         self.target_rules
-            .insert("security-encryption".to_string(), RpcConnectionType::Tarpc);
+            .insert(String::from("security-encryption"), RpcConnectionType::Tarpc);
         self.target_rules.insert(
-            "orchestration-discovery".to_string(),
+            String::from("orchestration-discovery"),
             RpcConnectionType::JsonRpc,
         );
         self.target_rules.insert(
-            "storage-management".to_string(),
+            String::from("storage-management"),
             RpcConnectionType::WebSocket,
         );
         self.target_rules
-            .insert("ai-text-generation".to_string(), RpcConnectionType::JsonRpc);
+            .insert(String::from("ai-text-generation"), RpcConnectionType::JsonRpc);
         self.target_rules
-            .insert("ai-embedding".to_string(), RpcConnectionType::JsonRpc);
+            .insert(String::from("ai-embedding"), RpcConnectionType::JsonRpc);
         self.target_rules.insert(
-            "ecosystem-management".to_string(),
+            String::from("ecosystem-management"),
             RpcConnectionType::WebSocket,
         );
 
@@ -292,28 +292,28 @@ impl UnifiedRpcRouter {
         if method_pattern.contains("encrypt") || method_pattern.contains("security") {
             recommendations.push((
                 RpcConnectionType::Tarpc,
-                "High-performance binary protocol recommended for security operations".to_string(),
+                String::from("High-performance binary protocol recommended for security operations"),
             ));
         }
 
         if method_pattern.contains("service") || method_pattern.contains("orchestr") {
             recommendations.push((
                 RpcConnectionType::JsonRpc,
-                "Standard JSON RPC recommended for service orchestration".to_string(),
+                String::from("Standard JSON RPC recommended for service orchestration"),
             ));
         }
 
         if method_pattern.contains("stream") || method_pattern.contains("realtime") {
             recommendations.push((
                 RpcConnectionType::WebSocket,
-                "WebSocket recommended for real-time streaming data".to_string(),
+                String::from("WebSocket recommended for real-time streaming data"),
             ));
         }
 
         if recommendations.is_empty() {
             recommendations.push((
                 self.default_connection,
-                "Default connection type for general operations".to_string(),
+                String::from("Default connection type for general operations"),
             ));
         }
 
@@ -351,7 +351,7 @@ mod tests {
     fn create_test_request(method: &str, target: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::new_v4(),
-            source: "test".to_string(),
+            source: String::from("test"),
             target: target.to_string(),
             method: method.to_string(),
             _params: serde_json::json!({}),
@@ -488,7 +488,7 @@ mod tests {
     #[test]
     fn add_method_rule_takes_precedence() {
         let mut router = UnifiedRpcRouter::new();
-        router.add_method_rule("custom.method".to_string(), RpcConnectionType::JsonRpc);
+        router.add_method_rule(String::from("custom.method"), RpcConnectionType::JsonRpc);
         let request = create_test_request("custom.method", "security-encryption");
         let connection_type = router
             .route_request(&request)

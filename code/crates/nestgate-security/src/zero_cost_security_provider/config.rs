@@ -40,12 +40,12 @@ impl Default for ZeroCostSecurityConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            provider_id: "zero-cost-security-provider".to_string(),
+            provider_id: String::from("zero-cost-security-provider"),
             token_expiry_seconds: 3600,
             max_concurrent_auth: 1000,
             enable_detailed_logging: false,
-            preferred_encryption: "AES-256-GCM".to_string(),
-            preferred_signing: "ECDSA-P256".to_string(),
+            preferred_encryption: String::from("AES-256-GCM"),
+            preferred_signing: String::from("ECDSA-P256"),
             rate_limit_per_minute: 100,
             auth_timeout_seconds: 30,
             key_rotation_days: 90,
@@ -100,31 +100,31 @@ impl ZeroCostSecurityConfig {
     /// - Network or I/O errors occur
     pub fn validate(&self) -> Result<(), String> {
         if self.provider_id.is_empty() {
-            return Err("Provider ID cannot be empty".to_string());
+            return Err(String::from("Provider ID cannot be empty"));
         }
 
         if self.token_expiry_seconds == 0 {
-            return Err("Token expiry must be greater than 0".to_string());
+            return Err(String::from("Token expiry must be greater than 0"));
         }
 
         if self.max_concurrent_auth == 0 {
-            return Err("Max concurrent auth must be greater than 0".to_string());
+            return Err(String::from("Max concurrent auth must be greater than 0"));
         }
 
         if self.rate_limit_per_minute == 0 {
-            return Err("Rate limit must be greater than 0".to_string());
+            return Err(String::from("Rate limit must be greater than 0"));
         }
 
         if self.auth_timeout_seconds == 0 {
-            return Err("Auth timeout must be greater than 0".to_string());
+            return Err(String::from("Auth timeout must be greater than 0"));
         }
 
         if self.max_failed_attempts == 0 {
-            return Err("Max failed attempts must be greater than 0".to_string());
+            return Err(String::from("Max failed attempts must be greater than 0"));
         }
 
         if self.lockout_duration_seconds == 0 {
-            return Err("Lockout duration must be greater than 0".to_string());
+            return Err(String::from("Lockout duration must be greater than 0"));
         }
 
         Ok(())
@@ -227,11 +227,11 @@ impl Default for EncryptionConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            default_algorithm: "AES-256-GCM".to_string(),
+            default_algorithm: String::from("AES-256-GCM"),
             supported_algorithms: vec![
-                "AES-256-GCM".to_string(),
-                "AES-128-GCM".to_string(),
-                "ChaCha20-Poly1305".to_string(),
+                String::from("AES-256-GCM"),
+                String::from("AES-128-GCM"),
+                String::from("ChaCha20-Poly1305"),
             ],
             symmetric_key_size: 256,
             asymmetric_key_size: 2048,
@@ -260,12 +260,12 @@ impl Default for SigningConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            default_algorithm: "ECDSA-P256".to_string(),
+            default_algorithm: String::from("ECDSA-P256"),
             supported_algorithms: vec![
-                "ECDSA-P256".to_string(),
-                "ECDSA-P384".to_string(),
-                "RSA-PSS-2048".to_string(),
-                "Ed25519".to_string(),
+                String::from("ECDSA-P256"),
+                String::from("ECDSA-P384"),
+                String::from("RSA-PSS-2048"),
+                String::from("Ed25519"),
             ],
             key_size: 256,
             enable_verification: true,

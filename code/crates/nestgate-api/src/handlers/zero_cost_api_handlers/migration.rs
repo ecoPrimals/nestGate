@@ -12,14 +12,14 @@ impl ApiHandlerMigrationGuide {
     #[must_use]
     pub fn migration_steps() -> Vec<String> {
         vec![
-            "1. Replace #[async_trait] with native async methods".to_string(),
-            "2. Convert handler structs to use const generics".to_string(),
-            "3. Add compile-time configuration for limits and timeouts".to_string(),
-            "4. Implement request caching with compile-time capacity".to_string(),
-            "5. Update route handlers to use direct method calls".to_string(),
-            "6. Add timeout handling with compile-time values".to_string(),
-            "7. Create type aliases for different deployment configurations".to_string(),
-            "8. Test performance improvements with load testing".to_string(),
+            String::from("1. Replace #[async_trait] with native async methods"),
+            String::from("2. Convert handler structs to use const generics"),
+            String::from("3. Add compile-time configuration for limits and timeouts"),
+            String::from("4. Implement request caching with compile-time capacity"),
+            String::from("5. Update route handlers to use direct method calls"),
+            String::from("6. Add timeout handling with compile-time values"),
+            String::from("7. Create type aliases for different deployment configurations"),
+            String::from("8. Test performance improvements with load testing"),
         ]
     }
 

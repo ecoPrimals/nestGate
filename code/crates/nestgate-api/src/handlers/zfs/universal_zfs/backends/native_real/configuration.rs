@@ -12,7 +12,7 @@ pub fn optimize(
     _service: &NativeZfsService,
     _optimization_type: String,
 ) -> UniversalZfsResult<String> {
-    Ok("Optimization completed".to_string())
+    Ok(String::from("Optimization completed"))
 }
 /// Get analytics data for ZFS optimization
 pub fn get_optimization_analytics(
@@ -25,7 +25,7 @@ pub fn predict_tier(
     _service: &NativeZfsService,
     _dataset_name: &str,
 ) -> UniversalZfsResult<String> {
-    Ok("tier_1".to_string())
+    Ok(String::from("tier_1"))
 }
 /// Get the current configuration of the native ZFS service
 ///
@@ -42,12 +42,12 @@ pub fn get_configuration(
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     let mut config = HashMap::new();
     config.insert(
-        "service_name".to_string(),
-        serde_json::Value::String("native-zfs".to_string()),
+        String::from("service_name"),
+        serde_json::Value::String(String::from("native-zfs")),
     );
     config.insert(
-        "version".to_string(),
-        serde_json::Value::String("1.0.0".to_string()),
+        String::from("version"),
+        serde_json::Value::String(String::from("1.0.0")),
     );
     Ok(config)
 }

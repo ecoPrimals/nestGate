@@ -104,14 +104,14 @@ impl Default for SnapshotPolicy {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: "default".to_string(),
-            description: "Default snapshot policy".to_string(),
+            name: String::from("default"),
+            description: String::from("Default snapshot policy"),
             enabled: true,
             frequency: ScheduleFrequency::Hours(1),
             retention: RetentionPolicy::default(),
-            dataset_patterns: vec!["*".to_string()],
+            dataset_patterns: vec![String::from("*")],
             tiers: vec![StorageTier::Hot, StorageTier::Warm, StorageTier::Cold],
-            name_prefix: "auto".to_string(),
+            name_prefix: String::from("auto"),
             include_properties: true,
             recursive: true,
             max_snapshots_per_run: 100,
@@ -164,7 +164,7 @@ mod tests {
         let daily = ScheduleFrequency::Daily(12);
         let weekly = ScheduleFrequency::Weekly { day: 1, hour: 0 };
         let monthly = ScheduleFrequency::Monthly { day: 1, hour: 0 };
-        let custom = ScheduleFrequency::Custom("0 0 * * *".to_string());
+        let custom = ScheduleFrequency::Custom(String::from("0 0 * * *"));
 
         assert!(matches!(minutes, ScheduleFrequency::Minutes(15)));
         assert!(matches!(hours, ScheduleFrequency::Hours(6)));
@@ -200,14 +200,14 @@ mod tests {
     #[test]
     fn test_snapshot_policy_custom() {
         let policy = SnapshotPolicy {
-            name: "custom".to_string(),
-            description: "Custom policy".to_string(),
+            name: String::from("custom"),
+            description: String::from("Custom policy"),
             enabled: false,
             frequency: ScheduleFrequency::Daily(2),
             retention: RetentionPolicy::Count(50),
-            dataset_patterns: vec!["tank/*".to_string()],
+            dataset_patterns: vec![String::from("tank/*")],
             tiers: vec![StorageTier::Hot],
-            name_prefix: "custom".to_string(),
+            name_prefix: String::from("custom"),
             include_properties: false,
             recursive: false,
             max_snapshots_per_run: 50,

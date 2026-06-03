@@ -312,7 +312,7 @@ impl CapabilityDiscovery {
 
         let standard_path = env
             .get("ORCHESTRATION_IPC_STANDARD_PATH")
-            .unwrap_or_else(|| "/primal/orchestration".to_string());
+            .unwrap_or_else(|| String::from("/primal/orchestration"));
         tracing::debug!(path = %standard_path, "Trying standard IPC path");
         if Path::new(&standard_path).exists() {
             match JsonRpcClient::connect_unix(&standard_path).await {
@@ -342,7 +342,7 @@ impl CapabilityDiscovery {
                     "Orchestration TCP bootstrap: ORCHESTRATION_HOST, NESTGATE_DEV_HOST, \
                      and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`."
                 );
-                "localhost".to_string()
+                String::from("localhost")
             });
         let port = env
             .get("ORCHESTRATION_PORT")

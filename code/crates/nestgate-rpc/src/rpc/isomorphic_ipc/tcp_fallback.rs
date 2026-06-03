@@ -385,7 +385,7 @@ mod tests {
     #[test]
     fn test_tcp_server_creation() {
         let handler = Arc::new(MockHandler);
-        let server = TcpFallbackServer::new("test-service".to_string(), handler);
+        let server = TcpFallbackServer::new(String::from("test-service"), handler);
         // Server constructed - clone needed for spawn
         let _cloned = server.clone();
     }
@@ -434,7 +434,7 @@ mod tests {
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
         let handler = Arc::new(MockHandler);
         let server = Arc::new(TcpFallbackServer::new(
-            "sg_tcp_accept_it".to_string(),
+            String::from("sg_tcp_accept_it"),
             handler,
         ));
         let _bg = tokio::spawn({
@@ -474,7 +474,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let env = MapEnv::from([("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref())]);
         let handler = Arc::new(MockHandler);
-        let server = TcpFallbackServer::new("ng_tcp_cov".to_string(), handler);
+        let server = TcpFallbackServer::new(String::from("ng_tcp_cov"), handler);
         let addr: SocketAddr = "127.0.0.1:55055".parse().unwrap();
         server
             .write_tcp_discovery_file_from_env_source(&env, &addr)
@@ -518,7 +518,7 @@ mod tests {
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
         let handler = Arc::new(MockHandler);
         let server = Arc::new(TcpFallbackServer::new(
-            "sg_tcp_parse_cov".to_string(),
+            String::from("sg_tcp_parse_cov"),
             handler,
         ));
         let _bg = tokio::spawn({
@@ -556,7 +556,7 @@ mod tests {
     fn write_tcp_discovery_file_falls_back_to_tmp_without_xdg_or_home() {
         let env = MapEnv::new();
         let handler = Arc::new(MockHandler);
-        let server = TcpFallbackServer::new("ng_tcp_tmp_only".to_string(), handler);
+        let server = TcpFallbackServer::new(String::from("ng_tcp_tmp_only"), handler);
         let addr: SocketAddr = "127.0.0.1:55111".parse().unwrap();
         server
             .write_tcp_discovery_file_from_env_source(&env, &addr)

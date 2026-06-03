@@ -198,7 +198,7 @@ impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
             port: Port::default(),
-            host: "127.0.0.1".to_string(),
+            host: String::from("127.0.0.1"),
             timeout_secs: 30,
             max_connections: 1000,
             read_timeout_secs: 10,

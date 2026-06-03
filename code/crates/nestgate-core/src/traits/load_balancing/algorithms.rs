@@ -25,7 +25,7 @@ impl RoundRobinLoadBalancer {
         Self {
             counter: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
-                algorithm: "round_robin".to_string(),
+                algorithm: String::from("round_robin"),
                 ..LoadBalancerStats::default()
             })),
         }
@@ -118,7 +118,7 @@ impl LeastConnectionsLoadBalancer {
         Self {
             connection_counts: Arc::new(dashmap::DashMap::new()),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
-                algorithm: "least_connections".to_string(),
+                algorithm: String::from("least_connections"),
                 ..LoadBalancerStats::default()
             })),
         }
@@ -236,7 +236,7 @@ impl RandomLoadBalancer {
         Self {
             rng: Arc::new(parking_lot::Mutex::new(StdRng::from_os_rng())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
-                algorithm: "random".to_string(),
+                algorithm: String::from("random"),
                 ..LoadBalancerStats::default()
             })),
         }
@@ -336,7 +336,7 @@ mod tests {
         ServiceInfo {
             id: format!("id-{name}"),
             name: name.to_string(),
-            version: "1.0.0".to_string(),
+            version: String::from("1.0.0"),
             capabilities: vec![],
             status: ServiceStatus::Healthy,
             last_seen: SystemTime::UNIX_EPOCH,
@@ -345,8 +345,8 @@ mod tests {
 
     fn dummy_request() -> ServiceRequest {
         ServiceRequest {
-            service_id: "svc".to_string(),
-            action: "ping".to_string(),
+            service_id: String::from("svc"),
+            action: String::from("ping"),
             parameters: HashMap::default(),
             timeout_seconds: Some(5),
         }

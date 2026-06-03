@@ -93,7 +93,7 @@ impl Default for PoolResponse {
     /// Returns the default instance
     fn default() -> Self { Self {
             name: String::new(),
-            health: "unknown".to_string(),
+            health: String::from("unknown"),
             capacity: None,
             ai_recommendations: vec![],
          }
@@ -396,15 +396,15 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
     match operation {
         "scrub" => vec![
             SuggestedAction {
-                action_type: "monitor_progress".to_string(),
-                description: "Monitor scrub progress with pool status checks".to_string(),
+                action_type: String::from("monitor_progress"),
+                description: String::from("Monitor scrub progress with pool status checks"),
                 parameters: HashMap::from([
                     (
-                        "command".to_string(),
-                        serde_json::Value::String("zpool status".to_string()),
+                        String::from("command"),
+                        serde_json::Value::String(String::from("zpool status")),
                     ),
                     (
-                        "interval_seconds".to_string(),
+                        String::from("interval_seconds"),
                         serde_json::Value::Number(serde_json::Number::from(300)),
                     ),
                 ]),
@@ -412,11 +412,11 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
                 estimated_duration_ms: 60000, // 1 minute monitoring intervals
             },
             SuggestedAction {
-                action_type: "schedule_next_scrub".to_string(),
-                description: "Schedule next scrub based on pool size and usage".to_string(),
+                action_type: String::from("schedule_next_scrub"),
+                description: String::from("Schedule next scrub based on pool size and usage"),
                 parameters: HashMap::from([(
-                    "frequency".to_string(),
-                    serde_json::Value::String("monthly".to_string()),
+                    String::from("frequency"),
+                    serde_json::Value::String(String::from("monthly")),
                 )]),
                 confidence: 0.8,
                 estimated_duration_ms: 5000,
@@ -424,18 +424,18 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
         ],
         "create" => vec![
             SuggestedAction {
-                action_type: "enable_compression".to_string(),
-                description: "Enable LZ4 compression for space efficiency".to_string(),
+                action_type: String::from("enable_compression"),
+                description: String::from("Enable LZ4 compression for space efficiency"),
                 parameters: HashMap::from([(
-                    "compression".to_string(),
-                    serde_json::Value::String("lz4".to_string()),
+                    String::from("compression"),
+                    serde_json::Value::String(String::from("lz4")),
                 )]),
                 confidence: 0.9,
                 estimated_duration_ms: 2000,
             },
             SuggestedAction {
-                action_type: "create_initial_datasets".to_string(),
-                description: "Create organizational dataset structure".to_string(),
+                action_type: String::from("create_initial_datasets"),
+                description: String::from("Create organizational dataset structure"),
                 parameters: HashMap::new(),
                 confidence: 0.85,
                 estimated_duration_ms: 10_000,
@@ -446,10 +446,10 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
                 let capacity = &info.capacity;
                 if capacity.utilization_percent > 50.0 {
                     return vec![SuggestedAction {
-                        action_type: "backup_data".to_string(),
-                        description: "Backup important data before pool destruction".to_string(),
+                        action_type: String::from("backup_data"),
+                        description: String::from("Backup important data before pool destruction"),
                         parameters: HashMap::from([(
-                            "data_size_gb".to_string(),
+                            String::from("data_size_gb"),
                             serde_json::Value::Number(serde_json::Number::from(
                                 (capacity.total_bytes - capacity.available_bytes) / 1_000_000_000,
                             )),
@@ -470,40 +470,40 @@ fn generate_pool_recommendations(pool_info: &PoolInfo, operation: &str) -> Vec<S
     
     match operation {
         "create" => {
-            recommendations.push("Consider enabling compression for space efficiency".to_string());
-            recommendations.push("Set up regular scrub schedule for data integrity".to_string());
-            recommendations.push("Configure appropriate recordsize for your workload".to_string());
+            recommendations.push(String::from("Consider enabling compression for space efficiency"));
+            recommendations.push(String::from("Set up regular scrub schedule for data integrity"));
+            recommendations.push(String::from("Configure appropriate recordsize for your workload"));
         }
         "status" | "list" => {
             // Add health-based recommendations
             match pool_info.health {
                 nestgate_zfs::PoolHealth::Healthy => {
-                    recommendations.push("Pool is healthy - consider regular maintenance".to_string());
+                    recommendations.push(String::from("Pool is healthy - consider regular maintenance"));
                 }
                 nestgate_zfs::PoolHealth::Degraded => {
-                    recommendations.push("Pool is degraded - consider resilver or device replacement".to_string());
-                    recommendations.push("Check pool status for specific issues".to_string());
+                    recommendations.push(String::from("Pool is degraded - consider resilver or device replacement"));
+                    recommendations.push(String::from("Check pool status for specific issues"));
                 }
                 nestgate_zfs::PoolHealth::Faulted => {
-                    recommendations.push("Pool is faulted - immediate attention required".to_string());
-                    recommendations.push("Review pool status and replace failed _devices".to_string());
+                    recommendations.push(String::from("Pool is faulted - immediate attention required"));
+                    recommendations.push(String::from("Review pool status and replace failed _devices"));
                 }
                 _ => {
-                    recommendations.push("Monitor pool health regularly".to_string());
+                    recommendations.push(String::from("Monitor pool health regularly"));
                 }
             }
             
             // Add capacity-based recommendations
             if let Some(capacity) = &pool_info.capacity {
                 if capacity.utilization_percent > 80.0 {
-                    recommendations.push("Pool utilization high - consider adding storage".to_string());
+                    recommendations.push(String::from("Pool utilization high - consider adding storage"));
                 } else if capacity.utilization_percent > 90.0 {
-                    recommendations.push("Pool utilization critical - add storage immediately".to_string());
+                    recommendations.push(String::from("Pool utilization critical - add storage immediately"));
                 }
             }
         }
         _ => {
-            recommendations.push("Monitor operation progress and system performance".to_string());
+            recommendations.push(String::from("Monitor operation progress and system performance"));
         }
     }
     
@@ -517,7 +517,7 @@ mod tests {
     #[test]
     fn test_pool_response_creation() {
         let pool_info = PoolInfo {
-            name: "testpool".to_string(),
+            name: String::from("testpool"),
             health: PoolHealth::Healthy,
             capacity: Some(PoolCapacity {
                 total_bytes: 1_000_000_000_000, // 1TB
@@ -546,7 +546,7 @@ mod tests {
     #[test]
     fn test_zfs_confidence_enhancement() {
         let pool_info = PoolInfo {
-            name: "testpool".to_string(),
+            name: String::from("testpool"),
             health: PoolHealth::Healthy,
             capacity: None,
         };
@@ -555,7 +555,7 @@ mod tests {
         assert_eq!(confidence, 0.95); // Healthy pool should have high scrub confidence
         
         let degraded_pool = PoolInfo {
-            name: "degraded".to_string(),
+            name: String::from("degraded"),
             health: PoolHealth::Degraded,
             capacity: None,
         };

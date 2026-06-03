@@ -154,7 +154,7 @@ mod tests {
                 format!("http://127.0.0.1:{}", runtime_fallback_ports::HEALTH),
                 format!("http://127.0.0.1:{}", runtime_fallback_ports::WEBSOCKET),
             ],
-            discovery_host: "127.0.0.1".to_string(),
+            discovery_host: String::from("127.0.0.1"),
             discovery_base_port: runtime_fallback_ports::HTTP,
             discovery_port_range: 10,
             auto_discovery: true,
@@ -184,7 +184,7 @@ mod tests {
         // Test build_endpoint method directly
         let config = ServiceDiscoveryConfig {
             endpoints: vec![],
-            discovery_host: "127.0.0.1".to_string(),
+            discovery_host: String::from("127.0.0.1"),
             discovery_base_port: runtime_fallback_ports::HTTP,
             discovery_port_range: 3,
             auto_discovery: true,
@@ -203,7 +203,7 @@ mod tests {
         // Test get_port_range method directly
         let config = ServiceDiscoveryConfig {
             endpoints: vec![],
-            discovery_host: "127.0.0.1".to_string(),
+            discovery_host: String::from("127.0.0.1"),
             discovery_base_port: runtime_fallback_ports::HTTP,
             discovery_port_range: 5,
             auto_discovery: true,
@@ -271,7 +271,7 @@ mod tests {
 
     #[test]
     fn test_with_host_and_port_constructor() {
-        let config = ServiceDiscoveryConfig::with_host_and_port("192.168.1.50".to_string(), 9000);
+        let config = ServiceDiscoveryConfig::with_host_and_port(String::from("192.168.1.50"), 9000);
 
         assert_eq!(config.discovery_host, "192.168.1.50");
         assert_eq!(config.discovery_base_port, 9000);

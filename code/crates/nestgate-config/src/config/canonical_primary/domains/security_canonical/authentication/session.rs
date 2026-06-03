@@ -138,7 +138,7 @@ impl Default for SessionEncryptionConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            algorithm: "AES-256-GCM".to_string(),
+            algorithm: String::from("AES-256-GCM"),
             key_rotation: KeyRotationConfig::default(),
         }
     }

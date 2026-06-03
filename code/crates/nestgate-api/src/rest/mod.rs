@@ -104,7 +104,7 @@ impl ApiState {
 
             // Universal adapter RPC integration when enabled
             if std::env::var("UNIVERSAL_ADAPTER_ENABLED")
-                .unwrap_or_else(|_| "true".to_string())
+                .unwrap_or_else(|_| String::from("true"))
                 .parse()
                 .unwrap_or(true)
             {
@@ -291,8 +291,8 @@ async fn handle_rpc_call(
 ) -> std::result::Result<axum::Json<DataResponse<UnifiedRpcResponse>>, axum::Json<DataError>> {
     let Some(rpc_manager) = state.rpc_manager.get() else {
         return Err(axum::Json(DataError::new(
-            "RPC manager not initialized".to_string(),
-            "RPC_NOT_AVAILABLE".to_string(),
+            String::from("RPC manager not initialized"),
+            String::from("RPC_NOT_AVAILABLE"),
         )));
     };
     let target = request.target.clone();
@@ -300,7 +300,7 @@ async fn handle_rpc_call(
         Ok(response) => Ok(axum::Json(DataResponse::new(response))),
         Err(e) => Err(axum::Json(DataError::new(
             format!("RPC call failed: {e}"),
-            "RPC_CALL_FAILED".to_string(),
+            String::from("RPC_CALL_FAILED"),
         ))),
     }
 }
@@ -312,8 +312,8 @@ async fn handle_rpc_stream(
 ) -> std::result::Result<axum::Json<DataResponse<serde_json::Value>>, axum::Json<DataError>> {
     let Some(rpc_manager) = state.rpc_manager.get() else {
         return Err(axum::Json(DataError::new(
-            "RPC manager not initialized".to_string(),
-            "RPC_NOT_AVAILABLE".to_string(),
+            String::from("RPC manager not initialized"),
+            String::from("RPC_NOT_AVAILABLE"),
         )));
     };
     match rpc_manager.start_bidirectional_stream(request) {
@@ -336,7 +336,7 @@ async fn handle_rpc_stream(
         }
         Err(e) => Err(axum::Json(DataError::new(
             format!("Failed to start RPC stream: {e}"),
-            "RPC_STREAM_FAILED".to_string(),
+            String::from("RPC_STREAM_FAILED"),
         ))),
     }
 }
@@ -384,7 +384,7 @@ mod tests {
 
     #[test]
     fn test_data_error_new() {
-        let err = DataError::new("test error".to_string(), "ERR_CODE".to_string());
+        let err = DataError::new(String::from("test error"), String::from("ERR_CODE"));
         assert_eq!(err.error, "test error");
         assert_eq!(err.code, "ERR_CODE");
     }
@@ -439,7 +439,7 @@ mod tests {
 
     #[test]
     fn data_response_serde_roundtrip() {
-        let r = DataResponse::new("hello".to_string());
+        let r = DataResponse::new(String::from("hello"));
         let json = serde_json::to_string(&r).expect("ser");
         let back: DataResponse<String> = serde_json::from_str(&json).expect("de");
         assert_eq!(back.data, "hello");

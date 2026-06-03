@@ -69,6 +69,6 @@ mod lib_smoke_tests {
 
     #[test]
     fn primal_agnostic_adapter_new_is_constructible() {
-        let _ = PrimalAgnosticAdapter::new("http://localhost:0/adapter".to_string());
+        let _ = PrimalAgnosticAdapter::new(String::from("http://localhost:0/adapter"));
     }
 }

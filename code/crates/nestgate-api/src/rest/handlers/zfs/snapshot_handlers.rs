@@ -46,7 +46,7 @@ pub async fn list_snapshots(
     } else {
         Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))
         .into_response()
     }
@@ -70,7 +70,7 @@ pub async fn create_snapshot(
     } else {
         Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))
         .into_response()
     }
@@ -87,7 +87,7 @@ pub async fn get_snapshot(
     } else {
         Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))
         .into_response()
     }
@@ -108,7 +108,7 @@ pub async fn delete_snapshot(
     } else {
         Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))
         .into_response()
     }
@@ -130,8 +130,8 @@ pub async fn clone_snapshot(
         return (
             StatusCode::BAD_REQUEST,
             Json(DataError::new(
-                "Clone name cannot be empty".to_string(),
-                "400".to_string(),
+                String::from("Clone name cannot be empty"),
+                String::from("400"),
             )),
         )
             .into_response();

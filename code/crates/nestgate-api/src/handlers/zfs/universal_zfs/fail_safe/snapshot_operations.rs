@@ -226,8 +226,8 @@ mod tests {
     async fn create_snapshot_circuit_open_without_fallback_errors() {
         let svc = service_with_open_circuit_no_fallback().await;
         let cfg = SnapshotConfig {
-            name: "snap".to_string(),
-            dataset: "tank/fs".to_string(),
+            name: String::from("snap"),
+            dataset: String::from("tank/fs"),
             properties: HashMap::new(),
         };
         let r = create_snapshot(&svc, &cfg).await;
@@ -262,8 +262,8 @@ mod tests {
     async fn create_snapshot_circuit_open_with_fallback_dispatches_fallback() {
         let svc = service_open_circuit_with_fallback().await;
         let cfg = SnapshotConfig {
-            name: "snap".to_string(),
-            dataset: "tank/fs".to_string(),
+            name: String::from("snap"),
+            dataset: String::from("tank/fs"),
             properties: HashMap::new(),
         };
         let _ = create_snapshot(&svc, &cfg).await;
@@ -299,8 +299,8 @@ mod tests {
         let svc = FailSafeZfsService::new(wrapped, outer_cfg);
         let _ = list_snapshots(&svc).await;
         let cfg = SnapshotConfig {
-            name: "snap".to_string(),
-            dataset: "tank/fs".to_string(),
+            name: String::from("snap"),
+            dataset: String::from("tank/fs"),
             properties: HashMap::new(),
         };
         let _ = create_snapshot(&svc, &cfg).await;

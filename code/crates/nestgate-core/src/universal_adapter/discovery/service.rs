@@ -15,12 +15,12 @@ pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
 
     // For now, return a basic result - this would be expanded with real discovery logic
     let services = vec![DiscoveredService {
-        id: "nestgate-core".to_string(),
-        name: "NestGate Core".to_string(),
+        id: String::from("nestgate-core"),
+        name: String::from("NestGate Core"),
         service_type: ServiceType::Storage,
         state: ServiceState::Running,
         endpoint: config.endpoint.clone(),
-        capabilities: vec!["storage".to_string(), "zfs".to_string()],
+        capabilities: vec![String::from("storage"), String::from("zfs")],
         metadata: HashMap::new(),
         discovered_at: SystemTime::now(),
         last_health_check: Some(SystemTime::now()),

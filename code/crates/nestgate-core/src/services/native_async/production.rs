@@ -85,7 +85,7 @@ impl Default for ProductionLoadBalancer {
                 failed_requests: 0,
                 average_response_time: 0.0,
                 service_stats: HashMap::new(),
-                algorithm: "round_robin".to_string(),
+                algorithm: String::from("round_robin"),
                 health_aware: true,
                 uptime_seconds: 0,
             })),
@@ -144,10 +144,10 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
                 if let Some(service_name_str) = service_namevalue.as_str() {
                     service_name_str.to_string()
                 } else {
-                    "default".to_string()
+                    String::from("default")
                 }
             } else {
-                "default".to_string()
+                String::from("default")
             };
 
         let target_service = if target_service_name.is_empty() || target_service_name == "default" {
@@ -333,9 +333,9 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         // Direct async method for message reception
         Ok(CommunicationMessage {
             message_id: uuid::Uuid::new_v4().to_string(),
-            sender: "production-sender".to_string(),
-            recipient: "production-recipient".to_string(),
-            unified_message_type: "system".to_string(),
+            sender: String::from("production-sender"),
+            recipient: String::from("production-recipient"),
+            unified_message_type: String::from("system"),
             payload: serde_json::json!({"type": "heartbeat"}),
             timestamp: SystemTime::now(),
             priority: crate::services::native_async::types::MessagePriority::Normal,
@@ -487,8 +487,8 @@ mod tests {
             metadata: ServiceMetadata {
                 name: name.to_string(),
                 category: ServiceCategory::Storage,
-                version: "1.0".to_string(),
-                description: "test".to_string(),
+                version: String::from("1.0"),
+                description: String::from("test"),
                 health_endpoint: None,
                 metrics_endpoint: None,
             },
@@ -560,8 +560,8 @@ mod tests {
     async fn test_production_load_balancer_route_request_no_service() {
         let lb = ProductionLoadBalancer::default();
         let req = ServiceRequest {
-            service_id: "x".to_string(),
-            action: "get".to_string(),
+            service_id: String::from("x"),
+            action: String::from("get"),
             parameters: HashMap::new(),
             timeout_seconds: None,
         };
@@ -637,10 +637,10 @@ mod tests {
             port: get_api_port(),
         };
         let msg = CommunicationMessage {
-            message_id: "m1".to_string(),
-            sender: "s".to_string(),
-            recipient: "r".to_string(),
-            unified_message_type: "test".to_string(),
+            message_id: String::from("m1"),
+            sender: String::from("s"),
+            recipient: String::from("r"),
+            unified_message_type: String::from("test"),
             payload: serde_json::json!({}),
             timestamp: SystemTime::now(),
             priority: crate::services::native_async::types::MessagePriority::Normal,
@@ -653,10 +653,10 @@ mod tests {
     async fn test_production_communication_provider_broadcast() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
         let msg = CommunicationMessage {
-            message_id: "b1".to_string(),
-            sender: "s".to_string(),
-            recipient: "r".to_string(),
-            unified_message_type: "broadcast".to_string(),
+            message_id: String::from("b1"),
+            sender: String::from("s"),
+            recipient: String::from("r"),
+            unified_message_type: String::from("broadcast"),
             payload: serde_json::json!({}),
             timestamp: SystemTime::now(),
             priority: crate::services::native_async::types::MessagePriority::Normal,

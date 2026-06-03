@@ -231,7 +231,7 @@ pub async fn cleanup_workspace(
                         .args(["destroy", snapshot_name])
                         .output()
                         .await;
-                    cleanup_actions.push("Removed temporary snapshot".to_string());
+                    cleanup_actions.push(String::from("Removed temporary snapshot"));
                     space_freed += 1024 * 1024; // Estimate 1MB freed per snapshot
                 }
             }
@@ -247,7 +247,7 @@ pub async fn cleanup_workspace(
     if let Ok(output) = cache_output
         && output.status.success()
     {
-        cleanup_actions.push("Optimized cache settings for better performance".to_string());
+        cleanup_actions.push(String::from("Optimized cache settings for better performance"));
     }
 
     // 3. Update dataset compression if not optimal
@@ -266,7 +266,7 @@ pub async fn cleanup_workspace(
                 .args(["set", "compression=lz4", &dataset_name])
                 .output()
                 .await;
-            cleanup_actions.push("Updated compression to lz4 for better efficiency".to_string());
+            cleanup_actions.push(String::from("Updated compression to lz4 for better efficiency"));
         }
     }
 
@@ -323,12 +323,12 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
                 // If utilization is high, recommend scaling
                 if utilization > 80.0 {
                     scale_actions
-                        .push("High utilization detected - consider expanding storage".to_string());
+                        .push(String::from("High utilization detected - consider expanding storage"));
                     scale_actions.push(
-                        "Monitoring compression ratio for optimization opportunities".to_string(),
+                        String::from("Monitoring compression ratio for optimization opportunities"),
                     );
                 } else {
-                    scale_actions.push("Storage utilization is healthy".to_string());
+                    scale_actions.push(String::from("Storage utilization is healthy"));
                 }
                 Ok(Json(json!({
                     "status": "success",

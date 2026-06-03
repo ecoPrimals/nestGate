@@ -97,15 +97,15 @@ pub async fn create_dataset(
     info!("Creating ZFS dataset: {}", request.name);
     if request.name.is_empty() {
         return Err(Json(DataError::new(
-            "Dataset name cannot be empty".to_string(),
-            "INVALID_NAME".to_string(),
+            String::from("Dataset name cannot be empty"),
+            String::from("INVALID_NAME"),
         )));
     }
 
     if state.zfs_engines.contains_key(&request.name) {
         return Err(Json(DataError::new(
             format!("Dataset '{}' already exists", request.name),
-            "DATASET_EXISTS".to_string(),
+            String::from("DATASET_EXISTS"),
         )));
     }
 
@@ -115,7 +115,7 @@ pub async fn create_dataset(
             error!("Failed to create storage backend: {}", e);
             return Err(Json(DataError::new(
                 format!("Failed to create storage backend: {}", request.name),
-                "BACKEND_ERROR".to_string(),
+                String::from("BACKEND_ERROR"),
             )));
         }
     };
@@ -131,7 +131,7 @@ pub async fn create_dataset(
 
     state
         .zfs_engines
-        .insert(request.name.clone(), "placeholder_engine".to_string());
+        .insert(request.name.clone(), String::from("placeholder_engine"));
 
     let welcome_content = format!(
         "Welcome to your new ZFS dataset: {}\nCreated: {}\nCompression: {}\nChecksum: {}\n",
@@ -159,7 +159,7 @@ pub async fn create_dataset(
     }
 
     let dataset =
-        helpers::convert_engine_to_placeholder_dataset(&request.name, &"placeholder".to_string());
+        helpers::convert_engine_to_placeholder_dataset(&request.name, &String::from("placeholder"));
 
     info!("Successfully created ZFS dataset: {}", request.name);
     Ok(Json(DataResponse::new(dataset)))
@@ -183,7 +183,7 @@ pub async fn get_dataset(
         ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))),
     }
 }
@@ -209,7 +209,7 @@ pub async fn update_dataset(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))),
     }
 }
@@ -233,7 +233,7 @@ pub async fn delete_dataset(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))),
     }
 }
@@ -256,7 +256,7 @@ pub async fn get_dataset_properties(
         ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))),
     }
 }
@@ -281,7 +281,7 @@ pub async fn set_dataset_properties(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))),
     }
 }
@@ -305,7 +305,7 @@ pub async fn get_dataset_stats(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            "DATASET_NOT_FOUND".to_string(),
+            String::from("DATASET_NOT_FOUND"),
         ))),
     }
 }

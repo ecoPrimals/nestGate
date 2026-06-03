@@ -139,10 +139,10 @@ impl CryptoDelegate {
         Ok(Self {
             client: Mutex::new(client),
             endpoint: ServiceEndpoint {
-                capability: "crypto".to_string(),
-                name: "crypto-provider".to_string(),
+                capability: String::from("crypto"),
+                name: String::from("crypto-provider"),
                 endpoint: path.to_string(),
-                version: "unknown".to_string(),
+                version: String::from("unknown"),
                 discovered_at: std::time::Instant::now(),
             },
         })

@@ -117,12 +117,12 @@ pub fn cpu_model_best_effort() -> Result<String> {
                     || line.starts_with("Hardware")
             })
             .and_then(|line| line.split(':').nth(1))
-            .map_or_else(|| "Unknown CPU".to_string(), |s| s.trim().to_string());
+            .map_or_else(|| String::from("Unknown CPU"), |s| s.trim().to_string());
         Ok(model)
     }
     #[cfg(not(target_os = "linux"))]
     {
-        Ok("unknown".to_string())
+        Ok(String::from("unknown"))
     }
 }
 
@@ -354,12 +354,12 @@ fn network_metrics_from_proc_net_dev() -> (f64, f64) {
 pub fn storage_profile_from_sysfs() -> String {
     #[cfg(not(target_os = "linux"))]
     {
-        return "unknown".to_string();
+        return String::from("unknown");
     }
     #[cfg(target_os = "linux")]
     {
         let Ok(entries) = std::fs::read_dir("/sys/block") else {
-            return "unknown".to_string();
+            return String::from("unknown");
         };
         let mut rotational = 0u32;
         let mut solid = 0u32;
@@ -380,13 +380,13 @@ pub fn storage_profile_from_sysfs() -> String {
             }
         }
         if solid > 0 && rotational > 0 {
-            "mixed_ssd_hdd".to_string()
+            String::from("mixed_ssd_hdd")
         } else if solid > 0 {
-            "solid_state".to_string()
+            String::from("solid_state")
         } else if rotational > 0 {
-            "rotational".to_string()
+            String::from("rotational")
         } else {
-            "unknown".to_string()
+            String::from("unknown")
         }
     }
 }
@@ -396,12 +396,12 @@ pub fn storage_profile_from_sysfs() -> String {
 pub fn network_profile_from_sysfs() -> String {
     #[cfg(not(target_os = "linux"))]
     {
-        return "unknown".to_string();
+        return String::from("unknown");
     }
     #[cfg(target_os = "linux")]
     {
         let Ok(entries) = std::fs::read_dir("/sys/class/net") else {
-            return "unknown".to_string();
+            return String::from("unknown");
         };
         let mut has_wifi = false;
         let mut has_eth = false;
@@ -418,10 +418,10 @@ pub fn network_profile_from_sysfs() -> String {
             }
         }
         match (has_eth, has_wifi) {
-            (true, true) => "ethernet_and_wifi".to_string(),
-            (true, false) => "ethernet".to_string(),
-            (false, true) => "wifi".to_string(),
-            (false, false) => "unknown".to_string(),
+            (true, true) => String::from("ethernet_and_wifi"),
+            (true, false) => String::from("ethernet"),
+            (false, true) => String::from("wifi"),
+            (false, false) => String::from("unknown"),
         }
     }
 }

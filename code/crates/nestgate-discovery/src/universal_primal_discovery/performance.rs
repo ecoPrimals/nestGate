@@ -180,25 +180,25 @@ impl PerformanceTestRunner {
     pub fn generate_metrics(&self) -> HashMap<String, String> {
         let mut metrics = HashMap::new();
 
-        metrics.insert("test_name".to_string(), "performance_discovery".to_string());
-        metrics.insert("test_type".to_string(), "timeout_optimization".to_string());
-        metrics.insert("concurrent_users".to_string(), "1".to_string());
-        metrics.insert("target_rps".to_string(), "100".to_string());
+        metrics.insert(String::from("test_name"), String::from("performance_discovery"));
+        metrics.insert(String::from("test_type"), String::from("timeout_optimization"));
+        metrics.insert(String::from("concurrent_users"), String::from("1"));
+        metrics.insert(String::from("target_rps"), String::from("100"));
 
         metrics.insert(
-            "test_iterations".to_string(),
+            String::from("test_iterations"),
             self.config.testing.test_iterations.to_string(),
         );
         metrics.insert(
-            "baseline_timeout".to_string(),
+            String::from("baseline_timeout"),
             format!("{}s", self.config.testing.baseline_timeout_seconds),
         );
         metrics.insert(
-            "max_timeout".to_string(),
+            String::from("max_timeout"),
             format!("{}s", self.config.testing.baseline_timeout_seconds),
         );
         metrics.insert(
-            "percentile_target".to_string(),
+            String::from("percentile_target"),
             self.config.testing.percentile_target.to_string(),
         );
 
@@ -261,11 +261,11 @@ impl PerformanceDiscovery {
 
         let logical_cpus = std::thread::available_parallelism().map_or(4u64, |n| n.get() as u64);
         characteristics.insert(
-            "cpu_cores".to_string(),
+            String::from("cpu_cores"),
             serde_json::Value::Number(serde_json::Number::from(logical_cpus)),
         );
         characteristics.insert(
-            "discovery_timestamp".to_string(),
+            String::from("discovery_timestamp"),
             serde_json::Value::String(
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)

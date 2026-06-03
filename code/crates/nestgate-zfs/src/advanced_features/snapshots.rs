@@ -98,16 +98,16 @@ impl SnapshotAnalytics {
 
         // Basic snapshot analysis
         if snapshot_count > 50 {
-            recommendations.push("Consider cleaning up old snapshots".to_string());
+            recommendations.push(String::from("Consider cleaning up old snapshots"));
         }
 
         if retention_policy.keep_daily > 30 {
-            recommendations.push("Daily snapshot retention is very high".to_string());
+            recommendations.push(String::from("Daily snapshot retention is very high"));
         }
 
         if storage_usage > 10 * 1024 * 1024 * 1024 {
             // 10GB
-            recommendations.push("Snapshots are using significant storage".to_string());
+            recommendations.push(String::from("Snapshots are using significant storage"));
         }
         Ok(Self {
             snapshot_count,
@@ -124,7 +124,7 @@ mod tests {
     /// Creates  Test Retention Policy
     fn create_test_retention_policy(keep_daily: u32) -> RetentionPolicy {
         RetentionPolicy {
-            name: "test_policy".to_string(),
+            name: String::from("test_policy"),
             keep_hourly: 24,
             keep_daily,
             keep_weekly: 4,
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_analytics_creation() {
-        let snapshots = vec!["snap1".to_string(), "snap2".to_string()];
+        let snapshots = vec![String::from("snap1"), String::from("snap2")];
         let policy = create_test_retention_policy(7);
         let analytics = SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy)
             .expect("Test: analyze_snapshots should succeed");
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_high_retention_recommendation() {
-        let snapshots = vec!["snap1".to_string()];
+        let snapshots = vec![String::from("snap1")];
         let policy = create_test_retention_policy(40);
         let analytics = SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy)
             .expect("Test: analyze_snapshots should succeed");
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_optimal_snapshots_no_recommendations() {
-        let snapshots = vec!["snap1".to_string(), "snap2".to_string()];
+        let snapshots = vec![String::from("snap1"), String::from("snap2")];
         let policy = create_test_retention_policy(7);
         let analytics =
             SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy).unwrap();
@@ -211,7 +211,7 @@ mod tests {
 
     #[test]
     fn test_storage_calculation() {
-        let snapshots = vec!["snap1".to_string()];
+        let snapshots = vec![String::from("snap1")];
         let policy = create_test_retention_policy(7);
         let analytics = SnapshotAnalytics::analyze_snapshots(
             "zzz_nestgate_snapshot_storage_fallback_ds",
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_analytics_clone() {
-        let snapshots = vec!["snap1".to_string()];
+        let snapshots = vec![String::from("snap1")];
         let policy = create_test_retention_policy(7);
         let analytics1 =
             SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy).unwrap();
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_analytics_serialization() {
-        let snapshots = vec!["snap1".to_string()];
+        let snapshots = vec![String::from("snap1")];
         let policy = create_test_retention_policy(7);
         let analytics =
             SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy).unwrap();

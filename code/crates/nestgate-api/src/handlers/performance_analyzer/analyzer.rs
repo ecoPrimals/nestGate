@@ -164,9 +164,9 @@ impl PerformanceAnalyzer {
             ));
         }
         if out.is_empty() {
-            out.push("System performance is within normal parameters".to_string());
+            out.push(String::from("System performance is within normal parameters"));
         }
-        out.push("Consider enabling ZFS compression for better storage efficiency".to_string());
+        out.push(String::from("Consider enabling ZFS compression for better storage efficiency"));
         out
     }
 }
@@ -424,24 +424,24 @@ mod tests {
             cpu_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 90.0,
-                details: "CPU usage: 10%".to_string(),
+                details: String::from("CPU usage: 10%"),
             },
             memory_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 85.0,
-                details: "Memory usage: 4GB".to_string(),
+                details: String::from("Memory usage: 4GB"),
             },
             disk_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 80.0,
-                details: "Disk I/O: Good".to_string(),
+                details: String::from("Disk I/O: Good"),
             },
             network_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 88.0,
-                details: "Network: Good".to_string(),
+                details: String::from("Network: Good"),
             },
-            recommendations: vec!["All good".to_string()],
+            recommendations: vec![String::from("All good")],
             timestamp: std::time::SystemTime::now(),
         };
 
@@ -475,7 +475,7 @@ mod tests {
         let analysis = ComponentAnalysis {
             status: PerformanceStatus::Warning,
             score: 65.5,
-            details: "Test details".to_string(),
+            details: String::from("Test details"),
         };
 
         let json = serde_json::to_string(&analysis).expect("Should serialize");

@@ -255,7 +255,7 @@ mod tests {
     impl RpcMethodHandler for TestHandler {
         async fn handle_method(&self, method: &str, _params: Value) -> Result<Value> {
             match method {
-                "test.ping" => Ok(Value::String("pong".to_string())),
+                "test.ping" => Ok(Value::String(String::from("pong"))),
                 _ => Err(NestGateError::api_error("Unknown method")),
             }
         }

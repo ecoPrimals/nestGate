@@ -50,7 +50,7 @@ impl Default for HandlerEnvironmentConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            environment: "development".to_string(),
+            environment: String::from("development"),
             debug: Some(HandlerDebugConfig::default()),
             features: HandlerFeatureConfig::default(),
             overrides: HandlerOverrideConfig::default(),

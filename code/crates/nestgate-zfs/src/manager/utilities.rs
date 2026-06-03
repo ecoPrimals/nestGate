@@ -29,7 +29,7 @@ impl ZfsManager {
     pub async fn _calculate_system_utilization(&self) -> Result<f64> {
         let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
-                "Failed to list pools: error details".to_string(),
+                String::from("Failed to list pools: error details"),
                 ZfsOperation::SystemCheck,
             )
         })?;
@@ -48,7 +48,7 @@ impl ZfsManager {
                 .await
                 .map_err(|_e| {
                     create_zfs_error(
-                        "Failed to get pool status: error details".to_string(),
+                        String::from("Failed to get pool status: error details"),
                         ZfsOperation::PoolCreate,
                     )
                 })?;

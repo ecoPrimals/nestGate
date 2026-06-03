@@ -219,7 +219,7 @@ mod tests {
             UnifiedCapabilityType::Generic
         );
         roundtrip_json(&UnifiedCapabilityType::Storage);
-        roundtrip_json(&UnifiedCapabilityType::Custom("x".to_string()));
+        roundtrip_json(&UnifiedCapabilityType::Custom(String::from("x")));
     }
 
     #[test]
@@ -228,7 +228,7 @@ mod tests {
         roundtrip_json(&UnifiedServiceType::Monitoring);
         assert_eq!(UnifiedServiceState::default(), UnifiedServiceState::Unknown);
         roundtrip_json(&UnifiedServiceState::Running);
-        roundtrip_json(&UnifiedServiceState::Custom("s".to_string()));
+        roundtrip_json(&UnifiedServiceState::Custom(String::from("s")));
     }
 
     #[test]

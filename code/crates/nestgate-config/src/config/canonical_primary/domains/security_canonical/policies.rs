@@ -60,7 +60,7 @@ impl Default for ComplianceConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            frameworks: vec!["SOC2".to_string(), "GDPR".to_string()],
+            frameworks: vec![String::from("SOC2"), String::from("GDPR")],
         }
     }
 }

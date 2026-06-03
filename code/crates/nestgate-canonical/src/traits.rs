@@ -167,7 +167,7 @@ impl CanonicalService for UniversalServiceImpl {
     async fn health_check(&self) -> NestGateResult<ServiceHealth> {
         Ok(ServiceHealth {
             healthy: true,
-            message: "Service is operational".to_string(),
+            message: String::from("Service is operational"),
             details: HashMap::new(),
         })
     }
@@ -183,7 +183,7 @@ impl CanonicalService for UniversalServiceImpl {
         // Implementation for stopping the service
         self.health_status = ServiceHealth {
             healthy: false,
-            message: "Service stopped".to_string(),
+            message: String::from("Service stopped"),
             details: HashMap::new(),
         };
         Ok(())
@@ -206,10 +206,10 @@ mod tests {
     async fn universal_service_impl_health_start_stop() {
         let initial = ServiceHealth {
             healthy: true,
-            message: "boot".to_string(),
+            message: String::from("boot"),
             details: HashMap::new(),
         };
-        let cap = CapabilityId::new("s".to_string(), "c".to_string(), "1".to_string());
+        let cap = CapabilityId::new(String::from("s"), String::from("c"), String::from("1"));
         let mut svc = UniversalServiceImpl::new(UnifiedServiceType::Storage, vec![cap], initial);
 
         let h = svc.health_check().await.unwrap();
@@ -225,10 +225,10 @@ mod tests {
     #[tokio::test]
     async fn universal_service_impl_new_clones_health_fields() {
         let mut details = HashMap::new();
-        details.insert("k".to_string(), "v".to_string());
+        details.insert(String::from("k"), String::from("v"));
         let h = ServiceHealth {
             healthy: false,
-            message: "m".to_string(),
+            message: String::from("m"),
             details,
         };
         let u = UniversalServiceImpl::new(UnifiedServiceType::Network, vec![], h.clone());

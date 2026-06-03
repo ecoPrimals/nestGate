@@ -107,7 +107,7 @@ impl BinErrorHelper {
         config_path: Option<String>,
     ) -> NestGateError {
         NestGateError::configuration_error(
-            config_path.unwrap_or_else(|| "bin_config".to_string()),
+            config_path.unwrap_or_else(|| String::from("bin_config")),
             message.into(),
         )
     }
@@ -120,7 +120,7 @@ impl BinErrorHelper {
         NestGateError::validation(format!(
             "Argument parsing error: {} (arg: {})",
             message.into(),
-            argument.unwrap_or_else(|| "unknown".to_string())
+            argument.unwrap_or_else(|| String::from("unknown"))
         ))
     }
 
@@ -133,7 +133,7 @@ impl BinErrorHelper {
             format!(
                 "Service initialization error: {} (service: {})",
                 message.into(),
-                service_name.unwrap_or_else(|| "unknown_service".to_string())
+                service_name.unwrap_or_else(|| String::from("unknown_service"))
             ),
             "nestgate-bin",
         )
@@ -145,7 +145,7 @@ impl BinErrorHelper {
             format!(
                 "Runtime error: {} (operation: {})",
                 message.into(),
-                operation.unwrap_or_else(|| "runtime".to_string())
+                operation.unwrap_or_else(|| String::from("runtime"))
             ),
             "nestgate-bin",
         )
@@ -164,7 +164,7 @@ impl From<NestGateBinError> for NestGateError {
             NestGateBinError::ArgumentParsingError { argument, message } => {
                 Self::validation(format!(
                     "Argument parsing: {} - {}",
-                    argument.unwrap_or_else(|| "unknown".to_string()),
+                    argument.unwrap_or_else(|| String::from("unknown")),
                     message
                 ))
             }
@@ -175,14 +175,14 @@ impl From<NestGateBinError> for NestGateError {
                 "config",
                 format!(
                     "{} - {}",
-                    config_path.unwrap_or_else(|| "unknown".to_string()),
+                    config_path.unwrap_or_else(|| String::from("unknown")),
                     message
                 ),
             ),
             NestGateBinError::RuntimeError { operation, message } => Self::internal_error(
                 format!(
                     "Runtime: {} - {}",
-                    operation.unwrap_or_else(|| "runtime".to_string()),
+                    operation.unwrap_or_else(|| String::from("runtime")),
                     message
                 ),
                 "nestgate-bin",
@@ -193,7 +193,7 @@ impl From<NestGateBinError> for NestGateError {
             } => Self::internal_error(
                 format!(
                     "Service: {} - {}",
-                    service_name.unwrap_or_else(|| "service".to_string()),
+                    service_name.unwrap_or_else(|| String::from("service")),
                     message
                 ),
                 "nestgate-bin",
@@ -311,7 +311,7 @@ mod tests {
     #[test]
     fn test_command_execution_failed() {
         let error =
-            NestGateBinError::command_failed("test failed", Some("ls".to_string()), Some(1));
+            NestGateBinError::command_failed("test failed", Some(String::from("ls")), Some(1));
         assert!(error.to_string().contains("Command execution failed"));
         assert!(error.to_string().contains("test failed"));
     }
@@ -325,7 +325,7 @@ mod tests {
     #[test]
     fn test_configuration_error() {
         let error =
-            NestGateBinError::config_error("invalid config", Some("/etc/config".to_string()));
+            NestGateBinError::config_error("invalid config", Some(String::from("/etc/config")));
         assert!(error.to_string().contains("Configuration error"));
         assert!(error.to_string().contains("invalid config"));
     }
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn test_argument_parsing_error() {
-        let error = NestGateBinError::argument_error("invalid value", Some("--port".to_string()));
+        let error = NestGateBinError::argument_error("invalid value", Some(String::from("--port")));
         assert!(error.to_string().contains("Argument parsing error"));
         assert!(error.to_string().contains("invalid value"));
     }
@@ -353,7 +353,7 @@ mod tests {
     fn test_service_initialization_error() {
         let error = NestGateBinError::service_init_error(
             "failed to start",
-            Some("http-server".to_string()),
+            Some(String::from("http-server")),
         );
         assert!(error.to_string().contains("Service initialization error"));
         assert!(error.to_string().contains("failed to start"));
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn test_runtime_error() {
         let error =
-            NestGateBinError::runtime_error("panic occurred", Some("data_processing".to_string()));
+            NestGateBinError::runtime_error("panic occurred", Some(String::from("data_processing")));
         assert!(error.to_string().contains("Runtime error"));
         assert!(error.to_string().contains("panic occurred"));
     }
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_error_serialization() {
-        let error = NestGateBinError::config_error("test", Some("path".to_string()));
+        let error = NestGateBinError::config_error("test", Some(String::from("path")));
         let serialized =
             serde_json::to_string(&error).expect("Test: error serialization should succeed");
         assert!(serialized.contains("Configuration"));
@@ -410,60 +410,60 @@ mod tests {
 
     #[test]
     fn test_bin_error_helper_configuration() {
-        let error = BinErrorHelper::configuration_error("bad config", Some("/path".to_string()));
+        let error = BinErrorHelper::configuration_error("bad config", Some(String::from("/path")));
         assert!(error.to_string().contains("Configuration"));
     }
 
     #[test]
     fn test_bin_error_helper_argument_parsing() {
-        let error = BinErrorHelper::argument_parsing_error("invalid", Some("--flag".to_string()));
+        let error = BinErrorHelper::argument_parsing_error("invalid", Some(String::from("--flag")));
         assert!(error.to_string().contains("Argument parsing error"));
     }
 
     #[test]
     fn test_bin_error_helper_service_init() {
         let error =
-            BinErrorHelper::service_initialization_error("crashed", Some("api".to_string()));
+            BinErrorHelper::service_initialization_error("crashed", Some(String::from("api")));
         assert!(error.to_string().contains("Service initialization error"));
     }
 
     #[test]
     fn test_bin_error_helper_runtime() {
-        let error = BinErrorHelper::runtime_error("error", Some("processing".to_string()));
+        let error = BinErrorHelper::runtime_error("error", Some(String::from("processing")));
         assert!(error.to_string().contains("Runtime error"));
     }
 
     #[test]
     fn test_conversion_to_nestgate_error_argument() {
-        let bin_error = NestGateBinError::argument_error("test", Some("arg".to_string()));
+        let bin_error = NestGateBinError::argument_error("test", Some(String::from("arg")));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Argument parsing"));
     }
 
     #[test]
     fn test_conversion_to_nestgate_error_config() {
-        let bin_error = NestGateBinError::config_error("test", Some("path".to_string()));
+        let bin_error = NestGateBinError::config_error("test", Some(String::from("path")));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Configuration"));
     }
 
     #[test]
     fn test_conversion_to_nestgate_error_runtime() {
-        let bin_error = NestGateBinError::runtime_error("test", Some("op".to_string()));
+        let bin_error = NestGateBinError::runtime_error("test", Some(String::from("op")));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Runtime"));
     }
 
     #[test]
     fn test_conversion_to_nestgate_error_service_init() {
-        let bin_error = NestGateBinError::service_init_error("test", Some("service".to_string()));
+        let bin_error = NestGateBinError::service_init_error("test", Some(String::from("service")));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Service"));
     }
 
     #[test]
     fn test_conversion_to_nestgate_error_command() {
-        let bin_error = NestGateBinError::command_failed("test", Some("cmd".to_string()), Some(1));
+        let bin_error = NestGateBinError::command_failed("test", Some(String::from("cmd")), Some(1));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Command"));
     }

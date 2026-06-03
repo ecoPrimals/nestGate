@@ -111,7 +111,7 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
 /// Handle logs WebSocket connection
 async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: WebSocketQuery) {
     info!("Logs WebSocket connection established");
-    let level_filter = query.level.unwrap_or_else(|| "info".to_string());
+    let level_filter = query.level.unwrap_or_else(|| String::from("info"));
     let update_interval = Duration::from_secs(query.interval.unwrap_or(1));
     let mut ticker = interval(update_interval);
 
@@ -390,7 +390,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
 
     let (description, data) = match *event_type {
         "dataset_created" => (
-            "New ZFS dataset created".to_string(),
+            String::from("New ZFS dataset created"),
             serde_json::json!({
                 "dataset_name": format!("tank/data_{}", ((seed >> 8) % 100)),
                 "backend": "filesystem",
@@ -398,7 +398,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         "snapshot_taken" => (
-            "Automatic snapshot created".to_string(),
+            String::from("Automatic snapshot created"),
             serde_json::json!({
                 "dataset": "tank/data",
                 "snapshot_name": format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
@@ -406,14 +406,14 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         "storage_scanned" => (
-            "Storage scan completed".to_string(),
+            String::from("Storage scan completed"),
             serde_json::json!({
                 "backends_found": (seed % 5) + 2,
                 "scan_duration_ms": (seed % 5000) + 1000
             }),
         ),
         "metrics_updated" => (
-            "System metrics refreshed".to_string(),
+            String::from("System metrics refreshed"),
             serde_json::json!({
                 "datasets": dataset_count,
                 "cpu_usage": nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0),
@@ -421,7 +421,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         "threshold_exceeded" => (
-            "Performance threshold exceeded".to_string(),
+            String::from("Performance threshold exceeded"),
             serde_json::json!({
                 "metric": "cpu_usage_percent",
                 "threshold": 80.0,
@@ -429,7 +429,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         _ => (
-            "System event occurred".to_string(),
+            String::from("System event occurred"),
             serde_json::json!({"info": "Generic system event"}),
         ),
     };
@@ -570,7 +570,7 @@ mod tests {
     fn test_websocket_query_debug() {
         let query = WebSocketQuery {
             interval: Some(5),
-            level: Some("info".to_string()),
+            level: Some(String::from("info")),
         };
         assert_eq!(query.interval, Some(5));
         assert_eq!(query.level.as_deref(), Some("info"));
@@ -580,10 +580,10 @@ mod tests {
     fn test_log_entry_serialization() {
         let entry = LogEntry {
             timestamp: chrono::Utc::now(),
-            level: "INFO".to_string(),
-            message: "Test message".to_string(),
-            module: "nestgate::test".to_string(),
-            thread: "worker-1".to_string(),
+            level: String::from("INFO"),
+            message: String::from("Test message"),
+            module: String::from("nestgate::test"),
+            thread: String::from("worker-1"),
         };
         let json = serde_json::to_string(&entry);
         assert!(json.is_ok());
@@ -595,12 +595,12 @@ mod tests {
     #[test]
     fn test_system_event_serialization() {
         let event = SystemEvent {
-            id: "evt_1".to_string(),
+            id: String::from("evt_1"),
             timestamp: chrono::Utc::now(),
-            event_type: "dataset_created".to_string(),
-            description: "Test event".to_string(),
+            event_type: String::from("dataset_created"),
+            description: String::from("Test event"),
             data: serde_json::json!({"key": "value"}),
-            severity: "info".to_string(),
+            severity: String::from("info"),
         };
         let json = serde_json::to_string(&event);
         assert!(json.is_ok());

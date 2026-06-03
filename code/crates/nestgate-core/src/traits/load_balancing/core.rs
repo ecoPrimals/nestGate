@@ -138,7 +138,7 @@ impl Default for LoadBalancerStats {
             failed_requests: 0,
             average_response_time: 0.0,
             service_stats: HashMap::new(),
-            algorithm: "round_robin".to_string(),
+            algorithm: String::from("round_robin"),
             health_aware: false,
         }
     }

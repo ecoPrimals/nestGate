@@ -148,8 +148,8 @@ mod tests {
     #[test]
     fn test_error_response_structure() {
         let error = ErrorResponse {
-            error: "Test error".to_string(),
-            code: "TEST_ERROR".to_string(),
+            error: String::from("Test error"),
+            code: String::from("TEST_ERROR"),
             details: None,
             timestamp: chrono::Utc::now(),
         };
@@ -162,8 +162,8 @@ mod tests {
     #[test]
     fn test_error_response_serialization() {
         let error = ErrorResponse {
-            error: "Test error".to_string(),
-            code: "TEST_ERROR".to_string(),
+            error: String::from("Test error"),
+            code: String::from("TEST_ERROR"),
             details: None,
             timestamp: chrono::Utc::now(),
         };
@@ -178,28 +178,28 @@ mod tests {
 
     #[test]
     fn test_api_error_display_invalid_request() {
-        let error = ApiError::InvalidRequest("Missing field".to_string());
+        let error = ApiError::InvalidRequest(String::from("Missing field"));
         let display = format!("{error}");
         assert_eq!(display, "Invalid request: Missing field");
     }
 
     #[test]
     fn test_api_error_display_not_found() {
-        let error = ApiError::NotFound("Resource not found".to_string());
+        let error = ApiError::NotFound(String::from("Resource not found"));
         let display = format!("{error}");
         assert_eq!(display, "Not found: Resource not found");
     }
 
     #[test]
     fn test_api_error_display_internal() {
-        let error = ApiError::Internal("Internal error occurred".to_string());
+        let error = ApiError::Internal(String::from("Internal error occurred"));
         let display = format!("{error}");
         assert_eq!(display, "Internal error: Internal error occurred");
     }
 
     #[test]
     fn test_api_error_display_service_unavailable() {
-        let error = ApiError::ServiceUnavailable("Service is down".to_string());
+        let error = ApiError::ServiceUnavailable(String::from("Service is down"));
         let display = format!("{error}");
         assert_eq!(display, "Service unavailable: Service is down");
     }
@@ -249,8 +249,8 @@ mod tests {
     #[test]
     fn round5_error_response_serde_roundtrip() {
         let er = ErrorResponse {
-            error: "e".to_string(),
-            code: "c".to_string(),
+            error: String::from("e"),
+            code: String::from("c"),
             details: Some(serde_json::json!({"k": 1})),
             timestamp: chrono::Utc::now(),
         };

@@ -51,7 +51,7 @@ impl AiAutomationConfig {
             predictive_scaling: false,
             auto_optimization: false,
             learning_mode: true,
-            model_config: "default".to_string(),
+            model_config: String::from("default"),
             monitoring_interval: Duration::from_secs(300),
             confidence_threshold: 0.6,
         }
@@ -68,7 +68,7 @@ impl AiAutomationConfig {
             predictive_scaling: true,
             auto_optimization: true,
             learning_mode: false, // Fixed models in production
-            model_config: "production".to_string(),
+            model_config: String::from("production"),
             monitoring_interval: Duration::from_secs(60),
             confidence_threshold: 0.85,
         }

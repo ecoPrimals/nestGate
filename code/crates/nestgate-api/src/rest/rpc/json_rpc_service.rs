@@ -147,7 +147,7 @@ impl UnifiedRpcService for JsonRpcService {
             // which is not directly managed by the JsonRpcService struct.
             // For now, we'll return an error as if it were disconnected.
             Err(RpcError::ConnectionFailed(
-                "Service not connected to orchestration".to_string(),
+                String::from("Service not connected to orchestration"),
             ))
         } else {
             Err(RpcError::ServiceUnavailable(format!(
@@ -176,7 +176,7 @@ impl UnifiedRpcService for JsonRpcService {
         // which is not directly managed by the JsonRpcService struct.
         // For now, we'll return an error as if it were disconnected.
         Err(RpcError::ConnectionFailed(
-            "Service not connected to orchestration".to_string(),
+            String::from("Service not connected to orchestration"),
         ))
     }
 
@@ -207,8 +207,8 @@ mod tests {
     fn sample_request(method: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::nil(),
-            source: "nestgate".to_string(),
-            target: "orchestration".to_string(),
+            source: String::from("nestgate"),
+            target: String::from("orchestration"),
             method: method.to_string(),
             _params: serde_json::json!({}),
             _metadata: HashMap::new(),
@@ -221,14 +221,14 @@ mod tests {
 
     #[test]
     fn new_check_connection_disconnect() {
-        let mut svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let mut svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         assert!(svc.check_connection_status());
         svc.disconnect().unwrap();
     }
 
     #[test]
     fn send_request_errors_service_unavailable() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         let req = serde_json::json!({"method": "test.echo"});
         let err = svc.send_request(req).unwrap_err();
         assert!(matches!(err, RpcError::ServiceUnavailable(_)));
@@ -236,14 +236,14 @@ mod tests {
 
     #[test]
     fn subscribe_errors_service_unavailable() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         let err = svc.subscribe("events").unwrap_err();
         assert!(matches!(err, RpcError::ServiceUnavailable(_)));
     }
 
     #[tokio::test]
     async fn unified_call_register_path_connection_failed() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         let req = sample_request("register_service");
         let err = svc.call(req).await.unwrap_err();
         assert!(matches!(err, RpcError::ConnectionFailed(_)));
@@ -251,7 +251,7 @@ mod tests {
 
     #[tokio::test]
     async fn unified_call_unknown_method_service_unavailable() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         let req = sample_request("unknown.method");
         let err = svc.call(req).await.unwrap_err();
         assert!(matches!(err, RpcError::ServiceUnavailable(_)));
@@ -259,7 +259,7 @@ mod tests {
 
     #[tokio::test]
     async fn unified_start_stream_connection_failed() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         let req = sample_request("stream");
         let err = svc.start_stream(req).await.unwrap_err();
         assert!(matches!(err, RpcError::ConnectionFailed(_)));
@@ -267,13 +267,13 @@ mod tests {
 
     #[tokio::test]
     async fn unified_health_check_ok() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         assert!(svc.health_check().await.unwrap());
     }
 
     #[tokio::test]
     async fn connection_type_json_rpc() {
-        let svc = JsonRpcService::new("http://127.0.0.1:0".to_string());
+        let svc = JsonRpcService::new(String::from("http://127.0.0.1:0"));
         assert_eq!(svc.connection_type(), RpcConnectionType::JsonRpc);
     }
 }

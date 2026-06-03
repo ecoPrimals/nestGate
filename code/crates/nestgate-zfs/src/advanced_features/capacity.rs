@@ -50,8 +50,8 @@ pub fn monitor_capacity_usage(
             current_usage as u64
         },
         recommendations: vec![
-            "Monitor capacity trends".to_string(),
-            "Consider tier migration if growth continues".to_string(),
+            String::from("Monitor capacity trends"),
+            String::from("Consider tier migration if growth continues"),
         ],
     })
 }
@@ -65,20 +65,20 @@ pub fn detect_performance_bottlenecks(performance_data: &[SystemInfo]) -> Result
     if let Some(latest) = performance_data.last() {
         // CPU bottleneck detection
         if latest.cpu_usage > 80.0 {
-            bottlenecks.push("High CPU usage".to_string());
-            recommendations.push("Consider CPU upgrade or workload optimization".to_string());
+            bottlenecks.push(String::from("High CPU usage"));
+            recommendations.push(String::from("Consider CPU upgrade or workload optimization"));
         }
 
         // Memory bottleneck detection
         if latest.memory_usage > 85.0 {
-            bottlenecks.push("High memory usage".to_string());
-            recommendations.push("Increase system memory or tune ARC settings".to_string());
+            bottlenecks.push(String::from("High memory usage"));
+            recommendations.push(String::from("Increase system memory or tune ARC settings"));
         }
 
         // I/O bottleneck detection (using disk usage as proxy)
         if latest.disk_usage > 90.0 {
-            bottlenecks.push("High disk usage".to_string());
-            recommendations.push("Consider storage expansion or data cleanup".to_string());
+            bottlenecks.push(String::from("High disk usage"));
+            recommendations.push(String::from("Consider storage expansion or data cleanup"));
         }
     }
 
@@ -91,9 +91,9 @@ pub fn detect_performance_bottlenecks(performance_data: &[SystemInfo]) -> Result
     };
 
     Ok(BottleneckReport {
-        dataset: "system".to_string(),
+        dataset: String::from("system"),
         bottleneck_type: if bottlenecks.is_empty() {
-            "none".to_string()
+            String::from("none")
         } else {
             bottlenecks[0].clone()
         },
@@ -121,13 +121,13 @@ pub fn generate_maintenance_schedule(
             / 86400;
         if days_since_epoch % 30 == 0 {
             // Schedule scrub every 30 days
-            scheduled_tasks.push("Schedule pool scrub".to_string());
+            scheduled_tasks.push(String::from("Schedule pool scrub"));
             priority = "high";
         }
 
         // Snapshot cleanup scheduling (simplified check based on disk usage)
         if latest.disk_usage > 80.0 {
-            scheduled_tasks.push("Clean up old snapshots".to_string());
+            scheduled_tasks.push(String::from("Clean up old snapshots"));
             if priority == "low" {
                 priority = "medium";
             }
@@ -135,7 +135,7 @@ pub fn generate_maintenance_schedule(
 
         // Defragmentation scheduling (simplified check based on disk usage)
         if latest.disk_usage > 85.0 {
-            scheduled_tasks.push("Defragment pool".to_string());
+            scheduled_tasks.push(String::from("Defragment pool"));
             let _priority = if priority == "low" {
                 "medium"
             } else {

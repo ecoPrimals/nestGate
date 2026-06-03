@@ -118,7 +118,7 @@ pub async fn create_pool(
     info!("Creating ZFS pool: {}", config.name);
     if config.devices.is_empty() {
         return Err(UniversalZfsError::InvalidInput {
-            message: "Pool creation requires at least one device".to_string(),
+            message: String::from("Pool creation requires at least one device"),
         });
     }
 

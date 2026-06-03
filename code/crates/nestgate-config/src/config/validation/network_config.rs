@@ -46,7 +46,7 @@ impl ConfigValidation for NetworkConfig {
 
         if self.security.firewall_enabled && self.security.allowed_ips.is_empty() {
             warnings.push(ValidationWarning {
-                field: "security.firewall_enabled".to_string(),
+                field: String::from("security.firewall_enabled"),
                 message:
                     "Firewall is enabled but no allowed IPs configured - this may block all traffic"
                         .to_string(),
@@ -66,35 +66,35 @@ impl ConfigValidation for NetworkConfig {
         let mut fields = HashMap::new();
 
         fields.insert(
-            "bind_address".to_string(),
+            String::from("bind_address"),
             FieldSchema {
-                field_type: "string".to_string(),
+                field_type: String::from("string"),
                 required: true,
-                default_value: Some("127.0.0.1".to_string()),
-                constraints: vec!["Valid IPv4 or IPv6 address".to_string()],
-                description: "IP address to bind the server to".to_string(),
+                default_value: Some(String::from("127.0.0.1")),
+                constraints: vec![String::from("Valid IPv4 or IPv6 address")],
+                description: String::from("IP address to bind the server to"),
             },
         );
 
         fields.insert(
-            "port".to_string(),
+            String::from("port"),
             FieldSchema {
-                field_type: "u16".to_string(),
+                field_type: String::from("u16"),
                 required: true,
-                default_value: Some("8080".to_string()),
-                constraints: vec!["1-65535".to_string()],
-                description: "Port number to listen on".to_string(),
+                default_value: Some(String::from("8080")),
+                constraints: vec![String::from("1-65535")],
+                description: String::from("Port number to listen on"),
             },
         );
 
         fields.insert(
-            "timeout_ms".to_string(),
+            String::from("timeout_ms"),
             FieldSchema {
-                field_type: "u64".to_string(),
+                field_type: String::from("u64"),
                 required: true,
-                default_value: Some("30000".to_string()),
-                constraints: vec!["> 0".to_string()],
-                description: "Request timeout in milliseconds".to_string(),
+                default_value: Some(String::from("30000")),
+                constraints: vec![String::from("> 0")],
+                description: String::from("Request timeout in milliseconds"),
             },
         );
 
@@ -102,14 +102,14 @@ impl ConfigValidation for NetworkConfig {
             fields,
             dependencies: vec![
                 FieldDependency {
-                    field: "tls_cert_path".to_string(),
-                    depends_on: "enable_tls".to_string(),
-                    condition: "required when enable_tls is true".to_string(),
+                    field: String::from("tls_cert_path"),
+                    depends_on: String::from("enable_tls"),
+                    condition: String::from("required when enable_tls is true"),
                 },
                 FieldDependency {
-                    field: "tls_key_path".to_string(),
-                    depends_on: "enable_tls".to_string(),
-                    condition: "required when enable_tls is true".to_string(),
+                    field: String::from("tls_key_path"),
+                    depends_on: String::from("enable_tls"),
+                    condition: String::from("required when enable_tls is true"),
                 },
             ],
         }

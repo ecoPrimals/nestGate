@@ -71,8 +71,8 @@ impl PerformanceOptimizationEngine {
 
         optimization_result.bottlenecks_resolved = bottlenecks;
         optimization_result.recommendations = vec![
-            "Monitor performance after optimization".to_string(),
-            "Schedule regular performance reviews".to_string(),
+            String::from("Monitor performance after optimization"),
+            String::from("Schedule regular performance reviews"),
         ];
 
         info!(
@@ -102,10 +102,10 @@ impl PerformanceOptimizationEngine {
         };
         result
             .parameter_changes
-            .insert("recordsize".to_string(), "128K".to_string());
+            .insert(String::from("recordsize"), String::from("128K"));
         result
             .parameter_changes
-            .insert("compression".to_string(), "lz4".to_string());
+            .insert(String::from("compression"), String::from("lz4"));
         result.expected_improvement = 10.0;
         result.validation_required = true;
 
@@ -212,7 +212,7 @@ impl PerformanceOptimizationEngine {
 
         Ok(AppliedOptimization {
             optimization_type: OptimizationType::ArcTuning,
-            description: "ARC tuning optimization applied to system".to_string(),
+            description: String::from("ARC tuning optimization applied to system"),
             performance_impact: 25.0,
             applied_at: SystemTime::now(),
         })
@@ -228,7 +228,7 @@ impl PerformanceOptimizationEngine {
 
         Ok(AppliedOptimization {
             optimization_type: OptimizationType::ArcTuning,
-            description: "Memory optimization applied to system".to_string(),
+            description: String::from("Memory optimization applied to system"),
             performance_impact: 15.0,
             applied_at: SystemTime::now(),
         })

@@ -36,7 +36,7 @@ async fn main() -> BinResult<()> {
                 .and_then(|n| n.to_str())
                 .map(std::string::ToString::to_string)
         })
-        .unwrap_or_else(|| "nestgate".to_string());
+        .unwrap_or_else(|| String::from("nestgate"));
 
     // Backward compatibility: Auto-daemon mode for 'nestgate-server' symlink
     if bin_name == "nestgate-server" {

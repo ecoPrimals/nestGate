@@ -409,7 +409,7 @@ mod tests {
     fn test_endpoint_url_generation() {
         // Test setup with clear context
         let port = Port::new(8080).expect("Port 8080 is valid for test setup");
-        let ep = Endpoint::http("localhost".to_string(), port);
+        let ep = Endpoint::http(String::from("localhost"), port);
         assert_eq!(ep.url("/api/test"), "http://localhost:8080/api/test");
         assert_eq!(ep.base_url(), "http://localhost:8080");
     }

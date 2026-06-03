@@ -51,7 +51,7 @@ impl<
     ) -> Result<ZeroCostSnapshotInfo> {
         if !self.can_create_more_snapshots().await {
             return Err(create_zfs_error(
-                "Cannot create snapshot: maximum snapshots reached".to_string(),
+                String::from("Cannot create snapshot: maximum snapshots reached"),
                 ZfsOperation::SystemCheck,
             ));
         }

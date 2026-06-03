@@ -309,7 +309,7 @@ impl From<std::io::Error> for UniversalZfsError {
     /// From
     fn from(error: std::io::Error) -> Self {
         Self::Backend {
-            backend: "system".to_string(),
+            backend: String::from("system"),
             message: format!("IO error: {error}"),
         }
     }
@@ -319,7 +319,7 @@ impl From<tokio::time::error::Elapsed> for UniversalZfsError {
     /// From
     fn from(_error: tokio::time::error::Elapsed) -> Self {
         Self::Timeout {
-            b_operation: "operation".to_string(),
+            b_operation: String::from("operation"),
             duration: Duration::from_secs(30), // Default timeout
         }
     }
@@ -330,10 +330,10 @@ impl From<UniversalZfsError> for NestGateError {
     fn from(error: UniversalZfsError) -> Self {
         let error_data = error.to_error_data();
         let _details = HashMap::from([
-            ("message".to_string(), error_data.message.clone()),
+            (String::from("message"), error_data.message.clone()),
             (
-                "backend".to_string(),
-                error_data.backend.unwrap_or_else(|| "unknown".to_string()),
+                String::from("backend"),
+                error_data.backend.unwrap_or_else(|| String::from("unknown")),
             ),
         ]);
 
@@ -392,13 +392,13 @@ mod universal_zfs_error_tests {
             UniversalZfsError::rate_limit_exceeded("rl", Some(rli)),
             UniversalZfsError::internal("in"),
             UniversalZfsError::PoolOperationFailed {
-                message: "p".to_string(),
+                message: String::from("p"),
             },
             UniversalZfsError::DatasetOperationFailed {
-                message: "d".to_string(),
+                message: String::from("d"),
             },
             UniversalZfsError::SnapshotOperationFailed {
-                message: "s".to_string(),
+                message: String::from("s"),
             },
         ];
 
@@ -444,15 +444,15 @@ mod universal_zfs_error_tests {
         let _: NestGateError = UniversalZfsError::not_found("/n").into();
         let _: NestGateError = UniversalZfsError::internal("i").into();
         let _: NestGateError = UniversalZfsError::PoolOperationFailed {
-            message: "p".to_string(),
+            message: String::from("p"),
         }
         .into();
         let _: NestGateError = UniversalZfsError::DatasetOperationFailed {
-            message: "d".to_string(),
+            message: String::from("d"),
         }
         .into();
         let _: NestGateError = UniversalZfsError::SnapshotOperationFailed {
-            message: "s".to_string(),
+            message: String::from("s"),
         }
         .into();
     }

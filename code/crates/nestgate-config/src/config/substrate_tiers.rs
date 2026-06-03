@@ -82,7 +82,7 @@ impl SubstrateTiers {
         if warm_mounts.is_empty() {
             warm_mounts.push(SubstrateMount {
                 path: get_storage_paths().storage_base_path(),
-                fs_type: "auto".to_string(),
+                fs_type: String::from("auto"),
                 rotational: false,
                 capacity_bytes: 0,
             });
@@ -140,7 +140,7 @@ impl SubstrateMount {
     #[cfg(target_os = "linux")]
     fn probe_mount(path: &Path) -> (String, bool, u64) {
         let fs_type =
-            Self::detect_fs_type_from_mounts(path).unwrap_or_else(|| "unknown".to_string());
+            Self::detect_fs_type_from_mounts(path).unwrap_or_else(|| String::from("unknown"));
 
         let rotational = Self::detect_rotational(path);
 
@@ -154,7 +154,7 @@ impl SubstrateMount {
     #[cfg(not(target_os = "linux"))]
     fn probe_mount(path: &Path) -> (String, bool, u64) {
         let _ = path;
-        ("unknown".to_string(), false, 0)
+        (String::from("unknown"), false, 0)
     }
 
     #[cfg(target_os = "linux")]

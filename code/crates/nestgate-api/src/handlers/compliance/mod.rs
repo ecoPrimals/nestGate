@@ -45,14 +45,14 @@ mod tests {
         let mut manager = ComplianceManager::new();
 
         let policy = RetentionPolicy {
-            id: "test-policy".to_string(),
-            name: "Test Policy".to_string(),
+            id: String::from("test-policy"),
+            name: String::from("Test Policy"),
             data_classification: DataClassification::Internal,
             retention_days: 365,
             archive_after_days: None,
             auto_delete: true,
             legal_hold: false,
-            data_types: vec!["test-data".to_string()],
+            data_types: vec![String::from("test-data")],
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -74,9 +74,9 @@ mod tests {
         let mut manager = ComplianceManager::new();
 
         let policy = AccessPolicy {
-            id: "test-access".to_string(),
-            name: "Test Access Policy".to_string(),
-            required_permissions: vec!["read".to_string(), "write".to_string()],
+            id: String::from("test-access"),
+            name: String::from("Test Access Policy"),
+            required_permissions: vec![String::from("read"), String::from("write")],
             min_clearance_level: 3,
             time_restrictions: vec![],
             location_restrictions: vec![],
@@ -89,15 +89,15 @@ mod tests {
 
         // User with sufficient permissions and clearance should be compliant
         assert!(manager.check_access_compliance(
-            &["read".to_string(), "write".to_string(), "admin".to_string()],
+            &[String::from("read"), String::from("write"), String::from("admin")],
             5
         ));
 
         // User with insufficient permissions should be non-compliant
-        assert!(!manager.check_access_compliance(&["read".to_string()], 5));
+        assert!(!manager.check_access_compliance(&[String::from("read")], 5));
 
         // User with insufficient clearance should be non-compliant
-        assert!(!manager.check_access_compliance(&["read".to_string(), "write".to_string()], 2));
+        assert!(!manager.check_access_compliance(&[String::from("read"), String::from("write")], 2));
     }
 
     #[test]
@@ -106,13 +106,13 @@ mod tests {
 
         // Add a framework with controls
         let framework = RegulatoryFramework {
-            id: "test-framework".to_string(),
-            name: "Test Framework".to_string(),
-            framework_type: RegulatoryType::Custom("test".to_string()),
+            id: String::from("test-framework"),
+            name: String::from("Test Framework"),
+            framework_type: RegulatoryType::Custom(String::from("test")),
             required_controls: vec![ComplianceControl {
-                id: "control-1".to_string(),
-                name: "Control 1".to_string(),
-                description: "Test control".to_string(),
+                id: String::from("control-1"),
+                name: String::from("Control 1"),
+                description: String::from("Test control"),
                 control_type: ControlType::Preventive,
                 implementation_status: ImplementationStatus::FullyImplemented,
                 last_assessment: None,
@@ -130,13 +130,13 @@ mod tests {
 
         // Add a violation
         let violation = ComplianceViolation {
-            id: "test-violation".to_string(),
+            id: String::from("test-violation"),
             timestamp: Utc::now(),
             violation_type: ViolationType::DataRetention,
             severity: ViolationSeverity::Medium,
-            description: "Test violation".to_string(),
-            path: "test-resource".to_string(),
-            framework: "test-framework".to_string(),
+            description: String::from("Test violation"),
+            path: String::from("test-resource"),
+            framework: String::from("test-framework"),
             resolution_status: ResolutionStatus::Open,
             resolution_deadline: None,
             assigned_to: None,
@@ -152,14 +152,14 @@ mod tests {
     fn test_retention_policy_with_legal_hold() {
         let mut manager = ComplianceManager::new();
         let policy = RetentionPolicy {
-            id: "legal-hold".to_string(),
-            name: "Legal Hold Policy".to_string(),
+            id: String::from("legal-hold"),
+            name: String::from("Legal Hold Policy"),
             data_classification: DataClassification::Restricted,
             retention_days: 30,
             archive_after_days: None,
             auto_delete: false,
             legal_hold: true,
-            data_types: vec!["legal-data".to_string()],
+            data_types: vec![String::from("legal-data")],
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -197,15 +197,15 @@ mod tests {
     fn test_access_policy_with_time_restrictions() {
         let time_restriction = TimeRestriction {
             day_of_week: 1, // Monday
-            start_time: "09:00".to_string(),
-            end_time: "17:00".to_string(),
-            timezone: "UTC".to_string(),
+            start_time: String::from("09:00"),
+            end_time: String::from("17:00"),
+            timezone: String::from("UTC"),
         };
 
         let policy = AccessPolicy {
-            id: "time-restricted".to_string(),
-            name: "Business Hours Only".to_string(),
-            required_permissions: vec!["read".to_string()],
+            id: String::from("time-restricted"),
+            name: String::from("Business Hours Only"),
+            required_permissions: vec![String::from("read")],
             min_clearance_level: 2,
             time_restrictions: vec![time_restriction],
             location_restrictions: vec![],
@@ -241,7 +241,7 @@ mod tests {
                 action: format!("action-{i}"),
                 result: AuditResult::Success,
                 details: HashMap::new(),
-                source_ip: Some("192.168.1.1".to_string()),
+                source_ip: Some(String::from("192.168.1.1")),
                 user_agent: None,
             };
             manager.log_audit_event(event);
@@ -259,7 +259,7 @@ mod tests {
             RegulatoryType::PCIDSS,
             RegulatoryType::ISO27001,
             RegulatoryType::FedRAMP,
-            RegulatoryType::Custom("Custom Framework".to_string()),
+            RegulatoryType::Custom(String::from("Custom Framework")),
         ];
 
         assert_eq!(frameworks.len(), 7);
@@ -270,16 +270,16 @@ mod tests {
         let mut manager = ComplianceManager::new();
 
         let violation = ComplianceViolation {
-            id: "v1".to_string(),
+            id: String::from("v1"),
             timestamp: Utc::now(),
             violation_type: ViolationType::DataRetention,
             severity: ViolationSeverity::High,
-            description: "Data retention policy violated".to_string(),
-            path: "/data/sensitive".to_string(),
-            framework: "gdpr".to_string(),
+            description: String::from("Data retention policy violated"),
+            path: String::from("/data/sensitive"),
+            framework: String::from("gdpr"),
             resolution_status: ResolutionStatus::Open,
             resolution_deadline: Some(Utc::now() + ChronoDuration::days(7)),
-            assigned_to: Some("compliance-team".to_string()),
+            assigned_to: Some(String::from("compliance-team")),
         };
 
         manager.record_violation(violation);
@@ -287,7 +287,7 @@ mod tests {
         assert_eq!(manager.violations.len(), 1);
         assert_eq!(
             manager.violations[0].assigned_to,
-            Some("compliance-team".to_string())
+            Some(String::from("compliance-team"))
         );
     }
 
@@ -296,13 +296,13 @@ mod tests {
         let mut manager = ComplianceManager::new();
 
         let framework = RegulatoryFramework {
-            id: "multi-test".to_string(),
-            name: "Multi Violation Test".to_string(),
+            id: String::from("multi-test"),
+            name: String::from("Multi Violation Test"),
             framework_type: RegulatoryType::HIPAA,
             required_controls: vec![ComplianceControl {
-                id: "ctrl-1".to_string(),
-                name: "Control 1".to_string(),
-                description: "Test control".to_string(),
+                id: String::from("ctrl-1"),
+                name: String::from("Control 1"),
+                description: String::from("Test control"),
                 control_type: ControlType::Preventive,
                 implementation_status: ImplementationStatus::FullyImplemented,
                 last_assessment: None,
@@ -317,26 +317,26 @@ mod tests {
 
         // Add violations of different severities
         manager.record_violation(ComplianceViolation {
-            id: "v1".to_string(),
+            id: String::from("v1"),
             timestamp: Utc::now(),
             violation_type: ViolationType::AccessControl,
             severity: ViolationSeverity::Low,
-            description: "Minor access issue".to_string(),
-            path: "/test1".to_string(),
-            framework: "multi-test".to_string(),
+            description: String::from("Minor access issue"),
+            path: String::from("/test1"),
+            framework: String::from("multi-test"),
             resolution_status: ResolutionStatus::Open,
             resolution_deadline: None,
             assigned_to: None,
         });
 
         manager.record_violation(ComplianceViolation {
-            id: "v2".to_string(),
+            id: String::from("v2"),
             timestamp: Utc::now(),
             violation_type: ViolationType::Encryption,
             severity: ViolationSeverity::Critical,
-            description: "Encryption failure".to_string(),
-            path: "/test2".to_string(),
-            framework: "multi-test".to_string(),
+            description: String::from("Encryption failure"),
+            path: String::from("/test2"),
+            framework: String::from("multi-test"),
             resolution_status: ResolutionStatus::Open,
             resolution_deadline: None,
             assigned_to: None,
@@ -366,22 +366,22 @@ mod tests {
 
         // Add multiple policies
         manager.add_retention_policy(RetentionPolicy {
-            id: "r1".to_string(),
-            name: "Retention 1".to_string(),
+            id: String::from("r1"),
+            name: String::from("Retention 1"),
             data_classification: DataClassification::Internal,
             retention_days: 365,
             archive_after_days: None,
             auto_delete: false,
             legal_hold: false,
-            data_types: vec!["logs".to_string()],
+            data_types: vec![String::from("logs")],
             created_at: Utc::now(),
             updated_at: Utc::now(),
         });
 
         manager.add_access_policy(AccessPolicy {
-            id: "a1".to_string(),
-            name: "Access 1".to_string(),
-            required_permissions: vec!["read".to_string()],
+            id: String::from("a1"),
+            name: String::from("Access 1"),
+            required_permissions: vec![String::from("read")],
             min_clearance_level: 1,
             time_restrictions: vec![],
             location_restrictions: vec![],
@@ -391,9 +391,9 @@ mod tests {
         });
 
         manager.add_access_policy(AccessPolicy {
-            id: "a2".to_string(),
-            name: "Access 2".to_string(),
-            required_permissions: vec!["write".to_string()],
+            id: String::from("a2"),
+            name: String::from("Access 2"),
+            required_permissions: vec![String::from("write")],
             min_clearance_level: 3,
             time_restrictions: vec![],
             location_restrictions: vec![],

@@ -42,8 +42,8 @@ impl RemoteZfsService {
         let client = HttpClient::new(&config);
 
         Self {
-            service_name: "remote-zfs".to_string(),
-            service_version: "1.0.0".to_string(),
+            service_name: String::from("remote-zfs"),
+            service_version: String::from("1.0.0"),
             config,
             client,
             start_time: SystemTime::now(),

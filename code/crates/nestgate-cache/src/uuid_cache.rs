@@ -336,7 +336,7 @@ mod tests {
             handle.join().map_err(|e| {
                 nestgate_types::error::NestGateError::internal_error(
                     format!("Expected Internal operation but failed: {e:?}"),
-                    "uuid_cache_test".to_string(),
+                    String::from("uuid_cache_test"),
                 )
             })?;
         }
@@ -376,7 +376,7 @@ mod tests {
         let test_uuid = Uuid::new_v4();
 
         // Preload specific UUID
-        cache.preload(vec![("preloaded-service".to_string(), test_uuid)]);
+        cache.preload(vec![(String::from("preloaded-service"), test_uuid)]);
 
         // Should return the preloaded UUID
         let cached_uuid = cache.get_or_create("preloaded-service");

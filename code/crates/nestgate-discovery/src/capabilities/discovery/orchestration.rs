@@ -122,13 +122,13 @@ impl OrchestrationCapabilityDiscovery {
         // Dynamic service mesh discovery - replaces hardcoded service mesh endpoints
         Ok(OrchestrationCapabilityInfo {
             capability_type: OrchestrationCapabilityType::ServiceMesh,
-            endpoint: "orchestration://service-mesh".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("orchestration://service-mesh"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "register_service".to_string(),
-                "deregister_service".to_string(),
-                "route_traffic".to_string(),
-                "health_check".to_string(),
+                String::from("register_service"),
+                String::from("deregister_service"),
+                String::from("route_traffic"),
+                String::from("health_check"),
             ],
             metadata: HashMap::new(),
         })
@@ -139,13 +139,13 @@ impl OrchestrationCapabilityDiscovery {
         // Dynamic load balancer discovery - replaces hardcoded LB endpoints
         Ok(OrchestrationCapabilityInfo {
             capability_type: OrchestrationCapabilityType::LoadBalancer,
-            endpoint: "orchestration://load-balancer".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("orchestration://load-balancer"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "add_backend".to_string(),
-                "remove_backend".to_string(),
-                "configure_algorithm".to_string(),
-                "health_status".to_string(),
+                String::from("add_backend"),
+                String::from("remove_backend"),
+                String::from("configure_algorithm"),
+                String::from("health_status"),
             ],
             metadata: HashMap::new(),
         })
@@ -156,13 +156,13 @@ impl OrchestrationCapabilityDiscovery {
         // Dynamic service discovery discovery - replaces hardcoded SD endpoints
         Ok(OrchestrationCapabilityInfo {
             capability_type: OrchestrationCapabilityType::ServiceDiscovery,
-            endpoint: "orchestration://service-discovery".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("orchestration://service-discovery"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "discover_services".to_string(),
-                "register_service".to_string(),
-                "watch_services".to_string(),
-                "query_health".to_string(),
+                String::from("discover_services"),
+                String::from("register_service"),
+                String::from("watch_services"),
+                String::from("query_health"),
             ],
             metadata: HashMap::new(),
         })
@@ -189,5 +189,5 @@ pub async fn get_orchestration_endpoint(_adapter: &()) -> Result<String> {
         }
     }
 
-    Ok("orchestration://service-mesh".to_string())
+    Ok(String::from("orchestration://service-mesh"))
 }

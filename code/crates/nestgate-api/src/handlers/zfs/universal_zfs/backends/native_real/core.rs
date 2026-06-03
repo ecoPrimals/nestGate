@@ -213,7 +213,7 @@ impl NativeZfsService {
             .unwrap_or((0.0, 0.0));
 
         ServiceMetrics {
-            service_name: "native_zfs".to_string(),
+            service_name: String::from("native_zfs"),
             timestamp: SystemTime::now(),
             requests_total: requests,
             requests_failed: requests - successes,
@@ -277,12 +277,12 @@ impl UniversalZfsService for NativeZfsService {
                 ServiceStatus::Degraded
             },
             checks: vec![HealthCheck {
-                name: "zfs_availability".to_string(),
+                name: String::from("zfs_availability"),
                 passed: zfs_available,
                 message: Some(if zfs_available {
-                    "ZFS modules loaded successfully".to_string()
+                    String::from("ZFS modules loaded successfully")
                 } else {
-                    "ZFS modules not available".to_string()
+                    String::from("ZFS modules not available")
                 }),
             }],
             last_check: SystemTime::now(),
@@ -414,7 +414,7 @@ impl UniversalZfsService for NativeZfsService {
 
     /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
-        super::configuration::optimize(self, "general".to_string())
+        super::configuration::optimize(self, String::from("general"))
     }
 
     /// Gets Optimization Analytics

@@ -102,8 +102,8 @@ impl RealHardwareTuningHandler {
         Ok(SystemProfile {
             cpu_profile: format!("{} cores: {}", cpu.cores, cpu.model),
             memory_profile: format!("{} GiB total", mem.total_gb),
-            storage_profile: "unknown".to_string(),
-            network_profile: "unknown".to_string(),
+            storage_profile: String::from("unknown"),
+            network_profile: String::from("unknown"),
         })
     }
 
@@ -114,8 +114,8 @@ impl RealHardwareTuningHandler {
         Ok(TuningResult {
             profile_name: profile.cpu_profile.clone(),
             optimizations_applied: vec![
-                "observed_live_metrics_only".to_string(),
-                "no_kernel_privilege_escalation".to_string(),
+                String::from("observed_live_metrics_only"),
+                String::from("no_kernel_privilege_escalation"),
             ],
             estimated_power_increase: 0.0,
             performance_improvement: 0.0,
@@ -365,7 +365,7 @@ impl RealHardwareTuningHandler {
             .lines()
             .find(|line| line.starts_with("model name"))
             .and_then(|line| line.split(':').nth(1))
-            .map_or_else(|| "Unknown CPU".to_string(), |s| s.trim().to_string());
+            .map_or_else(|| String::from("Unknown CPU"), |s| s.trim().to_string());
 
         Ok(CpuInfo { cores, model })
     }

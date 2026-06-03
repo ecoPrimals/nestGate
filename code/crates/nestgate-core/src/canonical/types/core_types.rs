@@ -241,10 +241,10 @@ impl Default for Alert {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            alert_id: "default".to_string(),
-            rule_id: "default".to_string(),
-            message: "Default alert".to_string(),
-            severity: "info".to_string(),
+            alert_id: String::from("default"),
+            rule_id: String::from("default"),
+            message: String::from("Default alert"),
+            severity: String::from("info"),
             timestamp: std::time::SystemTime::now(),
             resolved: false,
         }
@@ -267,9 +267,9 @@ impl Default for SuppressionRule {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            rule_id: "default".to_string(),
-            name: "Default Suppression".to_string(),
-            pattern: ".*".to_string(),
+            rule_id: String::from("default"),
+            name: String::from("Default Suppression"),
+            pattern: String::from(".*"),
             duration_seconds: 300,
             enabled: false,
         }
@@ -306,17 +306,17 @@ mod tests {
 
     #[test]
     fn test_service_info_custom() {
-        let capabilities = vec!["storage".to_string(), "zfs".to_string()];
+        let capabilities = vec![String::from("storage"), String::from("zfs")];
 
         let mut metadata = HashMap::new();
-        metadata.insert("region".to_string(), "us-west".to_string());
+        metadata.insert(String::from("region"), String::from("us-west"));
 
         let info = ServiceInfo {
-            service_id: "svc-123".to_string(),
-            service_type: "storage".to_string(),
+            service_id: String::from("svc-123"),
+            service_type: String::from("storage"),
             capabilities,
-            endpoint: "http://localhost:9000".to_string(),
-            health_status: "healthy".to_string(),
+            endpoint: String::from("http://localhost:9000"),
+            health_status: String::from("healthy"),
             metadata,
         };
 
@@ -339,9 +339,9 @@ mod tests {
     #[test]
     fn test_event_handler_custom() {
         let handler = EventHandler {
-            handler_id: "handler-001".to_string(),
-            event_type: "storage.created".to_string(),
-            handler_function: "handle_storage_created".to_string(),
+            handler_id: String::from("handler-001"),
+            event_type: String::from("storage.created"),
+            handler_function: String::from("handle_storage_created"),
         };
 
         assert_eq!(handler.handler_id, "handler-001");
@@ -362,10 +362,10 @@ mod tests {
     #[test]
     fn test_alert_rule_custom() {
         let rule = AlertRule {
-            rule_id: "rule-001".to_string(),
-            name: "High CPU Alert".to_string(),
-            condition: "cpu_usage > 80".to_string(),
-            severity: "warning".to_string(),
+            rule_id: String::from("rule-001"),
+            name: String::from("High CPU Alert"),
+            condition: String::from("cpu_usage > 80"),
+            severity: String::from("warning"),
             enabled: true,
         };
 
@@ -389,10 +389,10 @@ mod tests {
     #[test]
     fn test_alert_custom() {
         let alert = Alert {
-            alert_id: "alert-001".to_string(),
-            rule_id: "rule-001".to_string(),
-            message: "CPU usage exceeded threshold".to_string(),
-            severity: "critical".to_string(),
+            alert_id: String::from("alert-001"),
+            rule_id: String::from("rule-001"),
+            message: String::from("CPU usage exceeded threshold"),
+            severity: String::from("critical"),
             timestamp: std::time::SystemTime::now(),
             resolved: false,
         };
@@ -432,8 +432,8 @@ mod tests {
         };
 
         let channel = AlertChannel {
-            channel_id: "slack-001".to_string(),
-            channel_type: "slack".to_string(),
+            channel_id: String::from("slack-001"),
+            channel_type: String::from("slack"),
             endpoint,
             enabled: true,
         };
@@ -457,9 +457,9 @@ mod tests {
     #[test]
     fn test_suppression_rule_custom() {
         let rule = SuppressionRule {
-            rule_id: "suppress-001".to_string(),
-            name: "Maintenance Window".to_string(),
-            pattern: "maintenance.*".to_string(),
+            rule_id: String::from("suppress-001"),
+            name: String::from("Maintenance Window"),
+            pattern: String::from("maintenance.*"),
             duration_seconds: 3600,
             enabled: true,
         };
@@ -485,9 +485,9 @@ mod tests {
     #[test]
     fn test_health_check_custom() {
         let check = HealthCheck {
-            check_id: "check-001".to_string(),
-            name: "Database Health".to_string(),
-            component: "database".to_string(),
+            check_id: String::from("check-001"),
+            name: String::from("Database Health"),
+            component: String::from("database"),
             interval_seconds: 60,
             timeout_seconds: 10,
             enabled: true,
@@ -505,7 +505,7 @@ mod tests {
     fn test_provider_registry_creation() {
         let registry: ProviderRegistry = Arc::new(RwLock::new(HashMap::new()));
         let mut map = registry.write().expect("Failed to acquire write lock");
-        map.insert("storage".to_string(), "zfs-provider".to_string());
+        map.insert(String::from("storage"), String::from("zfs-provider"));
 
         assert_eq!(map.get("storage").unwrap(), "zfs-provider");
     }
@@ -515,9 +515,9 @@ mod tests {
         let index: CapabilityIndexMap = Arc::new(RwLock::new(HashMap::new()));
         let mut map = index.write().expect("Failed to acquire write lock");
 
-        let providers = vec!["provider1".to_string(), "provider2".to_string()];
+        let providers = vec![String::from("provider1"), String::from("provider2")];
 
-        map.insert("compute".to_string(), providers);
+        map.insert(String::from("compute"), providers);
 
         let compute_providers = map.get("compute").unwrap();
         assert_eq!(compute_providers.len(), 2);
@@ -530,15 +530,15 @@ mod tests {
         let mut map = registry.write().expect("Failed to acquire write lock");
 
         let service_info = ServiceInfo {
-            service_id: "svc-001".to_string(),
-            service_type: "api".to_string(),
-            capabilities: vec!["rest".to_string()],
-            endpoint: "http://localhost:18080".to_string(),
-            health_status: "healthy".to_string(),
+            service_id: String::from("svc-001"),
+            service_type: String::from("api"),
+            capabilities: vec![String::from("rest")],
+            endpoint: String::from("http://localhost:18080"),
+            health_status: String::from("healthy"),
             metadata: HashMap::new(),
         };
 
-        map.insert("api-service".to_string(), service_info);
+        map.insert(String::from("api-service"), service_info);
 
         assert!(map.contains_key("api-service"));
         assert_eq!(map.get("api-service").unwrap().service_id, "svc-001");
@@ -547,9 +547,9 @@ mod tests {
     #[test]
     fn test_event_handler_clone() {
         let handler = EventHandler {
-            handler_id: "handler-001".to_string(),
-            event_type: "test.event".to_string(),
-            handler_function: "handle_test".to_string(),
+            handler_id: String::from("handler-001"),
+            event_type: String::from("test.event"),
+            handler_function: String::from("handle_test"),
         };
 
         let cloned = handler.clone();

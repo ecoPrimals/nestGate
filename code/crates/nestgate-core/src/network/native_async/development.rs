@@ -59,16 +59,16 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         // Mock discovery for development
         if service_name == "test_service" {
             Ok(vec![ServiceInfo {
-                name: "test_service".to_string(),
-                version: "1.0.0".to_string(),
-                status: "running".to_string(),
+                name: String::from("test_service"),
+                version: String::from("1.0.0"),
+                status: String::from("running"),
                 pid: Some(std::process::id()),
                 cpu_percent: Some(0.0),
                 memory_bytes: Some(0),
                 start_time: Some(std::time::SystemTime::now()),
-                description: Some("Test service for development".to_string()),
+                description: Some(String::from("Test service for development")),
                 dependencies: None,
-                command_line: Some("nestgate-test".to_string()),
+                command_line: Some(String::from("nestgate-test")),
             }])
         } else {
             Ok(vec![])
@@ -105,16 +105,16 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
     async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
         if service_id == "test_service" {
             Ok(Some(ServiceInfo {
-                name: "test_service".to_string(),
-                version: "1.0.0".to_string(),
-                status: "running".to_string(),
+                name: String::from("test_service"),
+                version: String::from("1.0.0"),
+                status: String::from("running"),
                 pid: Some(std::process::id()),
                 cpu_percent: Some(0.0),
                 memory_bytes: Some(0),
                 start_time: Some(std::time::SystemTime::now()),
-                description: Some("Test service for development".to_string()),
+                description: Some(String::from("Test service for development")),
                 dependencies: None,
-                command_line: Some("nestgate-test".to_string()),
+                command_line: Some(String::from("nestgate-test")),
             }))
         } else {
             Ok(None)

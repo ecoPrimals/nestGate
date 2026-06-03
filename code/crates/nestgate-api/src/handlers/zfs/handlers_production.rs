@@ -84,12 +84,12 @@ pub async fn create_pool(
     let pool_name = body
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| ApiError::InvalidRequest("Pool name is required".to_string()))?;
+        .ok_or_else(|| ApiError::InvalidRequest(String::from("Pool name is required")))?;
 
     let devices = body
         .get("devices")
         .and_then(|v| v.as_array())
-        .ok_or_else(|| ApiError::InvalidRequest("Devices array is required".to_string()))?;
+        .ok_or_else(|| ApiError::InvalidRequest(String::from("Devices array is required")))?;
 
     let device_paths: Vec<String> = devices
         .iter()
@@ -98,7 +98,7 @@ pub async fn create_pool(
 
     if device_paths.is_empty() {
         return Err(ApiError::InvalidRequest(
-            "At least one device is required".to_string(),
+            String::from("At least one device is required"),
         ));
     }
 
@@ -215,7 +215,7 @@ pub async fn create_dataset(
     let dataset_name = body
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| ApiError::InvalidRequest("Dataset name is required".to_string()))?;
+        .ok_or_else(|| ApiError::InvalidRequest(String::from("Dataset name is required")))?;
 
     info!("Creating ZFS dataset: {}", dataset_name);
 
@@ -297,7 +297,7 @@ pub async fn create_snapshot(
     let snapshot_name = body
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| ApiError::InvalidRequest("Snapshot name is required".to_string()))?;
+        .ok_or_else(|| ApiError::InvalidRequest(String::from("Snapshot name is required")))?;
 
     info!("Creating ZFS snapshot: {}", snapshot_name);
 
@@ -402,7 +402,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_universal_pool_handler() {
-        let pool_name = "testpool".to_string();
+        let pool_name = String::from("testpool");
         let result = get_universal_pool(Path(pool_name)).await;
         
         // May fail if pool doesn't exist - that's expected
@@ -413,7 +413,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_pool_handler() {
-        let pool_name = "nonexistent_pool".to_string();
+        let pool_name = String::from("nonexistent_pool");
         let result = delete_pool(Path(pool_name)).await;
         
         // Should handle gracefully (success or error)
@@ -433,7 +433,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_dataset_handler() {
-        let dataset_name = "testpool/testdataset".to_string();
+        let dataset_name = String::from("testpool/testdataset");
         let result = get_dataset(Path(dataset_name)).await;
         
         // May fail if dataset doesn't exist
@@ -444,7 +444,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_dataset_handler() {
-        let dataset_name = "nonexistent/dataset".to_string();
+        let dataset_name = String::from("nonexistent/dataset");
         let result = delete_dataset(Path(dataset_name)).await;
         
         // Should handle gracefully

@@ -76,7 +76,7 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
         let caps = nestgate_core::services::storage::capabilities::detect_backend();
 
         let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
-            .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+            .unwrap_or_else(|_| String::from("/var/lib/nestgate/storage"));
         let storage_exists = std::path::Path::new(&storage_path).exists();
 
         // Display

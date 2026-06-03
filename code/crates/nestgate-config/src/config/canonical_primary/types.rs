@@ -22,10 +22,10 @@ impl Default for ConfigMetadata {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            version: "1.0.0".to_string(),
-            created_at: "2025-02-01T00:00:00Z".to_string(),
-            updated_at: "2025-02-01T00:00:00Z".to_string(),
-            checksum: "".to_string(),
+            version: String::from("1.0.0"),
+            created_at: String::from("2025-02-01T00:00:00Z"),
+            updated_at: String::from("2025-02-01T00:00:00Z"),
+            checksum: String::from(""),
         }
     }
 }
@@ -89,8 +89,8 @@ impl Default for TypesConfig {
         Self {
             strict_typing: true,
             validation_rules: vec![
-                "required_fields".to_string(),
-                "type_compatibility".to_string(),
+                String::from("required_fields"),
+                String::from("type_compatibility"),
             ],
             custom_types: std::collections::HashMap::new(),
         }

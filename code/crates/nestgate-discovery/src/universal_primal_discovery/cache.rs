@@ -290,18 +290,18 @@ impl DiscoveryCache {
     pub fn get_detailed_stats(&self) -> HashMap<String, usize> {
         let mut stats = HashMap::new();
 
-        stats.insert("port_cache_size".to_string(), self.port_cache.len());
-        stats.insert("endpoint_cache_size".to_string(), self.endpoint_cache.len());
-        stats.insert("timeout_cache_size".to_string(), self.timeout_cache.len());
-        stats.insert("general_cache_size".to_string(), self.general_cache.len());
+        stats.insert(String::from("port_cache_size"), self.port_cache.len());
+        stats.insert(String::from("endpoint_cache_size"), self.endpoint_cache.len());
+        stats.insert(String::from("timeout_cache_size"), self.timeout_cache.len());
+        stats.insert(String::from("general_cache_size"), self.general_cache.len());
         stats.insert(
-            "total_cache_size".to_string(),
+            String::from("total_cache_size"),
             self.port_cache.len()
                 + self.endpoint_cache.len()
                 + self.timeout_cache.len()
                 + self.general_cache.len(),
         );
-        stats.insert("max_cache_size".to_string(), self.max_cache_size);
+        stats.insert(String::from("max_cache_size"), self.max_cache_size);
 
         stats
     }

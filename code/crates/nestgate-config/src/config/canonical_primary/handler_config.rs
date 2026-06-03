@@ -88,9 +88,9 @@ impl Default for GlobalHandlerConfig {
             max_request_size: 10 * 1024 * 1024, // 10MB
             enable_logging: true,
             enable_metrics: true,
-            default_content_type: "application/json".to_string(),
+            default_content_type: String::from("application/json"),
             enable_cors: true,
-            cors_origins: vec!["*".to_string()],
+            cors_origins: vec![String::from("*")],
             rate_limiting: RateLimitConfig::default(),
             security: HandlerSecurityConfig::default(),
         }
@@ -124,7 +124,7 @@ impl Default for ZfsHandlerConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            service_name: "canonical-zfs-handler".to_string(),
+            service_name: String::from("canonical-zfs-handler"),
             backend: ZfsBackendConfig::Auto,
             fail_safe: ZfsFailSafeConfig::default(),
             observability: ZfsObservabilityConfig::default(),
@@ -146,7 +146,7 @@ impl ZfsHandlerConfig {
     /// - Network or I/O errors occur
     pub fn validate(&self) -> Result<(), String> {
         if self.service_name.is_empty() {
-            return Err("Service name cannot be empty".to_string());
+            return Err(String::from("Service name cannot be empty"));
         }
         // Additional validation can be added here
         Ok(())
@@ -309,9 +309,9 @@ impl Default for ZfsSecurityConfig {
             enable_signing: false,
             enable_encryption: true,
             allowed_operations: vec![
-                "list_pools".to_string(),
-                "create_dataset".to_string(),
-                "snapshot".to_string(),
+                String::from("list_pools"),
+                String::from("create_dataset"),
+                String::from("snapshot"),
             ],
         }
     }
@@ -505,7 +505,7 @@ impl Default for ComplianceHandlerConfig {
     fn default() -> Self {
         Self {
             enable_monitoring: true,
-            standards: vec!["ISO27001".to_string(), "GDPR".to_string()],
+            standards: vec![String::from("ISO27001"), String::from("GDPR")],
             audit_interval: Duration::from_secs(3600),
         }
     }
@@ -597,9 +597,9 @@ impl Default for HandlerSecurityConfig {
             enable_signing: false,
             security_headers: {
                 let mut headers = HashMap::new();
-                headers.insert("X-Content-Type-Options".to_string(), "nosniff".to_string());
-                headers.insert("X-Frame-Options".to_string(), "DENY".to_string());
-                headers.insert("X-XSS-Protection".to_string(), "1; mode=block".to_string());
+                headers.insert(String::from("X-Content-Type-Options"), String::from("nosniff"));
+                headers.insert(String::from("X-Frame-Options"), String::from("DENY"));
+                headers.insert(String::from("X-XSS-Protection"), String::from("1; mode=block"));
                 headers
             },
         }
@@ -625,7 +625,7 @@ mod tests {
         z.service_name.clear();
         assert_eq!(
             z.validate(),
-            Err("Service name cannot be empty".to_string())
+            Err(String::from("Service name cannot be empty"))
         );
     }
 
@@ -637,7 +637,7 @@ mod tests {
     #[test]
     fn zfs_backend_config_remote_roundtrip() {
         let b = ZfsBackendConfig::Remote {
-            endpoint: "https://zfs.example/tarpc".to_string(),
+            endpoint: String::from("https://zfs.example/tarpc"),
             timeout: Duration::from_secs(12),
         };
         let json = serde_json::to_string(&b).unwrap();
@@ -677,9 +677,9 @@ mod tests {
     #[test]
     fn custom_handler_config_roundtrip() {
         let mut settings = HashMap::new();
-        settings.insert("k".to_string(), serde_json::json!({"x": 1}));
+        settings.insert(String::from("k"), serde_json::json!({"x": 1}));
         let c = CustomHandlerConfig {
-            name: "plugin".to_string(),
+            name: String::from("plugin"),
             settings,
             timeout: Duration::from_millis(500),
             enable_metrics: false,

@@ -239,7 +239,7 @@ impl CapabilityConfig {
         // Read discovery backends
         let discovery_backends = env
             .get("NESTGATE_DISCOVERY_BACKENDS")
-            .unwrap_or_else(|| "environment".to_string())
+            .unwrap_or_else(|| String::from("environment"))
             .split(',')
             .filter_map(|backend| match backend.trim() {
                 "dns-srv" => {
@@ -249,7 +249,7 @@ impl CapabilityConfig {
                 "mdns" => {
                     let service_type = env
                         .get("NESTGATE_MDNS_SERVICE")
-                        .unwrap_or_else(|| "_nestgate._tcp".to_string());
+                        .unwrap_or_else(|| String::from("_nestgate._tcp"));
                     Some(DiscoveryBackend::MDns { service_type })
                 }
                 "consul" => {
@@ -259,7 +259,7 @@ impl CapabilityConfig {
                 "kubernetes" | "k8s" => {
                     let namespace = env
                         .get("NESTGATE_K8S_NAMESPACE")
-                        .unwrap_or_else(|| "default".to_string());
+                        .unwrap_or_else(|| String::from("default"));
                     Some(DiscoveryBackend::Kubernetes { namespace })
                 }
                 "environment" | "env" => Some(DiscoveryBackend::Environment),
@@ -360,21 +360,21 @@ impl CapabilityDefaults {
     pub fn secure() -> Self {
         let mut port_ranges = HashMap::new();
         port_ranges.insert(
-            "api".to_string(),
+            String::from("api"),
             PortRange {
                 start: 8000,
                 end: 8999,
             },
         );
         port_ranges.insert(
-            "metrics".to_string(),
+            String::from("metrics"),
             PortRange {
                 start: 9000,
                 end: 9999,
             },
         );
         port_ranges.insert(
-            "admin".to_string(),
+            String::from("admin"),
             PortRange {
                 start: 7000,
                 end: 7999,
@@ -382,7 +382,7 @@ impl CapabilityDefaults {
         );
 
         Self {
-            bind_address: "0.0.0.0".to_string(),
+            bind_address: String::from("0.0.0.0"),
             port_ranges,
             timeouts: DefaultTimeouts {
                 connection: Duration::from_secs(30),
@@ -398,7 +398,7 @@ impl CapabilityDefaults {
     #[must_use]
     pub fn development() -> Self {
         let mut defaults = Self::secure();
-        defaults.bind_address = "127.0.0.1".to_string();
+        defaults.bind_address = String::from("127.0.0.1");
         defaults
     }
 }
@@ -462,16 +462,16 @@ mod tests {
         let mut caps = HashMap::new();
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080);
         caps.insert(
-            "api".to_string(),
+            String::from("api"),
             CapabilityInfo {
-                id: "api".to_string(),
+                id: String::from("api"),
                 primary_endpoint: Some(addr),
                 additional_endpoints: vec![],
                 metadata: HashMap::new(),
                 health_check: Some(HealthCheckConfig {
                     interval: Duration::from_secs(10),
                     timeout: Duration::from_secs(2),
-                    path: "/health".to_string(),
+                    path: String::from("/health"),
                 }),
             },
         );
@@ -480,16 +480,16 @@ mod tests {
             fallbacks: None,
             discovery_backends: vec![
                 DiscoveryBackend::DnsSrv {
-                    domain: "example.com".to_string(),
+                    domain: String::from("example.com"),
                 },
                 DiscoveryBackend::MDns {
-                    service_type: "_http._tcp".to_string(),
+                    service_type: String::from("_http._tcp"),
                 },
                 DiscoveryBackend::Consul {
-                    address: "127.0.0.1:8500".to_string(),
+                    address: String::from("127.0.0.1:8500"),
                 },
                 DiscoveryBackend::Kubernetes {
-                    namespace: "ns".to_string(),
+                    namespace: String::from("ns"),
                 },
                 DiscoveryBackend::Environment,
             ],
@@ -504,7 +504,7 @@ mod tests {
     fn capability_info_endpoints() {
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9000);
         let info = CapabilityInfo {
-            id: "m".to_string(),
+            id: String::from("m"),
             primary_endpoint: None,
             additional_endpoints: vec![addr],
             metadata: HashMap::new(),
@@ -527,7 +527,7 @@ mod tests {
         assert!(cfg.fallbacks.is_some());
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 7000);
         cfg.register_capability(CapabilityInfo {
-            id: "x".to_string(),
+            id: String::from("x"),
             primary_endpoint: Some(addr),
             additional_endpoints: vec![],
             metadata: HashMap::new(),
@@ -571,7 +571,7 @@ mod tests {
             discovery_backends: vec![],
         };
         cfg.register_capability(CapabilityInfo {
-            id: "metrics".to_string(),
+            id: String::from("metrics"),
             primary_endpoint: None,
             additional_endpoints: vec![],
             metadata: HashMap::new(),
@@ -584,7 +584,7 @@ mod tests {
     #[test]
     fn capability_info_primary_endpoint_errors_when_no_endpoints() {
         let info = CapabilityInfo {
-            id: "empty".to_string(),
+            id: String::from("empty"),
             primary_endpoint: None,
             additional_endpoints: vec![],
             metadata: HashMap::new(),
@@ -601,7 +601,7 @@ mod tests {
             discovery_backends: vec![],
         };
         cfg.register_capability(CapabilityInfo {
-            id: "a".to_string(),
+            id: String::from("a"),
             primary_endpoint: Some(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 1)),
             additional_endpoints: vec![],
             metadata: HashMap::new(),
@@ -609,6 +609,6 @@ mod tests {
         });
         let mut keys = cfg.available_capabilities();
         keys.sort();
-        assert_eq!(keys, vec!["a".to_string()]);
+        assert_eq!(keys, vec![String::from("a")]);
     }
 }

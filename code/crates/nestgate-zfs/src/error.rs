@@ -282,9 +282,9 @@ mod tests {
     #[test]
     fn test_zfs_error_builder_internal() {
         let error = ZfsErrorBuilder::internal(
-            "Internal error occurred".to_string(),
-            "zfs-manager".to_string(),
-            Some("manager::create_pool".to_string()),
+            String::from("Internal error occurred"),
+            String::from("zfs-manager"),
+            Some(String::from("manager::create_pool")),
         );
         let error_string = format!("{error:?}");
         assert!(error_string.contains("Internal error occurred"));
@@ -295,8 +295,8 @@ mod tests {
     #[test]
     fn test_zfs_error_builder_internal_no_location() {
         let error = ZfsErrorBuilder::internal(
-            "Error without location".to_string(),
-            "zfs-core".to_string(),
+            String::from("Error without location"),
+            String::from("zfs-core"),
             None,
         );
         let error_string = format!("{error:?}");
@@ -309,9 +309,9 @@ mod tests {
     #[test]
     fn test_zfs_internal() {
         let error = zfs_internal(
-            "Internal ZFS error".to_string(),
-            "zfs-system".to_string(),
-            Some("system::check".to_string()),
+            String::from("Internal ZFS error"),
+            String::from("zfs-system"),
+            Some(String::from("system::check")),
             false,
             None,
         );
@@ -324,8 +324,8 @@ mod tests {
     #[test]
     fn test_zfs_internal_with_bug_flag() {
         let error = zfs_internal(
-            "Unexpected state".to_string(),
-            "zfs-bug".to_string(),
+            String::from("Unexpected state"),
+            String::from("zfs-bug"),
             None,
             true, // is_bug flag (ignored but tested)
             None,
@@ -369,7 +369,7 @@ mod tests {
 
     #[test]
     fn test_create_zfs_error_pool_create() {
-        let error = create_zfs_error("Pool creation failed".to_string(), ZfsOperation::PoolCreate);
+        let error = create_zfs_error(String::from("Pool creation failed"), ZfsOperation::PoolCreate);
         let error_string = format!("{error:?}");
         assert!(error_string.contains("Pool creation failed"));
         assert!(error_string.contains("zfs-core"));
@@ -379,7 +379,7 @@ mod tests {
     #[test]
     fn test_create_zfs_error_pool_destroy() {
         let error = create_zfs_error(
-            "Pool destruction failed".to_string(),
+            String::from("Pool destruction failed"),
             ZfsOperation::PoolDestroy,
         );
         let error_string = format!("{error:?}");
@@ -390,7 +390,7 @@ mod tests {
     #[test]
     fn test_create_zfs_error_dataset_create() {
         let error = create_zfs_error(
-            "Dataset creation failed".to_string(),
+            String::from("Dataset creation failed"),
             ZfsOperation::DatasetCreate,
         );
         let error_string = format!("{error:?}");
@@ -401,7 +401,7 @@ mod tests {
     #[test]
     fn test_create_zfs_error_snapshot_create() {
         let error = create_zfs_error(
-            "Snapshot creation failed".to_string(),
+            String::from("Snapshot creation failed"),
             ZfsOperation::SnapshotCreate,
         );
         let error_string = format!("{error:?}");
@@ -412,7 +412,7 @@ mod tests {
     #[test]
     fn test_create_zfs_error_command() {
         let error = create_zfs_error(
-            "Command execution failed".to_string(),
+            String::from("Command execution failed"),
             ZfsOperation::Command,
         );
         let error_string = format!("{error:?}");

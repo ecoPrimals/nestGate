@@ -462,7 +462,7 @@ impl SteamDataService {
         let library_stats = self.game_library_storage.get_library_stats().await;
 
         ServiceHealth {
-            service_name: "steam_data_service".to_string(),
+            service_name: String::from("steam_data_service"),
             healthy: federation_status.sync_enabled,
             games_tracked: library_stats.total_games,
             federation_nodes: federation_status.total_nodes,
@@ -526,12 +526,12 @@ mod tests {
 
         let game = GameMetadata {
             app_id: 12345,
-            name: "Test Game".to_string(),
-            developer: "Test Dev".to_string(),
-            publisher: "Test Pub".to_string(),
+            name: String::from("Test Game"),
+            developer: String::from("Test Dev"),
+            publisher: String::from("Test Pub"),
             release_date: chrono::Utc::now(),
-            genres: vec!["Action".to_string()],
-            tags: vec!["Singleplayer".to_string()],
+            genres: vec![String::from("Action")],
+            tags: vec![String::from("Singleplayer")],
             size_bytes: 1_000_000_000,
             last_played: None,
         };
@@ -551,8 +551,8 @@ mod tests {
         let federation = SaveDataFederation::new(ConflictResolution::MostRecent);
 
         let node = FederationNode {
-            id: "node1".to_string(),
-            endpoint: "http://gaming-rig-2:8080".to_string(),
+            id: String::from("node1"),
+            endpoint: String::from("http://gaming-rig-2:8080"),
             priority: 100,
             last_sync: None,
             healthy: true,
@@ -574,8 +574,8 @@ mod tests {
         let service = SteamDataService::new();
 
         let nodes = vec![FederationNode {
-            id: "primary".to_string(),
-            endpoint: "http://gaming-rig-1:8080".to_string(),
+            id: String::from("primary"),
+            endpoint: String::from("http://gaming-rig-1:8080"),
             priority: 100,
             last_sync: None,
             healthy: true,

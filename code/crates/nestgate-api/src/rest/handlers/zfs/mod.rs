@@ -34,7 +34,7 @@ mod tests {
         let state = crate::rest::ApiState::new().expect("Failed to create test state");
         state
             .zfs_engines
-            .insert(name.to_string(), "placeholder_engine".to_string());
+            .insert(name.to_string(), String::from("placeholder_engine"));
         state
     }
 
@@ -81,9 +81,9 @@ mod tests {
         let query = ListQuery {
             page: Some(1),
             per_page: Some(50),
-            sort: Some("name".to_string()),
-            order: Some("asc".to_string()),
-            filter: Some("tank".to_string()),
+            sort: Some(String::from("name")),
+            order: Some(String::from("asc")),
+            filter: Some(String::from("tank")),
         };
         let result = list_datasets(State(state), Query(query)).await;
         assert!(result.is_ok());
@@ -109,7 +109,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_dataset_not_found() {
         let state = create_test_state();
-        let result = get_dataset(State(state), Path("nonexistent".to_string())).await;
+        let result = get_dataset(State(state), Path(String::from("nonexistent"))).await;
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.0.code, "DATASET_NOT_FOUND");
@@ -118,7 +118,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_dataset_found() {
         let state = create_test_state_with_dataset("tank/data").await;
-        let result = get_dataset(State(state), Path("tank/data".to_string())).await;
+        let result = get_dataset(State(state), Path(String::from("tank/data"))).await;
         assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.0.data.name, "tank/data");
@@ -127,28 +127,28 @@ mod tests {
     #[tokio::test]
     async fn test_delete_dataset_not_found() {
         let state = create_test_state();
-        let result = delete_dataset(State(state), Path("nonexistent".to_string())).await;
+        let result = delete_dataset(State(state), Path(String::from("nonexistent"))).await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_delete_dataset_success() {
         let state = create_test_state_with_dataset("tank/to_delete").await;
-        let result = delete_dataset(State(state), Path("tank/to_delete".to_string())).await;
+        let result = delete_dataset(State(state), Path(String::from("tank/to_delete"))).await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_get_dataset_properties_not_found() {
         let state = create_test_state();
-        let result = get_dataset_properties(State(state), Path("nonexistent".to_string())).await;
+        let result = get_dataset_properties(State(state), Path(String::from("nonexistent"))).await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_get_dataset_properties_found() {
         let state = create_test_state_with_dataset("tank/data").await;
-        let result = get_dataset_properties(State(state), Path("tank/data".to_string())).await;
+        let result = get_dataset_properties(State(state), Path(String::from("tank/data"))).await;
         assert!(result.is_ok());
     }
 
@@ -156,7 +156,7 @@ mod tests {
     async fn test_set_dataset_properties_not_found() {
         let state = create_test_state();
         let props = DatasetProperties {
-            name: "nonexistent".to_string(),
+            name: String::from("nonexistent"),
             mountpoint: None,
             quota: None,
             reservation: None,
@@ -171,7 +171,7 @@ mod tests {
         };
         let result = set_dataset_properties(
             State(state),
-            Path("nonexistent".to_string()),
+            Path(String::from("nonexistent")),
             axum::Json(props),
         )
         .await;
@@ -181,14 +181,14 @@ mod tests {
     #[tokio::test]
     async fn test_get_dataset_stats_not_found() {
         let state = create_test_state();
-        let result = get_dataset_stats(State(state), Path("nonexistent".to_string())).await;
+        let result = get_dataset_stats(State(state), Path(String::from("nonexistent"))).await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_get_dataset_stats_found() {
         let state = create_test_state_with_dataset("tank/data").await;
-        let result = get_dataset_stats(State(state), Path("tank/data".to_string())).await;
+        let result = get_dataset_stats(State(state), Path(String::from("tank/data"))).await;
         assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.0.data.name, "tank/data");
@@ -204,7 +204,7 @@ mod tests {
             order: None,
             filter: None,
         };
-        let response = list_snapshots(State(state), Path("tank/data".to_string()), Query(query))
+        let response = list_snapshots(State(state), Path(String::from("tank/data")), Query(query))
             .await
             .into_response();
         assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
@@ -214,7 +214,7 @@ mod tests {
     async fn test_create_snapshot() {
         let state = create_test_state_with_dataset("tank/data").await;
         let request = CreateSnapshotRequest {
-            name: "snap1".to_string(),
+            name: String::from("snap1"),
             description: None,
             recursive: false,
             properties: HashMap::new(),
@@ -222,7 +222,7 @@ mod tests {
         };
         let response = create_snapshot(
             State(state),
-            Path("tank/data".to_string()),
+            Path(String::from("tank/data")),
             axum::Json(request),
         )
         .await
@@ -235,7 +235,7 @@ mod tests {
         let state = create_test_state_with_dataset("tank/data").await;
         let response = delete_snapshot(
             State(state),
-            Path(("tank/data".to_string(), "snap1".to_string())),
+            Path((String::from("tank/data"), String::from("snap1"))),
         )
         .await
         .into_response();
@@ -246,14 +246,14 @@ mod tests {
     async fn test_clone_snapshot_empty_name_fails() {
         let state = create_test_state();
         let request = CloneSnapshotRequest {
-            target_dataset_name: "tank/data".to_string(),
+            target_dataset_name: String::from("tank/data"),
             clone_name: String::new(),
             properties: None,
             description: None,
         };
         let response = clone_snapshot(
             State(state),
-            Path(("tank/data".to_string(), "snap1".to_string())),
+            Path((String::from("tank/data"), String::from("snap1"))),
             axum::Json(request),
         )
         .await
@@ -265,14 +265,14 @@ mod tests {
     async fn test_clone_snapshot_success() {
         let state = create_test_state();
         let request = CloneSnapshotRequest {
-            target_dataset_name: "tank/data".to_string(),
-            clone_name: "tank/clone".to_string(),
+            target_dataset_name: String::from("tank/data"),
+            clone_name: String::from("tank/clone"),
             properties: None,
             description: None,
         };
         let response = clone_snapshot(
             State(state),
-            Path(("tank/data".to_string(), "snap1".to_string())),
+            Path((String::from("tank/data"), String::from("snap1"))),
             axum::Json(request),
         )
         .await

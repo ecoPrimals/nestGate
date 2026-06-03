@@ -120,7 +120,7 @@ impl ZfsManager {
         // Get current pool status
         let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
-                "Failed to list pools: error details".to_string(),
+                String::from("Failed to list pools: error details"),
                 ZfsOperation::SystemCheck,
             )
         })?;
@@ -132,7 +132,7 @@ impl ZfsManager {
                 .await
                 .map_err(|_e| {
                     create_zfs_error(
-                        "Failed to get pool status: error details".to_string(),
+                        String::from("Failed to get pool status: error details"),
                         ZfsOperation::PoolCreate,
                     )
                 })?;
@@ -152,7 +152,7 @@ impl ZfsManager {
             }
         }
 
-        recommendations.push("Storage optimization completed using heuristic analysis".to_string());
+        recommendations.push(String::from("Storage optimization completed using heuristic analysis"));
         Ok(recommendations)
     }
 
@@ -175,7 +175,7 @@ impl ZfsManager {
                 || perf_data.current_metrics.avg_write_latency_ms > 100.0
             {
                 recommendations
-                    .push("Tier showing high latency - consider optimization".to_string());
+                    .push(String::from("Tier showing high latency - consider optimization"));
             }
         }
 

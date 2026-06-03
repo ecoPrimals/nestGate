@@ -162,7 +162,7 @@ mod tests {
 
         let adapter = UniversalAdapter::with_discovery_config(
             std::sync::Arc::new(config),
-            "http://test:3000/adapter".to_string(),
+            String::from("http://test:3000/adapter"),
         );
 
         assert_eq!(adapter.endpoint, "http://test:3000/adapter");

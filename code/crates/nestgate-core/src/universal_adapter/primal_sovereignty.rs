@@ -256,8 +256,8 @@ impl UniversalAdapter {
             id: format!("{}-env-discovered", capability_type_name(capability_type)),
             capability_type: capability_type.clone(),
             endpoint,
-            provider_type: "environment-configured".to_string(),
-            operations: vec!["*".to_string()], // All operations supported
+            provider_type: String::from("environment-configured"),
+            operations: vec![String::from("*")], // All operations supported
             health_status: HealthStatus::Unknown,
         })
     }
@@ -435,7 +435,7 @@ mod tests {
         let adapter = UniversalAdapter::new().expect("Failed to create adapter");
         let request = CapabilityRequest {
             capability_type: CapabilityType::Storage,
-            operation: "read".to_string(),
+            operation: String::from("read"),
             payload: serde_json::json!({}),
         };
         let result = adapter.request_capability("nonexistent-id", request).await;
@@ -445,11 +445,11 @@ mod tests {
     #[tokio::test]
     async fn test_discovered_capability_construction() {
         let cap = DiscoveredCapability {
-            id: "test-1".to_string(),
+            id: String::from("test-1"),
             capability_type: CapabilityType::Compute,
-            endpoint: "http://compute:7000".to_string(),
-            provider_type: "test".to_string(),
-            operations: vec!["run".to_string()],
+            endpoint: String::from("http://compute:7000"),
+            provider_type: String::from("test"),
+            operations: vec![String::from("run")],
             health_status: HealthStatus::Healthy,
         };
         assert_eq!(cap.id, "test-1");
@@ -486,13 +486,13 @@ mod tests {
     fn test_capability_request_response() {
         let req = CapabilityRequest {
             capability_type: CapabilityType::Storage,
-            operation: "store".to_string(),
+            operation: String::from("store"),
             payload: serde_json::json!({"key": "value"}),
         };
         assert_eq!(req.operation, "store");
 
         let resp = CapabilityResponse {
-            status: "ok".to_string(),
+            status: String::from("ok"),
             data: serde_json::Value::Null,
         };
         assert_eq!(resp.status, "ok");

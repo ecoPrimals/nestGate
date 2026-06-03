@@ -75,7 +75,7 @@ impl JsonRpcError {
     pub fn parse_error() -> Self {
         Self {
             code: -32700,
-            message: "Parse error".to_string(),
+            message: String::from("Parse error"),
             data: None,
         }
     }
@@ -85,7 +85,7 @@ impl JsonRpcError {
     pub fn invalid_request() -> Self {
         Self {
             code: -32600,
-            message: "Invalid Request".to_string(),
+            message: String::from("Invalid Request"),
             data: None,
         }
     }
@@ -95,7 +95,7 @@ impl JsonRpcError {
     pub fn method_not_found() -> Self {
         Self {
             code: -32601,
-            message: "Method not found".to_string(),
+            message: String::from("Method not found"),
             data: None,
         }
     }
@@ -105,7 +105,7 @@ impl JsonRpcError {
     pub fn internal_error() -> Self {
         Self {
             code: -32603,
-            message: "Internal error".to_string(),
+            message: String::from("Internal error"),
             data: None,
         }
     }
@@ -116,7 +116,7 @@ impl JsonRpcResponse {
     #[must_use]
     pub fn success(id: impl Into<Value>, result: impl Into<Value>) -> Self {
         Self {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: String::from("2.0"),
             result: Some(result.into()),
             error: None,
             id: id.into(),
@@ -127,7 +127,7 @@ impl JsonRpcResponse {
     #[must_use]
     pub fn error(id: impl Into<Value>, error: JsonRpcError) -> Self {
         Self {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: String::from("2.0"),
             result: None,
             error: Some(error),
             id: id.into(),
@@ -138,7 +138,7 @@ impl JsonRpcResponse {
     #[must_use]
     pub fn error_with_code(id: impl Into<Value>, code: i32, message: impl Into<String>) -> Self {
         Self {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: String::from("2.0"),
             result: None,
             error: Some(JsonRpcError {
                 code,
@@ -236,7 +236,7 @@ where
             Err(e) => {
                 let err_msg = e.to_string();
                 let (code, message) = if err_msg.contains("Unknown method") {
-                    (-32601, "Method not found".to_string())
+                    (-32601, String::from("Method not found"))
                 } else {
                     (-32603, format!("Internal error: {e}"))
                 };
@@ -344,18 +344,18 @@ mod tests {
         let h = JsonRpcHandler::new(EchoHandler);
         let ok = h
             .handle_request(JsonRpcRequest {
-                jsonrpc: "2.0".to_string(),
-                method: "echo".to_string(),
-                params: Value::String("hi".to_string()),
+                jsonrpc: String::from("2.0"),
+                method: String::from("echo"),
+                params: Value::String(String::from("hi")),
                 id: Value::from(1),
             })
             .await;
-        assert_eq!(ok.result, Some(Value::String("hi".to_string())));
+        assert_eq!(ok.result, Some(Value::String(String::from("hi"))));
 
         let bad = h
             .handle_request(JsonRpcRequest {
-                jsonrpc: "2.0".to_string(),
-                method: "missing".to_string(),
+                jsonrpc: String::from("2.0"),
+                method: String::from("missing"),
                 params: Value::Null,
                 id: Value::from(2),
             })
@@ -375,8 +375,8 @@ mod tests {
         let h = JsonRpcHandler::new(FailHandler);
         let r = h
             .handle_request(JsonRpcRequest {
-                jsonrpc: "2.0".to_string(),
-                method: "x".to_string(),
+                jsonrpc: String::from("2.0"),
+                method: String::from("x"),
                 params: Value::Null,
                 id: Value::Null,
             })

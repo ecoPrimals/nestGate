@@ -411,7 +411,7 @@ mod tests {
 
         let svc = DynZfsService::Native(NativeZfsService::new());
         let pool_cfg = PoolConfig {
-            name: "noop_pool".to_string(),
+            name: String::from("noop_pool"),
             devices: vec![],
             mountpoint: None,
             compression: false,
@@ -419,7 +419,7 @@ mod tests {
             properties: HashMap::new(),
         };
         let ds_cfg = DatasetConfig {
-            name: "noop/ds".to_string(),
+            name: String::from("noop/ds"),
             mountpoint: None,
             compression: false,
             quota: None,
@@ -427,8 +427,8 @@ mod tests {
             properties: HashMap::new(),
         };
         let snap_cfg = SnapshotConfig {
-            name: "snap1".to_string(),
-            dataset: "noop/ds".to_string(),
+            name: String::from("snap1"),
+            dataset: String::from("noop/ds"),
             properties: HashMap::new(),
         };
 
@@ -441,7 +441,7 @@ mod tests {
         let _ = svc.get_dataset("nope").await;
         let _ = svc.destroy_dataset("nope").await;
         let mut props = HashMap::new();
-        props.insert("compression".to_string(), "lz4".to_string());
+        props.insert(String::from("compression"), String::from("lz4"));
         let _ = svc.set_dataset_properties("noop/ds", &props).await;
         let _ = svc.get_dataset_properties("noop/ds").await;
         let _ = svc.list_snapshots().await;
@@ -465,7 +465,7 @@ mod tests {
 
         let svc = UniversalZfsServiceEnum::new_native();
         let ds_cfg = DatasetConfig {
-            name: "t/d".to_string(),
+            name: String::from("t/d"),
             mountpoint: None,
             compression: false,
             quota: None,
@@ -473,8 +473,8 @@ mod tests {
             properties: HashMap::new(),
         };
         let snap_cfg = SnapshotConfig {
-            name: "s".to_string(),
-            dataset: "t/d".to_string(),
+            name: String::from("s"),
+            dataset: String::from("t/d"),
             properties: HashMap::new(),
         };
 

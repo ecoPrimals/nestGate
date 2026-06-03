@@ -29,7 +29,7 @@ impl NetworkDiscoveryConfig {
     pub fn development_optimized() -> Self {
         Self {
             enabled: false,
-            multicast_address: "224.0.0.1".to_string(),
+            multicast_address: String::from("224.0.0.1"),
             discovery_interval_secs: 60,
         }
     }
@@ -41,7 +41,7 @@ impl NetworkDiscoveryConfig {
     pub fn production_hardened() -> Self {
         Self {
             enabled: true,
-            multicast_address: "224.0.0.100".to_string(),
+            multicast_address: String::from("224.0.0.100"),
             discovery_interval_secs: 30,
         }
     }

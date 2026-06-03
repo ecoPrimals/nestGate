@@ -112,8 +112,8 @@ mod tests {
     fn sample_request(method: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::nil(),
-            source: "nestgate".to_string(),
-            target: "security".to_string(),
+            source: String::from("nestgate"),
+            target: String::from("security"),
             method: method.to_string(),
             _params: serde_json::json!({}),
             _metadata: HashMap::new(),

@@ -32,8 +32,8 @@ mod tests {
     #[test]
     fn test_mcp_mount_request_creation() {
         let request = McpMountRequest {
-            mount_id: "mount-123".to_string(),
-            mount_point: "/mcp/data".to_string(),
+            mount_id: String::from("mount-123"),
+            mount_point: String::from("/mcp/data"),
             tier: crate::types::StorageTier::Hot,
             size_gb: 100,
         };
@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn test_mcp_volume_request_creation() {
         let request = McpVolumeRequest {
-            volume_id: "vol-456".to_string(),
+            volume_id: String::from("vol-456"),
             tier: crate::types::StorageTier::Cold,
             size_gb: 500,
         };
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_mount_status_error() {
-        let status = MountStatus::Error("Mount failed".to_string());
+        let status = MountStatus::Error(String::from("Mount failed"));
         match status {
             MountStatus::Error(msg) => assert_eq!(msg, "Mount failed"),
             _ => panic!("Expected Error variant"),
@@ -80,7 +80,7 @@ mod tests {
     fn test_volume_status_variants() {
         let active = VolumeStatus::Active;
         let inactive = VolumeStatus::Inactive;
-        let error = VolumeStatus::Error("Volume error".to_string());
+        let error = VolumeStatus::Error(String::from("Volume error"));
 
         assert!(matches!(active, VolumeStatus::Active));
         assert!(matches!(inactive, VolumeStatus::Inactive));
@@ -90,9 +90,9 @@ mod tests {
     #[test]
     fn test_zfs_mount_info_creation() {
         let info = ZfsMountInfo {
-            mount_id: "mount-789".to_string(),
-            dataset_path: "pool/mcp/mount-789".to_string(),
-            mount_point: "/mnt/mcp-789".to_string(),
+            mount_id: String::from("mount-789"),
+            dataset_path: String::from("pool/mcp/mount-789"),
+            mount_point: String::from("/mnt/mcp-789"),
             tier: crate::types::StorageTier::Warm,
             created_at: SystemTime::now(),
             status: MountStatus::Active,
@@ -106,8 +106,8 @@ mod tests {
     #[test]
     fn test_zfs_volume_info_creation() {
         let info = ZfsVolumeInfo {
-            volume_id: "vol-abc".to_string(),
-            dataset_path: "pool/mcp/vol-abc".to_string(),
+            volume_id: String::from("vol-abc"),
+            dataset_path: String::from("pool/mcp/vol-abc"),
             tier: crate::types::StorageTier::Hot,
             size_bytes: 1073741824, // 1GB
             created_at: SystemTime::now(),
@@ -163,8 +163,8 @@ mod tests {
     #[test]
     fn test_mount_request_cloning() {
         let request = McpMountRequest {
-            mount_id: "clone-test".to_string(),
-            mount_point: "/mcp/clone".to_string(),
+            mount_id: String::from("clone-test"),
+            mount_point: String::from("/mcp/clone"),
             tier: crate::types::StorageTier::Hot,
             size_gb: 50,
         };
@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn test_volume_request_serialization() {
         let request = McpVolumeRequest {
-            volume_id: "vol-serialize".to_string(),
+            volume_id: String::from("vol-serialize"),
             tier: crate::types::StorageTier::Cold,
             size_gb: 250,
         };
@@ -195,7 +195,7 @@ mod tests {
         let statuses = vec![
             MountStatus::Active,
             MountStatus::Inactive,
-            MountStatus::Error("test error".to_string()),
+            MountStatus::Error(String::from("test error")),
         ];
 
         for status in statuses {
@@ -287,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_volume_status_error_handling() {
-        let status = VolumeStatus::Error("Volume creation failed".to_string());
+        let status = VolumeStatus::Error(String::from("Volume creation failed"));
 
         let json = serde_json::to_string(&status).unwrap();
         let deserialized: VolumeStatus = serde_json::from_str(&json).unwrap();

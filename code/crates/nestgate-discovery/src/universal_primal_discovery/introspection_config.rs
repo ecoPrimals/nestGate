@@ -103,12 +103,12 @@ impl IntrospectionConfig {
 
         // DEPRECATED: Kubernetes namespace detection
         if self.is_kubernetes() {
-            return Some("legacy-orchestrated".to_string());
+            return Some(String::from("legacy-orchestrated"));
         }
 
         // DEPRECATED: Docker Compose detection
         if self.is_docker_compose() {
-            return Some("legacy-containerized".to_string());
+            return Some(String::from("legacy-containerized"));
         }
 
         None // Native/bare-metal execution
@@ -170,35 +170,35 @@ mod tests {
 
     #[test]
     fn test_introspection_config_kubernetes() {
-        let config = IntrospectionConfig::new().with_kubernetes_namespace("default".to_string());
+        let config = IntrospectionConfig::new().with_kubernetes_namespace(String::from("default"));
 
         assert!(config.is_kubernetes());
         assert_eq!(config.estimate_memory_gb(), 2.0); // K8s environment
         assert_eq!(
             config.detect_container_runtime(),
-            Some("legacy-orchestrated".to_string())
+            Some(String::from("legacy-orchestrated"))
         );
     }
 
     #[test]
     fn test_introspection_config_docker_compose() {
-        let config = IntrospectionConfig::new().with_docker_compose_project("myapp".to_string());
+        let config = IntrospectionConfig::new().with_docker_compose_project(String::from("myapp"));
 
         assert!(config.is_docker_compose());
         assert_eq!(
             config.detect_container_runtime(),
-            Some("legacy-containerized".to_string())
+            Some(String::from("legacy-containerized"))
         );
     }
 
     #[test]
     fn test_introspection_config_modern_detection() {
         let config =
-            IntrospectionConfig::new().with_compute_capability_type("orchestrated".to_string());
+            IntrospectionConfig::new().with_compute_capability_type(String::from("orchestrated"));
 
         assert_eq!(
             config.detect_container_runtime(),
-            Some("capability-based-orchestrated".to_string())
+            Some(String::from("capability-based-orchestrated"))
         );
     }
 
@@ -213,14 +213,14 @@ mod tests {
     fn test_introspection_config_priority() {
         // Modern detection should take priority over legacy
         let config = IntrospectionConfig::new()
-            .with_compute_capability_type("modern".to_string())
-            .with_kubernetes_namespace("default".to_string())
-            .with_docker_compose_project("myapp".to_string());
+            .with_compute_capability_type(String::from("modern"))
+            .with_kubernetes_namespace(String::from("default"))
+            .with_docker_compose_project(String::from("myapp"));
 
         // Modern should win
         assert_eq!(
             config.detect_container_runtime(),
-            Some("capability-based-modern".to_string())
+            Some(String::from("capability-based-modern"))
         );
     }
 
@@ -229,12 +229,12 @@ mod tests {
         // Create two different configurations
         let config1 = Arc::new(
             IntrospectionConfig::new()
-                .with_kubernetes_namespace("namespace1".to_string())
+                .with_kubernetes_namespace(String::from("namespace1"))
                 .with_max_file_handles(2048),
         );
         let config2 = Arc::new(
             IntrospectionConfig::new()
-                .with_docker_compose_project("project2".to_string())
+                .with_docker_compose_project(String::from("project2"))
                 .with_max_file_handles(4096),
         );
 
@@ -265,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_memory_estimation() {
-        let k8s_config = IntrospectionConfig::new().with_kubernetes_namespace("prod".to_string());
+        let k8s_config = IntrospectionConfig::new().with_kubernetes_namespace(String::from("prod"));
         assert_eq!(k8s_config.estimate_memory_gb(), 2.0);
 
         let native_config = IntrospectionConfig::new();

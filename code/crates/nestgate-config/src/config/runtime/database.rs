@@ -121,10 +121,10 @@ impl DatabaseConfig {
 impl Default for DatabaseConfig {
     fn default() -> Self {
         Self {
-            host: "localhost".to_string(),
+            host: String::from("localhost"),
             port: 5432,
-            name: "nestgate".to_string(),
-            user: "nestgate".to_string(),
+            name: String::from("nestgate"),
+            user: String::from("nestgate"),
             password: String::new(),
             pool_size: 10,
             max_connections: 100,
@@ -214,11 +214,11 @@ mod tests {
     #[test]
     fn database_config_connection_url_includes_credentials() {
         let c = DatabaseConfig {
-            host: "db.example.com".to_string(),
+            host: String::from("db.example.com"),
             port: 5432,
-            name: "app".to_string(),
-            user: "appuser".to_string(),
-            password: "s3cret".to_string(),
+            name: String::from("app"),
+            user: String::from("appuser"),
+            password: String::from("s3cret"),
             pool_size: 4,
             max_connections: 40,
         };

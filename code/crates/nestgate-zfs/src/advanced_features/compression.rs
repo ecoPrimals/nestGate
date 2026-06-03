@@ -34,7 +34,7 @@ fn try_zfs_compression_for_dataset(dataset: &str) -> Option<(f64, String)> {
             .unwrap_or("lz4")
             .trim()
             .to_string(),
-        _ => "lz4".to_string(),
+        _ => String::from("lz4"),
     };
 
     Some((ratio, algorithm))
@@ -81,7 +81,7 @@ impl CompressionAnalytics {
             } else {
                 (
                     Self::estimate_compression_ratio_from_sample(data_sample),
-                    "lz4".to_string(),
+                    String::from("lz4"),
                 )
             };
         let efficiency = Self::calculate_efficiency(compression_ratio);
@@ -116,11 +116,11 @@ impl CompressionAnalytics {
         let mut recommendations = Vec::new();
 
         if self.compression_ratio < 1.2 {
-            recommendations.push("Consider disabling compression for this dataset".to_string());
+            recommendations.push(String::from("Consider disabling compression for this dataset"));
         } else if self.compression_ratio < 1.5 {
-            recommendations.push("lz4 compression is optimal for this data".to_string());
+            recommendations.push(String::from("lz4 compression is optimal for this data"));
         } else {
-            recommendations.push("Consider gzip compression for better ratio".to_string());
+            recommendations.push(String::from("Consider gzip compression for better ratio"));
         }
 
         recommendations
@@ -173,7 +173,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 1.1,
             efficiency: 9.09,
-            algorithm: "lz4".to_string(),
+            algorithm: String::from("lz4"),
         };
 
         let recs = analytics.get_compression_recommendations();
@@ -185,7 +185,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 1.3,
             efficiency: 23.08,
-            algorithm: "lz4".to_string(),
+            algorithm: String::from("lz4"),
         };
 
         let recs = analytics.get_compression_recommendations();
@@ -197,7 +197,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 2.0,
             efficiency: 50.0,
-            algorithm: "lz4".to_string(),
+            algorithm: String::from("lz4"),
         };
 
         let recs = analytics.get_compression_recommendations();
@@ -238,7 +238,7 @@ mod tests {
         let analytics1 = CompressionAnalytics {
             compression_ratio: 1.5,
             efficiency: 33.33,
-            algorithm: "lz4".to_string(),
+            algorithm: String::from("lz4"),
         };
         let analytics2 = analytics1.clone();
 
@@ -250,7 +250,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 1.5,
             efficiency: 33.33,
-            algorithm: "lz4".to_string(),
+            algorithm: String::from("lz4"),
         };
         let serialized = serde_json::to_string(&analytics).unwrap();
 

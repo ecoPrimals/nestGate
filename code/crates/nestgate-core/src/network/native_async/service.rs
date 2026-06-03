@@ -87,7 +87,7 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
         Ok(crate::traits::canonical::ProviderHealth {
             is_healthy: true,
             last_check: SystemTime::now(),
-            health: "Network service operational".to_string(),
+            health: String::from("Network service operational"),
         })
     }
 
@@ -98,9 +98,9 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
             can_migrate: true,
             can_backup: false,
             supported_protocols: vec![
-                "tcp".to_string(),
-                "http".to_string(),
-                "websocket".to_string(),
+                String::from("tcp"),
+                String::from("http"),
+                String::from("websocket"),
             ],
         })
     }
@@ -146,9 +146,9 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
             can_migrate: true,
             can_backup: false,
             supported_protocols: vec![
-                "tcp".to_string(),
-                "http".to_string(),
-                "websocket".to_string(),
+                String::from("tcp"),
+                String::from("http"),
+                String::from("websocket"),
             ],
         })
     }
@@ -166,7 +166,7 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
         Ok(crate::traits::canonical::ProviderHealth {
             is_healthy: true,
             last_check: std::time::SystemTime::now(),
-            health: "Network service operational".to_string(),
+            health: String::from("Network service operational"),
         })
     }
 }
@@ -203,9 +203,9 @@ impl NativeAsyncNetworkService {
                 metadata: ServiceMetadata {
                     name: format!("network-service-{service_id}"),
                     category: ServiceCategory::Network,
-                    version: "1.0.0".to_string(),
-                    description: "Native async network service".to_string(),
-                    health_endpoint: Some("/health".to_string()),
+                    version: String::from("1.0.0"),
+                    description: String::from("Native async network service"),
+                    health_endpoint: Some(String::from("/health")),
                     metrics_endpoint: None,
                 },
                 capabilities: vec![ServiceCapability::Network(

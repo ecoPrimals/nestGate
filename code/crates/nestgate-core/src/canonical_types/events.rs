@@ -76,7 +76,7 @@ impl Default for Event {
             timestamp: SystemTime::now(),
             category: EventCategory::System,
             severity: EventSeverity::Info,
-            message: "Default event".to_string(),
+            message: String::from("Default event"),
             source: DEFAULT_SERVICE_NAME.to_string(),
             data: HashMap::new(),
             tags: Vec::new(),

@@ -9,8 +9,6 @@ use super::self_knowledge::NestGateSelfKnowledge;
 use super::types::{CapabilityCategory, CapabilityRequest, CapabilityResponse, DiscoveredService};
 use crate::Result;
 use crate::universal_primal_discovery::service_registry::ServiceRegistry;
-use serde_json::Value;
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -173,55 +171,36 @@ impl CapabilityRouter {
         }
     }
 
-    /// Handle storage capabilities (NestGate's domain)
+    /// Handle storage capabilities via capability-based IPC.
+    ///
+    /// Storage operations should be routed through JSON-RPC (`storage.*`
+    /// methods on the UDS/TCP transport), not through this in-process
+    /// capability router. Returns an explicit error directing callers to
+    /// the correct transport.
     fn handle_storage_capability(&self, request: CapabilityRequest) -> Result<CapabilityResponse> {
-        let mut response_data = serde_json::Map::new();
-
-        match request.operation.as_str() {
-            "create_dataset" => {
-                response_data.insert(
-                    "dataset_id".to_string(),
-                    Value::String("zfs-dataset-123".to_string()),
-                );
-                response_data.insert("status".to_string(), Value::String("created".to_string()));
-            }
-            "list_datasets" => {
-                response_data.insert("datasets".to_string(), Value::Array(vec![]));
-            }
-            _ => {
-                return Err(crate::NestGateError::validation_error(format!(
-                    "Storage operation not implemented: {}",
-                    request.operation
-                )));
-            }
-        }
-
-        Ok(CapabilityResponse {
-            request_id: request.request_id,
-            success: true,
-            data: Value::Object(response_data),
-            error: None,
-            metadata: HashMap::new(),
-            execution_time_ms: 10,
-        })
+        Err(crate::NestGateError::not_implemented(format!(
+            "Storage operation `{}` must be invoked via JSON-RPC transport (UDS/TCP), \
+             not the in-process capability router",
+            request.operation
+        )))
     }
 
-    /// Send universal capability request (works with any primal)
+    /// Send a capability request to a remote primal.
+    ///
+    /// Cross-primal requests require runtime discovery and IPC
+    /// (`capability.call` / `route.register`). Returns an explicit error
+    /// until the mesh relay transport is wired.
     fn send_universal_request(
         &self,
-        _endpoint: &str,
+        endpoint: &str,
         _capability_endpoint: &str,
         request: CapabilityRequest,
     ) -> Result<CapabilityResponse> {
-        // Simplified implementation - in production this would use HTTP/gRPC
-        Ok(CapabilityResponse {
-            request_id: request.request_id,
-            success: true,
-            data: Value::Object(serde_json::Map::new()),
-            error: None,
-            metadata: HashMap::new(),
-            execution_time_ms: 50,
-        })
+        Err(crate::NestGateError::not_implemented(format!(
+            "Remote capability dispatch to `{endpoint}` for operation `{}` \
+             requires mesh relay transport (not yet wired)",
+            request.operation
+        )))
     }
 }
 
@@ -235,6 +214,7 @@ impl Default for CapabilityRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     fn router() -> CapabilityRouter {
         CapabilityRouter::new()
@@ -258,38 +238,28 @@ mod tests {
     }
 
     #[test]
-    fn handle_storage_create_dataset() {
+    fn handle_storage_rejects_with_transport_hint() {
         let r = router();
         let req = storage_request("create_dataset");
-        let resp = r.handle_storage_capability(req).expect("create_dataset");
-        assert!(resp.success);
-        assert!(resp.data["dataset_id"].is_string());
-        assert_eq!(resp.data["status"], "created");
-    }
-
-    #[test]
-    fn handle_storage_list_datasets() {
-        let r = router();
-        let req = storage_request("list_datasets");
-        let resp = r.handle_storage_capability(req).expect("list_datasets");
-        assert!(resp.success);
-        assert!(resp.data["datasets"].is_array());
-    }
-
-    #[test]
-    fn handle_storage_unknown_op_returns_error() {
-        let r = router();
-        let req = storage_request("destroy_everything");
         let err = r.handle_storage_capability(req).unwrap_err();
-        assert!(err.to_string().contains("destroy_everything"));
+        assert!(err.to_string().contains("JSON-RPC transport"));
+        assert!(err.to_string().contains("create_dataset"));
     }
 
     #[test]
-    fn handle_locally_routes_storage_correctly() {
+    fn handle_storage_list_rejects_with_transport_hint() {
         let r = router();
         let req = storage_request("list_datasets");
-        let resp = r.handle_locally(req).expect("handle_locally");
-        assert!(resp.success);
+        let err = r.handle_storage_capability(req).unwrap_err();
+        assert!(err.to_string().contains("JSON-RPC transport"));
+    }
+
+    #[test]
+    fn handle_locally_rejects_storage_to_ipc() {
+        let r = router();
+        let req = storage_request("list_datasets");
+        let err = r.handle_locally(req).unwrap_err();
+        assert!(err.to_string().contains("JSON-RPC transport"));
     }
 
     fn security_request(op: &str) -> CapabilityRequest {
@@ -312,11 +282,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn route_storage_locally_when_self_capable() {
+    async fn route_storage_rejects_to_ipc() {
         let r = router();
         let req = storage_request("create_dataset");
-        let resp = r.route_capability_request(req).await.expect("route");
-        assert!(resp.success);
+        let err = r.route_capability_request(req).await.unwrap_err();
+        assert!(err.to_string().contains("JSON-RPC transport"));
     }
 
     #[tokio::test]
@@ -328,11 +298,10 @@ mod tests {
     }
 
     #[test]
-    fn response_preserves_request_id() {
+    fn error_includes_operation_name() {
         let r = router();
         let req = storage_request("list_datasets");
-        let req_id = req.request_id;
-        let resp = r.handle_locally(req).expect("response");
-        assert_eq!(resp.request_id, req_id);
+        let err = r.handle_locally(req).unwrap_err();
+        assert!(err.to_string().contains("list_datasets"));
     }
 }

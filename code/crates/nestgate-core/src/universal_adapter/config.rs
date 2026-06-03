@@ -280,14 +280,14 @@ mod tests {
 
     #[test]
     fn test_adapter_config_builder_add_endpoint() {
-        let config = AdapterConfig::new().add_endpoint("http://custom:9000/discovery".to_string());
+        let config = AdapterConfig::new().add_endpoint(String::from("http://custom:9000/discovery"));
 
         // ServiceDiscoveryConfig generates 3 endpoints + 1 custom = 4
         assert_eq!(config.endpoints.len(), 4);
         assert!(
             config
                 .endpoints
-                .contains(&"http://custom:9000/discovery".to_string())
+                .contains(&String::from("http://custom:9000/discovery"))
         );
     }
 
@@ -305,8 +305,8 @@ mod tests {
         let config = AdapterConfig::new()
             .with_discovery_timeout(Duration::from_secs(45))
             .with_retry_attempts(10)
-            .add_endpoint("http://endpoint1:8080/discovery".to_string())
-            .add_endpoint("http://endpoint2:8080/discovery".to_string())
+            .add_endpoint(String::from("http://endpoint1:8080/discovery"))
+            .add_endpoint(String::from("http://endpoint2:8080/discovery"))
             .with_fallback(false);
 
         assert_eq!(config.discovery_timeout, Duration::from_secs(45));

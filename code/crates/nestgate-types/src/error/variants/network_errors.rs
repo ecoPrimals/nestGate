@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn test_network_error_new_with_string() {
-        let error = NetworkErrorDetails::new("Network error".to_string());
+        let error = NetworkErrorDetails::new(String::from("Network error"));
 
         assert_eq!(error.message.as_ref(), "Network error");
         assert_eq!(error.operation, None);
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn test_network_error_with_operation_strings() {
         let error =
-            NetworkErrorDetails::with_operation("POST failed".to_string(), "http_post".to_string());
+            NetworkErrorDetails::with_operation(String::from("POST failed"), String::from("http_post"));
 
         assert_eq!(error.message.as_ref(), "POST failed");
         assert_eq!(
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_network_error_timeout_with_string() {
-        let endpoint = "http://localhost:8080/test".to_string();
+        let endpoint = String::from("http://localhost:8080/test");
         let error = NetworkErrorDetails::timeout(endpoint.clone());
 
         assert_eq!(

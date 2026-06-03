@@ -74,7 +74,7 @@ async fn show_config_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<
     println!(
         "  Features:     {}",
         if features.is_empty() {
-            "basic_operations".to_string()
+            String::from("basic_operations")
         } else {
             features.join(", ")
         }
@@ -176,10 +176,10 @@ async fn get_config_from_env_source(env: &(impl EnvSource + ?Sized), key: &str) 
         }
         "family_id" => env
             .get("NESTGATE_FAMILY_ID")
-            .unwrap_or_else(|| "(not set)".to_string()),
+            .unwrap_or_else(|| String::from("(not set)")),
         "socket_path" | "socket" => match nestgate_core::rpc::SocketConfig::from_environment() {
             Ok(cfg) => cfg.socket_path.display().to_string(),
-            Err(_) => "(default)".to_string(),
+            Err(_) => String::from("(default)"),
         },
         "backend" => {
             let caps = nestgate_core::services::storage::capabilities::detect_backend();

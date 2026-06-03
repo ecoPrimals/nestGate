@@ -19,7 +19,7 @@ pub async fn create_workspace_secret(
 ) -> Result<Json<Value>, StatusCode> {
     info!("Creating workspace secret: {}", workspace_id);
     // Attempt to delegate to security adapter
-    let adapter = AuthTokenManager::new("default-signing-key".to_string());
+    let adapter = AuthTokenManager::new(String::from("default-signing-key"));
 
     // Use security adapter for actual secret management
     match adapter.create_workspace_secret(&workspace_id) {
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_auth_token_manager_creation() {
-        let manager = AuthTokenManager::new("test-key".to_string());
+        let manager = AuthTokenManager::new(String::from("test-key"));
         // Just verify it can be created
         assert!(std::mem::size_of_val(&manager) > 0);
     }
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_create_workspace_secret_delegation() {
         // Test the delegation mechanism
-        let manager = AuthTokenManager::new("test-signing-key".to_string());
+        let manager = AuthTokenManager::new(String::from("test-signing-key"));
 
         // Try creating a workspace secret
         let result = manager.create_workspace_secret("test-workspace-123");
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn test_workspace_secret_with_different_workspace_ids() {
-        let manager = AuthTokenManager::new("test-key".to_string());
+        let manager = AuthTokenManager::new(String::from("test-key"));
 
         let workspace_ids = vec![
             "workspace-1",
@@ -93,7 +93,7 @@ mod tests {
         use axum::extract::Path;
 
         // Test the handler returns valid JSON
-        let workspace_id = "test-workspace".to_string();
+        let workspace_id = String::from("test-workspace");
         let result = create_workspace_secret(Path(workspace_id)).await;
 
         // Should return Ok with JSON value (either success or fallback)
@@ -111,7 +111,7 @@ mod tests {
         use axum::extract::Path;
 
         // Test with a workspace ID
-        let workspace_id = "fallback-test-workspace".to_string();
+        let workspace_id = String::from("fallback-test-workspace");
         let result = create_workspace_secret(Path(workspace_id.clone())).await;
 
         assert!(result.is_ok());

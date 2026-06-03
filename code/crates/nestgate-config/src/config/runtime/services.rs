@@ -73,22 +73,22 @@ impl ServicesConfig {
         let mut discovered_capabilities = HashMap::new();
 
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_SECURITY") {
-            discovered_capabilities.insert("security".to_string(), url);
+            discovered_capabilities.insert(String::from("security"), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_ORCHESTRATION") {
-            discovered_capabilities.insert("orchestration".to_string(), url);
+            discovered_capabilities.insert(String::from("orchestration"), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_NETWORKING") {
-            discovered_capabilities.insert("networking".to_string(), url);
+            discovered_capabilities.insert(String::from("networking"), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_AI") {
-            discovered_capabilities.insert("ai".to_string(), url);
+            discovered_capabilities.insert(String::from("ai"), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_COMPUTE") {
-            discovered_capabilities.insert("compute".to_string(), url);
+            discovered_capabilities.insert(String::from("compute"), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_ECOSYSTEM") {
-            discovered_capabilities.insert("ecosystem".to_string(), url);
+            discovered_capabilities.insert(String::from("ecosystem"), url);
         }
 
         Ok(Self {
@@ -178,14 +178,14 @@ mod tests {
     fn test_capability_based_discovery() {
         let mut config = ServicesConfig::default();
         config.discovered_capabilities.insert(
-            "security".to_string(),
-            "http://security-provider:8080".to_string(),
+            String::from("security"),
+            String::from("http://security-provider:8080"),
         );
 
         assert!(config.has_capability("security"));
         assert_eq!(
             config.get_capability_url("security"),
-            Some("http://security-provider:8080".to_string())
+            Some(String::from("http://security-provider:8080"))
         );
     }
 
@@ -194,14 +194,14 @@ mod tests {
         let mut config = ServicesConfig::default();
         config
             .discovered_capabilities
-            .insert("security".to_string(), "http://sec:8080".to_string());
+            .insert(String::from("security"), String::from("http://sec:8080"));
         config
             .discovered_capabilities
-            .insert("ai".to_string(), "http://ai:9000".to_string());
+            .insert(String::from("ai"), String::from("http://ai:9000"));
 
         let caps = config.available_capabilities();
-        assert!(caps.contains(&"security".to_string()));
-        assert!(caps.contains(&"ai".to_string()));
+        assert!(caps.contains(&String::from("security")));
+        assert!(caps.contains(&String::from("ai")));
     }
 
     #[test]

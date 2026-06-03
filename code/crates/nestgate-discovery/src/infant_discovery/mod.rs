@@ -249,24 +249,24 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         // For demonstration, return discovered capabilities
         vec![
             CapabilityDescriptor {
-                id: "dynamic_storage_001".to_string(),
+                id: String::from("dynamic_storage_001"),
                 capability_type: CapabilityType::Storage,
-                endpoint: Some("discovered://storage.local".to_string()),
+                endpoint: Some(String::from("discovered://storage.local")),
                 metadata: HashMap::from([
-                    ("discovered_at".to_string(), "runtime".to_string()),
-                    ("type".to_string(), "inferred".to_string()),
+                    (String::from("discovered_at"), String::from("runtime")),
+                    (String::from("type"), String::from("inferred")),
                 ]),
                 sovereignty_compliant: true,
             },
             CapabilityDescriptor {
-                id: "runtime_compute_001".to_string(),
+                id: String::from("runtime_compute_001"),
                 capability_type: CapabilityType::Compute,
-                endpoint: Some("discovered://compute.local".to_string()),
+                endpoint: Some(String::from("discovered://compute.local")),
                 metadata: HashMap::from([
-                    ("capabilities".to_string(), "simd,parallel".to_string()),
+                    (String::from("capabilities"), String::from("simd,parallel")),
                     (
-                        "discovery_method".to_string(),
-                        "behavioral_inference".to_string(),
+                        String::from("discovery_method"),
+                        String::from("behavioral_inference"),
                     ),
                 ]),
                 sovereignty_compliant: true,
@@ -324,18 +324,18 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     fn create_default_dignity_rules() -> Vec<DignityRule> {
         vec![
             DignityRule {
-                id: "no_surveillance".to_string(),
-                description: "Capability must not enable surveillance".to_string(),
+                id: String::from("no_surveillance"),
+                description: String::from("Capability must not enable surveillance"),
                 validator: |cap| !cap.metadata.contains_key("surveillance"),
             },
             DignityRule {
-                id: "user_consent".to_string(),
-                description: "Capability must respect user consent".to_string(),
-                validator: |cap| cap.metadata.get("consent_required") != Some(&"false".to_string()),
+                id: String::from("user_consent"),
+                description: String::from("Capability must respect user consent"),
+                validator: |cap| cap.metadata.get("consent_required") != Some(&String::from("false")),
             },
             DignityRule {
-                id: "data_sovereignty".to_string(),
-                description: "Capability must preserve data sovereignty".to_string(),
+                id: String::from("data_sovereignty"),
+                description: String::from("Capability must preserve data sovereignty"),
                 validator: |cap| cap.sovereignty_compliant,
             },
         ]
@@ -445,9 +445,9 @@ mod tests {
         let system: InfantDiscoverySystem<16> = InfantDiscoverySystem::new();
 
         let compliant_capability = CapabilityDescriptor {
-            id: "test_capability".to_string(),
+            id: String::from("test_capability"),
             capability_type: CapabilityType::Storage,
-            endpoint: Some("test://endpoint".to_string()),
+            endpoint: Some(String::from("test://endpoint")),
             metadata: HashMap::new(),
             sovereignty_compliant: true,
         };
@@ -459,10 +459,10 @@ mod tests {
         );
 
         let non_compliant_capability = CapabilityDescriptor {
-            id: "surveillance_capability".to_string(),
+            id: String::from("surveillance_capability"),
             capability_type: CapabilityType::Unknown,
-            endpoint: Some("surveillance://endpoint".to_string()),
-            metadata: HashMap::from([("surveillance".to_string(), "enabled".to_string())]),
+            endpoint: Some(String::from("surveillance://endpoint")),
+            metadata: HashMap::from([(String::from("surveillance"), String::from("enabled"))]),
             sovereignty_compliant: false,
         };
 

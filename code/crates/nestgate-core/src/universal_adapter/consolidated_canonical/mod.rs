@@ -184,9 +184,9 @@ impl ConsolidatedCanonicalAdapter {
     fn create_nestgate_capabilities(&self) -> Vec<ServiceCapability> {
         vec![
             ServiceCapability {
-                id: "nestgate_storage_intelligence".to_string(),
-                name: "Storage Intelligence Analytics".to_string(),
-                description: "Advanced storage analytics with predictive insights".to_string(),
+                id: String::from("nestgate_storage_intelligence"),
+                name: String::from("Storage Intelligence Analytics"),
+                description: String::from("Advanced storage analytics with predictive insights"),
                 category: CapabilityCategory::Storage,
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 provider: DEFAULT_SERVICE_NAME.to_string(),
@@ -200,9 +200,9 @@ impl ConsolidatedCanonicalAdapter {
                 metadata: HashMap::new(),
             },
             ServiceCapability {
-                id: "nestgate_zfs_management".to_string(),
-                name: "ZFS Pool Management".to_string(),
-                description: "Advanced ZFS pool and dataset management".to_string(),
+                id: String::from("nestgate_zfs_management"),
+                name: String::from("ZFS Pool Management"),
+                description: String::from("Advanced ZFS pool and dataset management"),
                 category: CapabilityCategory::Storage,
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 provider: DEFAULT_SERVICE_NAME.to_string(),

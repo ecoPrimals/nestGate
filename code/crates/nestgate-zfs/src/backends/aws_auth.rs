@@ -96,15 +96,15 @@ impl AwsSigV4 {
 
         // Build canonical headers (including x-amz-date and host)
         let mut canonical_headers = headers.clone();
-        canonical_headers.insert("x-amz-date".to_string(), amz_date.clone());
+        canonical_headers.insert(String::from("x-amz-date"), amz_date.clone());
         canonical_headers.insert(
-            "host".to_string(),
+            String::from("host"),
             parsed_url.host_str().unwrap_or("").to_string(),
         );
 
         // Add session token if present
         if let Some(ref token) = self.credentials.session_token {
-            canonical_headers.insert("x-amz-security-token".to_string(), token.clone());
+            canonical_headers.insert(String::from("x-amz-security-token"), token.clone());
         }
 
         // Step 1: Create canonical request
@@ -275,7 +275,7 @@ fn uri_encode(s: &str, encode_slash: bool) -> String {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
                 (b as char).to_string()
             }
-            b'/' if !encode_slash => "/".to_string(),
+            b'/' if !encode_slash => String::from("/"),
             _ => format!("%{b:02X}"),
         })
         .collect()
@@ -319,12 +319,12 @@ mod tests {
     #[test]
     fn test_aws_sigv4_creation() {
         let credentials = AwsCredentials {
-            access_key: "AKIAIOSFODNN7EXAMPLE".to_string(),
-            secret_key: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY".to_string(),
+            access_key: String::from("AKIAIOSFODNN7EXAMPLE"),
+            secret_key: String::from("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"),
             session_token: None,
         };
 
-        let signer = AwsSigV4::new(credentials, "us-east-1".to_string(), "s3".to_string());
+        let signer = AwsSigV4::new(credentials, String::from("us-east-1"), String::from("s3"));
 
         // Just test that it creates successfully
         assert_eq!(signer.region, "us-east-1");
@@ -334,12 +334,12 @@ mod tests {
     #[test]
     fn test_canonical_query_string() {
         let credentials = AwsCredentials {
-            access_key: "test".to_string(),
-            secret_key: "test".to_string(),
+            access_key: String::from("test"),
+            secret_key: String::from("test"),
             session_token: None,
         };
 
-        let signer = AwsSigV4::new(credentials, "us-east-1".to_string(), "s3".to_string());
+        let signer = AwsSigV4::new(credentials, String::from("us-east-1"), String::from("s3"));
 
         let url = url::Url::parse("https://example.com/path?z=last&a=first&b=second").unwrap();
         let query = signer.create_canonical_query_string(&url);

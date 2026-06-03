@@ -106,8 +106,8 @@ mod tests {
 
     #[test]
     fn build_access_grant_copies_inputs_and_sets_consensus() {
-        let perms = vec!["read".to_string()];
-        let nodes = vec!["n1".to_string()];
+        let perms = vec![String::from("read")];
+        let nodes = vec![String::from("n1")];
         let grant = build_access_grant(&perms, 1_700_000_000, "proof", &nodes, 0.75);
         assert_eq!(grant.permissions, perms);
         assert_eq!(grant.consensus_nodes, nodes);
@@ -121,7 +121,7 @@ mod tests {
         let d = build_diagnostic(
             DiagnosticLevel::Warning,
             ComponentType::Storage,
-            "low space".to_string(),
+            String::from("low space"),
         );
         assert_eq!(d.level, DiagnosticLevel::Warning);
         assert_eq!(d.component, ComponentType::Storage);
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn build_error_context_records_operation_and_component() {
-        let ctx = build_error_context("snap", "details".to_string(), None);
+        let ctx = build_error_context("snap", String::from("details"), None);
         assert_eq!(ctx.operation, "snap");
         assert_eq!(ctx.component, "config_builder");
         assert!(ctx.request_id.is_none());

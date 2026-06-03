@@ -87,12 +87,12 @@ impl AdaptiveZfsBackend {
             if kernel_module_loaded || !cfg!(target_os = "linux") {
                 (
                     ZfsAvailability::SystemZfs,
-                    "System ZFS fully available and functional".to_string(),
+                    String::from("System ZFS fully available and functional"),
                 )
             } else {
                 (
                     ZfsAvailability::InternalZfs,
-                    "ZFS commands available but kernel module not loaded - using internal implementation".to_string(),
+                    String::from("ZFS commands available but kernel module not loaded - using internal implementation"),
                 )
             }
         } else if has_zfs_command || has_zpool_command {
@@ -105,7 +105,7 @@ impl AdaptiveZfsBackend {
         } else {
             (
                 ZfsAvailability::InternalZfs,
-                "No system ZFS detected - using NestGate's internal ZFS implementation".to_string(),
+                String::from("No system ZFS detected - using NestGate's internal ZFS implementation"),
             )
         };
 
@@ -219,7 +219,7 @@ impl AdaptiveZfsBackend {
                     has_zfs_command: false,
                     has_zpool_command: false,
                     kernel_module_loaded: false,
-                    status_reason: "Invalid mode - will auto-detect".to_string(),
+                    status_reason: String::from("Invalid mode - will auto-detect"),
                 }
             }
         }

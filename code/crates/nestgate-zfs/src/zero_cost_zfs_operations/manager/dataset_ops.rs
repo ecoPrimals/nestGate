@@ -104,7 +104,7 @@ impl<
     ) -> Result<ZeroCostDatasetInfo> {
         if !self.can_create_more_datasets().await {
             return Err(create_zfs_error(
-                "Cannot create dataset: maximum datasets reached".to_string(),
+                String::from("Cannot create dataset: maximum datasets reached"),
                 ZfsOperation::DatasetCreate,
             ));
         }

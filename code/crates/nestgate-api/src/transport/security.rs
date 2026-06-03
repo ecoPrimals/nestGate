@@ -99,7 +99,7 @@ impl SecurityProviderClient {
 
         let security_slug = env
             .get("NESTGATE_SECURITY_SLUG")
-            .unwrap_or_else(|| "security".to_string());
+            .unwrap_or_else(|| String::from("security"));
 
         let socket_dirs = Self::candidate_socket_dirs_from_env(env);
         for dir in &socket_dirs {
@@ -132,7 +132,7 @@ impl SecurityProviderClient {
         } else if let Some(uid) = env.get("UID").or_else(|| env.get("EUID")) {
             dirs.push(format!("/run/user/{uid}"));
         }
-        dirs.push("/tmp".to_string());
+        dirs.push(String::from("/tmp"));
         dirs
     }
 
@@ -227,7 +227,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: "encrypt".to_string(),
+            method: String::from("encrypt"),
             data: plaintext.to_vec(),
         };
 
@@ -248,7 +248,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: "decrypt".to_string(),
+            method: String::from("decrypt"),
             data: ciphertext.to_vec(),
         };
 
@@ -269,7 +269,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: "generate_token".to_string(),
+            method: String::from("generate_token"),
             data: identity.as_bytes().to_vec(),
         };
 
@@ -291,7 +291,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: "validate_token".to_string(),
+            method: String::from("validate_token"),
             data: token.as_bytes().to_vec(),
         };
 
@@ -332,7 +332,7 @@ impl SecurityProviderClient {
                 "Security provider error: {}",
                 response
                     .error
-                    .unwrap_or_else(|| "Unknown error".to_string())
+                    .unwrap_or_else(|| String::from("Unknown error"))
             )));
         }
 
@@ -519,7 +519,7 @@ mod tests {
                 };
                 (true, out, None)
             } else {
-                (false, vec![], Some("mock failure".to_string()))
+                (false, vec![], Some(String::from("mock failure")))
             };
 
             let resp = json!({

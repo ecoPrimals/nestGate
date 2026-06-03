@@ -295,9 +295,9 @@ mod tests {
     #[test]
     fn test_alert_condition_creation() {
         let condition = AlertCondition {
-            id: "test-alert".to_string(),
-            name: "Test Alert".to_string(),
-            description: "Test alert condition".to_string(),
+            id: String::from("test-alert"),
+            name: String::from("Test Alert"),
+            description: String::from("Test alert condition"),
             metric: AlertMetric::Latency,
             operator: AlertOperator::GreaterThan,
             threshold: 100.0,

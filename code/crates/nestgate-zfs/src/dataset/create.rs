@@ -150,12 +150,12 @@ impl ZfsDatasetManager {
         let mut options = Vec::new();
 
         // Add compression property from config
-        let compression_opt = "compression=lz4".to_string(); // Canonical default
+        let compression_opt = String::from("compression=lz4"); // Canonical default
         options.push(compression_opt);
 
         // Use canonical defaults instead of complex config extensions
         // Record size optimization
-        let recordsize_opt = "recordsize=128K".to_string();
+        let recordsize_opt = String::from("recordsize=128K");
         options.push(recordsize_opt);
 
         // Quota and reservation handled by canonical storage config if needed

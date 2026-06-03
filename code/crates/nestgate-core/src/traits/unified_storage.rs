@@ -330,10 +330,10 @@ pub mod migration {
     pub fn generate_migration_guide(trait_name: &str) -> Vec<String> {
         vec![
             format!("Replace {trait_name} with UnifiedStorage"),
-            "Update method signatures to use native async patterns".to_string(),
-            "Remove async_trait annotations".to_string(),
-            "Update type bounds to use unified types".to_string(),
-            "Implement comprehensive storage operations".to_string(),
+            String::from("Update method signatures to use native async patterns"),
+            String::from("Remove async_trait annotations"),
+            String::from("Update type bounds to use unified types"),
+            String::from("Implement comprehensive storage operations"),
         ]
     }
 }

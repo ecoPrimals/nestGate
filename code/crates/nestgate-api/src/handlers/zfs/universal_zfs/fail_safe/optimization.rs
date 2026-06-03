@@ -19,7 +19,7 @@ pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String
             return dispatch_optimize(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            backend: "zfs_optimization".to_string(),
+            backend: String::from("zfs_optimization"),
         });
     }
 
@@ -60,7 +60,7 @@ pub async fn get_optimization_analytics(
             return dispatch_get_optimization_analytics(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            backend: "zfs_optimization".to_string(),
+            backend: String::from("zfs_optimization"),
         });
     }
 
@@ -104,7 +104,7 @@ pub async fn predict_tier(
             return dispatch_predict_tier(fallback, file_path).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            backend: "zfs_optimization".to_string(),
+            backend: String::from("zfs_optimization"),
         });
     }
 
@@ -148,7 +148,7 @@ pub async fn get_configuration(
             return dispatch_get_configuration(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            backend: "zfs_optimization".to_string(),
+            backend: String::from("zfs_optimization"),
         });
     }
 
@@ -192,7 +192,7 @@ pub async fn update_configuration(
             return dispatch_update_configuration(fallback, config).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            backend: "zfs_optimization".to_string(),
+            backend: String::from("zfs_optimization"),
         });
     }
 
@@ -236,7 +236,7 @@ pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
             return dispatch_shutdown(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            backend: "zfs_optimization".to_string(),
+            backend: String::from("zfs_optimization"),
         });
     }
 

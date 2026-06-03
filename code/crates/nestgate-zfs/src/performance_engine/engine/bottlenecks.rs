@@ -138,7 +138,7 @@ fn analyze_arc_bottlenecks(
             } else {
                 BottleneckSeverity::Medium
             },
-            pool_name: "system_arc".to_string(),
+            pool_name: String::from("system_arc"),
             dataset_name: None,
             description: format!(
                 "ARC hit ratio below optimal: {:.1}%",
@@ -164,9 +164,9 @@ fn analyze_memory_pressure(
         bottlenecks.push(ZfsBottleneck {
             bottleneck_type: ZfsBottleneckType::MemoryPressure,
             severity: BottleneckSeverity::Critical,
-            pool_name: "system_memory".to_string(),
+            pool_name: String::from("system_memory"),
             dataset_name: None,
-            description: "actual_error_details".to_string(),
+            description: String::from("actual_error_details"),
             impact_score: 95.0,
         });
     }

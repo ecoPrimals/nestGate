@@ -32,6 +32,6 @@ where
     D: Deserializer<'de>,
 {
     let secs = u64::deserialize(deserializer)
-        .map_err(|_e| de::Error::custom("deserialization error: error details".to_string()))?;
+        .map_err(|_e| de::Error::custom(String::from("deserialization error: error details")))?;
     Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
 }

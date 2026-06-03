@@ -52,7 +52,7 @@ pub fn pool_info_from_zfs_output(pool_name: &str, output: &str) -> ZfsResult<Poo
     let health_str = properties
         .get("health")
         .cloned()
-        .unwrap_or_else(|| "UNKNOWN".to_string());
+        .unwrap_or_else(|| String::from("UNKNOWN"));
 
     let health = match health_str.to_uppercase().as_str() {
         "ONLINE" | "HEALTHY" => PoolHealth::Healthy,
@@ -132,7 +132,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
     let full_name = properties
         .get("name")
         .ok_or_else(|| ZfsError::DatasetError {
-            message: "Missing dataset name in output".to_string(),
+            message: String::from("Missing dataset name in output"),
         })?
         .clone();
 
@@ -159,7 +159,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
     let compression = properties
         .get("compression")
         .cloned()
-        .unwrap_or_else(|| "lz4".to_string());
+        .unwrap_or_else(|| String::from("lz4"));
 
     let mountpoint = properties
         .get("mountpoint")
@@ -175,9 +175,9 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
         available,
         mountpoint: mountpoint.clone(),
         mount_point: mountpoint,
-        dataset_type: "filesystem".to_string(),
+        dataset_type: String::from("filesystem"),
         compression,
-        checksum: "sha256".to_string(),
+        checksum: String::from("sha256"),
         referenced: used,
         compression_ratio: 1.0,
         tier: StorageTier::Warm,
@@ -190,12 +190,12 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
 #[must_use]
 pub fn parse_health_status(status: &str) -> String {
     match status.trim().to_uppercase().as_str() {
-        "ONLINE" => "ONLINE".to_string(),
-        "DEGRADED" => "DEGRADED".to_string(),
-        "FAULTED" => "FAULTED".to_string(),
-        "OFFLINE" => "OFFLINE".to_string(),
-        "UNAVAIL" => "UNAVAIL".to_string(),
-        "REMOVED" => "REMOVED".to_string(),
+        "ONLINE" => String::from("ONLINE"),
+        "DEGRADED" => String::from("DEGRADED"),
+        "FAULTED" => String::from("FAULTED"),
+        "OFFLINE" => String::from("OFFLINE"),
+        "UNAVAIL" => String::from("UNAVAIL"),
+        "REMOVED" => String::from("REMOVED"),
         _ => status.trim().to_string(),
     }
 }

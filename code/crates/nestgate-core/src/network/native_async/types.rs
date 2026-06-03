@@ -143,7 +143,7 @@ mod tests {
     fn test_service_event_creation() {
         let event = ServiceEvent {
             event_type: ServiceEventType::Registered,
-            service_id: "test-service".to_string(),
+            service_id: String::from("test-service"),
             service_info: None,
             timestamp: Utc::now(),
             metadata: HashMap::new(),
@@ -169,14 +169,14 @@ mod tests {
     #[test]
     fn test_service_query_default() {
         let query = ServiceQuery {
-            service_name: Some("test".to_string()),
-            tags: vec!["production".to_string()],
-            namespace: Some("default".to_string()),
+            service_name: Some(String::from("test")),
+            tags: vec![String::from("production")],
+            namespace: Some(String::from("default")),
             healthy_only: true,
             metadata_filters: HashMap::new(),
         };
 
-        assert_eq!(query.service_name, Some("test".to_string()));
+        assert_eq!(query.service_name, Some(String::from("test")));
         assert!(query.healthy_only);
         assert_eq!(query.tags.len(), 1);
     }
@@ -186,8 +186,8 @@ mod tests {
         use crate::constants::{DEFAULT_API_PORT, network::LOCALHOST};
 
         let connection = NetworkConnection {
-            connection_id: "conn-123".to_string(),
-            protocol: "http".to_string(),
+            connection_id: String::from("conn-123"),
+            protocol: String::from("http"),
             local_endpoint: format!("{LOCALHOST}:{DEFAULT_API_PORT}"),
             established_at: Utc::now(),
             status: ConnectionStatus::Connected,
@@ -204,7 +204,7 @@ mod tests {
         let connecting = ConnectionStatus::Connecting;
         let connected = ConnectionStatus::Connected;
         let disconnected = ConnectionStatus::Disconnected;
-        let error = ConnectionStatus::Error("timeout".to_string());
+        let error = ConnectionStatus::Error(String::from("timeout"));
 
         assert!(matches!(connecting, ConnectionStatus::Connecting));
         assert!(matches!(connected, ConnectionStatus::Connected));
@@ -218,8 +218,8 @@ mod tests {
     #[test]
     fn test_network_request_creation() {
         let request = NetworkRequest {
-            request_id: "req-456".to_string(),
-            method: "GET".to_string(),
+            request_id: String::from("req-456"),
+            method: String::from("GET"),
             headers: HashMap::new(),
             body: vec![1, 2, 3],
             timeout: Some(Duration::from_secs(30)),
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn test_network_response_creation() {
         let response = NetworkResponse {
-            request_id: "req-456".to_string(),
+            request_id: String::from("req-456"),
             status_code: 200,
             headers: HashMap::new(),
             body: vec![4, 5, 6],
@@ -250,8 +250,8 @@ mod tests {
     #[test]
     fn test_load_balancer_backend_creation() {
         let backend = LoadBalancerBackend {
-            backend_id: "backend-1".to_string(),
-            endpoint: "192.168.1.1".to_string(),
+            backend_id: String::from("backend-1"),
+            endpoint: String::from("192.168.1.1"),
             port: 8080,
             weight: 100,
             healthy: true,
@@ -272,7 +272,7 @@ mod tests {
     fn test_service_event_serialization() {
         let event = ServiceEvent {
             event_type: ServiceEventType::Registered,
-            service_id: "test".to_string(),
+            service_id: String::from("test"),
             service_info: None,
             timestamp: Utc::now(),
             metadata: HashMap::new(),
@@ -290,12 +290,12 @@ mod tests {
     #[test]
     fn test_network_request_with_headers() {
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(), "application/json".to_string());
-        headers.insert("Authorization".to_string(), "Bearer token123".to_string());
+        headers.insert(String::from("Content-Type"), String::from("application/json"));
+        headers.insert(String::from("Authorization"), String::from("Bearer token123"));
 
         let request = NetworkRequest {
-            request_id: "req-789".to_string(),
-            method: "POST".to_string(),
+            request_id: String::from("req-789"),
+            method: String::from("POST"),
             headers,
             body: b"{}".to_vec(),
             timeout: Some(Duration::from_secs(60)),
@@ -304,15 +304,15 @@ mod tests {
         assert_eq!(request.headers.len(), 2);
         assert_eq!(
             request.headers.get("Content-Type"),
-            Some(&"application/json".to_string())
+            Some(&String::from("application/json"))
         );
     }
 
     #[test]
     fn test_load_balancer_backend_unhealthy() {
         let backend = LoadBalancerBackend {
-            backend_id: "backend-2".to_string(),
-            endpoint: "192.168.1.2".to_string(),
+            backend_id: String::from("backend-2"),
+            endpoint: String::from("192.168.1.2"),
             port: 8080,
             weight: 50,
             healthy: false,

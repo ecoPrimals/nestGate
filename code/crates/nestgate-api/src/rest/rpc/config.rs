@@ -277,7 +277,7 @@ impl Default for NestGateRpcConfig {
                 rate_limit_per_minute: 1000,
             },
             load_balancing: LoadBalancingConfig {
-                strategy: "round_robin".to_string(),
+                strategy: String::from("round_robin"),
                 health_check_interval: Duration::from_secs(30),
                 circuit_failure_threshold: 5,
                 circuit_success_threshold: 3,

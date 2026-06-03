@@ -169,11 +169,11 @@ impl Default for CanonicalConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            service_name: "nestgate".to_string(),
-            version: "2.0.0".to_string(),
-            environment: "production".to_string(),
+            service_name: String::from("nestgate"),
+            version: String::from("2.0.0"),
+            environment: String::from("production"),
             debug_mode: false,
-            log_level: "info".to_string(),
+            log_level: String::from("info"),
             network: NetworkConfig::default(),
             storage: StorageConfig::default(),
             security: SecurityConfig::default(),
@@ -223,7 +223,7 @@ impl StorageConfig {
     #[must_use]
     pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
-            backend_type: "local".to_string(),
+            backend_type: String::from("local"),
             data_directory: env_var_or_default(env, "NESTGATE_DATA_DIR", "./data"),
             cache_size_mb: 512,
             compression_enabled: true,
@@ -378,8 +378,8 @@ mod tests {
     #[test]
     fn test_storage_config_custom_values() {
         let config = StorageConfig {
-            backend_type: "zfs".to_string(),
-            data_directory: "/tank/data".to_string(),
+            backend_type: String::from("zfs"),
+            data_directory: String::from("/tank/data"),
             cache_size_mb: 2048,
             compression_enabled: false,
             encryption_enabled: true,
@@ -414,7 +414,7 @@ mod tests {
     #[test]
     fn test_auth_config_serialization() {
         let config = AuthConfig {
-            jwt_secret: "test-secret".to_string(),
+            jwt_secret: String::from("test-secret"),
             token_expiry_minutes: 120,
             refresh_token_expiry_days: 90,
             require_email_verification: false,

@@ -77,12 +77,12 @@ pub fn create_service_registration(
 /// Creates a storage service role with standard permissions
 pub fn create_storage_role() -> ServiceRole {
     ServiceRole {
-        name: "Storage Provider".to_string(),
+        name: String::from("Storage Provider"),
         required_capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
         optional_capabilities: vec![ServiceCapability::Custom {
-            namespace: "cache-provider".to_string(),
-            capability: "Cache Provider".to_string(),
-            version: "1.0.0".to_string(),
+            namespace: String::from("cache-provider"),
+            capability: String::from("Cache Provider"),
+            version: String::from("1.0.0"),
         }],
         resource_requirements: ResourceSpec::default(),
         performance_requirements: PerformanceRequirements::default(),
@@ -93,22 +93,22 @@ pub fn create_storage_role() -> ServiceRole {
 /// Creates an AI service role with standard permissions
 pub fn create_ai_role() -> ServiceRole {
     ServiceRole {
-        name: "AI Provider".to_string(),
+        name: String::from("AI Provider"),
         required_capabilities: vec![ServiceCapability::Custom {
-            namespace: "ai-provider".to_string(),
-            capability: "AI Provider".to_string(),
-            version: "1.0.0".to_string(),
+            namespace: String::from("ai-provider"),
+            capability: String::from("AI Provider"),
+            version: String::from("1.0.0"),
         }],
         optional_capabilities: vec![
             ServiceCapability::Custom {
-                namespace: "nlp-provider".to_string(),
-                capability: "NLP Provider".to_string(),
-                version: "1.0.0".to_string(),
+                namespace: String::from("nlp-provider"),
+                capability: String::from("NLP Provider"),
+                version: String::from("1.0.0"),
             },
             ServiceCapability::Custom {
-                namespace: "data-processing".to_string(),
-                capability: "Data Processing".to_string(),
-                version: "1.0.0".to_string(),
+                namespace: String::from("data-processing"),
+                capability: String::from("Data Processing"),
+                version: String::from("1.0.0"),
             },
         ],
         resource_requirements: ResourceSpec {
@@ -130,22 +130,22 @@ pub fn create_ai_role() -> ServiceRole {
 /// Creates a security service role with standard permissions
 pub fn create_security_role() -> ServiceRole {
     ServiceRole {
-        name: "Security Provider".to_string(),
+        name: String::from("Security Provider"),
         required_capabilities: vec![ServiceCapability::Custom {
-            namespace: "security-provider".to_string(),
-            capability: "Security Provider".to_string(),
-            version: "1.0.0".to_string(),
+            namespace: String::from("security-provider"),
+            capability: String::from("Security Provider"),
+            version: String::from("1.0.0"),
         }],
         optional_capabilities: vec![
             ServiceCapability::Custom {
-                namespace: "authorization".to_string(),
-                capability: "Authorization".to_string(),
-                version: "1.0.0".to_string(),
+                namespace: String::from("authorization"),
+                capability: String::from("Authorization"),
+                version: String::from("1.0.0"),
             },
             ServiceCapability::Custom {
-                namespace: "encryption".to_string(),
-                capability: "Encryption".to_string(),
-                version: "1.0.0".to_string(),
+                namespace: String::from("encryption"),
+                capability: String::from("Encryption"),
+                version: String::from("1.0.0"),
             },
         ],
         resource_requirements: ResourceSpec::default(),
@@ -171,7 +171,7 @@ mod tests {
         let registry = create_service_registry();
         let registration = create_service_registration(
             // SOVEREIGNTY FIX: Use capability-based naming
-            "test-capability".to_string(),
+            String::from("test-capability"),
             ServiceCategory::Storage,
             vec![ServiceCapability::Storage(StorageType::Object)],
         );
@@ -188,7 +188,7 @@ mod tests {
         let registry = create_service_registry();
         let registration = create_service_registration(
             // SOVEREIGNTY FIX: Use capability-based naming
-            "storage-capability".to_string(),
+            String::from("storage-capability"),
             ServiceCategory::Storage,
             vec![ServiceCapability::Storage(StorageType::Object)],
         );
@@ -211,7 +211,7 @@ mod tests {
         let storage_role = create_storage_role();
 
         let registration = create_service_registration(
-            "object-storage".to_string(),
+            String::from("object-storage"),
             ServiceCategory::Storage,
             vec![ServiceCapability::Storage(StorageType::Object)],
         );

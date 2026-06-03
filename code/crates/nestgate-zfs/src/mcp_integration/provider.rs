@@ -237,7 +237,7 @@ impl ZfsMcpStorageProvider {
     pub fn trigger_ai_optimization(&self) -> Result<()> {
         if !self.config.enable_ai_optimization {
             return Err(nestgate_core::NestGateError::internal_error(
-                "MCP integration - AI optimization is disabled".to_string(),
+                String::from("MCP integration - AI optimization is disabled"),
                 "mcp-integration",
             ));
         }
@@ -292,8 +292,8 @@ mod tests {
         let provider =
             ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
         let req = McpMountRequest {
-            mount_id: "mcp-test-mount-1".to_string(),
-            mount_point: "/mcp/mounts/mcp-test-mount-1".to_string(),
+            mount_id: String::from("mcp-test-mount-1"),
+            mount_point: String::from("/mcp/mounts/mcp-test-mount-1"),
             tier: StorageTier::Warm,
             size_gb: 1,
         };
@@ -312,7 +312,7 @@ mod tests {
         let provider =
             ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
         let req = McpVolumeRequest {
-            volume_id: "mcp-test-vol-1".to_string(),
+            volume_id: String::from("mcp-test-vol-1"),
             tier: StorageTier::Cold,
             size_gb: 1,
         };

@@ -139,9 +139,9 @@ mod tests {
     #[test]
     fn test_system_config_effective_values_without_override() {
         let config = SystemConfig::<1000, 65536> {
-            instance_id: "test".to_string(),
-            instance_name: "Test".to_string(),
-            version: "1.0.0".to_string(),
+            instance_id: String::from("test"),
+            instance_name: String::from("Test"),
+            version: String::from("1.0.0"),
             environment: DeploymentEnvironment::Development,
             log_level: LogLevel::Info,
             debug_mode: false,
@@ -164,9 +164,9 @@ mod tests {
     #[test]
     fn test_system_config_effective_values_with_override() {
         let config = SystemConfig::<1000, 65536> {
-            instance_id: "test".to_string(),
-            instance_name: "Test".to_string(),
-            version: "1.0.0".to_string(),
+            instance_id: String::from("test"),
+            instance_name: String::from("Test"),
+            version: String::from("1.0.0"),
             environment: DeploymentEnvironment::Production,
             log_level: LogLevel::Warn,
             debug_mode: false,
@@ -224,9 +224,9 @@ mod tests {
     #[test]
     fn test_system_config_production_settings() {
         let config = SystemConfig::<5000, 262_144> {
-            instance_id: "prod-001".to_string(),
-            instance_name: "Production Instance 1".to_string(),
-            version: "2.0.0".to_string(),
+            instance_id: String::from("prod-001"),
+            instance_name: String::from("Production Instance 1"),
+            version: String::from("2.0.0"),
             environment: DeploymentEnvironment::Production,
             log_level: LogLevel::Warn,
             debug_mode: false,
@@ -250,9 +250,9 @@ mod tests {
     #[test]
     fn test_system_config_timeouts() {
         let config = SystemConfig::<1000, 65536> {
-            instance_id: "test".to_string(),
-            instance_name: "Test".to_string(),
-            version: "1.0.0".to_string(),
+            instance_id: String::from("test"),
+            instance_name: String::from("Test"),
+            version: String::from("1.0.0"),
             environment: DeploymentEnvironment::Development,
             log_level: LogLevel::Info,
             debug_mode: false,
@@ -319,7 +319,7 @@ impl Default for EnvironmentConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: "development".to_string(),
+            name: String::from("development"),
             variables: std::collections::HashMap::new(),
             features: std::collections::HashMap::new(),
             resource_limits: ResourceLimits::default(),
@@ -371,9 +371,9 @@ impl Default for FeatureFlags {
     /// Returns the default instance
     fn default() -> Self {
         let mut features = std::collections::HashMap::new();
-        features.insert("async_trait_migration".to_string(), false);
-        features.insert("zero_cost_abstractions".to_string(), true);
-        features.insert("canonical_config".to_string(), true);
+        features.insert(String::from("async_trait_migration"), false);
+        features.insert(String::from("zero_cost_abstractions"), true);
+        features.insert(String::from("canonical_config"), true);
 
         Self {
             experimental_features: false,
@@ -418,12 +418,12 @@ impl Default for ConfigMetadata {
             .to_string();
 
         Self {
-            version: "1.0.0".to_string(),
+            version: String::from("1.0.0"),
             created_at: now.clone(),
             modified_at: now,
-            source: "canonical_primary".to_string(),
+            source: String::from("canonical_primary"),
             checksum: None,
-            schema_version: "2.0.0".to_string(),
+            schema_version: String::from("2.0.0"),
         }
     }
 }
@@ -446,8 +446,8 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
 
         Self {
             instance_id,
-            instance_name: "nestgate-default".to_string(),
-            version: "3.0.0".to_string(),
+            instance_name: String::from("nestgate-default"),
+            version: String::from("3.0.0"),
             environment: DeploymentEnvironment::default(),
             log_level: LogLevel::Info,
             debug_mode: false,

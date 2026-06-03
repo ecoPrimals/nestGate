@@ -9,7 +9,7 @@ macro_rules! safe_unwrap {
     ($expr:expr, $context:expr) => {
         $expr.map_err(|e| $crate::NestGateError::Internal {
             message: format!("Safe unwrap failed: {} - Context: {}", e, $context),
-            component: "safe_operations".to_string(),
+            component: String::from("safe_operations"),
         })?
     };
 }
@@ -20,7 +20,7 @@ macro_rules! safe_expect {
     ($expr:expr, $msg:expr) => {
         $expr.map_err(|_| $crate::NestGateError::Internal {
             message: format!("Safe expect failed: {$msg}"),
-            component: "safe_operations".to_string(),
+            component: String::from("safe_operations"),
         })?
     };
 }

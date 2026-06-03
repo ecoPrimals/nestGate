@@ -105,7 +105,7 @@ impl SelfKnowledgeBuilder {
                 .name
                 .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string()),
             capabilities: self.capabilities,
-            version: "1.0.0".to_string(),
+            version: String::from("1.0.0"),
             endpoints: HashMap::new(),
         })
     }
@@ -244,12 +244,12 @@ mod tests {
     #[tokio::test]
     async fn test_registration_data_serialization() {
         let data = ServiceRegistrationData {
-            service_id: "test-123".to_string(),
-            primal_name: "nestgate".to_string(),
-            capabilities: vec!["storage".to_string()],
-            version: "1.0.0".to_string(),
+            service_id: String::from("test-123"),
+            primal_name: String::from("nestgate"),
+            capabilities: vec![String::from("storage")],
+            version: String::from("1.0.0"),
             endpoints: std::collections::HashMap::new(),
-            registration_time: "2026-01-13T00:00:00Z".to_string(),
+            registration_time: String::from("2026-01-13T00:00:00Z"),
         };
 
         let json = serde_json::to_string(&data).unwrap();
@@ -275,18 +275,18 @@ mod tests {
     #[test]
     fn health_report_and_service_info_serde() {
         let hr = HealthReport {
-            service_id: "s1".to_string(),
-            status: "ok".to_string(),
-            timestamp: "2026-01-01T00:00:00Z".to_string(),
+            service_id: String::from("s1"),
+            status: String::from("ok"),
+            timestamp: String::from("2026-01-01T00:00:00Z"),
             details: Some(serde_json::json!({"k": 1})),
         };
         let j = serde_json::to_string(&hr).unwrap();
         assert!(j.contains("s1"));
         let si = ServiceInfo {
-            id: "a".to_string(),
-            name: "b".to_string(),
-            capabilities: vec!["c".to_string()],
-            endpoint: "e".to_string(),
+            id: String::from("a"),
+            name: String::from("b"),
+            capabilities: vec![String::from("c")],
+            endpoint: String::from("e"),
             metadata: std::collections::HashMap::new(),
             health_endpoint: None,
         };

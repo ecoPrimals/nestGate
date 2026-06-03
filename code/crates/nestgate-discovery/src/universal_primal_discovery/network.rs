@@ -74,9 +74,9 @@ impl NetworkDiscoveryConfig {
 
         Self {
             scan_timeout: Duration::from_secs(5),
-            preferred_interfaces: vec!["eth0".to_string(), "wlan0".to_string()],
+            preferred_interfaces: vec![String::from("eth0"), String::from("wlan0")],
             port_scan_range: (start_port, end_port),
-            interface_priority: vec!["lo".to_string(), "eth0".to_string(), "wlan0".to_string()],
+            interface_priority: vec![String::from("lo"), String::from("eth0"), String::from("wlan0")],
         }
     }
 }
@@ -280,7 +280,7 @@ impl NetworkDiscovery {
 
         // Localhost (highest priority for development)
         interfaces.push(InterfaceInfo {
-            name: "lo".to_string(),
+            name: String::from("lo"),
             ip_endpoint: IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,
@@ -393,15 +393,15 @@ impl NetworkDiscovery {
         let mut config = HashMap::new();
 
         config.insert(
-            "scan_timeout".to_string(),
+            String::from("scan_timeout"),
             format!("{:?}", self.legacy_discovery.scan_timeout),
         );
         config.insert(
-            "port_range".to_string(),
+            String::from("port_range"),
             format!("{:?}", self.legacy_discovery.port_scan_range),
         );
         config.insert(
-            "preferred_interfaces".to_string(),
+            String::from("preferred_interfaces"),
             self.legacy_discovery.preferred_interfaces.join(","),
         );
 
@@ -472,7 +472,7 @@ mod tests {
     #[test]
     fn test_interface_info_creation() {
         let interface = InterfaceInfo {
-            name: "eth0".to_string(),
+            name: String::from("eth0"),
             ip_endpoint: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100)),
             is_up: true,
             is_loopback: false,
@@ -488,7 +488,7 @@ mod tests {
     #[test]
     fn test_interface_info_clone() {
         let interface1 = InterfaceInfo {
-            name: "lo".to_string(),
+            name: String::from("lo"),
             ip_endpoint: IpAddr::V4(Ipv4Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,
@@ -503,7 +503,7 @@ mod tests {
     #[test]
     fn test_interface_info_debug() {
         let interface = InterfaceInfo {
-            name: "wlan0".to_string(),
+            name: String::from("wlan0"),
             ip_endpoint: IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)),
             is_up: true,
             is_loopback: false,
@@ -658,7 +658,7 @@ mod tests {
     #[test]
     fn test_interface_info_ipv6() {
         let interface = InterfaceInfo {
-            name: "eth0".to_string(),
+            name: String::from("eth0"),
             ip_endpoint: IpAddr::V6(Ipv6Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,

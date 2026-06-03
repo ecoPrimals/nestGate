@@ -61,9 +61,9 @@ impl Default for DatasetInfo {
             available: 0,
             mountpoint: None,
             mount_point: None,
-            dataset_type: "filesystem".to_string(),
-            compression: "lz4".to_string(),
-            checksum: "sha256".to_string(),
+            dataset_type: String::from("filesystem"),
+            compression: String::from("lz4"),
+            checksum: String::from("sha256"),
             referenced: 0,
             compression_ratio: 1.0,
             tier: StorageTier::Warm,
@@ -156,20 +156,20 @@ mod tests {
     #[test]
     fn test_dataset_info_creation() {
         let mut properties = HashMap::new();
-        properties.insert("compression".to_string(), "zstd".to_string());
+        properties.insert(String::from("compression"), String::from("zstd"));
 
         let info = DatasetInfo {
-            name: "data".to_string(),
-            full_name: "tank/data".to_string(),
-            pool: "tank".to_string(),
+            name: String::from("data"),
+            full_name: String::from("tank/data"),
+            pool: String::from("tank"),
             size: 1024 * 1024 * 1024,
             used: 512 * 1024 * 1024,
             available: 512 * 1024 * 1024,
             mountpoint: Some(PathBuf::from("/mnt/tank/data")),
             mount_point: Some(PathBuf::from("/mnt/tank/data")),
-            dataset_type: "filesystem".to_string(),
-            compression: "zstd".to_string(),
-            checksum: "sha512".to_string(),
+            dataset_type: String::from("filesystem"),
+            compression: String::from("zstd"),
+            checksum: String::from("sha512"),
             referenced: 500 * 1024 * 1024,
             compression_ratio: 1.5,
             tier: StorageTier::Hot,
@@ -201,9 +201,9 @@ mod tests {
     #[test]
     fn test_dataset_info_clone() {
         let info = DatasetInfo {
-            name: "test".to_string(),
-            full_name: "tank/test".to_string(),
-            pool: "tank".to_string(),
+            name: String::from("test"),
+            full_name: String::from("tank/test"),
+            pool: String::from("tank"),
             ..Default::default()
         };
 
@@ -243,8 +243,8 @@ mod tests {
     #[test]
     fn test_dataset_info_with_properties() {
         let mut properties = HashMap::new();
-        properties.insert("custom:priority".to_string(), "high".to_string());
-        properties.insert("custom:owner".to_string(), "admin".to_string());
+        properties.insert(String::from("custom:priority"), String::from("high"));
+        properties.insert(String::from("custom:owner"), String::from("admin"));
 
         let info = DatasetInfo {
             properties: properties.clone(),
@@ -254,11 +254,11 @@ mod tests {
         assert_eq!(info.properties.len(), 2);
         assert_eq!(
             info.properties.get("custom:priority"),
-            Some(&"high".to_string())
+            Some(&String::from("high"))
         );
         assert_eq!(
             info.properties.get("custom:owner"),
-            Some(&"admin".to_string())
+            Some(&String::from("admin"))
         );
     }
 
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn test_dataset_properties_basic() {
         let props = DatasetProperties {
-            compression: Some("lz4".to_string()),
+            compression: Some(String::from("lz4")),
             quota: Some(1024 * 1024 * 1024),
             reservation: Some(512 * 1024 * 1024),
             recordsize: Some(128 * 1024),
@@ -277,7 +277,7 @@ mod tests {
             custom: HashMap::new(),
         };
 
-        assert_eq!(props.compression, Some("lz4".to_string()));
+        assert_eq!(props.compression, Some(String::from("lz4")));
         assert_eq!(props.quota, Some(1024 * 1024 * 1024));
         assert!(!props.readonly);
     }
@@ -307,18 +307,18 @@ mod tests {
             recordsize: None,
             mountpoint: None,
             readonly: false,
-            dedup: Some("sha256".to_string()),
+            dedup: Some(String::from("sha256")),
             custom: HashMap::new(),
         };
 
-        assert_eq!(props.dedup, Some("sha256".to_string()));
+        assert_eq!(props.dedup, Some(String::from("sha256")));
     }
 
     #[test]
     fn test_dataset_properties_custom() {
         let mut custom = HashMap::new();
-        custom.insert("backup:enabled".to_string(), "true".to_string());
-        custom.insert("backup:schedule".to_string(), "daily".to_string());
+        custom.insert(String::from("backup:enabled"), String::from("true"));
+        custom.insert(String::from("backup:schedule"), String::from("daily"));
 
         let props = DatasetProperties {
             compression: None,
@@ -334,14 +334,14 @@ mod tests {
         assert_eq!(props.custom.len(), 2);
         assert_eq!(
             props.custom.get("backup:enabled"),
-            Some(&"true".to_string())
+            Some(&String::from("true"))
         );
     }
 
     #[test]
     fn test_dataset_properties_serialization() {
         let props = DatasetProperties {
-            compression: Some("zstd".to_string()),
+            compression: Some(String::from("zstd")),
             quota: Some(1024 * 1024 * 1024),
             reservation: None,
             recordsize: Some(1024 * 1024),
@@ -365,7 +365,7 @@ mod tests {
     #[test]
     fn test_dataset_quota_with_limits() {
         let quota = DatasetQuota {
-            dataset: "tank/data".to_string(),
+            dataset: String::from("tank/data"),
             quota: Some(1024 * 1024 * 1024),
             reservation: Some(256 * 1024 * 1024),
             used: 512 * 1024 * 1024,
@@ -381,7 +381,7 @@ mod tests {
     #[test]
     fn test_dataset_quota_no_limits() {
         let quota = DatasetQuota {
-            dataset: "tank/unlimited".to_string(),
+            dataset: String::from("tank/unlimited"),
             quota: None,
             reservation: None,
             used: 100 * 1024 * 1024,
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn test_dataset_quota_serialization() {
         let quota = DatasetQuota {
-            dataset: "tank/test".to_string(),
+            dataset: String::from("tank/test"),
             quota: Some(1024),
             reservation: Some(512),
             used: 256,
@@ -414,7 +414,7 @@ mod tests {
     #[test]
     fn test_dataset_quota_at_limit() {
         let quota = DatasetQuota {
-            dataset: "tank/full".to_string(),
+            dataset: String::from("tank/full"),
             quota: Some(1024 * 1024 * 1024),
             reservation: None,
             used: 1024 * 1024 * 1024,
@@ -430,8 +430,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_hourly() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/data".to_string(),
-            frequency: "hourly".to_string(),
+            dataset: String::from("tank/data"),
+            frequency: String::from("hourly"),
             retention_count: 24,
             enabled: true,
         };
@@ -445,8 +445,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_daily() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/important".to_string(),
-            frequency: "daily".to_string(),
+            dataset: String::from("tank/important"),
+            frequency: String::from("daily"),
             retention_count: 7,
             enabled: true,
         };
@@ -458,8 +458,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_weekly() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/archive".to_string(),
-            frequency: "weekly".to_string(),
+            dataset: String::from("tank/archive"),
+            frequency: String::from("weekly"),
             retention_count: 4,
             enabled: true,
         };
@@ -471,8 +471,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_monthly() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/backups".to_string(),
-            frequency: "monthly".to_string(),
+            dataset: String::from("tank/backups"),
+            frequency: String::from("monthly"),
             retention_count: 12,
             enabled: true,
         };
@@ -484,8 +484,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_disabled() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/temp".to_string(),
-            frequency: "daily".to_string(),
+            dataset: String::from("tank/temp"),
+            frequency: String::from("daily"),
             retention_count: 1,
             enabled: false,
         };
@@ -496,8 +496,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_serialization() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/test".to_string(),
-            frequency: "hourly".to_string(),
+            dataset: String::from("tank/test"),
+            frequency: String::from("hourly"),
             retention_count: 48,
             enabled: true,
         };
@@ -515,8 +515,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_zero_retention() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/minimal".to_string(),
-            frequency: "daily".to_string(),
+            dataset: String::from("tank/minimal"),
+            frequency: String::from("daily"),
             retention_count: 0,
             enabled: true,
         };
@@ -527,8 +527,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_large_retention() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/forever".to_string(),
-            frequency: "monthly".to_string(),
+            dataset: String::from("tank/forever"),
+            frequency: String::from("monthly"),
             retention_count: 120, // 10 years
             enabled: true,
         };
@@ -539,8 +539,8 @@ mod tests {
     #[test]
     fn test_snapshot_schedule_clone() {
         let schedule = SnapshotSchedule {
-            dataset: "tank/data".to_string(),
-            frequency: "daily".to_string(),
+            dataset: String::from("tank/data"),
+            frequency: String::from("daily"),
             retention_count: 7,
             enabled: true,
         };

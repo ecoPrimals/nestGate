@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn test_performance_metrics_response_serialization() {
         let mut metrics = HashMap::new();
-        metrics.insert("test_metric".to_string(), 42.0);
+        metrics.insert(String::from("test_metric"), 42.0);
 
         let response = PerformanceMetricsResponse {
             metrics,
@@ -282,9 +282,9 @@ mod tests {
     #[test]
     fn test_performance_alert_serialization() {
         let alert = PerformanceAlert {
-            id: "test_alert".to_string(),
-            message: "Test message".to_string(),
-            severity: "critical".to_string(),
+            id: String::from("test_alert"),
+            message: String::from("Test message"),
+            severity: String::from("critical"),
             timestamp: std::time::SystemTime::now(),
         };
 
@@ -296,10 +296,10 @@ mod tests {
     #[test]
     fn test_performance_recommendation_serialization() {
         let recommendation = PerformanceRecommendation {
-            id: "test_rec".to_string(),
-            title: "Test Recommendation".to_string(),
-            description: "Test description".to_string(),
-            impact: "Test impact".to_string(),
+            id: String::from("test_rec"),
+            title: String::from("Test Recommendation"),
+            description: String::from("Test description"),
+            impact: String::from("Test impact"),
             priority: 3,
         };
 

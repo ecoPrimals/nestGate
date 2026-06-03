@@ -148,7 +148,7 @@ fn benchmark_string_operations(c: &mut Criterion) {
     group.bench_function("string_concat", |b| {
         b.iter(|| {
             for i in 0..100 {
-                let s = "item_".to_string() + &i.to_string();
+                let s = String::from("item_") + &i.to_string();
                 black_box(s);
             }
         });

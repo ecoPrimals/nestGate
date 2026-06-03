@@ -328,11 +328,11 @@ mod tests {
 
         let audit = ExecutionAudit {
             id: String::new(), // Will be auto-generated
-            execution_id: "exec_123".to_string(),
-            graph_id: "graph_456".to_string(),
-            template_id: Some("tmpl_789".to_string()),
-            user_id: "user_abc".to_string(),
-            family_id: "test_family".to_string(),
+            execution_id: String::from("exec_123"),
+            graph_id: String::from("graph_456"),
+            template_id: Some(String::from("tmpl_789")),
+            user_id: String::from("user_abc"),
+            family_id: String::from("test_family"),
             started_at: Utc::now(),
             completed_at: Some(Utc::now()),
             status: ExecutionStatus::Completed,
@@ -359,11 +359,11 @@ mod tests {
 
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: "exec_123".to_string(),
-            graph_id: "graph_456".to_string(),
+            execution_id: String::from("exec_123"),
+            graph_id: String::from("graph_456"),
             template_id: None,
-            user_id: "user_abc".to_string(),
-            family_id: "family_1".to_string(),
+            user_id: String::from("user_abc"),
+            family_id: String::from("family_1"),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,
@@ -391,24 +391,24 @@ mod tests {
             GraphModification {
                 timestamp: Utc::now(),
                 modification_type: ModificationType::AddNode,
-                node_id: Some("node_cache".to_string()),
+                node_id: Some(String::from("node_cache")),
                 data: json!({"type": "redis"}),
             },
             GraphModification {
                 timestamp: Utc::now(),
                 modification_type: ModificationType::ModifyNode,
-                node_id: Some("node_db".to_string()),
+                node_id: Some(String::from("node_db")),
                 data: json!({"pool_size": 20}),
             },
         ];
 
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: "exec_with_mods".to_string(),
-            graph_id: "graph_789".to_string(),
+            execution_id: String::from("exec_with_mods"),
+            graph_id: String::from("graph_789"),
             template_id: None,
-            user_id: "user_xyz".to_string(),
-            family_id: "test_family".to_string(),
+            user_id: String::from("user_xyz"),
+            family_id: String::from("test_family"),
             started_at: Utc::now(),
             completed_at: Some(Utc::now()),
             status: ExecutionStatus::Completed,
@@ -439,10 +439,10 @@ mod tests {
         let audit = ExecutionAudit {
             id: String::new(),
             execution_id: String::new(),
-            graph_id: "graph_123".to_string(),
+            graph_id: String::from("graph_123"),
             template_id: None,
-            user_id: "user_abc".to_string(),
-            family_id: "family".to_string(),
+            user_id: String::from("user_abc"),
+            family_id: String::from("family"),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,
@@ -460,11 +460,11 @@ mod tests {
         let storage = AuditStorage::new();
         let base = ExecutionAudit {
             id: String::new(),
-            execution_id: "e1".to_string(),
-            graph_id: "g".to_string(),
+            execution_id: String::from("e1"),
+            graph_id: String::from("g"),
             template_id: None,
-            user_id: "alice".to_string(),
-            family_id: "fam_list".to_string(),
+            user_id: String::from("alice"),
+            family_id: String::from("fam_list"),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,
@@ -473,8 +473,8 @@ mod tests {
             metadata: json!({}),
         };
         let mut second = base.clone();
-        second.execution_id = "e2".to_string();
-        second.user_id = "bob".to_string();
+        second.execution_id = String::from("e2");
+        second.user_id = String::from("bob");
         second.status = ExecutionStatus::Completed;
 
         storage.store_audit(base).await.unwrap();
@@ -532,10 +532,10 @@ mod tests {
         let storage = AuditStorage::new();
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: "e".to_string(),
-            graph_id: "g".to_string(),
+            execution_id: String::from("e"),
+            graph_id: String::from("g"),
             template_id: None,
-            user_id: "u".to_string(),
+            user_id: String::from("u"),
             family_id: String::new(),
             started_at: Utc::now(),
             completed_at: None,
@@ -552,11 +552,11 @@ mod tests {
         let storage = AuditStorage::new();
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: "e".to_string(),
-            graph_id: "g".to_string(),
+            execution_id: String::from("e"),
+            graph_id: String::from("g"),
             template_id: None,
             user_id: String::new(),
-            family_id: "fam".to_string(),
+            family_id: String::from("fam"),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,

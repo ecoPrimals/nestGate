@@ -65,7 +65,7 @@ mod tests {
     use super::*;
 
     fn manager() -> AuthTokenManager {
-        AuthTokenManager::new("test-signing-key".to_string())
+        AuthTokenManager::new(String::from("test-signing-key"))
     }
 
     #[test]

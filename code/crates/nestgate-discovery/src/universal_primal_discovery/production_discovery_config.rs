@@ -280,11 +280,11 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let config = ProductionDiscoveryConfig::new()
-            .with_service_host("API".to_string(), "api.example.com".to_string())
-            .with_service_port("API".to_string(), 8080)
-            .with_service_bind("API".to_string(), "0.0.0.0".to_string())
-            .with_resource_limit("max_connections".to_string(), 1000)
-            .with_operation_timeout("connect".to_string(), 30);
+            .with_service_host(String::from("API"), String::from("api.example.com"))
+            .with_service_port(String::from("API"), 8080)
+            .with_service_bind(String::from("API"), String::from("0.0.0.0"))
+            .with_resource_limit(String::from("max_connections"), 1000)
+            .with_operation_timeout(String::from("connect"), 30);
 
         assert_eq!(config.get_service_host("API"), Some("api.example.com"));
         assert_eq!(config.get_service_port("API"), Some(8080));
@@ -298,8 +298,8 @@ mod tests {
         let mut config = ProductionDiscoveryConfig::new();
         config
             .service_hosts
-            .insert("WEB".to_string(), "web.example.com".to_string());
-        config.service_ports.insert("WEB".to_string(), 3000);
+            .insert(String::from("WEB"), String::from("web.example.com"));
+        config.service_ports.insert(String::from("WEB"), 3000);
 
         assert_eq!(config.get_service_host("WEB"), Some("web.example.com"));
         assert_eq!(config.get_service_port("WEB"), Some(3000));
@@ -310,9 +310,9 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             ProductionDiscoveryConfig::new()
-                .with_service_host("API".to_string(), "api.example.com".to_string())
-                .with_service_port("API".to_string(), 8080)
-                .with_resource_limit("max_connections".to_string(), 1000),
+                .with_service_host(String::from("API"), String::from("api.example.com"))
+                .with_service_port(String::from("API"), 8080)
+                .with_resource_limit(String::from("max_connections"), 1000),
         );
 
         let handles: Vec<_> = (0..100)
@@ -337,13 +337,13 @@ mod tests {
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             ProductionDiscoveryConfig::new()
-                .with_service_host("API".to_string(), "api1.example.com".to_string())
-                .with_service_port("API".to_string(), 8080),
+                .with_service_host(String::from("API"), String::from("api1.example.com"))
+                .with_service_port(String::from("API"), 8080),
         );
         let config2 = Arc::new(
             ProductionDiscoveryConfig::new()
-                .with_service_host("API".to_string(), "api2.example.com".to_string())
-                .with_service_port("API".to_string(), 9090),
+                .with_service_host(String::from("API"), String::from("api2.example.com"))
+                .with_service_port(String::from("API"), 9090),
         );
 
         let handle1 = tokio::spawn({
@@ -368,9 +368,9 @@ mod tests {
         let (host1, port1) = handle1.await.unwrap();
         let (host2, port2) = handle2.await.unwrap();
 
-        assert_eq!(host1, Some("api1.example.com".to_string()));
+        assert_eq!(host1, Some(String::from("api1.example.com")));
         assert_eq!(port1, Some(8080));
-        assert_eq!(host2, Some("api2.example.com".to_string()));
+        assert_eq!(host2, Some(String::from("api2.example.com")));
         assert_eq!(port2, Some(9090));
     }
 }

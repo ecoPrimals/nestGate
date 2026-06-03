@@ -31,16 +31,16 @@ impl ProductionReadinessValidator {
             .unwrap_or_default()
             .eq("true")
         {
-            mocks.push("NESTGATE_MOCK_MODE=true (explicit mock mode)".to_string());
+            mocks.push(String::from("NESTGATE_MOCK_MODE=true (explicit mock mode)"));
         }
 
         #[cfg(target_os = "linux")]
         {
             if !proc_cpuinfo_readable() {
-                mocks.push("/proc/cpuinfo unreadable (no CPU topology signal)".to_string());
+                mocks.push(String::from("/proc/cpuinfo unreadable (no CPU topology signal)"));
             }
             if !proc_meminfo_readable() {
-                mocks.push("/proc/meminfo unreadable (no memory signal)".to_string());
+                mocks.push(String::from("/proc/meminfo unreadable (no memory signal)"));
             }
         }
 

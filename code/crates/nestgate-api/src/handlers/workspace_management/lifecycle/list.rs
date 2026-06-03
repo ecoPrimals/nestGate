@@ -80,7 +80,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("temp backup dir");
         let path = dir.path().to_str().expect("utf8 temp path");
         let env = MapEnv::from([("NESTGATE_BACKUP_DIR", path)]);
-        let Json(v) = list_workspace_backups_from_env_source(&env, Path("ws1".to_string()))
+        let Json(v) = list_workspace_backups_from_env_source(&env, Path(String::from("ws1")))
             .await
             .expect("list_workspace_backups");
         assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
@@ -98,7 +98,7 @@ mod tests {
             .await
             .expect("write fake backup");
         let env = MapEnv::from([("NESTGATE_BACKUP_DIR", path)]);
-        let Json(v) = list_workspace_backups_from_env_source(&env, Path("acme".to_string()))
+        let Json(v) = list_workspace_backups_from_env_source(&env, Path(String::from("acme")))
             .await
             .expect("list_workspace_backups");
         assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
@@ -120,7 +120,7 @@ mod tests {
 
     #[tokio::test]
     async fn list_workspace_backups_ok_with_default_backup_dir_env() {
-        let Json(v) = list_workspace_backups(Path("any-id".to_string()))
+        let Json(v) = list_workspace_backups(Path(String::from("any-id")))
             .await
             .expect("list ok");
         assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));

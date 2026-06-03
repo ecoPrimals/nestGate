@@ -84,8 +84,8 @@ mod tests {
     async fn test_create_api_key() {
         let handler = ProductionAuthHandler::new();
         let request = ApiKeyRequest {
-            user_id: "test_user".to_string(),
-            name: "Test Key".to_string(),
+            user_id: String::from("test_user"),
+            name: String::from("Test Key"),
         };
 
         let result = create_api_key(State(handler), Json(request)).await;
@@ -96,8 +96,8 @@ mod tests {
     async fn test_create_api_key_response_format() {
         let handler = ProductionAuthHandler::new();
         let request = ApiKeyRequest {
-            user_id: "testuser".to_string(),
-            name: "test_key".to_string(),
+            user_id: String::from("testuser"),
+            name: String::from("test_key"),
         };
 
         let result = create_api_key(State(handler), Json(request)).await;
@@ -112,8 +112,8 @@ mod tests {
     #[tokio::test]
     async fn test_api_key_request_validation() {
         let valid_request = ApiKeyRequest {
-            user_id: "user_123".to_string(),
-            name: "Valid Key".to_string(),
+            user_id: String::from("user_123"),
+            name: String::from("Valid Key"),
         };
         assert!(!valid_request.user_id.is_empty());
         assert!(!valid_request.name.is_empty());
@@ -157,7 +157,7 @@ mod tests {
     async fn test_validate_token_with_invalid_token() {
         let handler = ProductionAuthHandler::new();
         let request = TokenValidationRequest {
-            token: "invalid_token_12345".to_string(),
+            token: String::from("invalid_token_12345"),
         };
 
         let (status, _) = validate_token(State(handler), Json(request)).await;

@@ -45,7 +45,7 @@ impl Default for AuthConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            provider: "none".to_string(),
+            provider: String::from("none"),
             auth_settings: HashMap::new(),
         }
     }

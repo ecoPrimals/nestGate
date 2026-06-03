@@ -326,7 +326,7 @@ mod tests {
         let config = NetworkDefaultsConfig::new()
             .with_api_port(9999)
             .with_websocket_port(8888)
-            .with_hostname("custom-host".to_string());
+            .with_hostname(String::from("custom-host"));
 
         assert_eq!(config.get_api_port(), 9999);
         assert_eq!(config.get_websocket_port(), 8888);

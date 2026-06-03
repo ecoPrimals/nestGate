@@ -334,8 +334,8 @@ mod tests {
     #[tokio::test]
     async fn test_cache_invalidation() {
         let map = Arc::new(Mutex::new(HashMap::from([(
-            "TEST_PORT".to_string(),
-            "5555".to_string(),
+            String::from("TEST_PORT"),
+            String::from("5555"),
         )])));
         let env: Arc<dyn EnvSource> = Arc::new(MutableTestEnv(map.clone()));
         let helper = DiscoveryOrEnv::with_config_and_env(
@@ -351,7 +351,7 @@ mod tests {
 
         map.lock()
             .expect("lock")
-            .insert("TEST_PORT".to_string(), "3333".to_string());
+            .insert(String::from("TEST_PORT"), String::from("3333"));
 
         let endpoint2 = helper
             .endpoint_for("test", "TEST_PORT", 4444)
@@ -427,8 +427,8 @@ mod tests {
     #[tokio::test]
     async fn test_cache_expiration_via_invalidation() {
         let map = Arc::new(Mutex::new(HashMap::from([(
-            "TEST_TTL_PORT".to_string(),
-            "5000".to_string(),
+            String::from("TEST_TTL_PORT"),
+            String::from("5000"),
         )])));
         let env: Arc<dyn EnvSource> = Arc::new(MutableTestEnv(map.clone()));
         let helper = DiscoveryOrEnv::with_config_and_env(
@@ -444,7 +444,7 @@ mod tests {
 
         map.lock()
             .expect("lock")
-            .insert("TEST_TTL_PORT".to_string(), "6000".to_string());
+            .insert(String::from("TEST_TTL_PORT"), String::from("6000"));
 
         let endpoint2 = helper
             .endpoint_for("ttl_test", "TEST_TTL_PORT", 9000)
@@ -481,9 +481,9 @@ mod tests {
     #[tokio::test]
     async fn test_clear_cache_removes_all_entries() {
         let map = Arc::new(Mutex::new(HashMap::from([
-            ("SERVICE1_PORT".to_string(), "5001".to_string()),
-            ("SERVICE2_PORT".to_string(), "5002".to_string()),
-            ("SERVICE3_PORT".to_string(), "5003".to_string()),
+            (String::from("SERVICE1_PORT"), String::from("5001")),
+            (String::from("SERVICE2_PORT"), String::from("5002")),
+            (String::from("SERVICE3_PORT"), String::from("5003")),
         ])));
         let env: Arc<dyn EnvSource> = Arc::new(MutableTestEnv(map.clone()));
         let helper = DiscoveryOrEnv::with_config_and_env(
@@ -500,9 +500,9 @@ mod tests {
 
         {
             let mut g = map.lock().expect("lock");
-            g.insert("SERVICE1_PORT".to_string(), "6001".to_string());
-            g.insert("SERVICE2_PORT".to_string(), "6002".to_string());
-            g.insert("SERVICE3_PORT".to_string(), "6003".to_string());
+            g.insert(String::from("SERVICE1_PORT"), String::from("6001"));
+            g.insert(String::from("SERVICE2_PORT"), String::from("6002"));
+            g.insert(String::from("SERVICE3_PORT"), String::from("6003"));
         }
 
         let e1 = helper

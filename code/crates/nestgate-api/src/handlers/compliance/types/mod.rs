@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_regulatory_type_custom() {
-        let custom = RegulatoryType::Custom("Custom Framework".to_string());
+        let custom = RegulatoryType::Custom(String::from("Custom Framework"));
         let json = serde_json::to_string(&custom).expect("String operation failed");
         let deserialized =
             serde_json::from_str::<RegulatoryType>(&json).expect("Failed to convert from string");
@@ -107,9 +107,9 @@ mod tests {
     fn test_time_restriction_creation() {
         let restriction = TimeRestriction {
             day_of_week: 1,
-            start_time: "09:00".to_string(),
-            end_time: "17:00".to_string(),
-            timezone: "UTC".to_string(),
+            start_time: String::from("09:00"),
+            end_time: String::from("17:00"),
+            timezone: String::from("UTC"),
         };
 
         assert_eq!(restriction.day_of_week, 1);
@@ -120,9 +120,9 @@ mod tests {
     #[test]
     fn test_compliance_control_creation() {
         let control = ComplianceControl {
-            id: "ctrl1".to_string(),
-            name: "Access Control".to_string(),
-            description: "Control for data access".to_string(),
+            id: String::from("ctrl1"),
+            name: String::from("Access Control"),
+            description: String::from("Control for data access"),
             control_type: ControlType::Preventive,
             implementation_status: ImplementationStatus::FullyImplemented,
             last_assessment: Some(Utc::now()),
@@ -136,8 +136,8 @@ mod tests {
     #[test]
     fn test_regulatory_framework_creation() {
         let framework = RegulatoryFramework {
-            id: "gdpr1".to_string(),
-            name: "GDPR Compliance".to_string(),
+            id: String::from("gdpr1"),
+            name: String::from("GDPR Compliance"),
             framework_type: RegulatoryType::GDPR,
             required_controls: vec![],
             audit_frequency_days: 90,

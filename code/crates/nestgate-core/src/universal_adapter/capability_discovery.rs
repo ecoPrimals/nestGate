@@ -219,7 +219,7 @@ impl CapabilityDiscovery {
         // Discover networking capability
         if let Some(endpoint) = config.networking_endpoint() {
             self.register(
-                "networking-env".to_string(),
+                String::from("networking-env"),
                 CapabilityProvider {
                     endpoint: endpoint.to_string(),
                     capabilities: vec![
@@ -237,7 +237,7 @@ impl CapabilityDiscovery {
         // Discover security capability
         if let Some(endpoint) = config.security_endpoint() {
             self.register(
-                "security-env".to_string(),
+                String::from("security-env"),
                 CapabilityProvider {
                     endpoint: endpoint.to_string(),
                     capabilities: vec![
@@ -291,7 +291,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider)
+            .register(String::from("provider-1"), provider)
             .await
             .expect("Failed to register provider");
 
@@ -336,11 +336,11 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider1)
+            .register(String::from("provider-1"), provider1)
             .await
             .expect("Failed to register provider 1");
         discovery
-            .register("provider-2".to_string(), provider2)
+            .register(String::from("provider-2"), provider2)
             .await
             .expect("Failed to register provider 2");
 
@@ -381,7 +381,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider)
+            .register(String::from("provider-1"), provider)
             .await
             .expect("Failed to register provider");
 
@@ -418,7 +418,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider)
+            .register(String::from("provider-1"), provider)
             .await
             .expect("Failed to register provider");
 
@@ -435,8 +435,8 @@ mod tests {
         let discovery = CapabilityDiscovery::new();
 
         let mut metadata = HashMap::new();
-        metadata.insert("version".to_string(), "1.0.0".to_string());
-        metadata.insert("region".to_string(), "us-west".to_string());
+        metadata.insert(String::from("version"), String::from("1.0.0"));
+        metadata.insert(String::from("region"), String::from("us-west"));
 
         let provider = CapabilityProvider {
             endpoint: test_endpoint(8080),
@@ -446,7 +446,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider)
+            .register(String::from("provider-1"), provider)
             .await
             .expect("Failed to register provider");
 
@@ -478,11 +478,11 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider1)
+            .register(String::from("provider-1"), provider1)
             .await
             .expect("Failed to register provider 1");
         discovery
-            .register("provider-2".to_string(), provider2)
+            .register(String::from("provider-2"), provider2)
             .await
             .expect("Failed to register provider 2");
 
@@ -543,7 +543,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider)
+            .register(String::from("provider-1"), provider)
             .await
             .expect("Failed to register provider");
 
@@ -568,7 +568,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider1)
+            .register(String::from("provider-1"), provider1)
             .await
             .expect("Failed to register first provider");
 
@@ -581,7 +581,7 @@ mod tests {
         };
 
         discovery
-            .register("provider-1".to_string(), provider2)
+            .register(String::from("provider-1"), provider2)
             .await
             .expect("Failed to register second provider");
 

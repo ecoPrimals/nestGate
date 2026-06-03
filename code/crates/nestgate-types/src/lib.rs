@@ -47,7 +47,7 @@ mod error_mod_coverage_tests {
         assert_eq!(ok.to_canonical().expect("ok"), 7);
 
         let err: std::result::Result<(), &str> = Err("e");
-        let mapped = err.with_context(|| "ctx".to_string());
+        let mapped = err.with_context(|| String::from("ctx"));
         assert!(mapped.is_err());
     }
 

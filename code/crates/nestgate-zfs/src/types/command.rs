@@ -126,10 +126,10 @@ mod tests {
 
     #[test]
     fn command_result_constructors() {
-        let ok = CommandResult::success("out".to_string());
+        let ok = CommandResult::success(String::from("out"));
         assert!(ok.is_success());
         assert!(!ok.is_failure());
-        let bad = CommandResult::failure("e".to_string(), Some(1));
+        let bad = CommandResult::failure(String::from("e"), Some(1));
         assert!(bad.is_failure());
         assert!(!bad.is_success());
     }

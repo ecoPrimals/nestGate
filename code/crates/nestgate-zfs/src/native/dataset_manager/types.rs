@@ -19,13 +19,13 @@ use serde::{Deserialize, Serialize};
 /// use nestgate_core::canonical_types::StorageTier;
 ///
 /// let options = DatasetCreateOptions {
-///     compression: Some("lz4".to_string()),
+///     compression: Some(String::from("lz4")),
 ///     deduplication: Some(false),
-///     encryption: Some("aes-256-gcm".to_string()),
-///     mount_point: Some("/mnt/data".to_string()),
+///     encryption: Some(String::from("aes-256-gcm")),
+///     mount_point: Some(String::from("/mnt/data")),
 ///     quota: Some(1_000_000_000),
 ///     reservation: Some(500_000_000),
-///     record_size: Some("128K".to_string()),
+///     record_size: Some(String::from("128K")),
 ///     storage_tier: Some(StorageTier::Hot),
 /// };
 /// ```
@@ -95,13 +95,13 @@ mod tests {
     #[test]
     fn test_dataset_create_options_custom() {
         let options = DatasetCreateOptions {
-            compression: Some("zstd".to_string()),
+            compression: Some(String::from("zstd")),
             deduplication: Some(true),
-            encryption: Some("aes-256-gcm".to_string()),
-            mount_point: Some("/mnt/data".to_string()),
+            encryption: Some(String::from("aes-256-gcm")),
+            mount_point: Some(String::from("/mnt/data")),
             quota: Some(1_073_741_824),     // 1GB
             reservation: Some(536_870_912), // 512MB
-            record_size: Some("256K".to_string()),
+            record_size: Some(String::from("256K")),
             storage_tier: Some(StorageTier::Cold),
         };
 
@@ -156,13 +156,13 @@ mod tests {
     #[test]
     fn test_dataset_create_options_serialization() {
         let options = DatasetCreateOptions {
-            compression: Some("lz4".to_string()),
+            compression: Some(String::from("lz4")),
             deduplication: Some(false),
             encryption: None,
-            mount_point: Some("/data".to_string()),
+            mount_point: Some(String::from("/data")),
             quota: Some(2_147_483_648),
             reservation: None,
-            record_size: Some("128K".to_string()),
+            record_size: Some(String::from("128K")),
             storage_tier: Some(StorageTier::Warm),
         };
 
@@ -330,13 +330,13 @@ mod tests {
     #[test]
     fn test_dataset_create_options_with_all_fields() {
         let options = DatasetCreateOptions {
-            compression: Some("zstd".to_string()),
+            compression: Some(String::from("zstd")),
             deduplication: Some(true),
-            encryption: Some("aes-256-gcm".to_string()),
-            mount_point: Some("/mnt/secure".to_string()),
+            encryption: Some(String::from("aes-256-gcm")),
+            mount_point: Some(String::from("/mnt/secure")),
             quota: Some(5_368_709_120),       // 5GB
             reservation: Some(1_073_741_824), // 1GB
-            record_size: Some("256K".to_string()),
+            record_size: Some(String::from("256K")),
             storage_tier: Some(StorageTier::Hot),
         };
 
@@ -367,7 +367,7 @@ mod tests {
     #[test]
     fn test_dataset_create_options_partial_configuration() {
         let options = DatasetCreateOptions {
-            compression: Some("lz4".to_string()),
+            compression: Some(String::from("lz4")),
             quota: Some(2_147_483_648),
             storage_tier: Some(StorageTier::Warm),
             ..Default::default()

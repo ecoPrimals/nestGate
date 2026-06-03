@@ -240,11 +240,11 @@ impl StorageTraitMigration {
     #[must_use]
     pub fn get_migration_benefits() -> Vec<String> {
         vec![
-            "30-50% throughput improvement through native async".to_string(),
-            "25-35% latency reduction by eliminating Future boxing".to_string(),
-            "Compile-time operation limits prevent resource exhaustion".to_string(),
-            "Zero-allocation trait dispatch".to_string(),
-            "Monomorphization enables CPU-specific optimizations".to_string(),
+            String::from("30-50% throughput improvement through native async"),
+            String::from("25-35% latency reduction by eliminating Future boxing"),
+            String::from("Compile-time operation limits prevent resource exhaustion"),
+            String::from("Zero-allocation trait dispatch"),
+            String::from("Monomorphization enables CPU-specific optimizations"),
         ]
     }
 }

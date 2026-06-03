@@ -124,6 +124,6 @@ pub(super) fn gather_socket_search_dirs_from_env(env: &(impl EnvSource + ?Sized)
         dirs.push(xdg_default);
     }
 
-    dirs.push("/tmp".to_string());
+    dirs.push(String::from("/tmp"));
     dirs
 }

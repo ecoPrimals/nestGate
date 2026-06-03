@@ -54,7 +54,7 @@
 //! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! // Environment-driven: $NESTGATE_RPC_ADDR or default
 //! let rpc_addr = std::env::var("NESTGATE_RPC_ADDR")
-//!     .unwrap_or_else(|_| "tarpc://localhost:8091".to_string());
+//!     .unwrap_or_else(|_| String::from("tarpc://localhost:8091"));
 //! let client = NestGateRpcClient::new(&rpc_addr)?;
 //! let health = client.health().await?;
 //! println!("Service status: {}", health.status);
@@ -80,6 +80,7 @@ pub mod socket_config;
 pub mod storage_backend;
 pub mod storage_encryption;
 pub(crate) mod storage_stream;
+pub(crate) mod content_stream;
 // Legacy primal-specific registration removed in v2.3.0; use capability-based IPC
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
 pub(crate) mod model_cache_handlers;

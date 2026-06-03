@@ -272,27 +272,27 @@ mod round5_rpc_types_tests {
     #[test]
     fn round5_rpc_error_display_variants() {
         assert!(
-            RpcError::ConnectionFailed("x".to_string())
+            RpcError::ConnectionFailed(String::from("x"))
                 .to_string()
                 .contains("Connection failed")
         );
         assert!(
-            RpcError::Timeout("t".to_string())
+            RpcError::Timeout(String::from("t"))
                 .to_string()
                 .contains("timeout")
         );
         assert!(
-            RpcError::InvalidConfiguration("c".to_string())
+            RpcError::InvalidConfiguration(String::from("c"))
                 .to_string()
                 .contains("Invalid configuration")
         );
         assert!(
-            RpcError::StreamError("s".to_string())
+            RpcError::StreamError(String::from("s"))
                 .to_string()
                 .contains("Stream error")
         );
         assert!(
-            RpcError::Internal("i".to_string())
+            RpcError::Internal(String::from("i"))
                 .to_string()
                 .contains("Internal error")
         );

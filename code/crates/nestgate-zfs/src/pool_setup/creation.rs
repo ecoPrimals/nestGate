@@ -140,7 +140,7 @@ impl PoolCreator {
         Ok(PoolSetupResult {
             pool_name: config.pool_name.clone(),
             success: true,
-            message: "Pool created successfully".to_string(),
+            message: String::from("Pool created successfully"),
             devices_used: config.devices.clone(),
             topology: config.topology.clone(),
         })
@@ -178,7 +178,7 @@ impl PoolCreator {
         Ok(PoolSetupResult {
             pool_name: config.pool_name.clone(),
             success: true,
-            message: "Dry run completed successfully - pool would be created".to_string(),
+            message: String::from("Dry run completed successfully - pool would be created"),
             devices_used: config.devices.clone(),
             topology: config.topology.clone(),
         })
@@ -206,7 +206,7 @@ impl PoolCreator {
             return Ok(PoolSetupResult {
                 pool_name: pool_name.to_string(),
                 success: true,
-                message: "Dry run - pool would be imported".to_string(),
+                message: String::from("Dry run - pool would be imported"),
                 devices_used: vec![],
                 topology: PoolTopology::Single, // Unknown topology
             });
@@ -235,7 +235,7 @@ impl PoolCreator {
         Ok(PoolSetupResult {
             pool_name: pool_name.to_string(),
             success: true,
-            message: "Pool imported successfully".to_string(),
+            message: String::from("Pool imported successfully"),
             devices_used: vec![], // Would need to query for actual devices
             topology: PoolTopology::Single, // Would need to query for actual topology
         })
@@ -322,8 +322,8 @@ mod tests {
     async fn test_dry_run_pool_creation() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "test-pool".to_string(),
-            devices: vec!["/dev/sdb".to_string()],
+            pool_name: String::from("test-pool"),
+            devices: vec![String::from("/dev/sdb")],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),
@@ -345,7 +345,7 @@ mod tests {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
             pool_name: String::new(),
-            devices: vec!["/dev/sdb".to_string()],
+            devices: vec![String::from("/dev/sdb")],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),
@@ -362,7 +362,7 @@ mod tests {
     async fn test_no_devices() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "test-pool".to_string(),
+            pool_name: String::from("test-pool"),
             devices: vec![],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
@@ -403,8 +403,8 @@ mod tests {
     async fn dry_run_mirror_topology_two_devices_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "mirror-pool".to_string(),
-            devices: vec!["/dev/sda".to_string(), "/dev/sdb".to_string()],
+            pool_name: String::from("mirror-pool"),
+            devices: vec![String::from("/dev/sda"), String::from("/dev/sdb")],
             topology: PoolTopology::Mirror,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),
@@ -422,11 +422,11 @@ mod tests {
     async fn dry_run_raidz1_topology_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "raid-pool".to_string(),
+            pool_name: String::from("raid-pool"),
             devices: vec![
-                "/dev/sda".to_string(),
-                "/dev/sdb".to_string(),
-                "/dev/sdc".to_string(),
+                String::from("/dev/sda"),
+                String::from("/dev/sdb"),
+                String::from("/dev/sdc"),
             ],
             topology: PoolTopology::RaidZ1,
             properties: HashMap::new(),
@@ -444,12 +444,12 @@ mod tests {
     async fn dry_run_raidz2_topology_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "raidz2-pool".to_string(),
+            pool_name: String::from("raidz2-pool"),
             devices: vec![
-                "/dev/sda".to_string(),
-                "/dev/sdb".to_string(),
-                "/dev/sdc".to_string(),
-                "/dev/sdd".to_string(),
+                String::from("/dev/sda"),
+                String::from("/dev/sdb"),
+                String::from("/dev/sdc"),
+                String::from("/dev/sdd"),
             ],
             topology: PoolTopology::RaidZ2,
             properties: HashMap::new(),
@@ -467,13 +467,13 @@ mod tests {
     async fn dry_run_raidz3_topology_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "raidz3-pool".to_string(),
+            pool_name: String::from("raidz3-pool"),
             devices: vec![
-                "/dev/sda".to_string(),
-                "/dev/sdb".to_string(),
-                "/dev/sdc".to_string(),
-                "/dev/sdd".to_string(),
-                "/dev/sde".to_string(),
+                String::from("/dev/sda"),
+                String::from("/dev/sdb"),
+                String::from("/dev/sdc"),
+                String::from("/dev/sdd"),
+                String::from("/dev/sde"),
             ],
             topology: PoolTopology::RaidZ3,
             properties: HashMap::new(),
@@ -493,7 +493,7 @@ mod tests {
         let creator = PoolCreator::new_dry_run();
         let ghost = "/tmp/nestgate-no-such-block-device-000";
         let config = PoolSetupConfig {
-            pool_name: "ghost-pool".to_string(),
+            pool_name: String::from("ghost-pool"),
             devices: vec![ghost.to_string()],
             topology: PoolTopology::Single,
             properties: HashMap::new(),

@@ -357,7 +357,7 @@ impl RuntimeDiscovery {
     fn select_best_primal(capabilities: &[CapabilityDescriptor]) -> Result<PrimalConnection> {
         if capabilities.is_empty() {
             return Err(NestGateError::internal(
-                "No primals discovered for connection".to_string(),
+                String::from("No primals discovered for connection"),
             ));
         }
 
@@ -462,18 +462,18 @@ mod tests {
     #[test]
     fn test_primal_connection_methods() {
         let mut metadata = std::collections::HashMap::new();
-        metadata.insert("key1".to_string(), "value1".to_string());
+        metadata.insert(String::from("key1"), String::from("value1"));
 
         let capability = CapabilityDescriptor {
-            id: "test-id".to_string(),
+            id: String::from("test-id"),
             capability_type: CapabilityType::Storage,
-            endpoint: Some("http://localhost:8080".to_string()),
+            endpoint: Some(String::from("http://localhost:8080")),
             metadata: metadata.clone(),
             sovereignty_compliant: true,
         };
 
         let connection = PrimalConnection {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: String::from("http://localhost:8080"),
             capability: capability.clone(),
         };
 
@@ -481,7 +481,7 @@ mod tests {
         assert!(connection.is_sovereignty_compliant());
         assert_eq!(connection.endpoint, "http://localhost:8080");
         assert_eq!(connection.capability_type(), &CapabilityType::Storage);
-        assert_eq!(connection.metadata("key1"), Some(&"value1".to_string()));
+        assert_eq!(connection.metadata("key1"), Some(&String::from("value1")));
         assert_eq!(connection.metadata("absent"), None);
     }
 

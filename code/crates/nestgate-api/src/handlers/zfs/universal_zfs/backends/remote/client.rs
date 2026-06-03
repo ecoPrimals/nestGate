@@ -31,13 +31,13 @@ impl HttpClient {
 
     fn removed() -> UniversalZfsResult<serde_json::Value> {
         Err(UniversalZfsError::RemoteError(
-            "HTTP removed — use Unix sockets via the orchestration gateway".to_string(),
+            String::from("HTTP removed — use Unix sockets via the orchestration gateway"),
         ))
     }
 
     pub async fn health_check(&self) -> UniversalZfsResult<()> {
         Err(UniversalZfsError::RemoteError(
-            "HTTP removed — use Unix sockets via the orchestration gateway".to_string(),
+            String::from("HTTP removed — use Unix sockets via the orchestration gateway"),
         ))
     }
 

@@ -26,11 +26,11 @@ impl Default for TracingConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            level: "info".to_string(),
+            level: String::from("info"),
             json_format: false,
             distributed_tracing: false,
             service_name: nestgate_config::constants::system::DEFAULT_SERVICE_NAME.to_string(),
-            environment: "development".to_string(),
+            environment: String::from("development"),
         }
     }
 }
@@ -120,7 +120,7 @@ mod tests {
         }
         let mut json_cfg = TracingConfig::default();
         json_cfg.json_format = true;
-        json_cfg.level = "debug".to_string();
+        json_cfg.level = String::from("debug");
         let _ = init_tracing(&json_cfg);
     }
 }

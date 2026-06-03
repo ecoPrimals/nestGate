@@ -83,8 +83,8 @@ impl CanonicalPerformanceConfig {
         // Validate concurrency configuration
         if self.concurrency.max_concurrent == 0 {
             return Err(NestGateError::configuration_error_detailed(
-                "concurrency.max_concurrent".to_string(),
-                "Maximum concurrent operations cannot be zero".to_string(),
+                String::from("concurrency.max_concurrent"),
+                String::from("Maximum concurrent operations cannot be zero"),
                 Some("0".into()),
                 Some(">0".into()),
                 true,

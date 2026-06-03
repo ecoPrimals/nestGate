@@ -109,13 +109,13 @@ fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
     }
 
     // Analyze file types (simplified - in production would scan actual files)
-    file_types.insert("text".to_string(), 0.3);
-    file_types.insert("binary".to_string(), 0.4);
-    file_types.insert("compressed".to_string(), 0.2);
-    file_types.insert("other".to_string(), 0.1);
+    file_types.insert(String::from("text"), 0.3);
+    file_types.insert(String::from("binary"), 0.4);
+    file_types.insert(String::from("compressed"), 0.2);
+    file_types.insert(String::from("other"), 0.1);
 
     StoragePattern {
-        file_size_distribution: "mixed".to_string(),
+        file_size_distribution: String::from("mixed"),
         file_type_distribution: file_types,
         duplicate_ratio,
         sequential_vs_random: 0.7, // 70% sequential access
@@ -149,9 +149,9 @@ fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<
         )),
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some("fixed".to_string())
+            Some(String::from("fixed"))
         }
-        Err(_e) => Some("Compression command failed".to_string()),
+        Err(_e) => Some(String::from("Compression command failed")),
     }
 }
 
@@ -181,9 +181,9 @@ fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<S
         )),
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some("fixed".to_string())
+            Some(String::from("fixed"))
         }
-        Err(_e) => Some("Recordsize command failed".to_string()),
+        Err(_e) => Some(String::from("Recordsize command failed")),
     }
 }
 
@@ -217,7 +217,7 @@ fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -> Opti
                 "Cache settings optimized: primary={primarycache}, secondary={secondarycache}"
             ))
         }
-        _ => Some("Cache optimization partially failed".to_string()),
+        _ => Some(String::from("Cache optimization partially failed")),
     }
 }
 
@@ -230,13 +230,13 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 
     match result {
         Ok(output) if output.status.success() => {
-            Some("Deduplication enabled to reduce storage usage".to_string())
+            Some(String::from("Deduplication enabled to reduce storage usage"))
         }
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some("fixed".to_string())
+            Some(String::from("fixed"))
         }
-        Err(_e) => Some("Deduplication command failed".to_string()),
+        Err(_e) => Some(String::from("Deduplication command failed")),
     }
 }
 

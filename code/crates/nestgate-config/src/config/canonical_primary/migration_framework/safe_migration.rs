@@ -37,13 +37,13 @@ impl SafeConfigMigration {
             backup: None,
             validation_rules: vec![
                 ValidationRule {
-                    name: "required_fields".to_string(),
-                    description: "Validate required fields are present".to_string(),
+                    name: String::from("required_fields"),
+                    description: String::from("Validate required fields are present"),
                     validator: Self::validate_required_fields,
                 },
                 ValidationRule {
-                    name: "value_ranges".to_string(),
-                    description: "Validate values are within acceptable ranges".to_string(),
+                    name: String::from("value_ranges"),
+                    description: String::from("Validate values are within acceptable ranges"),
                     validator: Self::validatevalue_ranges,
                 },
             ],
@@ -66,8 +66,8 @@ impl SafeConfigMigration {
             Ok(())
         } else {
             Err(NestGateError::configuration_error_detailed(
-                "backup".to_string(),
-                "No backup available for rollback".to_string(),
+                String::from("backup"),
+                String::from("No backup available for rollback"),
                 None,
                 Some("Valid backup".into()),
                 false,
@@ -97,14 +97,14 @@ impl SafeConfigMigration {
         }
 
         Ok(MigrationReport {
-            source_type: "Unknown".to_string(),
+            source_type: String::from("Unknown"),
             started_at: SystemTime::now(),
             current_phase: if errors.is_empty() {
                 MigrationPhase::Completed
             } else {
                 MigrationPhase::Failed
             },
-            completed_steps: vec!["Validation completed".to_string()],
+            completed_steps: vec![String::from("Validation completed")],
             failed_steps: errors,
             warnings,
             progress_percentage: 100,

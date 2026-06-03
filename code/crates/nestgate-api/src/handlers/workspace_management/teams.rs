@@ -72,17 +72,17 @@ pub async fn create_team(
 pub fn get_teams() -> Result<Json<Vec<TeamInfo>>, StatusCode> {
     let teams = vec![
         TeamInfo {
-            id: "team_001".to_string(),
-            name: "Development Team".to_string(),
-            description: Some("Core development team".to_string()),
-            members: vec!["alice".to_string(), "bob".to_string()],
+            id: String::from("team_001"),
+            name: String::from("Development Team"),
+            description: Some(String::from("Core development team")),
+            members: vec![String::from("alice"), String::from("bob")],
             created_at: std::time::SystemTime::now(),
         },
         TeamInfo {
-            id: "team_002".to_string(),
-            name: "Operations Team".to_string(),
-            description: Some("Infrastructure and operations".to_string()),
-            members: vec!["charlie".to_string(), "diana".to_string()],
+            id: String::from("team_002"),
+            name: String::from("Operations Team"),
+            description: Some(String::from("Infrastructure and operations")),
+            members: vec![String::from("charlie"), String::from("diana")],
             created_at: std::time::SystemTime::now(),
         },
     ];

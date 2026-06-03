@@ -174,7 +174,7 @@ mod service_registry_edge_cases {
     #[test]
     fn test_single_service() {
         let mut registry = HashMap::new();
-        registry.insert("service1".to_string(), vec!["endpoint1".to_string()]);
+        registry.insert(String::from("service1"), vec![String::from("endpoint1")]);
         assert_eq!(registry.len(), 1);
     }
 
@@ -191,22 +191,22 @@ mod service_registry_edge_cases {
     fn test_service_with_multiple_endpoints() {
         let mut registry = HashMap::new();
         let endpoints: Vec<String> = (0..10).map(|i| format!("endpoint{}", i)).collect();
-        registry.insert("service".to_string(), endpoints);
+        registry.insert(String::from("service"), endpoints);
         assert_eq!(registry.get("service").map(|v| v.len()), Some(10));
     }
 
     #[test]
     fn test_registry_updates() {
         let mut registry = HashMap::new();
-        registry.insert("service".to_string(), vec!["endpoint1".to_string()]);
-        registry.insert("service".to_string(), vec!["endpoint2".to_string()]);
+        registry.insert(String::from("service"), vec![String::from("endpoint1")]);
+        registry.insert(String::from("service"), vec![String::from("endpoint2")]);
         assert_eq!(registry.get("service").map(|v| v.len()), Some(1));
     }
 
     #[test]
     fn test_registry_removal() {
         let mut registry = HashMap::new();
-        registry.insert("service".to_string(), vec!["endpoint".to_string()]);
+        registry.insert(String::from("service"), vec![String::from("endpoint")]);
         let removed = registry.remove("service");
         assert!(removed.is_some());
         assert!(registry.is_empty());
@@ -222,7 +222,7 @@ mod service_concurrent_operations {
     #[test]
     fn test_concurrent_registry_reads() {
         let mut registry = HashMap::new();
-        registry.insert("service".to_string(), vec!["endpoint".to_string()]);
+        registry.insert(String::from("service"), vec![String::from("endpoint")]);
         let registry = Arc::new(registry);
 
         let mut handles = vec![];
@@ -294,7 +294,7 @@ mod service_performance_tests {
     fn test_large_endpoint_lists() {
         let mut registry = HashMap::new();
         let endpoints: Vec<String> = (0..1000).map(|i| format!("endpoint{}", i)).collect();
-        registry.insert("service".to_string(), endpoints);
+        registry.insert(String::from("service"), endpoints);
 
         assert_eq!(registry.get("service").map(|v| v.len()), Some(1000));
     }

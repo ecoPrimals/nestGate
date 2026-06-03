@@ -40,10 +40,10 @@ impl StorageConfig {
     pub fn from_environment() -> Result<Self> {
         Ok(Self {
             base_path: env::var("NESTGATE_STORAGE_PATH")
-                .unwrap_or_else(|_| "./data".to_string())
+                .unwrap_or_else(|_| String::from("./data"))
                 .into(),
             backend: env::var("NESTGATE_STORAGE_BACKEND")
-                .unwrap_or_else(|_| "filesystem".to_string()),
+                .unwrap_or_else(|_| String::from("filesystem")),
             quota_gb: env::var("NESTGATE_STORAGE_QUOTA_GB")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -60,7 +60,7 @@ impl Default for StorageConfig {
     fn default() -> Self {
         Self {
             base_path: PathBuf::from("./data"),
-            backend: "filesystem".to_string(),
+            backend: String::from("filesystem"),
             quota_gb: 100,
             retention_days: 30,
         }

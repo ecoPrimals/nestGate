@@ -26,44 +26,44 @@ impl NativeZfsDatasetManager {
 
         // Set compression
         if let Some(compression) = &options.compression {
-            properties.insert("compression".to_string(), compression.clone());
+            properties.insert(String::from("compression"), compression.clone());
         }
 
         // Set deduplication
         if let Some(dedup) = options.deduplication {
             properties.insert(
-                "dedup".to_string(),
+                String::from("dedup"),
                 if dedup {
-                    "on".to_string()
+                    String::from("on")
                 } else {
-                    "off".to_string()
+                    String::from("off")
                 },
             );
         }
 
         // Set encryption
         if let Some(encryption) = &options.encryption {
-            properties.insert("encryption".to_string(), encryption.clone());
+            properties.insert(String::from("encryption"), encryption.clone());
         }
 
         // Set mount point
         if let Some(mount_point) = &options.mount_point {
-            properties.insert("mountpoint".to_string(), mount_point.clone());
+            properties.insert(String::from("mountpoint"), mount_point.clone());
         }
 
         // Set quota
         if let Some(quota) = options.quota {
-            properties.insert("quota".to_string(), quota.to_string());
+            properties.insert(String::from("quota"), quota.to_string());
         }
 
         // Set reservation
         if let Some(reservation) = options.reservation {
-            properties.insert("reservation".to_string(), reservation.to_string());
+            properties.insert(String::from("reservation"), reservation.to_string());
         }
 
         // Set record size
         if let Some(record_size) = &options.record_size {
-            properties.insert("recordsize".to_string(), record_size.clone());
+            properties.insert(String::from("recordsize"), record_size.clone());
         }
 
         // Create the dataset

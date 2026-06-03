@@ -131,7 +131,7 @@ impl UnifiedRpcManager {
                     request_id: request.id,
                     success: false,
                     data: None,
-                    error: Some("Service execution failed".to_string()),
+                    error: Some(String::from("Service execution failed")),
                     _metadata: HashMap::new(),
                     timestamp: chrono::Utc::now(),
                     metrics: ResponseMetrics {
@@ -233,7 +233,7 @@ impl UnifiedRpcManager {
         info!("Initializing JSON-RPC service connection to: {}", endpoint);
         if endpoint.is_empty() {
             return Err(RpcError::InvalidConfiguration(
-                "JSON-RPC address cannot be empty".to_string(),
+                String::from("JSON-RPC address cannot be empty"),
             ));
         }
         if endpoint.starts_with("http") {

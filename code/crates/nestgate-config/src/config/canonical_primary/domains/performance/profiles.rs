@@ -45,17 +45,17 @@ mod tests {
     fn optimization_profiles_serde_roundtrip() {
         let mut profiles = HashMap::new();
         profiles.insert(
-            "p1".to_string(),
+            String::from("p1"),
             OptimizationProfile {
-                name: "p1".to_string(),
-                description: "d".to_string(),
+                name: String::from("p1"),
+                description: String::from("d"),
                 cpu_override: None,
                 memory_override: None,
                 io_override: None,
             },
         );
         let o = OptimizationProfiles {
-            active_profile: "p1".to_string(),
+            active_profile: String::from("p1"),
             profiles,
         };
         let s = serde_json::to_string(&o).expect("to_string");

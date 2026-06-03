@@ -52,7 +52,7 @@ impl NetworkingCapability {
         // Port is provided by the discovered service endpoint
         Ok(LoadBalanceResponse {
             chosen_endpoint: provider.endpoint.clone(),
-            algorithm_used: "discovered-provider".to_string(),
+            algorithm_used: String::from("discovered-provider"),
         })
     }
 

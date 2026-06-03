@@ -24,7 +24,7 @@ fn parse_http_url(url: &str) -> Result<ParsedUrl> {
     })?;
 
     let (host_port, path_part) = stripped.split_once('/').map_or_else(
-        || (stripped, "/".to_string()),
+        || (stripped, String::from("/")),
         |(hp, p)| (hp, format!("/{p}")),
     );
 
@@ -350,7 +350,7 @@ mod tests {
         let keys = http_list_prefix(&(base.clone() + "keys"), t)
             .await
             .expect("list");
-        assert_eq!(keys, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(keys, vec![String::from("a"), String::from("b")]);
 
         let err = http_list_prefix(&(base.clone() + "bin"), t)
             .await

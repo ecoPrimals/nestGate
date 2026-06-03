@@ -67,15 +67,14 @@ fn capability_registry_register_and_find() {
 }
 
 #[tokio::test]
-async fn capability_router_routes_local_storage_create_dataset() {
+async fn capability_router_rejects_storage_to_ipc_transport() {
     let router = CapabilityRouter::default();
     let req = CapabilityRequest::new(CapabilityCategory::Storage, "create_dataset");
-    let resp = router
+    let err = router
         .route_capability_request(req)
         .await
-        .expect("local route");
-    assert!(resp.success);
-    assert!(resp.data.get("dataset_id").is_some());
+        .unwrap_err();
+    assert!(err.to_string().contains("JSON-RPC transport"));
 }
 
 #[tokio::test]
@@ -121,15 +120,14 @@ fn all_capability_categories_map_to_primal() {
 }
 
 #[tokio::test]
-async fn capability_router_local_list_datasets() {
+async fn capability_router_rejects_list_datasets_to_ipc() {
     let router = CapabilityRouter::default();
     let req = CapabilityRequest::new(CapabilityCategory::Storage, "list_datasets");
-    let resp = router
+    let err = router
         .route_capability_request(req)
         .await
-        .expect("list_datasets");
-    assert!(resp.success);
-    assert!(resp.data.get("datasets").is_some());
+        .unwrap_err();
+    assert!(err.to_string().contains("JSON-RPC transport"));
 }
 
 #[tokio::test]
@@ -207,7 +205,7 @@ fn capability_request_optional_and_timeout() {
 }
 
 #[tokio::test]
-async fn r6_capability_router_concurrent_list_datasets() {
+async fn r6_capability_router_concurrent_rejects_to_ipc() {
     let router = CapabilityRouter::default();
     let (a, b, c) = tokio::join!(
         router.route_capability_request(CapabilityRequest::new(
@@ -223,9 +221,9 @@ async fn r6_capability_router_concurrent_list_datasets() {
             "create_dataset",
         )),
     );
-    assert!(a.expect("a").success);
-    assert!(b.expect("b").success);
-    assert!(c.expect("c").success);
+    assert!(a.unwrap_err().to_string().contains("JSON-RPC"));
+    assert!(b.unwrap_err().to_string().contains("JSON-RPC"));
+    assert!(c.unwrap_err().to_string().contains("JSON-RPC"));
 }
 
 #[test]

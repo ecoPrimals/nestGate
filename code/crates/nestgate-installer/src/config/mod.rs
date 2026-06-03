@@ -33,8 +33,8 @@ impl Default for InstallerConfig {
     fn default() -> Self {
         Self {
             base_config: NestGateCanonicalConfig::default(),
-            installation_path: "/opt/nestgate".to_string(),
-            environment: "development".to_string(),
+            installation_path: String::from("/opt/nestgate"),
+            environment: String::from("development"),
         }
     }
 }
@@ -45,7 +45,7 @@ impl InstallerConfig {
     pub fn development() -> Self {
         let mut config = Self::default();
         config.base_config.system.debug_mode = true; // Use available system field instead
-        config.environment = "development".to_string();
+        config.environment = String::from("development");
         config
     }
 
@@ -53,8 +53,8 @@ impl InstallerConfig {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            environment: "production".to_string(),
-            installation_path: "/opt/nestgate".to_string(),
+            environment: String::from("production"),
+            installation_path: String::from("/opt/nestgate"),
             base_config: {
                 let mut config = NestGateCanonicalConfig::default();
                 config.system.debug_mode = false;
@@ -105,8 +105,8 @@ pub mod installer_config_factory {
         // Installerconfig
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
-            installation_path: "/opt/nestgate".to_string(),
-            environment: "development".to_string(),
+            installation_path: String::from("/opt/nestgate"),
+            environment: String::from("development"),
         }
     }
 
@@ -115,8 +115,8 @@ pub mod installer_config_factory {
     pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
-            installation_path: "/opt/nestgate".to_string(),
-            environment: "production".to_string(),
+            installation_path: String::from("/opt/nestgate"),
+            environment: String::from("production"),
         }
     }
 }
@@ -137,12 +137,12 @@ impl InstallerConfigUtils {
         if !config.base_config.system.debug_mode
             && !PathBuf::from(&config.installation_path).exists()
         {
-            return Err("Installation directory does not exist".to_string());
+            return Err(String::from("Installation directory does not exist"));
         }
 
         // Basic validation - can be expanded as needed
         if config.base_config.system.instance_name.is_empty() {
-            return Err("Service name cannot be empty".to_string());
+            return Err(String::from("Service name cannot be empty"));
         }
 
         Ok(())
@@ -153,10 +153,10 @@ impl InstallerConfigUtils {
     pub fn get_selected_components(_config: &InstallerConfig) -> Vec<String> {
         // For now, return default components since canonical config doesn't have components field yet
         vec![
-            "core".to_string(),
-            "api".to_string(),
-            "storage".to_string(),
-            "network".to_string(),
+            String::from("core"),
+            String::from("api"),
+            String::from("storage"),
+            String::from("network"),
         ]
     }
 
@@ -225,8 +225,8 @@ mod tests {
         // Component state verification is now handled through get_selected_components()
 
         let enabled = InstallerConfigUtils::get_selected_components(&config);
-        assert!(enabled.contains(&"core".to_string()));
-        assert!(enabled.contains(&"api".to_string()));
+        assert!(enabled.contains(&String::from("core")));
+        assert!(enabled.contains(&String::from("api")));
     }
 
     #[test]

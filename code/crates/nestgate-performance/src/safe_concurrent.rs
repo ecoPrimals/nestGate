@@ -436,7 +436,7 @@ mod tests {
         let removed = map.remove("a");
         assert!(removed.is_some());
         let (key, val) = removed.expect("Operation failed");
-        assert_eq!(key, "a".to_string());
+        assert_eq!(key, String::from("a"));
         assert_eq!(val, 10);
         assert_eq!(map.len(), 1);
     }

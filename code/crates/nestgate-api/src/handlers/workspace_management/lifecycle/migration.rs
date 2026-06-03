@@ -301,7 +301,7 @@ mod tests {
 
     fn sample_migration_config(strategy: MigrationStrategy) -> MigrationConfig {
         MigrationConfig {
-            target_pool: "targetpool".to_string(),
+            target_pool: String::from("targetpool"),
             target_host: None,
             strategy,
             bandwidth_limit: Some(4096),
@@ -344,7 +344,7 @@ mod tests {
     #[tokio::test]
     async fn migrate_workspace_rejects_slash_in_workspace_id() {
         let r = migrate_workspace(
-            Path("x/y".to_string()),
+            Path(String::from("x/y")),
             Json(sample_migration_config(MigrationStrategy::Copy)),
         )
         .await;
@@ -354,7 +354,7 @@ mod tests {
     #[tokio::test]
     async fn migrate_workspace_rejects_space_in_workspace_id() {
         let r = migrate_workspace(
-            Path("x y".to_string()),
+            Path(String::from("x y")),
             Json(sample_migration_config(MigrationStrategy::Copy)),
         )
         .await;
@@ -417,7 +417,7 @@ mod tests {
     #[tokio::test]
     async fn perform_copy_migration_remote_target_host_fails_without_working_pipe() {
         let mut cfg = sample_migration_config(MigrationStrategy::Copy);
-        cfg.target_host = Some("127.0.0.1".to_string());
+        cfg.target_host = Some(String::from("127.0.0.1"));
         let r = perform_copy_migration(
             "nonexistent_pool_zz/ds@migrate_bad",
             "targetpool/workspaces/w-copy-remote",

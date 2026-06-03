@@ -227,7 +227,7 @@ impl BidirectionalStreamManager {
 
                 let event = RpcStreamEvent {
                     stream_id,
-                    event_type: "realtime_metrics".to_string(),
+                    event_type: String::from("realtime_metrics"),
                     data: serde_json::json!({
                         "timestamp": chrono::Utc::now(),
                         "cpu_usage": 25.0 + (f64::from(counter) * 0.5) % 50.0,
@@ -282,7 +282,7 @@ impl BidirectionalStreamManager {
 
                 let event = RpcStreamEvent {
                     stream_id,
-                    event_type: "zfs_event".to_string(),
+                    event_type: String::from("zfs_event"),
                     data: serde_json::json!({
                         "event_id": format!("zfs_event_{counter}"),
                         "event_type": event_type,
@@ -337,7 +337,7 @@ impl BidirectionalStreamManager {
 
                 let event = RpcStreamEvent {
                     stream_id,
-                    event_type: "storage_event".to_string(),
+                    event_type: String::from("storage_event"),
                     data: serde_json::json!({
                         "event_id": format!("storage_event_{counter}"),
                         "backend_type": backend,
@@ -400,7 +400,7 @@ impl BidirectionalStreamManager {
 
                 let event = RpcStreamEvent {
                     stream_id,
-                    event_type: "system_log".to_string(),
+                    event_type: String::from("system_log"),
                     data: serde_json::json!({
                         "log_id": format!("log_{}", counter),
                         "level": level,
@@ -442,7 +442,7 @@ impl BidirectionalStreamManager {
 
                 let event = RpcStreamEvent {
                     stream_id,
-                    event_type: "performance_data".to_string(),
+                    event_type: String::from("performance_data"),
                     data: serde_json::json!({
                         "sample_id": format!("perf_{counter}"),
                         "timestamp": chrono::Utc::now(),
@@ -483,8 +483,8 @@ mod tests {
     fn make_request(method: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::new_v4(),
-            source: "test".to_string(),
-            target: "storage".to_string(),
+            source: String::from("test"),
+            target: String::from("storage"),
             method: method.to_string(),
             _params: serde_json::json!({}),
             _metadata: std::collections::HashMap::new(),
@@ -580,7 +580,7 @@ mod tests {
     async fn test_rpc_stream_event_serialization() {
         let event = RpcStreamEvent {
             stream_id: Uuid::new_v4(),
-            event_type: "test".to_string(),
+            event_type: String::from("test"),
             data: serde_json::json!({"key": "value"}),
             timestamp: chrono::Utc::now(),
         };

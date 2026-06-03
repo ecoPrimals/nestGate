@@ -609,7 +609,7 @@ impl Default for DiscoveredService {
         use nestgate_config::constants::hardcoding::{addresses, runtime_fallback_ports};
         Self {
             id: Uuid::new_v4().to_string(),
-            name: "unknown".to_string(),
+            name: String::from("unknown"),
             endpoint: addresses::LOCALHOST_NAME.to_string(),
             port: runtime_fallback_ports::HTTP,
             capabilities: vec![],

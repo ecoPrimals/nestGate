@@ -442,7 +442,7 @@ impl ZeroCostZfsOperations for AzureBackend {
             custom: {
                 let mut map = HashMap::new();
                 map.insert(
-                    "config_source".to_string(),
+                    String::from("config_source"),
                     cloud_helpers::config_source_custom_value(&self.client.config_source),
                 );
                 map

@@ -59,7 +59,7 @@ impl NativeZfsService {
             .output()
             .await
             .map_err(|_e| {
-                UniversalZfsError::internal("Failed to execute ZFS command".to_string())
+                UniversalZfsError::internal(String::from("Failed to execute ZFS command"))
             })?;
 
         if !output.status.success() {
@@ -82,7 +82,7 @@ impl NativeZfsService {
             .output()
             .await
             .map_err(|_e| {
-                UniversalZfsError::internal("Failed to execute zpool command".to_string())
+                UniversalZfsError::internal(String::from("Failed to execute zpool command"))
             })?;
 
         if !output.status.success() {

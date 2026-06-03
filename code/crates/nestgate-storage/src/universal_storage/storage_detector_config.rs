@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn test_has_aws_credentials_partial() {
         let mut config = StorageDetectorConfig::new();
-        config.aws_access_key = Some("key".to_string());
+        config.aws_access_key = Some(String::from("key"));
         // Missing secret key
         assert!(!config.has_aws_credentials());
     }

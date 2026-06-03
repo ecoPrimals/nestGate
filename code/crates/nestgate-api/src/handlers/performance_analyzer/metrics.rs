@@ -278,14 +278,14 @@ mod tests {
 
     #[test]
     fn test_metrics_error_system_read() {
-        let error = MetricsError::SystemRead("Test error".to_string());
+        let error = MetricsError::SystemRead(String::from("Test error"));
         let error_str = error.to_string();
         assert!(error_str.contains("Failed to read system metrics"));
     }
 
     #[test]
     fn test_metrics_error_parse() {
-        let error = MetricsError::Parse("Invalid value".to_string());
+        let error = MetricsError::Parse(String::from("Invalid value"));
         let error_str = error.to_string();
         assert!(error_str.contains("Parse error"));
     }

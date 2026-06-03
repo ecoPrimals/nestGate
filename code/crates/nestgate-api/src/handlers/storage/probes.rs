@@ -49,11 +49,11 @@ pub(super) fn collect_real_storage_pools() -> Result<Vec<StoragePool>> {
 
                 pools.push(StoragePool {
                     name: format!("{source} ({mount_point})"),
-                    status: "ONLINE".to_string(),
+                    status: String::from("ONLINE"),
                     size,
                     used,
                     available,
-                    health: "HEALTHY".to_string(),
+                    health: String::from("HEALTHY"),
                     pool_type: fstype.to_uppercase(),
                 });
             }
@@ -95,13 +95,13 @@ pub(super) fn create_fallback_root_pool() -> StoragePool {
     };
 
     StoragePool {
-        name: "root (/)".to_string(),
-        status: "ONLINE".to_string(),
+        name: String::from("root (/)"),
+        status: String::from("ONLINE"),
         size,
         used,
         available,
-        health: "HEALTHY".to_string(),
-        pool_type: "FILESYSTEM".to_string(),
+        health: String::from("HEALTHY"),
+        pool_type: String::from("FILESYSTEM"),
     }
 }
 
@@ -166,12 +166,12 @@ fn collect_real_storage_datasets() -> Vec<StorageDataset> {
         {
             datasets.push(StorageDataset {
                 name: format!("local_{}", dir.trim_start_matches('/').replace('/', "_")),
-                pool: "root".to_string(),
+                pool: String::from("root"),
                 size,
                 used,
                 available,
                 mount_point: dir.to_string(),
-                compression: "none".to_string(),
+                compression: String::from("none"),
             });
         }
     }
@@ -181,13 +181,13 @@ fn collect_real_storage_datasets() -> Vec<StorageDataset> {
         && let Ok((size, used, available)) = get_directory_usage(&home_dir)
     {
         datasets.push(StorageDataset {
-            name: "user_home".to_string(),
-            pool: "root".to_string(),
+            name: String::from("user_home"),
+            pool: String::from("root"),
             size,
             used,
             available,
             mount_point: home_dir,
-            compression: "none".to_string(),
+            compression: String::from("none"),
         });
     }
 
@@ -224,13 +224,13 @@ fn create_fallback_home_dataset() -> StorageDataset {
     let home_dir = safe_env_var_or_default("HOME", "/home");
     let (size, used, available) = get_directory_usage(&home_dir).unwrap_or((0, 0, 0));
     StorageDataset {
-        name: "user_home".to_string(),
-        pool: "root".to_string(),
+        name: String::from("user_home"),
+        pool: String::from("root"),
         size,
         used,
         available,
         mount_point: home_dir,
-        compression: "none".to_string(),
+        compression: String::from("none"),
     }
 }
 
@@ -277,10 +277,10 @@ async fn collect_real_zfs_snapshots() -> Result<Vec<StorageSnapshot>> {
                     .checked_add(std::time::Duration::from_secs(creation_timestamp))
                 {
                     Some(time) => chrono::DateTime::<chrono::Utc>::from(time).to_rfc3339(),
-                    None => "unknown".to_string(),
+                    None => String::from("unknown"),
                 }
             } else {
-                "unknown".to_string()
+                String::from("unknown")
             };
 
             snapshots.push(StorageSnapshot {
@@ -365,7 +365,7 @@ async fn collect_fallback_storage_metrics() -> StorageMetrics {
         available_storage,
         iops: 50.0,           // Conservative estimate
         bandwidth_mbps: 25.0, // Conservative estimate
-        health_status: "SYSTEM_STORAGE".to_string(),
+        health_status: String::from("SYSTEM_STORAGE"),
     }
 }
 

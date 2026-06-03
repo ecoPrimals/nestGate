@@ -93,7 +93,7 @@ impl SovereigntyRuntimeConfig {
     /// use nestgate_core::config::sovereignty_config::SovereigntyRuntimeConfig;
     ///
     /// let config = SovereigntyRuntimeConfig::default()
-    ///     .with_api_endpoint("http://api.example.com".to_string());
+    ///     .with_api_endpoint(String::from("http://api.example.com"));
     /// ```
     #[must_use]
     pub fn with_api_endpoint(mut self, endpoint: String) -> Self {
@@ -244,7 +244,7 @@ mod tests {
     fn test_builder_pattern() {
         let config = SovereigntyRuntimeConfig::new()
             .with_api_port(runtime_fallback_ports::METRICS)
-            .with_bind_address("0.0.0.0".to_string())
+            .with_bind_address(String::from("0.0.0.0"))
             .with_api_endpoint(format!("http://custom:{}", runtime_fallback_ports::METRICS));
 
         assert_eq!(config.api_port(), runtime_fallback_ports::METRICS);
@@ -258,7 +258,7 @@ mod tests {
     #[test]
     fn test_fallback_logic() {
         let config = SovereigntyRuntimeConfig::new()
-            .with_api_host("myhost".to_string())
+            .with_api_host(String::from("myhost"))
             .with_api_port(8888);
 
         assert_eq!(config.api_endpoint(), "http://myhost:8888");
@@ -304,12 +304,12 @@ mod tests {
         let config1 = Arc::new(
             SovereigntyRuntimeConfig::new()
                 .with_api_port(runtime_fallback_ports::HTTP)
-                .with_bind_address("127.0.0.1".to_string()),
+                .with_bind_address(String::from("127.0.0.1")),
         );
         let config2 = Arc::new(
             SovereigntyRuntimeConfig::new()
                 .with_api_port(runtime_fallback_ports::METRICS)
-                .with_bind_address("0.0.0.0".to_string()),
+                .with_bind_address(String::from("0.0.0.0")),
         );
 
         let handle1 = tokio::spawn({

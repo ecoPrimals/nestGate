@@ -109,7 +109,7 @@ impl Default for StorageBackendConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            backend_type: "memory".to_string(),
+            backend_type: String::from("memory"),
             connection: HashMap::new(),
             pool: ConnectionPoolSettings::default(),
             encryption_enabled: false,
@@ -146,7 +146,7 @@ impl Default for CompressionSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            algorithm: "gzip".to_string(),
+            algorithm: String::from("gzip"),
             level: 6,
             min_size: 1024, // 1KB
         }
@@ -159,9 +159,9 @@ impl Default for IndexingSettings {
         Self {
             enabled: false,
             fields: vec![
-                "path".to_string(),
-                "event_type".to_string(),
-                "timestamp".to_string(),
+                String::from("path"),
+                String::from("event_type"),
+                String::from("timestamp"),
             ],
             refresh_interval: Duration::from_secs(60),
             full_text_search: false,

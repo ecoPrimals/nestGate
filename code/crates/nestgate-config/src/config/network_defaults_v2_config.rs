@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn test_config_builders() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host("0.0.0.0".to_string())
+            .with_api_host(String::from("0.0.0.0"))
             .with_api_port(9000)
             .with_metrics_port(9091)
             .with_websocket_port(9092)
@@ -429,7 +429,7 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             NetworkDefaultsV2Config::new()
-                .with_api_host("192.168.1.100".to_string())
+                .with_api_host(String::from("192.168.1.100"))
                 .with_api_port(7070),
         );
 

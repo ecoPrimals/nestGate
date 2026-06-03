@@ -53,18 +53,18 @@ mod tests {
         let service = ServiceInfo {
             service_id: uuid::Uuid::new_v4(),
             metadata: crate::service_discovery::types::ServiceMetadata {
-                name: "test-service".to_string(),
+                name: String::from("test-service"),
                 category: crate::service_discovery::types::ServiceCategory::Storage,
-                version: "1.0.0".to_string(),
-                description: "Test service for load balancer".to_string(),
+                version: String::from("1.0.0"),
+                description: String::from("Test service for load balancer"),
                 health_endpoint: None,
                 metrics_endpoint: None,
             },
             capabilities: vec![],
             endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
-                url: "http://localhost:9999".to_string(),
+                url: String::from("http://localhost:9999"),
                 protocol: crate::service_discovery::types::CommunicationProtocol::Http,
-                health_check: Some("/health".to_string()),
+                health_check: Some(String::from("/health")),
             }],
             last_seen: std::time::SystemTime::now(),
         };
@@ -116,10 +116,10 @@ mod tests {
         let service = ServiceInfo {
             service_id: uuid::Uuid::new_v4(),
             metadata: crate::service_discovery::types::ServiceMetadata {
-                name: "test_service".to_string(),
+                name: String::from("test_service"),
                 category: crate::service_discovery::types::ServiceCategory::Storage,
-                version: "1.0.0".to_string(),
-                description: "Test storage service".to_string(),
+                version: String::from("1.0.0"),
+                description: String::from("Test storage service"),
                 health_endpoint: None,
                 metrics_endpoint: None,
             },
@@ -191,7 +191,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_native_async_service_creation() -> Result<()> {
-        let service = NativeAsyncService::new("test_service".to_string());
+        let service = NativeAsyncService::new(String::from("test_service"));
 
         // Test service configuration
         let config = service.get_config();
@@ -203,7 +203,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_native_async_service_operations() -> Result<()> {
-        let service = NativeAsyncService::new("test_service".to_string());
+        let service = NativeAsyncService::new(String::from("test_service"));
 
         // Test basic service operation - just verify the service was created
         assert!(!service.name.is_empty());

@@ -65,8 +65,8 @@ pub fn create_stub_tuning_result() -> TuningResult {
     TuningResult {
         profile_name,
         optimizations_applied: vec![
-            "observed_live_metrics_only".to_string(),
-            "no_kernel_privilege_escalation".to_string(),
+            String::from("observed_live_metrics_only"),
+            String::from("no_kernel_privilege_escalation"),
         ],
         estimated_power_increase: 0.0,
         performance_improvement: 0.0,
@@ -96,7 +96,7 @@ pub fn create_stub_cpu_info() -> CpuInfo {
     let cores = linux_proc::logical_cpu_count()
         .map(|n| usize::try_from(n.max(1)).unwrap_or(1))
         .unwrap_or(1);
-    let model = linux_proc::cpu_model_best_effort().unwrap_or_else(|_| "unknown".to_string());
+    let model = linux_proc::cpu_model_best_effort().unwrap_or_else(|_| String::from("unknown"));
     CpuInfo { cores, model }
 }
 

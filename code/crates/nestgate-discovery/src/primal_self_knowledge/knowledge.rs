@@ -90,21 +90,21 @@ impl PrimalSelfKnowledge {
 
         // Always provide storage capability
         capabilities.push(Capability {
-            name: "storage".to_string(),
-            description: "Universal storage management".to_string(),
-            endpoint: "/api/v1/storage".to_string(),
+            name: String::from("storage"),
+            description: String::from("Universal storage management"),
+            endpoint: String::from("/api/v1/storage"),
             metadata: std::collections::HashMap::new(),
         });
 
         // Check if ZFS is available (runtime capability detection - universal!)
         if Self::check_zfs_available().await {
             capabilities.push(Capability {
-                name: "zfs".to_string(),
-                description: "ZFS pool and dataset management".to_string(),
-                endpoint: "/api/v1/zfs".to_string(),
+                name: String::from("zfs"),
+                description: String::from("ZFS pool and dataset management"),
+                endpoint: String::from("/api/v1/zfs"),
                 metadata: std::collections::HashMap::from([(
-                    "backend".to_string(),
-                    "native".to_string(),
+                    String::from("backend"),
+                    String::from("native"),
                 )]),
             });
         }
@@ -147,7 +147,7 @@ impl PrimalSelfKnowledge {
         // Get API endpoint from environment
         let api_host = env
             .get("NESTGATE_API_HOST")
-            .unwrap_or_else(|| "0.0.0.0".to_string());
+            .unwrap_or_else(|| String::from("0.0.0.0"));
 
         let api_port_str = env.get("NESTGATE_API_PORT").unwrap_or_else(|| {
             nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
@@ -158,11 +158,11 @@ impl PrimalSelfKnowledge {
             .with_context(|| format!("Invalid NESTGATE_API_PORT: {api_port_str}"))?;
 
         endpoints.push(Endpoint {
-            protocol: "http".to_string(),
+            protocol: String::from("http"),
             address: api_host,
             port: api_port,
-            path: Some("/api/v1".to_string()),
-            health_path: Some("/health".to_string()),
+            path: Some(String::from("/api/v1")),
+            health_path: Some(String::from("/health")),
         });
 
         Ok(endpoints)
@@ -324,17 +324,17 @@ impl PrimalSelfKnowledge {
                 .with_context(|| format!("Invalid port in {port_var}"))?;
 
             let endpoint = Endpoint {
-                protocol: "http".to_string(),
+                protocol: String::from("http"),
                 address: host,
                 port,
-                path: Some("/api/v1".to_string()),
-                health_path: Some("/health".to_string()),
+                path: Some(String::from("/api/v1")),
+                health_path: Some(String::from("/health")),
             };
 
             let identity = PrimalIdentity {
                 id: format!("{primal_type}-discovered-via-env"),
                 primal_type: primal_type.to_string(),
-                version: "unknown".to_string(),
+                version: String::from("unknown"),
                 started_at: std::time::SystemTime::now(),
             };
 
@@ -365,7 +365,7 @@ impl PrimalSelfKnowledge {
         let namespace = self
             .env
             .get("KUBERNETES_NAMESPACE")
-            .unwrap_or_else(|| "default".to_string());
+            .unwrap_or_else(|| String::from("default"));
 
         // K8s service DNS: <service>.<namespace>.svc.cluster.local
         let dns_name = format!("{service_name}.{namespace}.svc.cluster.local");
@@ -375,17 +375,17 @@ impl PrimalSelfKnowledge {
             Ok(mut addrs) => {
                 if let Some(addr) = addrs.next() {
                     let endpoint = Endpoint {
-                        protocol: "http".to_string(),
+                        protocol: String::from("http"),
                         address: dns_name,
                         port: addr.port(),
-                        path: Some("/api/v1".to_string()),
-                        health_path: Some("/health".to_string()),
+                        path: Some(String::from("/api/v1")),
+                        health_path: Some(String::from("/health")),
                     };
 
                     let identity = PrimalIdentity {
                         id: format!("{primal_type}-k8s"),
                         primal_type: primal_type.to_string(),
-                        version: "unknown".to_string(),
+                        version: String::from("unknown"),
                         started_at: std::time::SystemTime::now(),
                     };
 

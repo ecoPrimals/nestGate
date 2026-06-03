@@ -231,11 +231,11 @@ impl Default for DashboardConfig {
     /// Returns the default instance
     fn default() -> Self {
         let mut alert_thresholds = HashMap::new();
-        alert_thresholds.insert("cpu_usage".to_string(), 80.0);
-        alert_thresholds.insert("memory_usage".to_string(), 85.0);
-        alert_thresholds.insert("disk_usage".to_string(), 90.0);
-        alert_thresholds.insert("latency_ms".to_string(), 1000.0);
-        alert_thresholds.insert("error_rate".to_string(), 5.0);
+        alert_thresholds.insert(String::from("cpu_usage"), 80.0);
+        alert_thresholds.insert(String::from("memory_usage"), 85.0);
+        alert_thresholds.insert(String::from("disk_usage"), 90.0);
+        alert_thresholds.insert(String::from("latency_ms"), 1000.0);
+        alert_thresholds.insert(String::from("error_rate"), 5.0);
 
         Self {
             enable_real_time: true,
@@ -380,8 +380,8 @@ mod tests {
     fn test_dashboard_state_update_metrics() {
         let mut state = DashboardState::new();
 
-        state.update_metrics("cpu_usage".to_string(), serde_json::json!(45.5));
-        state.update_metrics("memory_usage".to_string(), serde_json::json!(67.8));
+        state.update_metrics(String::from("cpu_usage"), serde_json::json!(45.5));
+        state.update_metrics(String::from("memory_usage"), serde_json::json!(67.8));
 
         assert_eq!(state.cached_metrics.len(), 2);
         assert_eq!(
@@ -395,13 +395,13 @@ mod tests {
         let mut state = DashboardState::new();
 
         let alert = PerformanceAlert {
-            id: "alert_001".to_string(),
+            id: String::from("alert_001"),
             severity: AlertSeverity::Warning,
-            title: "High CPU".to_string(),
-            message: "CPU usage exceeded threshold".to_string(),
+            title: String::from("High CPU"),
+            message: String::from("CPU usage exceeded threshold"),
             timestamp: SystemTime::now(),
             resolved: false,
-            metric_name: "cpu_usage".to_string(),
+            metric_name: String::from("cpu_usage"),
             currentvalue: 85.0,
             threshold: 80.0,
         };
@@ -416,26 +416,26 @@ mod tests {
 
         // Add resolved alert
         state.add_alert(PerformanceAlert {
-            id: "alert_001".to_string(),
+            id: String::from("alert_001"),
             severity: AlertSeverity::Warning,
-            title: "Test".to_string(),
-            message: "Test".to_string(),
+            title: String::from("Test"),
+            message: String::from("Test"),
             timestamp: SystemTime::now(),
             resolved: true,
-            metric_name: "test".to_string(),
+            metric_name: String::from("test"),
             currentvalue: 50.0,
             threshold: 40.0,
         });
 
         // Add unresolved alert
         state.add_alert(PerformanceAlert {
-            id: "alert_002".to_string(),
+            id: String::from("alert_002"),
             severity: AlertSeverity::Critical,
-            title: "Test2".to_string(),
-            message: "Test2".to_string(),
+            title: String::from("Test2"),
+            message: String::from("Test2"),
             timestamp: SystemTime::now(),
             resolved: false,
-            metric_name: "test2".to_string(),
+            metric_name: String::from("test2"),
             currentvalue: 90.0,
             threshold: 80.0,
         });
@@ -448,13 +448,13 @@ mod tests {
     #[test]
     fn test_performance_alert_serialization() {
         let alert = PerformanceAlert {
-            id: "alert_123".to_string(),
+            id: String::from("alert_123"),
             severity: AlertSeverity::Critical,
-            title: "High Memory Usage".to_string(),
-            message: "Memory usage exceeded threshold".to_string(),
+            title: String::from("High Memory Usage"),
+            message: String::from("Memory usage exceeded threshold"),
             timestamp: SystemTime::now(),
             resolved: false,
-            metric_name: "memory_usage".to_string(),
+            metric_name: String::from("memory_usage"),
             currentvalue: 92.5,
             threshold: 85.0,
         };
@@ -473,7 +473,7 @@ mod tests {
     #[test]
     fn test_dashboard_event_serialization() {
         let event = DashboardEvent {
-            event_type: "metric_updated".to_string(),
+            event_type: String::from("metric_updated"),
             data: serde_json::json!({"cpu": 45.2}),
             timestamp: SystemTime::now(),
         };

@@ -153,7 +153,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
         ZeroCostSystem::new(
             super::providers::ZeroCostMemoryCache::new(),
             super::providers::ZeroCostJwtProvider::new([0u8; 32]),
-            super::providers::ZeroCostFileStorage::new("/tmp".to_string()),
+            super::providers::ZeroCostFileStorage::new(String::from("/tmp")),
         )
     }
 
@@ -198,7 +198,7 @@ mod tests {
     fn test_zero_cost_system_creation() {
         let cache = ZeroCostMemoryCache::<10>::new();
         let security = ZeroCostJwtProvider::new([1u8; 32]);
-        let storage = ZeroCostFileStorage::new("/tmp".to_string());
+        let storage = ZeroCostFileStorage::new(String::from("/tmp"));
 
         let system = ZeroCostSystem::<_, _, _, 10, ZERO_COST_TEST_TIMEOUT_MS_5000>::new(
             cache, security, storage,
@@ -213,7 +213,7 @@ mod tests {
     fn test_zero_cost_system_request_processing() {
         let cache = ZeroCostMemoryCache::<16>::new();
         let security = ZeroCostJwtProvider::new([2u8; 32]);
-        let storage = ZeroCostFileStorage::new("/tmp".to_string());
+        let storage = ZeroCostFileStorage::new(String::from("/tmp"));
 
         let system = ZeroCostSystem::<_, _, _, 16, ZERO_COST_TEST_TIMEOUT_MS_3000>::new(
             cache, security, storage,
@@ -242,7 +242,7 @@ mod tests {
     fn test_zero_cost_system_metrics() {
         let cache = ZeroCostMemoryCache::<32>::new();
         let security = ZeroCostJwtProvider::new([3u8; 32]);
-        let storage = ZeroCostFileStorage::new("/tmp".to_string());
+        let storage = ZeroCostFileStorage::new(String::from("/tmp"));
 
         let system = ZeroCostSystem::<_, _, _, 32, ZERO_COST_TEST_TIMEOUT_MS_2000>::new(
             cache, security, storage,

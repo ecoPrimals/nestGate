@@ -92,7 +92,7 @@ impl ZfsHealthMonitor {
                             Self::check_pool_health(&pool_manager, &pool.name).await;
 
                         let report = HealthReport {
-                            component_type: "pool".to_string(),
+                            component_type: String::from("pool"),
                             component_name: pool.name.clone(),
                             status: health_status,
                             last_check: SystemTime::now(),
@@ -104,7 +104,7 @@ impl ZfsHealthMonitor {
 
                         // Update health data
                         let mut health = health_data.write().await;
-                        health.insert("pool:error details".to_string(), report);
+                        health.insert(String::from("pool:error details"), report);
                     }
                 }
 
@@ -133,13 +133,13 @@ impl ZfsHealthMonitor {
 
                         let mut health = dataset_health_data.write().await;
                         health.insert(
-                            "datasets:error details".to_string(),
+                            String::from("datasets:error details"),
                             HealthReport {
-                                component_type: "datasets".to_string(),
+                                component_type: String::from("datasets"),
                                 component_name: pool.name.clone(),
                                 status: health_status,
                                 last_check: SystemTime::now(),
-                                details: "Dataset health assessment completed".to_string().clone(),
+                                details: String::from("Dataset health assessment completed").clone(),
                             },
                         );
                     }

@@ -91,7 +91,7 @@ impl Default for StorageConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            default_backend: "filesystem".to_string(),
+            default_backend: String::from("filesystem"),
             backends: HashMap::new(),
             zfs: ZfsConfig::default(),
             cache: CacheConfig::default(),
@@ -106,7 +106,7 @@ impl Default for CacheConfig {
         Self {
             enabled: true,
             size_bytes: 1024 * 1024 * 1024, // 1GB
-            cache_type: "lru".to_string(),
+            cache_type: String::from("lru"),
             cache_dir: None,
             policy: None,
             hot_tier_size: None,
@@ -125,9 +125,9 @@ impl CacheConfig {
         Self {
             enabled: true,
             size_bytes: 256 * 1024 * 1024, // 256MB
-            cache_type: "lru".to_string(),
-            cache_dir: Some("/tmp/nestgate/cache".to_string().into()),
-            policy: Some("lru".to_string()),
+            cache_type: String::from("lru"),
+            cache_dir: Some(String::from("/tmp/nestgate/cache").into()),
+            policy: Some(String::from("lru")),
             hot_tier_size: Some(64 * 1024 * 1024),   // 64MB
             warm_tier_size: Some(128 * 1024 * 1024), // 128MB
             cold_tier_unlimited: Some(false),
@@ -142,9 +142,9 @@ impl CacheConfig {
         Self {
             enabled: true,
             size_bytes: 4 * 1024 * 1024 * 1024, // 4GB
-            cache_type: "lru".to_string(),
-            cache_dir: Some("/var/cache/nestgate".to_string().into()),
-            policy: Some("lru".to_string()),
+            cache_type: String::from("lru"),
+            cache_dir: Some(String::from("/var/cache/nestgate").into()),
+            policy: Some(String::from("lru")),
             hot_tier_size: Some(1024 * 1024 * 1024), // 1GB
             warm_tier_size: Some(2 * 1024 * 1024 * 1024), // 2GB
             cold_tier_unlimited: Some(true),
@@ -206,9 +206,9 @@ mod tests {
     fn storage_backend_roundtrip() {
         let mut backends = HashMap::new();
         backends.insert(
-            "main".to_string(),
+            String::from("main"),
             StorageBackend {
-                backend_type: "fs".to_string(),
+                backend_type: String::from("fs"),
                 config: HashMap::new(),
             },
         );

@@ -118,13 +118,13 @@ impl SecurityCapabilityDiscovery {
         // Dynamic authentication discovery - replaces hardcoded auth endpoints
         Ok(SecurityCapabilityInfo {
             capability_type: SecurityCapabilityType::Authentication,
-            endpoint: "security://authentication".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("security://authentication"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "authenticate".to_string(),
-                "validate_token".to_string(),
-                "refresh_token".to_string(),
-                "logout".to_string(),
+                String::from("authenticate"),
+                String::from("validate_token"),
+                String::from("refresh_token"),
+                String::from("logout"),
             ],
             metadata: HashMap::new(),
         })
@@ -135,13 +135,13 @@ impl SecurityCapabilityDiscovery {
         // Dynamic authorization discovery - replaces hardcoded authz endpoints
         Ok(SecurityCapabilityInfo {
             capability_type: SecurityCapabilityType::Authorization,
-            endpoint: "security://authorization".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("security://authorization"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "check_permission".to_string(),
-                "grant_permission".to_string(),
-                "revoke_permission".to_string(),
-                "list_permissions".to_string(),
+                String::from("check_permission"),
+                String::from("grant_permission"),
+                String::from("revoke_permission"),
+                String::from("list_permissions"),
             ],
             metadata: HashMap::new(),
         })
@@ -152,13 +152,13 @@ impl SecurityCapabilityDiscovery {
         // Dynamic encryption discovery - replaces hardcoded crypto endpoints
         Ok(SecurityCapabilityInfo {
             capability_type: SecurityCapabilityType::Encryption,
-            endpoint: "security://encryption".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("security://encryption"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "encrypt_data".to_string(),
-                "decrypt_data".to_string(),
-                "generate_key".to_string(),
-                "rotate_keys".to_string(),
+                String::from("encrypt_data"),
+                String::from("decrypt_data"),
+                String::from("generate_key"),
+                String::from("rotate_keys"),
             ],
             metadata: HashMap::new(),
         })
@@ -189,5 +189,5 @@ pub async fn get_auth_endpoint(
     }
 
     // Default auth endpoint if discovery fails
-    Ok("security://authentication".to_string())
+    Ok(String::from("security://authentication"))
 }

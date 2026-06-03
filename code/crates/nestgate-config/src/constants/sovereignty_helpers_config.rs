@@ -343,10 +343,10 @@ mod tests {
     #[test]
     fn test_config_builders() {
         let config = SovereigntyHelpersConfig::new()
-            .with_api_host("example.com".to_string())
-            .with_api_port("9000".to_string())
-            .with_api_scheme("https".to_string())
-            .with_ws_scheme("wss".to_string());
+            .with_api_host(String::from("example.com"))
+            .with_api_port(String::from("9000"))
+            .with_api_scheme(String::from("https"))
+            .with_ws_scheme(String::from("wss"));
 
         assert_eq!(config.api_host(), "example.com");
         assert_eq!(config.api_port(), 9000);
@@ -365,8 +365,8 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             SovereigntyHelpersConfig::new()
-                .with_api_host("192.168.1.100".to_string())
-                .with_api_port("7070".to_string()),
+                .with_api_host(String::from("192.168.1.100"))
+                .with_api_port(String::from("7070")),
         );
 
         let mut handles = vec![];

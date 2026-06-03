@@ -351,7 +351,7 @@ mod tests {
             window_size: Duration::from_secs(60),
         };
 
-        let cb = CircuitBreaker::new("test_service".to_string(), config);
+        let cb = CircuitBreaker::new(String::from("test_service"), config);
 
         // Initially closed
         assert_eq!(cb.state().await, CircuitState::Closed);
@@ -410,7 +410,7 @@ mod tests {
             window_size: Duration::from_secs(60),
         };
 
-        let cb = CircuitBreaker::new("test_service".to_string(), config);
+        let cb = CircuitBreaker::new(String::from("test_service"), config);
 
         // Fail to open circuit
         let result: Result<(), _> = cb

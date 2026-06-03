@@ -59,7 +59,7 @@ impl TransportProtocol {
                 )
             }
             Self::Tcp { framing } => format!("TCP ({})", framing.description()),
-            Self::Quic { .. } => "QUIC (HTTP/3)".to_string(),
+            Self::Quic { .. } => String::from("QUIC (HTTP/3)"),
             Self::UnixSocket { path } => format!("Unix Socket ({path})"),
             Self::Custom { protocol_id, .. } => format!("Custom ({protocol_id})"),
         }

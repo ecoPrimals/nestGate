@@ -111,13 +111,13 @@ impl StorageCapabilityDiscovery {
         // Dynamic ZFS discovery - replaces hardcoded ZFS endpoints
         Ok(StorageCapabilityInfo {
             capability_type: StorageCapabilityType::ZfsPool,
-            endpoint: "zfs://pool-management".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("zfs://pool-management"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "create_pool".to_string(),
-                "destroy_pool".to_string(),
-                "list_pools".to_string(),
-                "pool_status".to_string(),
+                String::from("create_pool"),
+                String::from("destroy_pool"),
+                String::from("list_pools"),
+                String::from("pool_status"),
             ],
             metadata: HashMap::new(),
         })
@@ -128,13 +128,13 @@ impl StorageCapabilityDiscovery {
         // Dynamic dataset discovery - replaces hardcoded dataset endpoints
         Ok(StorageCapabilityInfo {
             capability_type: StorageCapabilityType::Dataset,
-            endpoint: "zfs://dataset-management".to_string(),
-            version: "1.0.0".to_string(),
+            endpoint: String::from("zfs://dataset-management"),
+            version: String::from("1.0.0"),
             supported_operations: vec![
-                "create_dataset".to_string(),
-                "destroy_dataset".to_string(),
-                "list_datasets".to_string(),
-                "dataset_properties".to_string(),
+                String::from("create_dataset"),
+                String::from("destroy_dataset"),
+                String::from("list_datasets"),
+                String::from("dataset_properties"),
             ],
             metadata: HashMap::new(),
         })
@@ -162,5 +162,5 @@ pub async fn get_zfs_endpoint(
     }
 
     // Default ZFS endpoint if discovery fails
-    Ok("zfs://pool-management".to_string())
+    Ok(String::from("zfs://pool-management"))
 }

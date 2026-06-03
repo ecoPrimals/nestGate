@@ -31,7 +31,7 @@ impl WeightedRoundRobinLoadBalancer {
             weights: Arc::new(parking_lot::RwLock::new(HashMap::new())),
             current_weights: Arc::new(parking_lot::RwLock::new(HashMap::new())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
-                algorithm: "weighted_round_robin".to_string(),
+                algorithm: String::from("weighted_round_robin"),
                 ..LoadBalancerStats::default()
             })),
         }
@@ -185,7 +185,7 @@ impl WeightedRandomLoadBalancer {
             weights: Arc::new(parking_lot::RwLock::new(HashMap::new())),
             rng: Arc::new(parking_lot::Mutex::new(StdRng::from_os_rng())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
-                algorithm: "weighted_random".to_string(),
+                algorithm: String::from("weighted_random"),
                 ..LoadBalancerStats::default()
             })),
         }
@@ -313,7 +313,7 @@ mod tests {
         ServiceInfo {
             id: format!("id-{name}"),
             name: name.to_string(),
-            version: "1.0.0".to_string(),
+            version: String::from("1.0.0"),
             capabilities: vec![],
             status: ServiceStatus::Healthy,
             last_seen: SystemTime::UNIX_EPOCH,
@@ -322,8 +322,8 @@ mod tests {
 
     fn dummy_request() -> ServiceRequest {
         ServiceRequest {
-            service_id: "svc".to_string(),
-            action: "ping".to_string(),
+            service_id: String::from("svc"),
+            action: String::from("ping"),
             parameters: HashMap::default(),
             timeout_seconds: Some(5),
         }

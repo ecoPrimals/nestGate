@@ -59,8 +59,8 @@ mod tests {
     fn test_user_creation() {
         let user = User {
             id: Uuid::new_v4(),
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
+            username: String::from("testuser"),
+            email: String::from("test@example.com"),
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };
@@ -72,8 +72,8 @@ mod tests {
     #[test]
     fn test_login_request_structure() {
         let request = LoginRequest {
-            username: "testuser".to_string(),
-            password: "password123".to_string(),
+            username: String::from("testuser"),
+            password: String::from("password123"),
         };
 
         assert_eq!(request.username, "testuser");
@@ -83,8 +83,8 @@ mod tests {
     #[test]
     fn test_login_request_serialization() {
         let request = LoginRequest {
-            username: "testuser".to_string(),
-            password: "password123".to_string(),
+            username: String::from("testuser"),
+            password: String::from("password123"),
         };
 
         let serialized = serde_json::to_string(&request);
@@ -99,14 +99,14 @@ mod tests {
     fn test_login_response_structure() {
         let user = User {
             id: Uuid::new_v4(),
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
+            username: String::from("testuser"),
+            email: String::from("test@example.com"),
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };
 
         let response = LoginResponse {
-            token: "test_token_123".to_string(),
+            token: String::from("test_token_123"),
             user,
         };
 
@@ -120,7 +120,7 @@ mod tests {
         let future_time = chrono::Utc::now() + chrono::Duration::hours(1);
 
         let token = AuthToken {
-            token: "test_token".to_string(),
+            token: String::from("test_token"),
             user_id,
             expires_at: future_time,
         };

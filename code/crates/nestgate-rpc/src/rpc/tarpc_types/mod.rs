@@ -340,7 +340,7 @@ mod tests {
     #[test]
     fn test_dataset_params_default() {
         let params = DatasetParams::default();
-        assert_eq!(params.compression, Some("lz4".to_string()));
+        assert_eq!(params.compression, Some(String::from("lz4")));
         assert!(params.encrypted);
         assert!(params.deduplicated);
         assert!(params.quota.is_none());
@@ -350,7 +350,7 @@ mod tests {
     fn test_operation_result() {
         let result = OperationResult {
             success: true,
-            message: "Success".to_string(),
+            message: String::from("Success"),
             metadata: HashMap::new(),
         };
         assert!(result.success);
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_invalid_parameters() {
         let e = NestGateRpcError::InvalidParameters {
-            message: "bad".to_string(),
+            message: String::from("bad"),
         };
         assert_eq!(e.to_string(), "Invalid parameters: bad");
     }
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_permission_denied() {
         let e = NestGateRpcError::PermissionDenied {
-            message: "nope".to_string(),
+            message: String::from("nope"),
         };
         assert_eq!(e.to_string(), "Permission denied: nope");
     }
@@ -432,7 +432,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_internal_error() {
         let e = NestGateRpcError::InternalError {
-            message: "panic".to_string(),
+            message: String::from("panic"),
         };
         assert_eq!(e.to_string(), "Internal error: panic");
     }
@@ -440,7 +440,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_service_unavailable() {
         let e = NestGateRpcError::ServiceUnavailable {
-            message: "down".to_string(),
+            message: String::from("down"),
         };
         assert_eq!(e.to_string(), "Service unavailable: down");
     }
@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_connection_error() {
         let e = NestGateRpcError::ConnectionError {
-            message: "reset".to_string(),
+            message: String::from("reset"),
         };
         assert_eq!(e.to_string(), "Connection error: reset");
     }

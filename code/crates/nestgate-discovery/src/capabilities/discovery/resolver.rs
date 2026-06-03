@@ -96,7 +96,7 @@ impl ServiceResolver {
                     .cloned()
                     .ok_or_else(|| {
                         CapabilityError::ConnectionFailed(
-                            "No healthy providers available".to_string(),
+                            String::from("No healthy providers available"),
                         )
                     })
             }
@@ -107,7 +107,7 @@ impl ServiceResolver {
 
                 if healthy.is_empty() {
                     return Err(CapabilityError::ConnectionFailed(
-                        "No healthy providers available".to_string(),
+                        String::from("No healthy providers available"),
                     ));
                 }
 
@@ -126,7 +126,7 @@ impl ServiceResolver {
                     .cloned()
                     .ok_or_else(|| {
                         CapabilityError::ConnectionFailed(
-                            "No healthy providers available".to_string(),
+                            String::from("No healthy providers available"),
                         )
                     })
             }
@@ -159,7 +159,7 @@ impl ServiceResolver {
                     .cloned()
                     .ok_or_else(|| {
                         CapabilityError::ConnectionFailed(
-                            "No healthy providers available".to_string(),
+                            String::from("No healthy providers available"),
                         )
                     })
             }
@@ -196,10 +196,10 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "test".to_string(),
+            name: String::from("test"),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
             endpoint: Endpoint {
-                host: "localhost".to_string(),
+                host: String::from("localhost"),
                 port: nestgate_config::constants::hardcoding::runtime_fallback_ports::HTTPS,
                 protocol: Protocol::HTTPS,
                 tls: true,
@@ -240,9 +240,9 @@ mod tests {
         // Register two services with different loads
         let service1 = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "high-load".to_string(),
+            name: String::from("high-load"),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
-            endpoint: Endpoint::http("localhost".to_string(), 8001),
+            endpoint: Endpoint::http(String::from("localhost"), 8001),
             metadata: ServiceMetadata {
                 load: 0.8,
                 ..Default::default()
@@ -252,9 +252,9 @@ mod tests {
 
         let service2 = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "low-load".to_string(),
+            name: String::from("low-load"),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
-            endpoint: Endpoint::http("localhost".to_string(), 8002),
+            endpoint: Endpoint::http(String::from("localhost"), 8002),
             metadata: ServiceMetadata {
                 load: 0.2,
                 ..Default::default()
@@ -282,11 +282,11 @@ mod tests {
         // Register two services with different latencies
         let service1 = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "high-latency".to_string(),
+            name: String::from("high-latency"),
             capabilities: vec![Capability::Orchestration(
                 OrchestrationCapability::ServiceDiscovery,
             )],
-            endpoint: Endpoint::http("localhost".to_string(), 9001),
+            endpoint: Endpoint::http(String::from("localhost"), 9001),
             metadata: ServiceMetadata {
                 latency_ms: Some(100.0),
                 ..Default::default()
@@ -296,11 +296,11 @@ mod tests {
 
         let service2 = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "low-latency".to_string(),
+            name: String::from("low-latency"),
             capabilities: vec![Capability::Orchestration(
                 OrchestrationCapability::ServiceDiscovery,
             )],
-            endpoint: Endpoint::http("localhost".to_string(), 9002),
+            endpoint: Endpoint::http(String::from("localhost"), 9002),
             metadata: ServiceMetadata {
                 latency_ms: Some(10.0),
                 ..Default::default()
@@ -344,18 +344,18 @@ mod tests {
         // Register a healthy and an unhealthy service
         let healthy = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "healthy".to_string(),
+            name: String::from("healthy"),
             capabilities: vec![Capability::AI(AICapability::Inference)],
-            endpoint: Endpoint::http("localhost".to_string(), 7001),
+            endpoint: Endpoint::http(String::from("localhost"), 7001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
 
         let unhealthy = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "unhealthy".to_string(),
+            name: String::from("unhealthy"),
             capabilities: vec![Capability::AI(AICapability::Inference)],
-            endpoint: Endpoint::http("localhost".to_string(), 7002),
+            endpoint: Endpoint::http(String::from("localhost"), 7002),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Unhealthy,
         };
@@ -379,9 +379,9 @@ mod tests {
         // Register only unhealthy services
         let unhealthy = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "unhealthy".to_string(),
+            name: String::from("unhealthy"),
             capabilities: vec![Capability::Networking(NetworkingCapability::ServiceMesh)],
-            endpoint: Endpoint::http("localhost".to_string(), 6001),
+            endpoint: Endpoint::http(String::from("localhost"), 6001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Unhealthy,
         };
@@ -401,12 +401,12 @@ mod tests {
         // Register a service with multiple capabilities
         let service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "multi-cap".to_string(),
+            name: String::from("multi-cap"),
             capabilities: vec![
                 Capability::Storage(StorageCapability::ObjectStorage),
                 Capability::Storage(StorageCapability::BlockStorage),
             ],
-            endpoint: Endpoint::http("localhost".to_string(), 5001),
+            endpoint: Endpoint::http(String::from("localhost"), 5001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -434,18 +434,18 @@ mod tests {
         // Register two services with the same capability
         let service1 = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "service1".to_string(),
+            name: String::from("service1"),
             capabilities: vec![Capability::Security(SecurityCapability::Encryption)],
-            endpoint: Endpoint::http("localhost".to_string(), 4001),
+            endpoint: Endpoint::http(String::from("localhost"), 4001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
 
         let service2 = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "service2".to_string(),
+            name: String::from("service2"),
             capabilities: vec![Capability::Security(SecurityCapability::Encryption)],
-            endpoint: Endpoint::http("localhost".to_string(), 4002),
+            endpoint: Endpoint::http(String::from("localhost"), 4002),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -474,9 +474,9 @@ mod tests {
         // Register healthy and degraded services
         let healthy = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "healthy".to_string(),
+            name: String::from("healthy"),
             capabilities: vec![Capability::Networking(NetworkingCapability::LoadBalancing)],
-            endpoint: Endpoint::http("localhost".to_string(), 3001),
+            endpoint: Endpoint::http(String::from("localhost"), 3001),
             metadata: ServiceMetadata {
                 load: 0.3, // Lower load
                 ..Default::default()
@@ -486,9 +486,9 @@ mod tests {
 
         let degraded = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "degraded".to_string(),
+            name: String::from("degraded"),
             capabilities: vec![Capability::Networking(NetworkingCapability::LoadBalancing)],
-            endpoint: Endpoint::http("localhost".to_string(), 3002),
+            endpoint: Endpoint::http(String::from("localhost"), 3002),
             metadata: ServiceMetadata {
                 load: 0.8, // Higher load
                 ..Default::default()
@@ -528,9 +528,9 @@ mod tests {
         // Test that metadata fields are properly used in selection
         let service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "metadata-test".to_string(),
+            name: String::from("metadata-test"),
             capabilities: vec![Capability::AI(AICapability::Training)],
-            endpoint: Endpoint::http("localhost".to_string(), 2001),
+            endpoint: Endpoint::http(String::from("localhost"), 2001),
             metadata: ServiceMetadata {
                 load: 0.5,
                 latency_ms: Some(25.0),
@@ -569,11 +569,11 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: "concurrent".to_string(),
+            name: String::from("concurrent"),
             capabilities: vec![Capability::Orchestration(
                 OrchestrationCapability::ServiceScheduling,
             )],
-            endpoint: Endpoint::http("localhost".to_string(), 1001),
+            endpoint: Endpoint::http(String::from("localhost"), 1001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };

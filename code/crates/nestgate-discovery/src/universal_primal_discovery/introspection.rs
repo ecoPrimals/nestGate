@@ -210,15 +210,15 @@ impl SystemIntrospection {
         // Generate recommended limits based on scores
         let mut recommended_limits = HashMap::new();
         recommended_limits.insert(
-            "max_connections".to_string(),
+            String::from("max_connections"),
             ((overall_score * 5000.0) as usize).clamp(100, 10000),
         );
         recommended_limits.insert(
-            "worker_threads".to_string(),
+            String::from("worker_threads"),
             ((cpu_score * capabilities.logical_cores as f64 * 2.0) as usize).clamp(2, 32),
         );
         recommended_limits.insert(
-            "buffer_size".to_string(),
+            String::from("buffer_size"),
             ((memory_score * 32768.0) as usize).clamp(4096, 65536),
         );
 
@@ -254,7 +254,7 @@ impl SystemIntrospection {
     /// **NETWORK INTERFACE DETECTION**: Detect available network interfaces
     fn detect_network_interfaces() -> Result<Vec<String>> {
         // Simplified implementation - in a real system would use proper network APIs
-        let mut interfaces = vec!["lo".to_string()]; // Always have loopback
+        let mut interfaces = vec![String::from("lo")]; // Always have loopback
 
         // Common interface names
         let common_interfaces = vec!["eth0", "wlan0", "en0", "ens33"];
@@ -303,7 +303,7 @@ impl SystemIntrospection {
                 Please migrate to COMPUTE_CAPABILITY_TYPE=containerized. \
                 This Docker-specific detection will be removed in version 4.0.0."
             );
-            return Some("legacy-containerized".to_string());
+            return Some(String::from("legacy-containerized"));
         }
 
         runtime
@@ -385,30 +385,30 @@ impl SystemIntrospection {
 
         let mut summary = HashMap::new();
 
-        summary.insert("cpu_cores".to_string(), capabilities.cpu_cores.to_string());
+        summary.insert(String::from("cpu_cores"), capabilities.cpu_cores.to_string());
         summary.insert(
-            "logical_cores".to_string(),
+            String::from("logical_cores"),
             capabilities.logical_cores.to_string(),
         );
         summary.insert(
-            "memory_gb".to_string(),
+            String::from("memory_gb"),
             format!("{:.1}", capabilities.memory_gb),
         );
         summary.insert(
-            "network_interfaces".to_string(),
+            String::from("network_interfaces"),
             capabilities.network_interfaces.len().to_string(),
         );
         summary.insert(
-            "storage_available".to_string(),
+            String::from("storage_available"),
             capabilities.storage_available.to_string(),
         );
         summary.insert(
-            "container_runtime".to_string(),
+            String::from("container_runtime"),
             capabilities
                 .container_runtime
-                .unwrap_or_else(|| "native".to_string()),
+                .unwrap_or_else(|| String::from("native")),
         );
-        summary.insert("os_type".to_string(), capabilities.os_type);
+        summary.insert(String::from("os_type"), capabilities.os_type);
 
         Ok(summary)
     }

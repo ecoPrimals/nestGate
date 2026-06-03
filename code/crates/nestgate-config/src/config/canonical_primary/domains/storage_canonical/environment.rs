@@ -64,19 +64,19 @@ impl Default for StorageEnvironmentConfig {
     fn default() -> Self {
         Self {
             development: EnvironmentStorageSettings {
-                backend_type: "filesystem".to_string(),
-                performance_mode: "standard".to_string(),
-                security_level: "basic".to_string(),
+                backend_type: String::from("filesystem"),
+                performance_mode: String::from("standard"),
+                security_level: String::from("basic"),
             },
             staging: EnvironmentStorageSettings {
-                backend_type: "zfs".to_string(),
-                performance_mode: "optimized".to_string(),
-                security_level: "enhanced".to_string(),
+                backend_type: String::from("zfs"),
+                performance_mode: String::from("optimized"),
+                security_level: String::from("enhanced"),
             },
             production: EnvironmentStorageSettings {
-                backend_type: "zfs".to_string(),
-                performance_mode: "high_performance".to_string(),
-                security_level: "maximum".to_string(),
+                backend_type: String::from("zfs"),
+                performance_mode: String::from("high_performance"),
+                security_level: String::from("maximum"),
             },
             deployment: DeploymentStorageConfig {
                 auto_provision: false,
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn storage_environment_merge_keeps_self() {
         let mut other = StorageEnvironmentConfig::default();
-        other.development.backend_type = "s3".to_string();
+        other.development.backend_type = String::from("s3");
         let merged = StorageEnvironmentConfig::default().merge(other);
         assert_eq!(merged.development.backend_type, "filesystem");
     }
@@ -196,11 +196,11 @@ mod tests {
         original
             .deployment
             .resource_limits
-            .insert("cpu".to_string(), "4".to_string());
+            .insert(String::from("cpu"), String::from("4"));
         original
             .features
             .feature_flags
-            .insert("tiered".to_string(), true);
+            .insert(String::from("tiered"), true);
         let json = serde_json::to_string(&original).expect("serialize");
         let parsed: StorageEnvironmentConfig = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(

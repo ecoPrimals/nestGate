@@ -287,7 +287,7 @@ mod tests {
         assert_eq!(UnifiedServiceType::Storage.to_string(), "storage");
         assert_eq!(UnifiedServiceType::Unknown.to_string(), "unknown");
         assert_eq!(
-            UnifiedServiceType::Custom("my-service".to_string()).to_string(),
+            UnifiedServiceType::Custom(String::from("my-service")).to_string(),
             "my-service"
         );
     }
@@ -303,7 +303,7 @@ mod tests {
         assert_eq!(st.as_str(), "ai");
         assert!(!st.is_custom());
 
-        let custom = UnifiedServiceType::Custom("custom".to_string());
+        let custom = UnifiedServiceType::Custom(String::from("custom"));
         assert!(custom.is_custom());
         assert_eq!(custom.as_str(), "custom");
 

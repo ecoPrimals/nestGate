@@ -217,8 +217,8 @@ mod tests {
     #[test]
     fn calculate_average_latencies_zero_throughput() {
         let p = PoolMetrics {
-            name: "p".to_string(),
-            health_status: "ONLINE".to_string(),
+            name: String::from("p"),
+            health_status: String::from("ONLINE"),
             utilization_percentage: 0.0,
             total_capacity: 0,
             used_space: 0,
@@ -237,8 +237,8 @@ mod tests {
     #[test]
     fn calculate_average_latencies_nonzero_throughput() {
         let p = PoolMetrics {
-            name: "p".to_string(),
-            health_status: "ONLINE".to_string(),
+            name: String::from("p"),
+            health_status: String::from("ONLINE"),
             utilization_percentage: 50.0,
             total_capacity: 100,
             used_space: 50,
@@ -369,7 +369,7 @@ mod tests {
         };
         {
             let mut w = c.metrics_cache.write().await;
-            w.insert("latest".to_string(), cached.clone());
+            w.insert(String::from("latest"), cached.clone());
         }
         let got = c.get_current_metrics().await.unwrap();
         assert_eq!(got.cpu_usage, 3.0);
@@ -391,7 +391,7 @@ mod tests {
         };
         {
             let mut w = c.metrics_cache.write().await;
-            w.insert("latest".to_string(), cached);
+            w.insert(String::from("latest"), cached);
         }
         let got = c.get_current_metrics().await.unwrap();
         assert_ne!(got.cpu_usage, 99.0);

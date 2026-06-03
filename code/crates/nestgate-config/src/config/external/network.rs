@@ -317,7 +317,7 @@ mod tests {
     #[test]
     fn test_endpoint_url() {
         let endpoint = EndpointConfig {
-            host: "example.com".to_string(),
+            host: String::from("example.com"),
             port: runtime_fallback_ports::HTTP,
         };
         assert_eq!(

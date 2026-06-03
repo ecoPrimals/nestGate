@@ -25,13 +25,13 @@ use std::collections::HashMap;
 ///
 /// async fn send_example(comm: &impl CommunicationLayer) -> nestgate_core::Result<()> {
 ///     let target = ServiceAddress {
-///         service_id: "my-service".to_string(),
+///         service_id: String::from("my-service"),
 ///         instance_id: None,
 ///         endpoint: None,
 ///     };
 ///     
 ///     let message = ServiceMessage {
-///         id: "msg-123".to_string(),
+///         id: String::from("msg-123"),
 ///         message_type: MessageType::Request,
 ///         topic: None,
 ///         payload: serde_json::json!({"data": "hello"}),

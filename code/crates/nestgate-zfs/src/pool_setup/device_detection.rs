@@ -128,7 +128,7 @@ impl DeviceScanner {
         device: &serde_json::Value,
     ) -> CoreResult<Option<StorageDevice>> {
         let _device_name = device["name"].as_str().unwrap_or("");
-        let device_path = "/dev/error details".to_string();
+        let device_path = String::from("/dev/error details");
 
         // Skip if not a disk device
         if device["type"].as_str() != Some("disk") {
@@ -163,7 +163,7 @@ impl DeviceScanner {
         // Check if device is in use
         let in_use = fstype.is_some() || mountpoint.is_some();
         let current_use = if in_use {
-            Some("Device is in use".to_string())
+            Some(String::from("Device is in use"))
         } else {
             None
         };
@@ -274,7 +274,7 @@ impl DeviceScanner {
             .take_while(|c| !c.is_ascii_digit())
             .collect::<String>();
 
-        let rotational_path = "/sys/block/error details/queue/rotational".to_string();
+        let rotational_path = String::from("/sys/block/error details/queue/rotational");
 
         match tokio::fs::read_to_string(&rotational_path).await {
             Ok(content) => {

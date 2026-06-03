@@ -48,7 +48,7 @@ impl WorkflowsConfig {
             max_concurrent_workflows: 5,
             workflow_timeout: Duration::from_secs(600),
             scheduling_enabled: false,
-            definitions_dir: "./workflows".to_string(),
+            definitions_dir: String::from("./workflows"),
             versioning_enabled: false,
         }
     }
@@ -64,7 +64,7 @@ impl WorkflowsConfig {
             max_concurrent_workflows: 20,
             workflow_timeout: Duration::from_secs(1800),
             scheduling_enabled: true,
-            definitions_dir: "/etc/nestgate/workflows".to_string(),
+            definitions_dir: String::from("/etc/nestgate/workflows"),
             versioning_enabled: true,
         }
     }

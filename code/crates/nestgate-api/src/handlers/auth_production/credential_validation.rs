@@ -82,10 +82,10 @@ mod tests {
     async fn test_create_user() {
         let handler = ProductionAuthHandler::new();
         let request = CreateUserRequest {
-            user_id: "test_user".to_string(),
-            username: "testuser".to_string(),
-            role: "user".to_string(),
-            permissions: vec!["read".to_string()],
+            user_id: String::from("test_user"),
+            username: String::from("testuser"),
+            role: String::from("user"),
+            permissions: vec![String::from("read")],
         };
 
         let result = create_user(State(handler), Json(request)).await;
@@ -96,8 +96,8 @@ mod tests {
     async fn test_authenticate_returns_unauthenticated() {
         let handler = ProductionAuthHandler::new();
         let credentials = AuthCredentials {
-            username: "any_user".to_string(),
-            password: "password123".to_string(),
+            username: String::from("any_user"),
+            password: String::from("password123"),
         };
 
         let result = authenticate(State(handler), Json(credentials)).await;
@@ -115,10 +115,10 @@ mod tests {
 
         // Test admin role
         let admin_request = CreateUserRequest {
-            user_id: "admin_user".to_string(),
-            username: "admin".to_string(),
-            role: "admin".to_string(),
-            permissions: vec!["all".to_string()],
+            user_id: String::from("admin_user"),
+            username: String::from("admin"),
+            role: String::from("admin"),
+            permissions: vec![String::from("all")],
         };
 
         let result = create_user(State(handler.clone()), Json(admin_request)).await;
@@ -126,10 +126,10 @@ mod tests {
 
         // Test operator role
         let operator_request = CreateUserRequest {
-            user_id: "operator_user".to_string(),
-            username: "operator".to_string(),
-            role: "operator".to_string(),
-            permissions: vec!["read".to_string(), "write".to_string()],
+            user_id: String::from("operator_user"),
+            username: String::from("operator"),
+            role: String::from("operator"),
+            permissions: vec![String::from("read"), String::from("write")],
         };
 
         let result = create_user(State(handler.clone()), Json(operator_request)).await;
@@ -137,10 +137,10 @@ mod tests {
 
         // Test read_only role
         let readonly_request = CreateUserRequest {
-            user_id: "readonly_user".to_string(),
-            username: "readonly".to_string(),
-            role: "read_only".to_string(),
-            permissions: vec!["read".to_string()],
+            user_id: String::from("readonly_user"),
+            username: String::from("readonly"),
+            role: String::from("read_only"),
+            permissions: vec![String::from("read")],
         };
 
         let result = create_user(State(handler), Json(readonly_request)).await;
@@ -156,7 +156,7 @@ mod tests {
                 user_id: format!("user_{}", role),
                 username: role.to_string(),
                 role: role.to_string(),
-                permissions: vec!["read".to_string()],
+                permissions: vec![String::from("read")],
             };
             assert_eq!(request.role, role);
         }
@@ -165,13 +165,13 @@ mod tests {
     #[tokio::test]
     async fn test_create_user_with_multiple_permissions() {
         let request = CreateUserRequest {
-            user_id: "power_user".to_string(),
-            username: "poweruser".to_string(),
-            role: "power_user".to_string(),
+            user_id: String::from("power_user"),
+            username: String::from("poweruser"),
+            role: String::from("power_user"),
             permissions: vec![
-                "read".to_string(),
-                "write".to_string(),
-                "execute".to_string(),
+                String::from("read"),
+                String::from("write"),
+                String::from("execute"),
             ],
         };
         assert_eq!(request.permissions.len(), 3);

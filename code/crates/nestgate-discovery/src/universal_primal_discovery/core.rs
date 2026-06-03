@@ -188,21 +188,21 @@ impl UniversalPrimalDiscovery {
         let mut status = HashMap::new();
 
         // Network discovery status
-        status.insert("network_discovery".to_string(), "active".to_string());
+        status.insert(String::from("network_discovery"), String::from("active"));
 
         // Performance discovery status
-        status.insert("performance_discovery".to_string(), "active".to_string());
+        status.insert(String::from("performance_discovery"), String::from("active"));
 
         // Registry client status
-        status.insert("registry_client".to_string(), "active".to_string());
+        status.insert(String::from("registry_client"), String::from("active"));
 
         // Cache status
         let cache_stats = self.cache.get_cache_stats();
-        status.insert("cache_entries".to_string(), cache_stats.to_string());
+        status.insert(String::from("cache_entries"), cache_stats.to_string());
 
         // Discovered limits count
         status.insert(
-            "discovered_limits".to_string(),
+            String::from("discovered_limits"),
             self.discovered_limits.len().to_string(),
         );
 

@@ -129,14 +129,14 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
     };
 
     let health = HealthStatus {
-        status: "healthy".to_string(),
+        status: String::from("healthy"),
         uptime_seconds: get_system_uptime(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         services: ServiceStatus {
             zfs_engine: zfs_status.to_string(),
             storage_detector: storage_detector_status.to_string(),
             auto_configurator: auto_configurator_status.to_string(),
-            metrics_collector: "online".to_string(),
+            metrics_collector: String::from("online"),
         },
         timestamp: chrono::Utc::now(),
     };
@@ -249,9 +249,9 @@ fn get_target_triple() -> String {
 /// Get build profile
 fn get_build_profile() -> String {
     if cfg!(debug_assertions) {
-        "debug".to_string()
+        String::from("debug")
     } else {
-        "release".to_string()
+        String::from("release")
     }
 }
 /// Current resource usage from `/proc` and root [`statvfs`](nestgate_core::linux_proc::statvfs_space) (Linux).
@@ -343,7 +343,7 @@ mod tests {
         // Add a test engine
         state
             .zfs_engines
-            .insert("test-engine".to_string(), "engine-data".to_string());
+            .insert(String::from("test-engine"), String::from("engine-data"));
 
         let result = health_check(State(state)).await;
 
@@ -401,13 +401,13 @@ mod tests {
         // Add test datasets
         state
             .zfs_engines
-            .insert("dataset1".to_string(), "data1".to_string());
+            .insert(String::from("dataset1"), String::from("data1"));
         state
             .zfs_engines
-            .insert("dataset2".to_string(), "data2".to_string());
+            .insert(String::from("dataset2"), String::from("data2"));
         state
             .zfs_engines
-            .insert("dataset3".to_string(), "data3".to_string());
+            .insert(String::from("dataset3"), String::from("data3"));
 
         let result = system_status(State(state)).await;
 
@@ -523,10 +523,10 @@ mod tests {
     #[test]
     fn test_service_status_serialization() {
         let service_status = ServiceStatus {
-            zfs_engine: "online".to_string(),
-            storage_detector: "online".to_string(),
-            auto_configurator: "online".to_string(),
-            metrics_collector: "online".to_string(),
+            zfs_engine: String::from("online"),
+            storage_detector: String::from("online"),
+            auto_configurator: String::from("online"),
+            metrics_collector: String::from("online"),
         };
 
         // Should be serializable
@@ -537,14 +537,14 @@ mod tests {
     #[test]
     fn test_health_status_serialization() {
         let health = HealthStatus {
-            status: "healthy".to_string(),
+            status: String::from("healthy"),
             uptime_seconds: 12345,
-            version: "0.1.0".to_string(),
+            version: String::from("0.1.0"),
             services: ServiceStatus {
-                zfs_engine: "online".to_string(),
-                storage_detector: "online".to_string(),
-                auto_configurator: "online".to_string(),
-                metrics_collector: "online".to_string(),
+                zfs_engine: String::from("online"),
+                storage_detector: String::from("online"),
+                auto_configurator: String::from("online"),
+                metrics_collector: String::from("online"),
             },
             timestamp: chrono::Utc::now(),
         };
@@ -557,12 +557,12 @@ mod tests {
     #[test]
     fn test_version_info_serialization() {
         let version = VersionInfo {
-            version: "0.1.0".to_string(),
-            build_date: "2025-01-30".to_string(),
-            git_hash: "abc123".to_string(),
-            rust_version: "1.75.0".to_string(),
-            target: "x86_64-linux".to_string(),
-            profile: "release".to_string(),
+            version: String::from("0.1.0"),
+            build_date: String::from("2025-01-30"),
+            git_hash: String::from("abc123"),
+            rust_version: String::from("1.75.0"),
+            target: String::from("x86_64-linux"),
+            profile: String::from("release"),
         };
 
         // Should be serializable

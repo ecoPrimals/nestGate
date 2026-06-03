@@ -286,10 +286,10 @@ mod tests {
     fn test_nat_traversal_info_roundtrip() {
         let mut relays = HashMap::new();
         relays.insert(
-            "tower".to_string(),
+            String::from("tower"),
             RelayEndpoint {
-                relay_addr: "192.0.2.10:3479".to_string(),
-                stun_addr: "192.0.2.10:3478".to_string(),
+                relay_addr: String::from("192.0.2.10:3479"),
+                stun_addr: String::from("192.0.2.10:3478"),
             },
         );
 
@@ -301,7 +301,7 @@ mod tests {
                 predicted_next: 41205,
                 confidence: 0.85,
             },
-            last_probed: "2026-02-11T20:00:00Z".to_string(),
+            last_probed: String::from("2026-02-11T20:00:00Z"),
             family_relay: relays,
         };
 
@@ -313,10 +313,10 @@ mod tests {
     #[test]
     fn test_known_beacon_roundtrip() {
         let beacon = KnownBeacon {
-            peer_id: "pixel-abc123".to_string(),
-            family_id: "nat0".to_string(),
-            last_seen: "2026-02-11T20:30:00Z".to_string(),
-            public_addr: Some("1.2.3.4:41200".to_string()),
+            peer_id: String::from("pixel-abc123"),
+            family_id: String::from("nat0"),
+            last_seen: String::from("2026-02-11T20:30:00Z"),
+            public_addr: Some(String::from("1.2.3.4:41200")),
             nat_type: Some(NatType::Symmetric),
             port_pattern: Some(PortPattern::Sequential {
                 step: 1,
@@ -325,12 +325,12 @@ mod tests {
                 confidence: 0.85,
             }),
             relay_preference: Some(RelayPreference {
-                preferred_relay: "tower".to_string(),
-                relay_addr: "192.0.2.10:3479".to_string(),
-                stun_addr: "192.0.2.10:3478".to_string(),
+                preferred_relay: String::from("tower"),
+                relay_addr: String::from("192.0.2.10:3479"),
+                stun_addr: String::from("192.0.2.10:3478"),
             }),
             connection_history: vec![ConnectionRecord {
-                timestamp: "2026-02-11T20:30:00Z".to_string(),
+                timestamp: String::from("2026-02-11T20:30:00Z"),
                 method: ConnectionMethod::RelayAssisted,
                 success: true,
                 duration_ms: Some(150),
@@ -345,9 +345,9 @@ mod tests {
     #[test]
     fn test_known_beacon_minimal() {
         let beacon = KnownBeacon {
-            peer_id: "usb-xyz".to_string(),
-            family_id: "nat0".to_string(),
-            last_seen: "2026-02-11T21:00:00Z".to_string(),
+            peer_id: String::from("usb-xyz"),
+            family_id: String::from("nat0"),
+            last_seen: String::from("2026-02-11T21:00:00Z"),
             public_addr: None,
             nat_type: None,
             port_pattern: None,

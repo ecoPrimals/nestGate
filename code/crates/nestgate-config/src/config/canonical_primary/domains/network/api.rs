@@ -230,7 +230,7 @@ impl ApiConfig {
 
             // Metadata
             enabled: true,
-            version: "v1".to_string(),
+            version: String::from("v1"),
             api_settings: HashMap::new(),
 
             // Security (relaxed for development)
@@ -269,7 +269,7 @@ impl ApiConfig {
 
             // Metadata
             enabled: true,
-            version: "v1".to_string(),
+            version: String::from("v1"),
             api_settings: HashMap::new(),
 
             // Security (strict)
@@ -341,8 +341,8 @@ impl Default for TlsConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            cert_path: "/etc/ssl/certs/nestgate.pem".to_string(),
-            key_path: "/etc/ssl/private/nestgate.key".to_string(),
+            cert_path: String::from("/etc/ssl/certs/nestgate.pem"),
+            key_path: String::from("/etc/ssl/private/nestgate.key"),
             ca_path: None,
             verify_client: false,
         }
@@ -357,9 +357,9 @@ impl TlsConfig {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            cert_path: "/etc/ssl/certs/nestgate-prod.pem".to_string(),
-            key_path: "/etc/ssl/private/nestgate-prod.key".to_string(),
-            ca_path: Some("/etc/ssl/certs/ca-bundle.pem".to_string()),
+            cert_path: String::from("/etc/ssl/certs/nestgate-prod.pem"),
+            key_path: String::from("/etc/ssl/private/nestgate-prod.key"),
+            ca_path: Some(String::from("/etc/ssl/certs/ca-bundle.pem")),
             verify_client: true,
         }
     }
@@ -418,7 +418,7 @@ impl ApiSecurityConfig {
             auth_enabled: false,
             jwt_secret: None,
             api_key_enabled: false,
-            cors_origins: vec!["*".to_string()],
+            cors_origins: vec![String::from("*")],
             request_signing_enabled: false,
             audit_logging_enabled: true,
         }
@@ -508,9 +508,9 @@ impl ApiMonitoringConfig {
     pub fn development() -> Self {
         Self {
             metrics_enabled: true,
-            metrics_path: "/api/v1/monitoring/metrics".to_string(),
+            metrics_path: String::from("/api/v1/monitoring/metrics"),
             health_checks_enabled: true,
-            health_path: "/health".to_string(),
+            health_path: String::from("/health"),
             tracing_enabled: true,
             request_logging_enabled: true,
             profiling_enabled: true,
@@ -526,9 +526,9 @@ impl ApiMonitoringConfig {
     pub fn production() -> Self {
         Self {
             metrics_enabled: true,
-            metrics_path: "/api/v1/monitoring/metrics".to_string(),
+            metrics_path: String::from("/api/v1/monitoring/metrics"),
             health_checks_enabled: true,
-            health_path: "/health".to_string(),
+            health_path: String::from("/health"),
             tracing_enabled: true,
             request_logging_enabled: false, // Reduce overhead in production
             profiling_enabled: false,       // Disable unless debugging

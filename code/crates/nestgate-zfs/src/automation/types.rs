@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn test_tier_rule_creation() {
         let rule = TierRule {
-            condition: "size > 1GB".to_string(),
+            condition: String::from("size > 1GB"),
             target_tier: StorageTier::Cold,
             priority: 10,
         };
@@ -286,9 +286,9 @@ mod tests {
         let rule = MigrationRule {
             source_tier: StorageTier::Hot,
             target_tier: StorageTier::Cold,
-            condition: "age > 30 days".to_string(),
+            condition: String::from("age > 30 days"),
             bandwidth_limits: BandwidthLimits::default(),
-            schedule: "nightly".to_string(),
+            schedule: String::from("nightly"),
         };
         assert_eq!(rule.schedule, "nightly");
     }
@@ -298,8 +298,8 @@ mod tests {
         let rule = LifecycleRule {
             stage: LifecycleStage::Active,
             next_stage: Some(LifecycleStage::Aging),
-            conditions: vec!["low_access".to_string()],
-            actions: vec!["migrate".to_string()],
+            conditions: vec![String::from("low_access")],
+            actions: vec![String::from("migrate")],
         };
         assert_eq!(rule.stage, LifecycleStage::Active);
         assert_eq!(rule.conditions.len(), 1);
@@ -308,9 +308,9 @@ mod tests {
     #[test]
     fn test_automation_policy_creation() {
         let policy = AutomationPolicy {
-            policy_id: "pol-001".to_string(),
-            name: "Test Policy".to_string(),
-            description: "A test policy".to_string(),
+            policy_id: String::from("pol-001"),
+            name: String::from("Test Policy"),
+            description: String::from("A test policy"),
             priority: PolicyPriority::High,
             enabled: true,
             conditions: PolicyConditions {
@@ -328,7 +328,7 @@ mod tests {
     #[test]
     fn test_dataset_lifecycle_creation() {
         let lifecycle = DatasetLifecycle {
-            dataset_name: "tank/data".to_string(),
+            dataset_name: String::from("tank/data"),
             current_tier: StorageTier::Hot,
             created: SystemTime::now(),
             last_accessed: None,
@@ -345,10 +345,10 @@ mod tests {
     #[test]
     fn test_automation_event_creation() {
         let event = AutomationEvent {
-            event_id: "evt-001".to_string(),
+            event_id: String::from("evt-001"),
             event_type: AutomationEventType::Migration,
             timestamp: SystemTime::now(),
-            details: "Migrated to cold tier".to_string(),
+            details: String::from("Migrated to cold tier"),
             success: true,
         };
         assert_eq!(event.event_id, "evt-001");
@@ -390,17 +390,17 @@ mod tests {
     #[test]
     fn test_automation_event_type_variants() {
         let event1 = AutomationEvent {
-            event_id: "1".to_string(),
+            event_id: String::from("1"),
             event_type: AutomationEventType::TierAssignment,
             timestamp: SystemTime::now(),
-            details: "test".to_string(),
+            details: String::from("test"),
             success: true,
         };
         let event2 = AutomationEvent {
-            event_id: "2".to_string(),
+            event_id: String::from("2"),
             event_type: AutomationEventType::Cleanup,
             timestamp: SystemTime::now(),
-            details: "test".to_string(),
+            details: String::from("test"),
             success: true,
         };
         assert_eq!(event1.event_id, "1");

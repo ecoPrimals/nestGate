@@ -41,7 +41,7 @@
 //! ```rust,ignore
 //! // Requires RpcHandler impl; see fn new() doc for construction example
 //! use nestgate_core::rpc::isomorphic_ipc::IsomorphicIpcServer;
-//! let server = IsomorphicIpcServer::new("nestgate".to_string(), handler);
+//! let server = IsomorphicIpcServer::new(String::from("nestgate"), handler);
 //! ```
 //!
 //! ## Expected Behavior
@@ -158,7 +158,7 @@ impl IsomorphicIpcServer {
     ///
     /// # async fn example(handler: Arc<dyn nestgate_core::rpc::isomorphic_ipc::RpcHandler>) {
     /// let server = Arc::new(IsomorphicIpcServer::new(
-    ///     "nestgate".to_string(),
+    ///     String::from("nestgate"),
     ///     handler,
     /// ));
     /// # }

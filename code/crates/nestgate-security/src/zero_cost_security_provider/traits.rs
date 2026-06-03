@@ -237,9 +237,9 @@ mod tests {
             _credentials: &ZeroCostCredentials,
         ) -> Result<ZeroCostAuthToken> {
             Ok(ZeroCostAuthToken::new(
-                "mock-token".to_string(),
-                "user123".to_string(),
-                vec!["read".to_string()],
+                String::from("mock-token"),
+                String::from("user123"),
+                vec![String::from("read")],
                 std::time::Duration::from_secs(3600),
             ))
         }
@@ -252,9 +252,9 @@ mod tests {
         /// Refresh Token
         async fn refresh_token(&self, _token: &str) -> Result<ZeroCostAuthToken> {
             Ok(ZeroCostAuthToken::new(
-                "refreshed-token".to_string(),
-                "user123".to_string(),
-                vec!["read".to_string()],
+                String::from("refreshed-token"),
+                String::from("user123"),
+                vec![String::from("read")],
                 std::time::Duration::from_secs(3600),
             ))
         }
@@ -277,9 +277,9 @@ mod tests {
         /// Sign Data
         async fn sign_data(&self, _data: &[u8]) -> Result<ZeroCostSignature> {
             Ok(ZeroCostSignature::new(
-                "ECDSA-P256".to_string(),
-                "mock-signature".to_string(),
-                "key123".to_string(),
+                String::from("ECDSA-P256"),
+                String::from("mock-signature"),
+                String::from("key123"),
             ))
         }
 
@@ -294,12 +294,12 @@ mod tests {
 
         /// Gets Key Id
         fn get_key_id(&self) -> String {
-            "mock-key-123".to_string()
+            String::from("mock-key-123")
         }
 
         /// Supported Algorithms
         fn supported_algorithms(&self) -> Vec<String> {
-            vec!["AES-256-GCM".to_string(), "ECDSA-P256".to_string()]
+            vec![String::from("AES-256-GCM"), String::from("ECDSA-P256")]
         }
 
         /// Supports Algorithm
@@ -331,12 +331,12 @@ mod tests {
     #[tokio::test]
     async fn test_mock_security_provider() -> Result<()> {
         let provider = MockSecurityProvider {
-            config: "mock-config".to_string(),
+            config: String::from("mock-config"),
         };
 
         // Test authentication - using canonical error handling
         let credentials =
-            ZeroCostCredentials::new_password("testuser".to_string(), "testpass".to_string());
+            ZeroCostCredentials::new_password(String::from("testuser"), String::from("testpass"));
         let token = provider.authenticate(&credentials).await?;
         assert_eq!(token.user_id, "user123");
 

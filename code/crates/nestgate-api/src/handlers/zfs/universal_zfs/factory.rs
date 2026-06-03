@@ -54,7 +54,7 @@ impl ZfsServiceFactory {
                 error!("Remote ZFS backend removed - use native backend");
                 Box::pin(async {
                     Err(UniversalZfsError::configuration(
-                        "Remote backends removed - use native ZFS".to_string(),
+                        String::from("Remote backends removed - use native ZFS"),
                     ))
                 })
             }
@@ -209,7 +209,7 @@ impl ZfsServiceFactory {
                 let _ = (endpoint, timeout);
                 error!("Remote ZFS fallback removed - use native backend");
                 Err(UniversalZfsError::configuration(
-                    "Remote backends removed - use native ZFS".to_string(),
+                    String::from("Remote backends removed - use native ZFS"),
                 ))
             }
         }
@@ -244,11 +244,11 @@ impl ZfsServiceFactory {
 
         // Check native ZFS
         let native_available = Self::is_zfs_available().await;
-        health_status.push(("native".to_string(), native_available));
+        health_status.push((String::from("native"), native_available));
 
         // Check remote services
         let remote_available = Self::detect_remote_services().is_some();
-        health_status.push(("remote".to_string(), remote_available));
+        health_status.push((String::from("remote"), remote_available));
 
         // Note: Mock backend eliminated in canonical modernization
         // All backends now use real implementations
@@ -347,7 +347,7 @@ mod tests {
     async fn create_service_remote_backend_errors() {
         let config = ZfsServiceConfig {
             backend: ZfsBackend::Remote {
-                endpoint: "http://example.invalid".to_string(),
+                endpoint: String::from("http://example.invalid"),
                 timeout: Duration::from_secs(1),
             },
             ..Default::default()

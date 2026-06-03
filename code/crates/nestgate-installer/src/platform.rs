@@ -62,7 +62,7 @@ impl PlatformInfo {
         Self {
             service_manager,
             binary_extension: if os == "windows" {
-                ".exe".to_string()
+                String::from(".exe")
             } else {
                 String::new()
             },
@@ -473,10 +473,10 @@ mod tests {
     #[test]
     fn synthetic_platform_info_windows_get_binary_name() {
         let info = PlatformInfo {
-            os: "windows".to_string(),
-            arch: "x86_64".to_string(),
+            os: String::from("windows"),
+            arch: String::from("x86_64"),
             service_manager: ServiceManager::WindowsService,
-            binary_extension: ".exe".to_string(),
+            binary_extension: String::from(".exe"),
         };
         assert_eq!(info.get_binary_name("nestgate"), "nestgate.exe");
         assert!(info.service_install_supported());
@@ -486,8 +486,8 @@ mod tests {
     #[test]
     fn synthetic_platform_info_launchd_and_manual() {
         let launchd = PlatformInfo {
-            os: "macos".to_string(),
-            arch: "aarch64".to_string(),
+            os: String::from("macos"),
+            arch: String::from("aarch64"),
             service_manager: ServiceManager::Launchd,
             binary_extension: String::new(),
         };
@@ -495,8 +495,8 @@ mod tests {
         assert_eq!(launchd.get_binary_name("nestgate"), "nestgate");
 
         let manual = PlatformInfo {
-            os: "linux".to_string(),
-            arch: "x86_64".to_string(),
+            os: String::from("linux"),
+            arch: String::from("x86_64"),
             service_manager: ServiceManager::Manual,
             binary_extension: String::new(),
         };
@@ -508,15 +508,15 @@ mod tests {
     fn service_install_supported_matches_service_manager() {
         let systemd = ServiceManager::Systemd;
         let info = PlatformInfo {
-            os: "linux".to_string(),
-            arch: "x86_64".to_string(),
+            os: String::from("linux"),
+            arch: String::from("x86_64"),
             service_manager: systemd,
             binary_extension: String::new(),
         };
         assert!(info.service_install_supported());
         let manual = PlatformInfo {
-            os: "linux".to_string(),
-            arch: "x86_64".to_string(),
+            os: String::from("linux"),
+            arch: String::from("x86_64"),
             service_manager: ServiceManager::Manual,
             binary_extension: String::new(),
         };

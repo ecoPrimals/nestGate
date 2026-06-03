@@ -50,7 +50,7 @@ pub(super) async fn get_workspace_properties(
         }
     }
 
-    ("lz4".to_string(), "none".to_string(), "unknown".to_string())
+    (String::from("lz4"), String::from("none"), String::from("unknown"))
 }
 
 /// Get workspace details for a specific workspace ID

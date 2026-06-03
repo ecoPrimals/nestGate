@@ -138,7 +138,7 @@ async fn handle_websocket_connection(
     }
     // Send welcome message
     let welcome_event = WebSocketEvent::Message {
-        content: "Connected to NestGate WebSocket".to_string(),
+        content: String::from("Connected to NestGate WebSocket"),
         timestamp: chrono::Utc::now().to_rfc3339(),
     };
 
@@ -348,8 +348,8 @@ mod tests {
     #[tokio::test]
     async fn test_websocket_event_metrics_update() {
         let mut metrics = HashMap::new();
-        metrics.insert("cpu_usage".to_string(), 45.5);
-        metrics.insert("memory_usage".to_string(), 70.2);
+        metrics.insert(String::from("cpu_usage"), 45.5);
+        metrics.insert(String::from("memory_usage"), 70.2);
 
         let event = WebSocketEvent::metrics_update(metrics.clone());
 
@@ -427,7 +427,7 @@ mod tests {
     #[tokio::test]
     async fn test_event_serialization_metrics_update() {
         let mut metrics = HashMap::new();
-        metrics.insert("latency_ms".to_string(), 125.5);
+        metrics.insert(String::from("latency_ms"), 125.5);
 
         let event = WebSocketEvent::metrics_update(metrics);
         let serialized = serde_json::to_string(&event);

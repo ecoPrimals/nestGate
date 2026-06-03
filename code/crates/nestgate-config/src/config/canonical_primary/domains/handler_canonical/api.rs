@@ -104,7 +104,7 @@ impl Default for AuthHandlerConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            methods: vec!["bearer".to_string()],
+            methods: vec![String::from("bearer")],
         }
     }
 }

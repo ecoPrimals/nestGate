@@ -21,7 +21,7 @@ impl Default for ServiceStatus {
         Self {
             running: false,
             replicas: 0,
-            health: "unknown".to_string(),
+            health: String::from("unknown"),
             last_updated: std::time::SystemTime::now(),
         }
     }

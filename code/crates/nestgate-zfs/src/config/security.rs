@@ -77,7 +77,7 @@ impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
             enable_encryption: false,
-            encryption_algorithm: "aes-256-gcm".to_string(),
+            encryption_algorithm: String::from("aes-256-gcm"),
             key_management: KeyManagementConfig::default(),
             access_control: AccessControlConfig::default(),
         }
@@ -114,7 +114,7 @@ impl Default for AccessControlConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            default_permissions: "755".to_string(),
+            default_permissions: String::from("755"),
             user_rules: HashMap::new(),
             group_rules: HashMap::new(),
         }
@@ -125,16 +125,16 @@ impl AccessControlConfig {
     /// Create production-optimized access control configuration
     pub fn production() -> Self {
         let mut user_rules = HashMap::new();
-        user_rules.insert("zfs-admin".to_string(), vec!["all".to_string()]);
-        user_rules.insert("backup".to_string(), vec!["read".to_string()]);
+        user_rules.insert(String::from("zfs-admin"), vec![String::from("all")]);
+        user_rules.insert(String::from("backup"), vec![String::from("read")]);
 
         let mut group_rules = HashMap::new();
         group_rules.insert(
-            "zfs-operators".to_string(),
+            String::from("zfs-operators"),
             [
-                "read".to_string(),
-                "create".to_string(),
-                "snapshot".to_string(),
+                String::from("read"),
+                String::from("create"),
+                String::from("snapshot"),
             ]
             .iter()
             .map(std::string::ToString::to_string)
@@ -142,7 +142,7 @@ impl AccessControlConfig {
         );
 
         Self {
-            default_permissions: "750".to_string(),
+            default_permissions: String::from("750"),
             user_rules,
             group_rules,
         }
@@ -155,7 +155,7 @@ impl SecurityConfig {
     pub fn production() -> Self {
         Self {
             enable_encryption: true,
-            encryption_algorithm: "aes-256-gcm".to_string(),
+            encryption_algorithm: String::from("aes-256-gcm"),
             key_management: KeyManagementConfig::production(),
             access_control: AccessControlConfig::production(),
         }

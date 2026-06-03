@@ -369,7 +369,7 @@ impl RealTimePerformanceMonitor {
         self.metrics_cache
             .write()
             .await
-            .insert("latest".to_string(), metrics.clone());
+            .insert(String::from("latest"), metrics.clone());
         trim_metrics_cache_entries(&mut *self.metrics_cache.write().await, 50);
 
         // Get metrics for trending

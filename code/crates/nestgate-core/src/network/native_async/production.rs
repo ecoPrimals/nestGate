@@ -128,7 +128,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
             service_id: service_id.to_string(),
             service_info: None,
             timestamp: Utc::now(),
-            metadata: [("health_status".to_string(), format!("{status:?}"))].into(),
+            metadata: [(String::from("health_status"), format!("{status:?}"))].into(),
         });
         Ok(())
     }
@@ -231,7 +231,7 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         // Native async connection - no Future boxing overhead
         let connection = NetworkConnection {
             connection_id: uuid::Uuid::new_v4().to_string(),
-            protocol: "http".to_string(),
+            protocol: String::from("http"),
             local_endpoint: format!("{}:{}", config.api.bind_address, config.api.port),
             established_at: chrono::Utc::now(),
             status: ConnectionStatus::Connecting,
@@ -309,8 +309,8 @@ mod tests {
     fn make_service_info(name: &str) -> ServiceInfo {
         ServiceInfo {
             name: name.to_string(),
-            version: "1.0".to_string(),
-            status: "running".to_string(),
+            version: String::from("1.0"),
+            status: String::from("running"),
             start_time: None,
             pid: None,
             memory_bytes: None,
@@ -413,7 +413,7 @@ mod tests {
         discovery.register(service).await?;
 
         let query = ServiceQuery {
-            service_name: Some("query-svc".to_string()),
+            service_name: Some(String::from("query-svc")),
             tags: vec![],
             namespace: None,
             healthy_only: false,
@@ -431,7 +431,7 @@ mod tests {
         discovery.register(service).await?;
 
         let mut meta = std::collections::HashMap::new();
-        meta.insert("key".to_string(), "value".to_string());
+        meta.insert(String::from("key"), String::from("value"));
         let result = discovery.update_service("update-svc", meta).await;
         assert!(result.is_ok());
         Ok(())
@@ -454,8 +454,8 @@ mod tests {
         let conn = handler.connect(&config).await?;
 
         let request = NetworkRequest {
-            request_id: "req-1".to_string(),
-            method: "GET".to_string(),
+            request_id: String::from("req-1"),
+            method: String::from("GET"),
             headers: std::collections::HashMap::new(),
             body: vec![],
             timeout: None,

@@ -176,16 +176,16 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
 
     // HTTP/REST protocol
     protocols.insert(
-        "http".to_string(),
+        String::from("http"),
         ProtocolInfo {
-            name: "HTTP/REST".to_string(),
-            version: "1.1".to_string(),
+            name: String::from("HTTP/REST"),
+            version: String::from("1.1"),
             endpoint: format!("http://{advertise_host}:{api_port}"),
             port: Some(api_port),
             features: vec![
-                "rest".to_string(),
-                "json".to_string(),
-                "streaming".to_string(),
+                String::from("rest"),
+                String::from("json"),
+                String::from("streaming"),
             ],
             latency_us: Some(5000), // ~5ms
             status: None,
@@ -194,16 +194,16 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
 
     // JSON-RPC protocol
     protocols.insert(
-        "jsonrpc".to_string(),
+        String::from("jsonrpc"),
         ProtocolInfo {
-            name: "JSON-RPC".to_string(),
-            version: "2.0".to_string(),
+            name: String::from("JSON-RPC"),
+            version: String::from("2.0"),
             endpoint: format!("http://{advertise_host}:{api_port}/jsonrpc"),
             port: Some(api_port),
             features: vec![
-                "rpc".to_string(),
-                "universal".to_string(),
-                "language-agnostic".to_string(),
+                String::from("rpc"),
+                String::from("universal"),
+                String::from("language-agnostic"),
             ],
             latency_us: Some(2000), // ~2ms
             status: None,
@@ -212,21 +212,21 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
 
     // tarpc protocol - planned for v0.2.0, not yet running (serve_tarpc not wired)
     protocols.insert(
-        "tarpc".to_string(),
+        String::from("tarpc"),
         ProtocolInfo {
-            name: "tarpc".to_string(),
-            version: "0.34".to_string(),
+            name: String::from("tarpc"),
+            version: String::from("0.34"),
             endpoint: format!("tarpc://{advertise_host}:{tarpc_port}"),
             port: Some(tarpc_port),
             features: vec![
-                "binary".to_string(),
-                "high-performance".to_string(),
-                "rust-native".to_string(),
-                "type-safe".to_string(),
-                "zero-copy".to_string(),
+                String::from("binary"),
+                String::from("high-performance"),
+                String::from("rust-native"),
+                String::from("type-safe"),
+                String::from("zero-copy"),
             ],
             latency_us: Some(50), // ~50μs (40x faster than JSON-RPC!)
-            status: Some("planned_v0.2.0".to_string()),
+            status: Some(String::from("planned_v0.2.0")),
         },
     );
 
@@ -260,7 +260,7 @@ mod tests {
     async fn test_jsonrpc_handler() {
         let request = JsonRpcRequest {
             jsonrpc: Arc::from("2.0"),
-            id: "test-1".to_string(),
+            id: String::from("test-1"),
             method: Arc::from("health"),
             params: serde_json::Value::Null,
         };
@@ -278,7 +278,7 @@ mod tests {
     async fn test_invalid_jsonrpc_version() {
         let request = JsonRpcRequest {
             jsonrpc: Arc::from("1.0"),
-            id: "test-2".to_string(),
+            id: String::from("test-2"),
             method: Arc::from("health"),
             params: serde_json::Value::Null,
         };
@@ -303,7 +303,7 @@ mod tests {
         // Verify tarpc has best performance and is marked as planned (not yet running)
         let tarpc = capabilities.protocols.get("tarpc").unwrap();
         assert_eq!(tarpc.latency_us, Some(50));
-        assert_eq!(tarpc.status, Some("planned_v0.2.0".to_string()));
+        assert_eq!(tarpc.status, Some(String::from("planned_v0.2.0")));
 
         let jsonrpc = capabilities.protocols.get("jsonrpc").unwrap();
         assert_eq!(jsonrpc.latency_us, Some(2000));

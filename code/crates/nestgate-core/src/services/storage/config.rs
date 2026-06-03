@@ -174,15 +174,15 @@ impl ZfsConfig {
     /// - Network or I/O errors occur
     pub fn validate(&self) -> Result<(), String> {
         if self.zfs_binary.is_empty() {
-            return Err("ZFS binary path cannot be empty".to_string());
+            return Err(String::from("ZFS binary path cannot be empty"));
         }
 
         if self.zpool_binary.is_empty() {
-            return Err("ZPool binary path cannot be empty".to_string());
+            return Err(String::from("ZPool binary path cannot be empty"));
         }
 
         if self.command_timeout.as_secs() == 0 {
-            return Err("Command timeout must be greater than zero".to_string());
+            return Err(String::from("Command timeout must be greater than zero"));
         }
 
         // Check if binaries exist (in a real implementation)
@@ -273,23 +273,23 @@ impl StorageServiceConfig {
         self.zfs.validate()?;
 
         if self.discovery_interval == 0 {
-            return Err("Discovery interval must be greater than zero".to_string());
+            return Err(String::from("Discovery interval must be greater than zero"));
         }
 
         if self.quota_check_interval == 0 {
-            return Err("Quota check interval must be greater than zero".to_string());
+            return Err(String::from("Quota check interval must be greater than zero"));
         }
 
         if self.monitoring_interval == 0 {
-            return Err("Monitoring interval must be greater than zero".to_string());
+            return Err(String::from("Monitoring interval must be greater than zero"));
         }
 
         if self.operation_timeout == 0 {
-            return Err("Operation timeout must be greater than zero".to_string());
+            return Err(String::from("Operation timeout must be greater than zero"));
         }
 
         if self.max_concurrent_operations == 0 {
-            return Err("Max concurrent operations must be greater than zero".to_string());
+            return Err(String::from("Max concurrent operations must be greater than zero"));
         }
 
         Ok(())

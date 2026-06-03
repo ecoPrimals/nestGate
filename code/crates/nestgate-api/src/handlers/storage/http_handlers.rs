@@ -15,18 +15,18 @@ use super::types::{StorageDatasetInfo, StorageMetrics, StoragePoolInfo, StorageS
 pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
     let pools = vec![
         StoragePoolInfo {
-            name: "main-pool".to_string(),
+            name: String::from("main-pool"),
             total_capacity_gb: 1000,
             used_capacity_gb: 400,
             available_capacity_gb: 600,
-            health_status: "healthy".to_string(),
+            health_status: String::from("healthy"),
         },
         StoragePoolInfo {
-            name: "backup-pool".to_string(),
+            name: String::from("backup-pool"),
             total_capacity_gb: 500,
             used_capacity_gb: 150,
             available_capacity_gb: 350,
-            health_status: "healthy".to_string(),
+            health_status: String::from("healthy"),
         },
     ];
 
@@ -43,15 +43,15 @@ pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCod
 pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
     let datasets = vec![
         StorageDatasetInfo {
-            name: "main-pool/data".to_string(),
-            pool_name: "main-pool".to_string(),
+            name: String::from("main-pool/data"),
+            pool_name: String::from("main-pool"),
             used_space_gb: 200,
             compression_ratio: 1.5,
             dedup_ratio: 1.2,
         },
         StorageDatasetInfo {
-            name: "main-pool/logs".to_string(),
-            pool_name: "main-pool".to_string(),
+            name: String::from("main-pool/logs"),
+            pool_name: String::from("main-pool"),
             used_space_gb: 50,
             compression_ratio: 2.1,
             dedup_ratio: 1.8,
@@ -71,14 +71,14 @@ pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, Sta
 pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
     let snapshots = vec![
         StorageSnapshotInfo {
-            name: "main-pool/data@backup-2024-01-15".to_string(),
-            dataset_name: "main-pool/data".to_string(),
+            name: String::from("main-pool/data@backup-2024-01-15"),
+            dataset_name: String::from("main-pool/data"),
             created_at: std::time::SystemTime::now(),
             size_gb: 180,
         },
         StorageSnapshotInfo {
-            name: "main-pool/logs@daily-2024-01-15".to_string(),
-            dataset_name: "main-pool/logs".to_string(),
+            name: String::from("main-pool/logs@daily-2024-01-15"),
+            dataset_name: String::from("main-pool/logs"),
             created_at: std::time::SystemTime::now(),
             size_gb: 45,
         },
@@ -104,7 +104,7 @@ pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
         available_storage: 950_000_000_000, // 950GB in bytes
         iops: 1250.0,
         bandwidth_mbps: 450.5,
-        health_status: "healthy".to_string(),
+        health_status: String::from("healthy"),
     };
 
     Ok(Json(metrics))

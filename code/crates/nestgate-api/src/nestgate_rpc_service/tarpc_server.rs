@@ -79,7 +79,7 @@ impl NestGateRpc for NestGateRpcServer {
                             used_capacity_gb: used,
                             available_capacity_gb: available,
                             health_status: pool_info.health,
-                            backend: "zfs".to_string(),
+                            backend: String::from("zfs"),
                         }
                     })
                     .collect()
@@ -187,7 +187,7 @@ impl NestGateRpc for NestGateRpcServer {
             warn!("Blocked deletion of pool root: {pool}");
             return OperationResult {
                 success: false,
-                message: "Cannot delete pool root dataset".to_string(),
+                message: String::from("Cannot delete pool root dataset"),
                 data: None,
             };
         }

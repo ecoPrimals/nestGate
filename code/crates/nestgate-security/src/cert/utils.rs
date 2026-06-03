@@ -11,7 +11,7 @@ use std::time::{Duration, SystemTime};
 #[must_use]
 pub fn format_system_time(time: SystemTime) -> String {
     time.duration_since(SystemTime::UNIX_EPOCH).map_or_else(
-        |_| "0".to_string(), // fallback for times before Unix epoch
+        |_| String::from("0"), // fallback for times before Unix epoch
         |duration| duration.as_secs().to_string(),
     )
 }
@@ -73,7 +73,7 @@ impl CertUtils {
             }
         }
 
-        Ok("Unknown Subject".to_string())
+        Ok(String::from("Unknown Subject"))
     }
 
     /// Parse certificate issuer from PEM data
@@ -98,7 +98,7 @@ impl CertUtils {
             return Ok(remaining.trim().to_string());
         }
 
-        Ok("Unknown Issuer".to_string())
+        Ok(String::from("Unknown Issuer"))
     }
 
     /// Check if certificate PEM format is valid
@@ -113,18 +113,18 @@ impl CertUtils {
     pub fn create_test_certificate() -> Certificate {
         let now = SystemTime::now();
         Certificate {
-            id: "test-cert-001".to_string(),
+            id: String::from("test-cert-001"),
             cert_type: CertificateType::Server,
             principal: format!(
                 "CN={}",
                 nestgate_config::constants::canonical_defaults::network::LOCALHOST
             ),
-            issuer: "CN=NestGate Test CA".to_string(),
+            issuer: String::from("CN=NestGate Test CA"),
             data: b"test certificate data".to_vec(),
             not_before: format_system_time(now),
             not_after: format_system_time(now + Duration::from_secs(365 * 24 * 3600)), // 1 year
-            serial_number: "TEST-001".to_string(),
-            fingerprint: "sha256:test123456789abcdef".to_string(),
+            serial_number: String::from("TEST-001"),
+            fingerprint: String::from("sha256:test123456789abcdef"),
             metadata: std::collections::HashMap::new(),
         }
     }
@@ -133,9 +133,9 @@ impl CertUtils {
     #[must_use]
     pub fn create_expired_certificate() -> Certificate {
         let mut cert = Self::create_test_certificate();
-        cert.id = "expired-test-cert".to_string();
+        cert.id = String::from("expired-test-cert");
         cert.not_after = format_system_time(SystemTime::UNIX_EPOCH + Duration::from_secs(1)); // Already expired
-        cert.serial_number = "EXPIRED-001".to_string();
+        cert.serial_number = String::from("EXPIRED-001");
         cert
     }
 
@@ -145,31 +145,31 @@ impl CertUtils {
         let mut errors = Vec::new();
 
         if cert.id.is_empty() {
-            errors.push("Certificate ID cannot be empty".to_string());
+            errors.push(String::from("Certificate ID cannot be empty"));
         }
 
         if cert.principal.is_empty() {
-            errors.push("Certificate subject cannot be empty".to_string());
+            errors.push(String::from("Certificate subject cannot be empty"));
         }
 
         if cert.issuer.is_empty() {
-            errors.push("Certificate issuer cannot be empty".to_string());
+            errors.push(String::from("Certificate issuer cannot be empty"));
         }
 
         if cert.data.is_empty() {
-            errors.push("Certificate data cannot be empty".to_string());
+            errors.push(String::from("Certificate data cannot be empty"));
         }
 
         if cert.serial_number.is_empty() {
-            errors.push("Certificate serial number cannot be empty".to_string());
+            errors.push(String::from("Certificate serial number cannot be empty"));
         }
 
         if cert.fingerprint.is_empty() {
-            errors.push("Certificate fingerprint cannot be empty".to_string());
+            errors.push(String::from("Certificate fingerprint cannot be empty"));
         }
 
         if cert.not_before > cert.not_after {
-            errors.push("Certificate not_before time cannot be after not_after time".to_string());
+            errors.push(String::from("Certificate not_before time cannot be after not_after time"));
         }
 
         errors
@@ -266,14 +266,14 @@ pub mod modern {
             id: format!("cert-{service_name}"),
             cert_type: crate::cert::types::CertificateType::Server,
             principal: format!("CN={service_name}, O=NestGate, OU=Security, C=US"),
-            issuer: "CN=NestGate-CA, O=NestGate, C=US".to_string(),
+            issuer: String::from("CN=NestGate-CA, O=NestGate, C=US"),
             data: b"-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----".to_vec(),
             not_before: format_system_time(std::time::SystemTime::now()),
             not_after: format_system_time(
                 std::time::SystemTime::now() + std::time::Duration::from_secs(365 * 24 * 3600),
             ),
-            serial_number: "1".to_string(),
-            fingerprint: "sha256:abcdef123456".to_string(),
+            serial_number: String::from("1"),
+            fingerprint: String::from("sha256:abcdef123456"),
             metadata: std::collections::HashMap::new(),
         })
     }

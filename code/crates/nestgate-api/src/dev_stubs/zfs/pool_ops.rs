@@ -33,15 +33,15 @@ impl PoolOperations for ProductionZfsManager {
     fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError> {
         Ok(vec![
             ZeroCostPoolInfo {
-                name: "tank".to_string(),
-                health: "ONLINE".to_string(),
+                name: String::from("tank"),
+                health: String::from("ONLINE"),
                 size: 1_000_000_000_000,
                 allocated: 500_000_000_000,
                 free: 500_000_000_000,
             },
             ZeroCostPoolInfo {
-                name: "backup".to_string(),
-                health: "ONLINE".to_string(),
+                name: String::from("backup"),
+                health: String::from("ONLINE"),
                 size: 1_000_000_000_000,
                 allocated: 500_000_000_000,
                 free: 500_000_000_000,

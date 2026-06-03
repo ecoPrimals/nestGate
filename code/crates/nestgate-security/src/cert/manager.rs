@@ -85,8 +85,8 @@ impl CertificateManager {
     pub fn get_certificate_info(&self, cert_id: &str) -> Result<HashMap<String, String>> {
         // Use the universal adapter for certificate operations
         let mut info = HashMap::new();
-        info.insert("id".to_string(), cert_id.to_string());
-        info.insert("status".to_string(), "valid".to_string());
+        info.insert(String::from("id"), cert_id.to_string());
+        info.insert(String::from("status"), String::from("valid"));
         Ok(info)
     }
 }
@@ -135,8 +135,8 @@ mod tests {
         let m = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
             .unwrap();
         let info = m.get_certificate_info("cert-1").unwrap();
-        assert_eq!(info.get("id"), Some(&"cert-1".to_string()));
-        assert_eq!(info.get("status"), Some(&"valid".to_string()));
+        assert_eq!(info.get("id"), Some(&String::from("cert-1")));
+        assert_eq!(info.get("status"), Some(&String::from("valid")));
     }
 
     #[test]
@@ -144,7 +144,7 @@ mod tests {
         let env = MapEnv::from([("NESTGATE_API_URL", "http://127.0.0.1:8080")]);
         let m = create_default_certificate_manager_from_env_source(&env).unwrap();
         let info = m.get_certificate_info("x").unwrap();
-        assert_eq!(info.get("status"), Some(&"valid".to_string()));
+        assert_eq!(info.get("status"), Some(&String::from("valid")));
     }
 
     #[test]
@@ -153,6 +153,6 @@ mod tests {
         let m = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
             .unwrap();
         let info = m.get_certificate_info("id").unwrap();
-        assert_eq!(info.get("id"), Some(&"id".to_string()));
+        assert_eq!(info.get("id"), Some(&String::from("id")));
     }
 }

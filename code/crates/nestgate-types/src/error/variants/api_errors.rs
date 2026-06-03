@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_api_error_with_string() {
-        let error = NestGateUnifiedError::api("API failure".to_string());
+        let error = NestGateUnifiedError::api(String::from("API failure"));
         assert!(matches!(&error, NestGateUnifiedError::Api(_)));
         if let NestGateUnifiedError::Api(details) = error {
             assert_eq!(details.message, "API failure");
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_api_with_status_string_message() {
-        let error = NestGateUnifiedError::api_with_status("Internal error".to_string(), 500);
+        let error = NestGateUnifiedError::api_with_status(String::from("Internal error"), 500);
         assert!(matches!(&error, NestGateUnifiedError::Api(_)));
         if let NestGateUnifiedError::Api(details) = error {
             assert_eq!(details.message.as_ref(), "Internal error");
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn test_service_unavailable_string() {
-        let error = NestGateUnifiedError::service_unavailable("Cache unavailable".to_string());
+        let error = NestGateUnifiedError::service_unavailable(String::from("Cache unavailable"));
         assert!(matches!(&error, NestGateUnifiedError::Api(_)));
         if let NestGateUnifiedError::Api(details) = error {
             assert_eq!(
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_not_found_string() {
-        let error = NestGateUnifiedError::not_found("User not found".to_string());
+        let error = NestGateUnifiedError::not_found(String::from("User not found"));
         assert!(matches!(&error, NestGateUnifiedError::Api(_)));
         if let NestGateUnifiedError::Api(details) = error {
             assert_eq!(details.message.as_ref(), "Not found: User not found");
@@ -311,8 +311,8 @@ mod tests {
     #[test]
     fn test_invalid_input_with_field_strings() {
         let error = NestGateUnifiedError::invalid_input_with_field(
-            "password".to_string(),
-            "Too short".to_string(),
+            String::from("password"),
+            String::from("Too short"),
         );
         assert!(matches!(&error, NestGateUnifiedError::Validation(_)));
         if let NestGateUnifiedError::Validation(details) = error {

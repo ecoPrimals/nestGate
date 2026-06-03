@@ -36,7 +36,7 @@ impl Default for MonitoringConfig {
             metrics_interval: Duration::from_secs(60),
             log_retention_days: 30,
             tracing_enabled: false,
-            endpoints: vec!["http://localhost:9090".to_string()],
+            endpoints: vec![String::from("http://localhost:9090")],
             custom_settings: HashMap::new(),
         }
     }
@@ -87,7 +87,7 @@ impl Default for FsMonitorConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            ignore_patterns: vec!["*.tmp".to_string(), "*.log".to_string()],
+            ignore_patterns: vec![String::from("*.tmp"), String::from("*.log")],
             event_settings: HashMap::new(),
         }
     }
@@ -138,9 +138,9 @@ impl Default for MiddlewareConfig {
         Self {
             enabled: true,
             middleware_chain: vec![
-                "cors".to_string(),
-                "auth".to_string(),
-                "logging".to_string(),
+                String::from("cors"),
+                String::from("auth"),
+                String::from("logging"),
             ],
             request_settings: HashMap::new(),
             response_settings: HashMap::new(),

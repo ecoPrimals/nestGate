@@ -275,12 +275,12 @@ pub fn validate_performance_claims() -> Result<(), String> {
     // Performance thresholds (adjust based on actual measurements)
     if uuid_cache_duration.as_nanos() > 50_000_000 {
         // 50ms for 10k operations
-        return Err("UUID cache performance regression detected".to_string());
+        return Err(String::from("UUID cache performance regression detected"));
     }
 
     if memory_pool_duration.as_nanos() > 10_000_000 {
         // 10ms for 1k operations
-        return Err("Memory pool performance regression detected".to_string());
+        return Err(String::from("Memory pool performance regression detected"));
     }
 
     println!("🎉 All performance validations passed!");

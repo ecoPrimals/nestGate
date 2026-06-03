@@ -77,7 +77,7 @@ pub async fn get_pool_properties(pool_name: &str) -> Result<HashMap<String, Stri
         .await
         .map_err(|_e| {
             create_zfs_error(
-                "Failed to get pool properties: error details".to_string(),
+                String::from("Failed to get pool properties: error details"),
                 ZfsOperation::SystemCheck,
             )
         })?;

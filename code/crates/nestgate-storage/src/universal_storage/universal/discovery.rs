@@ -464,7 +464,7 @@ mod tests {
     #[tokio::test]
     async fn test_discover_operations_filesystem() {
         let transport = TransportProtocol::UnixSocket {
-            path: "./storage".to_string(),
+            path: String::from("./storage"),
         };
 
         let pattern =
@@ -568,8 +568,8 @@ mod tests {
     #[test]
     fn test_discovered_storage_creation() {
         let storage = DiscoveredStorage {
-            name: "test".to_string(),
-            endpoint: "https://example.com".to_string(),
+            name: String::from("test"),
+            endpoint: String::from("https://example.com"),
             protocol: DiscoveredProtocol::new(
                 TransportProtocol::Http {
                     version: HttpVersion::Http1_1,

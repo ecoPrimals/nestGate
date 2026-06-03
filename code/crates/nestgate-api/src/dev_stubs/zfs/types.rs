@@ -92,8 +92,8 @@ impl ZeroCostZfsOperations {
     /// - Network or I/O errors occur
     pub fn get_system_info(&self) -> Result<HashMap<String, String>, ZfsError> {
         let mut info = HashMap::new();
-        info.insert("version".to_string(), "2.1.0".to_string());
-        info.insert("kernel_module".to_string(), "loaded".to_string());
+        info.insert(String::from("version"), String::from("2.1.0"));
+        info.insert(String::from("kernel_module"), String::from("loaded"));
         Ok(info)
     }
 
@@ -108,15 +108,15 @@ impl ZeroCostZfsOperations {
     pub fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError> {
         Ok(vec![
             ZeroCostPoolInfo {
-                name: "tank".to_string(),
-                health: "ONLINE".to_string(),
+                name: String::from("tank"),
+                health: String::from("ONLINE"),
                 size: 1_000_000_000_000,
                 allocated: 500_000_000_000,
                 free: 500_000_000_000,
             },
             ZeroCostPoolInfo {
-                name: "backup".to_string(),
-                health: "ONLINE".to_string(),
+                name: String::from("backup"),
+                health: String::from("ONLINE"),
                 size: 2_000_000_000_000,
                 allocated: 800_000_000_000,
                 free: 1_200_000_000_000,
@@ -140,7 +140,7 @@ impl ZeroCostZfsOperations {
         let _ = devices;
         Ok(ZeroCostPoolInfo {
             name: name.to_string(),
-            health: "ONLINE".to_string(),
+            health: String::from("ONLINE"),
             size: 1_000_000_000_000,
             allocated: 0,
             free: 1_000_000_000_000,
@@ -203,7 +203,7 @@ impl ZeroCostZfsOperations {
             name: format!("{dataset}@snapshot1"),
             used: 50_000_000,
             referenced: 50_000_000,
-            creation_time: "2024-01-01T00:00:00Z".to_string(),
+            creation_time: String::from("2024-01-01T00:00:00Z"),
         }])
     }
 
@@ -502,7 +502,7 @@ mod tests {
     fn test_create_pool() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
-        let devices = vec!["sda".to_string(), "sdb".to_string()];
+        let devices = vec![String::from("sda"), String::from("sdb")];
         manager
             .create_pool("newpool", devices, None)
             .expect("Test: create_pool should succeed");
@@ -556,7 +556,7 @@ mod tests {
     #[test]
     fn test_zero_cost_create_pool() {
         let ops = ZeroCostZfsOperations::new();
-        let devices = vec!["sda".to_string()];
+        let devices = vec![String::from("sda")];
         let pool = ops
             .create_pool("testpool", &devices)
             .expect("Test: create_pool should succeed");
@@ -609,7 +609,7 @@ mod tests {
     fn test_set_dataset_properties() {
         let ops = ZeroCostZfsOperations::new();
         let mut props = HashMap::new();
-        props.insert("compression".to_string(), "lz4".to_string());
+        props.insert(String::from("compression"), String::from("lz4"));
         let result = ops.set_dataset_properties("tank/data", &props);
         assert!(result.is_ok());
     }
@@ -651,11 +651,11 @@ mod tests {
     #[test]
     fn test_zero_cost_dataset_info_serialization() {
         let info = ZeroCostDatasetInfo {
-            name: "tank/data".to_string(),
+            name: String::from("tank/data"),
             used: 100,
             available: 900,
             referenced: 100,
-            mountpoint: "/tank/data".to_string(),
+            mountpoint: String::from("/tank/data"),
             mounted: true,
         };
         let serialized =
@@ -666,8 +666,8 @@ mod tests {
     #[test]
     fn test_zero_cost_pool_info_serialization() {
         let info = ZeroCostPoolInfo {
-            name: "tank".to_string(),
-            health: "ONLINE".to_string(),
+            name: String::from("tank"),
+            health: String::from("ONLINE"),
             size: 1000,
             allocated: 500,
             free: 500,
@@ -681,10 +681,10 @@ mod tests {
     #[test]
     fn test_zero_cost_snapshot_info_serialization() {
         let info = ZeroCostSnapshotInfo {
-            name: "snap1".to_string(),
+            name: String::from("snap1"),
             used: 1000,
             referenced: 500,
-            creation_time: "2024-01-01T00:00:00Z".to_string(),
+            creation_time: String::from("2024-01-01T00:00:00Z"),
         };
         let serialized =
             serde_json::to_string(&info).expect("Test: snapshot info serialization should succeed");
@@ -694,9 +694,9 @@ mod tests {
 
     #[test]
     fn test_zfs_error_variants() {
-        let err1 = ZfsError::OperationFailed("test".to_string());
-        let err2 = ZfsError::PoolNotFound("tank".to_string());
-        let err3 = ZfsError::DatasetError("error".to_string());
+        let err1 = ZfsError::OperationFailed(String::from("test"));
+        let err2 = ZfsError::PoolNotFound(String::from("tank"));
+        let err3 = ZfsError::DatasetError(String::from("error"));
 
         assert!(err1.to_string().contains("operation failed"));
         assert!(err2.to_string().contains("Pool not found"));

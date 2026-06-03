@@ -103,18 +103,18 @@ impl ObjectStorageBackend {
 
             let region = env
                 .get("OBJECT_STORAGE_REGION")
-                .unwrap_or_else(|| "us-east-1".to_string());
+                .unwrap_or_else(|| String::from("us-east-1"));
             let bucket_prefix = env
                 .get("OBJECT_STORAGE_BUCKET_PREFIX")
-                .unwrap_or_else(|| "nestgate".to_string());
+                .unwrap_or_else(|| String::from("nestgate"));
 
             return Ok(DiscoveredStorageConfig {
-                service_id: "env-configured".to_string(),
+                service_id: String::from("env-configured"),
                 endpoint,
                 region,
                 bucket_prefix,
                 capability: StorageCapability::S3Compatible {
-                    version: "2006-03-01".to_string(),
+                    version: String::from("2006-03-01"),
                 },
                 path_style: false, // Default to virtual-hosted style
             });
@@ -173,11 +173,11 @@ impl ObjectStorageBackend {
 
         let region = env
             .get("OBJECT_STORAGE_REGION")
-            .unwrap_or_else(|| "us-east-1".to_string());
+            .unwrap_or_else(|| String::from("us-east-1"));
 
         let bucket_prefix = env
             .get("OBJECT_STORAGE_BUCKET_PREFIX")
-            .unwrap_or_else(|| "nestgate".to_string());
+            .unwrap_or_else(|| String::from("nestgate"));
 
         // Validate credentials present
         let _access_key = env.get("OBJECT_STORAGE_ACCESS_KEY").ok_or_else(|| {

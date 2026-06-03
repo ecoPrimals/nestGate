@@ -64,7 +64,7 @@ mod adapter_routing_edge_cases {
     #[test]
     fn test_single_route() {
         let mut routes = HashMap::new();
-        routes.insert("capability1".to_string(), "handler1".to_string());
+        routes.insert(String::from("capability1"), String::from("handler1"));
         assert_eq!(routes.len(), 1);
     }
 
@@ -80,15 +80,15 @@ mod adapter_routing_edge_cases {
     #[test]
     fn test_route_override() {
         let mut routes = HashMap::new();
-        routes.insert("cap".to_string(), "handler1".to_string());
-        routes.insert("cap".to_string(), "handler2".to_string());
-        assert_eq!(routes.get("cap"), Some(&"handler2".to_string()));
+        routes.insert(String::from("cap"), String::from("handler1"));
+        routes.insert(String::from("cap"), String::from("handler2"));
+        assert_eq!(routes.get("cap"), Some(&String::from("handler2")));
     }
 
     #[test]
     fn test_route_removal() {
         let mut routes = HashMap::new();
-        routes.insert("cap".to_string(), "handler".to_string());
+        routes.insert(String::from("cap"), String::from("handler"));
         let removed = routes.remove("cap");
         assert!(removed.is_some());
         assert!(routes.is_empty());
@@ -139,14 +139,14 @@ mod adapter_cache_edge_cases {
     #[test]
     fn test_cache_hit() {
         let mut cache = HashMap::new();
-        cache.insert("key".to_string(), "value".to_string());
-        assert_eq!(cache.get("key"), Some(&"value".to_string()));
+        cache.insert(String::from("key"), String::from("value"));
+        assert_eq!(cache.get("key"), Some(&String::from("value")));
     }
 
     #[test]
     fn test_cache_eviction() {
         let mut cache = HashMap::new();
-        cache.insert("key".to_string(), "value".to_string());
+        cache.insert(String::from("key"), String::from("value"));
         cache.remove("key");
         assert!(!cache.contains_key("key"));
     }
@@ -170,7 +170,7 @@ mod adapter_concurrent_operations {
     #[test]
     fn test_concurrent_cache_reads() {
         let mut cache = HashMap::new();
-        cache.insert("key".to_string(), "value".to_string());
+        cache.insert(String::from("key"), String::from("value"));
         let cache = Arc::new(cache);
 
         let mut handles = vec![];
@@ -301,7 +301,7 @@ mod adapter_boundary_conditions {
     #[test]
     fn test_single_capability() {
         let mut capabilities = HashMap::new();
-        capabilities.insert("cap".to_string(), "handler".to_string());
+        capabilities.insert(String::from("cap"), String::from("handler"));
         assert_eq!(capabilities.len(), 1);
     }
 
@@ -317,23 +317,23 @@ mod adapter_boundary_conditions {
     #[test]
     fn test_capability_name_collision() {
         let mut capabilities = HashMap::new();
-        capabilities.insert("cap".to_string(), "handler1".to_string());
-        capabilities.insert("cap".to_string(), "handler2".to_string());
+        capabilities.insert(String::from("cap"), String::from("handler1"));
+        capabilities.insert(String::from("cap"), String::from("handler2"));
         // Last write wins in HashMap
-        assert_eq!(capabilities.get("cap"), Some(&"handler2".to_string()));
+        assert_eq!(capabilities.get("cap"), Some(&String::from("handler2")));
     }
 
     #[test]
     fn test_empty_capability_name() {
         let mut capabilities = HashMap::new();
-        capabilities.insert(String::new(), "handler".to_string());
+        capabilities.insert(String::new(), String::from("handler"));
         assert!(capabilities.contains_key(""));
     }
 
     #[test]
     fn test_empty_handler_name() {
         let mut capabilities = HashMap::new();
-        capabilities.insert("cap".to_string(), String::new());
+        capabilities.insert(String::from("cap"), String::new());
         assert_eq!(capabilities.get("cap"), Some(&String::new()));
     }
 }

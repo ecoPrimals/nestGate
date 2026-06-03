@@ -12,17 +12,17 @@ use crate::pool::types::PoolInfo;
 use super::manager::ZfsPoolManager;
 
 fn zpool_create_argv(name: &str, devices: &[String]) -> Vec<String> {
-    let mut args = vec!["create".to_string(), name.to_string()];
+    let mut args = vec![String::from("create"), name.to_string()];
     args.extend(devices.iter().cloned());
     args
 }
 
 fn zpool_destroy_argv(name: &str) -> [String; 3] {
-    ["destroy".to_string(), "-f".to_string(), name.to_string()]
+    [String::from("destroy"), String::from("-f"), name.to_string()]
 }
 
 fn zpool_scrub_argv(name: &str) -> [String; 2] {
-    ["scrub".to_string(), name.to_string()]
+    [String::from("scrub"), name.to_string()]
 }
 
 impl ZfsPoolManager {
@@ -45,7 +45,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    "Failed to execute zpool create: error details".to_string(),
+                    String::from("Failed to execute zpool create: error details"),
                     ZfsOperation::Command,
                 )
             })?;
@@ -128,7 +128,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    "Failed to execute zpool scrub: error details".to_string(),
+                    String::from("Failed to execute zpool scrub: error details"),
                     ZfsOperation::Command,
                 )
             })?;
@@ -158,10 +158,10 @@ mod tests {
         assert_eq!(
             argv,
             vec![
-                "create".to_string(),
-                "tank".to_string(),
-                "/dev/sda".to_string(),
-                "/dev/sdb".to_string()
+                String::from("create"),
+                String::from("tank"),
+                String::from("/dev/sda"),
+                String::from("/dev/sdb")
             ]
         );
     }
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn zpool_create_argv_empty_devices() {
         let argv = zpool_create_argv("z", &[]);
-        assert_eq!(argv, vec!["create".to_string(), "z".to_string()]);
+        assert_eq!(argv, vec![String::from("create"), String::from("z")]);
     }
 
     #[test]
@@ -177,9 +177,9 @@ mod tests {
         assert_eq!(
             zpool_destroy_argv("my-pool"),
             [
-                "destroy".to_string(),
-                "-f".to_string(),
-                "my-pool".to_string()
+                String::from("destroy"),
+                String::from("-f"),
+                String::from("my-pool")
             ]
         );
     }
@@ -188,7 +188,7 @@ mod tests {
     fn zpool_scrub_argv_pool_name() {
         assert_eq!(
             zpool_scrub_argv("tank"),
-            ["scrub".to_string(), "tank".to_string()]
+            [String::from("scrub"), String::from("tank")]
         );
     }
 }

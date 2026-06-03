@@ -80,7 +80,7 @@ impl StorageManagerService {
         // Validate configuration
         config.validate().map_err(|e| {
             NestGateError::invalid_input_with_field(
-                "config".to_string(),
+                String::from("config"),
                 format!("Invalid storage configuration: {e}"),
             )
         })?;
@@ -145,8 +145,8 @@ impl StorageManagerService {
                 if !modules.contains("zfs") {
                     warn!("ZFS kernel module not loaded");
                     return Err(NestGateError::configuration_error_detailed(
-                        "zfs_module".to_string(),
-                        "ZFS kernel module is not loaded".to_string(),
+                        String::from("zfs_module"),
+                        String::from("ZFS kernel module is not loaded"),
                         Some("not_loaded".into()),
                         Some("loaded ZFS kernel module".into()),
                         false,

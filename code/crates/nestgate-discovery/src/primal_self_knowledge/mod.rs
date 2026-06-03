@@ -48,8 +48,8 @@ mod tests {
     #[test]
     fn endpoint_url_without_path_suffix() {
         let endpoint = Endpoint {
-            protocol: "https".to_string(),
-            address: "10.0.0.1".to_string(),
+            protocol: String::from("https"),
+            address: String::from("10.0.0.1"),
             port: 443,
             path: None,
             health_path: None,
@@ -115,17 +115,17 @@ mod tests {
     #[tokio::test]
     async fn test_endpoint_url() {
         let endpoint = Endpoint {
-            protocol: "http".to_string(),
-            address: "localhost".to_string(),
+            protocol: String::from("http"),
+            address: String::from("localhost"),
             port: 8080,
-            path: Some("/api".to_string()),
-            health_path: Some("/health".to_string()),
+            path: Some(String::from("/api")),
+            health_path: Some(String::from("/health")),
         };
 
         assert_eq!(endpoint.url(), "http://localhost:8080/api");
         assert_eq!(
             endpoint.health_url(),
-            Some("http://localhost:8080/health".to_string())
+            Some(String::from("http://localhost:8080/health"))
         );
     }
 
@@ -133,20 +133,20 @@ mod tests {
     async fn test_discovered_primal_has_capability() {
         let discovered = DiscoveredPrimal {
             identity: PrimalIdentity {
-                id: "test".to_string(),
-                primal_type: "testprimal".to_string(),
-                version: "1.0.0".to_string(),
+                id: String::from("test"),
+                primal_type: String::from("testprimal"),
+                version: String::from("1.0.0"),
                 started_at: std::time::SystemTime::now(),
             },
             capabilities: vec![Capability {
-                name: "storage".to_string(),
-                description: "Storage".to_string(),
-                endpoint: "/storage".to_string(),
+                name: String::from("storage"),
+                description: String::from("Storage"),
+                endpoint: String::from("/storage"),
                 metadata: std::collections::HashMap::new(),
             }],
             primary_endpoint: Endpoint {
-                protocol: "http".to_string(),
-                address: "localhost".to_string(),
+                protocol: String::from("http"),
+                address: String::from("localhost"),
                 port: 8080,
                 path: None,
                 health_path: None,

@@ -88,7 +88,7 @@ fn benchmark_hashmap_operations(c: &mut Criterion) {
 
         b.iter(|| {
             for key in &keys {
-                map.insert(key.to_string(), "value".to_string());
+                map.insert(key.to_string(), String::from("value"));
             }
             black_box(&map);
             map.clear();

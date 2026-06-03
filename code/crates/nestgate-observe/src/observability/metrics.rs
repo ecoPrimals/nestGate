@@ -357,7 +357,7 @@ mod tests {
     impl MetricsCollector for TestCollector {
         fn collect_metrics(&self) -> HashMap<String, f64> {
             let mut m = HashMap::new();
-            m.insert("k".to_string(), 1.0);
+            m.insert(String::from("k"), 1.0);
             m
         }
 

@@ -126,7 +126,7 @@ impl PrimalId {
         let hostname = env
             .get("HOSTNAME")
             .or_else(|| env.get("HOST"))
-            .unwrap_or_else(|| "unknown".to_string());
+            .unwrap_or_else(|| String::from("unknown"));
 
         let pid = std::process::id();
 
@@ -233,7 +233,7 @@ impl DiscoveryQuery {
             optional_capabilities: vec![],
             max_latency: None,
             min_health: HealthStatus::Degraded {
-                reason: "acceptable".to_string(),
+                reason: String::from("acceptable"),
             },
         }
     }
@@ -409,16 +409,16 @@ impl<
 
         // Runtime information
         if let Some(hostname) = env.get("HOSTNAME").or_else(|| env.get("HOST")) {
-            metadata.insert("hostname".to_string(), hostname);
+            metadata.insert(String::from("hostname"), hostname);
         }
 
-        metadata.insert("pid".to_string(), std::process::id().to_string());
+        metadata.insert(String::from("pid"), std::process::id().to_string());
 
         // Environment indicators (not hardcoded values!)
         if env.get("KUBERNETES_SERVICE_HOST").is_some() {
-            metadata.insert("platform".to_string(), "kubernetes".to_string());
+            metadata.insert(String::from("platform"), String::from("kubernetes"));
         } else if std::path::Path::new("/.dockerenv").exists() {
-            metadata.insert("platform".to_string(), "docker".to_string());
+            metadata.insert(String::from("platform"), String::from("docker"));
         }
 
         metadata

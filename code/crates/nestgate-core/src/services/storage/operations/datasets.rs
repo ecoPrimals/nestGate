@@ -47,7 +47,7 @@ pub async fn create_dataset(
         object_count: 0,
         compression_ratio: 1.0,
         params,
-        status: "active".to_string(),
+        status: String::from("active"),
     };
 
     info!("Dataset created: {}", name);
@@ -113,7 +113,7 @@ pub async fn list_datasets(
                 object_count: 0,
                 compression_ratio: 1.0,
                 params: crate::rpc::tarpc_types::DatasetParams::default(),
-                status: "active".to_string(),
+                status: String::from("active"),
             });
         }
     }
@@ -162,7 +162,7 @@ pub async fn get_dataset(
         object_count: 0,
         compression_ratio: 1.0,
         params: crate::rpc::tarpc_types::DatasetParams::default(),
-        status: "active".to_string(),
+        status: String::from("active"),
     })
 }
 
@@ -220,7 +220,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let cfg = test_config(dir.path());
         let params = crate::rpc::tarpc_types::DatasetParams {
-            description: Some("d".to_string()),
+            description: Some(String::from("d")),
             ..Default::default()
         };
         let info = create_dataset(&cfg, "alpha", params.clone())

@@ -272,9 +272,9 @@ impl DatasetAutomation {
     async fn create_default_policies(&self) -> Result<()> {
         // Default balanced policy
         let default_policy = AutomationPolicy {
-            policy_id: "default".to_string(),
-            name: "Default Automation Policy".to_string(),
-            description: "Default policy for new datasets".to_string(),
+            policy_id: String::from("default"),
+            name: String::from("Default Automation Policy"),
+            description: String::from("Default policy for new datasets"),
             priority: PolicyPriority::Normal,
             enabled: true,
             conditions: PolicyConditions {

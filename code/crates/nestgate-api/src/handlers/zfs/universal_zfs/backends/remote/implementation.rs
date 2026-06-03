@@ -164,7 +164,7 @@ impl UniversalZfsService for RemoteZfsService {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into PoolInfo
                 serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
-                    backend: "remote".to_string(),
+                    backend: String::from("remote"),
                     message: format!("Failed to parse pool response: {e}"),
                 })
             }
@@ -309,7 +309,7 @@ impl UniversalZfsService for RemoteZfsService {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into DatasetInfo
                 serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
-                    backend: "remote".to_string(),
+                    backend: String::from("remote"),
                     message: format!("Failed to parse dataset response: {e}"),
                 })
             }
@@ -487,7 +487,7 @@ impl UniversalZfsService for RemoteZfsService {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into SnapshotInfo
                 serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
-                    backend: "remote".to_string(),
+                    backend: String::from("remote"),
                     message: format!("Failed to parse snapshot response: {e}"),
                 })
             }
@@ -530,7 +530,7 @@ impl UniversalZfsService for RemoteZfsService {
                 } else if let Some(status) = response.get("status").and_then(|s| s.as_str()) {
                     Ok(format!("Status: {status}"))
                 } else {
-                    Ok("Optimization completed successfully".to_string())
+                    Ok(String::from("Optimization completed successfully"))
                 }
             }
             Err(e) => {
@@ -586,13 +586,13 @@ impl UniversalZfsService for RemoteZfsService {
                     Ok(tier.to_string())
                 } else {
                     // Fallback to "unknown" if parsing fails
-                    Ok("unknown".to_string())
+                    Ok(String::from("unknown"))
                 }
             }
             Err(e) => {
                 debug!("Failed to predict tier for '{}': {}", file_path, e);
                 // Return default tier instead of error for graceful degradation
-                Ok("warm".to_string())
+                Ok(String::from("warm"))
             }
         }
     }
@@ -675,7 +675,7 @@ mod implementation_tests {
     #[expect(deprecated, reason = "testing backward-compatible deprecated remote ZFS API")]
     fn remote_zfs_service_exposes_metadata() {
         let cfg = RemoteConfig {
-            endpoint: "http://127.0.0.1:65530".to_string(),
+            endpoint: String::from("http://127.0.0.1:65530"),
             timeout: Duration::from_millis(500),
             auth: Some("token".into()),
         };

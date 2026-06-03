@@ -84,7 +84,7 @@ pub async fn create_pool(
                 info!("Pool created successfully: {}", request.name);
                 Ok(Json(ZeroCostPoolInfo {
                     name: request.name.clone(),
-                    health: "ONLINE".to_string(),
+                    health: String::from("ONLINE"),
                     size: 0,
                     allocated: 0,
                     free: 0,

@@ -18,8 +18,8 @@
 //!
 //! // Or build manually for testing
 //! let test_config = NetworkDefaultsConfig::new()
-//!     .with_api_host("test.example.com".to_string())
-//!     .with_environment("production".to_string());
+//!     .with_api_host(String::from("test.example.com"))
+//!     .with_environment(String::from("production"));
 //! ```
 use super::network_defaults::{DEFAULT_BIND_ADDRESS, LOCALHOST_NAME};
 use nestgate_types::{EnvSource, ProcessEnv};
@@ -190,11 +190,11 @@ mod tests {
     #[test]
     fn test_network_defaults_config_builder() {
         let config = NetworkDefaultsConfig::new()
-            .with_bind_address("192.168.1.1".to_string())
-            .with_api_host("api.example.com".to_string())
-            .with_db_host("db.example.com".to_string())
-            .with_redis_host("redis.example.com".to_string())
-            .with_environment("production".to_string());
+            .with_bind_address(String::from("192.168.1.1"))
+            .with_api_host(String::from("api.example.com"))
+            .with_db_host(String::from("db.example.com"))
+            .with_redis_host(String::from("redis.example.com"))
+            .with_environment(String::from("production"));
 
         assert_eq!(config.get_bind_address(), "192.168.1.1");
         assert_eq!(config.get_api_host(), "api.example.com");
@@ -207,21 +207,21 @@ mod tests {
     #[test]
     fn test_environment_detection() {
         // Production
-        let prod_config = NetworkDefaultsConfig::new().with_environment("production".to_string());
+        let prod_config = NetworkDefaultsConfig::new().with_environment(String::from("production"));
         assert!(prod_config.is_production());
         assert!(!prod_config.is_development());
 
         // Production (short form)
-        let prod_short_config = NetworkDefaultsConfig::new().with_environment("prod".to_string());
+        let prod_short_config = NetworkDefaultsConfig::new().with_environment(String::from("prod"));
         assert!(prod_short_config.is_production());
 
         // Development
-        let dev_config = NetworkDefaultsConfig::new().with_environment("development".to_string());
+        let dev_config = NetworkDefaultsConfig::new().with_environment(String::from("development"));
         assert!(dev_config.is_development());
         assert!(!dev_config.is_production());
 
         // Development (short form)
-        let dev_short_config = NetworkDefaultsConfig::new().with_environment("dev".to_string());
+        let dev_short_config = NetworkDefaultsConfig::new().with_environment(String::from("dev"));
         assert!(dev_short_config.is_development());
 
         // Default (no environment)
@@ -235,13 +235,13 @@ mod tests {
         // Create two different configurations
         let config1 = Arc::new(
             NetworkDefaultsConfig::new()
-                .with_api_host("host1.example.com".to_string())
-                .with_environment("production".to_string()),
+                .with_api_host(String::from("host1.example.com"))
+                .with_environment(String::from("production")),
         );
         let config2 = Arc::new(
             NetworkDefaultsConfig::new()
-                .with_api_host("host2.example.com".to_string())
-                .with_environment("development".to_string()),
+                .with_api_host(String::from("host2.example.com"))
+                .with_environment(String::from("development")),
         );
 
         // Spawn concurrent tasks accessing different configs
@@ -272,10 +272,10 @@ mod tests {
     #[test]
     fn test_all_hosts_configurable() {
         let config = NetworkDefaultsConfig::new()
-            .with_bind_address("10.0.0.1".to_string())
-            .with_api_host("api.local".to_string())
-            .with_db_host("db.local".to_string())
-            .with_redis_host("redis.local".to_string());
+            .with_bind_address(String::from("10.0.0.1"))
+            .with_api_host(String::from("api.local"))
+            .with_db_host(String::from("db.local"))
+            .with_redis_host(String::from("redis.local"));
 
         // All hosts should be customizable
         assert_eq!(config.get_bind_address(), "10.0.0.1");
@@ -286,14 +286,14 @@ mod tests {
 
     #[test]
     fn test_case_insensitive_environment() {
-        let config_upper = NetworkDefaultsConfig::new().with_environment("PRODUCTION".to_string());
+        let config_upper = NetworkDefaultsConfig::new().with_environment(String::from("PRODUCTION"));
         assert!(config_upper.is_production());
 
-        let config_mixed = NetworkDefaultsConfig::new().with_environment("Production".to_string());
+        let config_mixed = NetworkDefaultsConfig::new().with_environment(String::from("Production"));
         assert!(config_mixed.is_production());
 
         let config_dev_upper =
-            NetworkDefaultsConfig::new().with_environment("DEVELOPMENT".to_string());
+            NetworkDefaultsConfig::new().with_environment(String::from("DEVELOPMENT"));
         assert!(config_dev_upper.is_development());
     }
 }

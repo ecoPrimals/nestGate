@@ -5,7 +5,60 @@
 /// Handles access control, encryption, audit logging, authentication, and authorization
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::time::Duration;
+
+/// XDG-compliant config directory for key storage.
+///
+/// Checks `$NESTGATE_CONFIG_DIR`, then `$XDG_CONFIG_HOME/nestgate/keys`,
+/// then `$HOME/.config/nestgate/keys`, and falls back to FHS.
+fn default_key_storage_path() -> String {
+    if let Ok(dir) = std::env::var("NESTGATE_CONFIG_DIR") {
+        return PathBuf::from(dir)
+            .join("keys")
+            .to_string_lossy()
+            .into_owned();
+    }
+    if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
+        return PathBuf::from(xdg)
+            .join("nestgate/keys")
+            .to_string_lossy()
+            .into_owned();
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        return PathBuf::from(home)
+            .join(".config/nestgate/keys")
+            .to_string_lossy()
+            .into_owned();
+    }
+    String::from("/etc/nestgate/keys")
+}
+
+/// XDG-compliant state directory for audit logs.
+///
+/// Checks `$NESTGATE_LOG_DIR`, then `$XDG_STATE_HOME/nestgate`,
+/// then `$HOME/.local/state/nestgate`, and falls back to FHS.
+fn default_audit_log_path() -> String {
+    if let Ok(dir) = std::env::var("NESTGATE_LOG_DIR") {
+        return PathBuf::from(dir)
+            .join("audit.log")
+            .to_string_lossy()
+            .into_owned();
+    }
+    if let Ok(xdg) = std::env::var("XDG_STATE_HOME") {
+        return PathBuf::from(xdg)
+            .join("nestgate/audit.log")
+            .to_string_lossy()
+            .into_owned();
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        return PathBuf::from(home)
+            .join(".local/state/nestgate/audit.log")
+            .to_string_lossy()
+            .into_owned();
+    }
+    String::from("/var/log/nestgate/audit.log")
+}
 /// Security and access control settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FsMonitorSecuritySettings {
@@ -134,10 +187,10 @@ impl Default for FsMonitorSecuritySettings {
             enabled: true,
             enable_access_logging: false,
             allowed_operations: vec![
-                "read".to_string(),
-                "write".to_string(),
-                "create".to_string(),
-                "delete".to_string(),
+                String::from("read"),
+                String::from("write"),
+                String::from("create"),
+                String::from("delete"),
             ],
             access_control: AccessControlSettings::default(),
             encryption: EncryptionSettings::default(),
@@ -153,7 +206,7 @@ impl Default for AccessControlSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            default_policy: "allow".to_string(),
+            default_policy: String::from("allow"),
             rules: Vec::new(),
             ip_allowlist: Vec::new(),
             ip_denylist: Vec::new(),
@@ -170,7 +223,7 @@ impl Default for EncryptionSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            algorithm: "AES-256-GCM".to_string(),
+            algorithm: String::from("AES-256-GCM"),
             key_management: KeyManagementSettings::default(),
             encrypt_at_rest: false,
             encrypt_in_transit: false,
@@ -182,11 +235,11 @@ impl Default for KeyManagementSettings {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            provider: "local".to_string(),
+            provider: String::from("local"),
             rotation_interval: Duration::from_secs(86400 * 30), // 30 days
-            kdf: "PBKDF2".to_string(),
+            kdf: String::from("PBKDF2"),
             key_size: 256,
-            storage_location: "/etc/nestgate/keys".to_string(),
+            storage_location: default_key_storage_path(),
         }
     }
 }
@@ -196,8 +249,8 @@ impl Default for AuditLoggingSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            log_level: "info".to_string(),
-            log_file: "/var/log/nestgate/audit.log".to_string(),
+            log_level: String::from("info"),
+            log_file: default_audit_log_path(),
             rotation: LogRotationSettings::default(),
             include_sensitive_data: false,
             retention_period: Duration::from_secs(86400 * 90), // 90 days
@@ -222,7 +275,7 @@ impl Default for AuthenticationSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            methods: vec!["password".to_string()],
+            methods: vec![String::from("password")],
             session_timeout: Duration::from_secs(3600), // 1 hour
             max_failed_attempts: 5,
             lockout_duration: Duration::from_secs(300), // 5 minutes
@@ -278,6 +331,22 @@ mod tests {
         let settings = AuthorizationSettings::default();
         assert_eq!(settings.model, "rbac");
         assert!(settings.default_permissions.contains(&String::from("read")));
+    }
+
+    #[test]
+    fn audit_log_resolves_nestgate_log_dir_env() {
+        temp_env::with_var("NESTGATE_LOG_DIR", Some("/custom/logs"), || {
+            let path = default_audit_log_path();
+            assert_eq!(path, "/custom/logs/audit.log");
+        });
+    }
+
+    #[test]
+    fn key_storage_resolves_nestgate_config_dir_env() {
+        temp_env::with_var("NESTGATE_CONFIG_DIR", Some("/custom/config"), || {
+            let path = default_key_storage_path();
+            assert_eq!(path, "/custom/config/keys");
+        });
     }
 
     #[test]

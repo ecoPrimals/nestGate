@@ -94,7 +94,7 @@ impl FailSafeZfsService {
                 health_check_timeout: std::time::Duration::from_secs(5),
             },
             graceful_degradation: config.enable_graceful_degradation,
-            service_name: "fail-safe-zfs".to_string(),
+            service_name: String::from("fail-safe-zfs"),
             start_time: SystemTime::now(),
             metrics: Arc::new(RwLock::new(ServiceMetrics::default())),
         }

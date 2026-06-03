@@ -54,7 +54,7 @@ impl StorageConfig {
         env: &(impl EnvSource + ?Sized),
     ) -> Result<Self, ConfigError> {
         Ok(Self {
-            zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", "tank".to_string(), env)?,
+            zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", String::from("tank"), env)?,
             data_dir: Self::env_var_or(
                 prefix,
                 "DATA_DIR",
@@ -94,7 +94,7 @@ impl StorageConfig {
 impl Default for StorageConfig {
     fn default() -> Self {
         Self {
-            zfs_pool: "tank".to_string(),
+            zfs_pool: String::from("tank"),
             data_dir: crate::config::storage_paths::StoragePaths::from_environment()
                 .data_dir()
                 .to_string_lossy()

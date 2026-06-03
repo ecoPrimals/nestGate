@@ -85,10 +85,10 @@ mod tests {
     #[test]
     fn test_credentials_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let credentials = Credentials {
-            username: "test".to_string(),
-            password: "pass".to_string(),
-            mfa_token: Some("123456".to_string()),
-            client_info: Some("mobile_app".to_string()),
+            username: String::from("test"),
+            password: String::from("pass"),
+            mfa_token: Some(String::from("123456")),
+            client_info: Some(String::from("mobile_app")),
         };
 
         let serialized = serde_json::to_string(&credentials)?;
@@ -103,9 +103,9 @@ mod tests {
     #[test]
     fn test_auth_token_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let token = AuthToken {
-            token: "test_token".to_string(),
+            token: String::from("test_token"),
             expires_at: SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(1000),
-            permissions: vec!["read".to_string()],
+            permissions: vec![String::from("read")],
         };
 
         let serialized = serde_json::to_string(&token)?;
@@ -118,9 +118,9 @@ mod tests {
     #[test]
     fn test_signature_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let signature = Signature {
-            algorithm: "RS256".to_string(),
+            algorithm: String::from("RS256"),
             signature: vec![1, 2, 3, 4],
-            key_id: Some("test-key".to_string()),
+            key_id: Some(String::from("test-key")),
         };
 
         let serialized = serde_json::to_string(&signature)?;

@@ -85,7 +85,7 @@ pub fn run_hardware_benchmark() -> Result<Json<BenchmarkResult>> {
         .mul_add(10.0, f64::from(resources.available_memory_gb) * 0.5);
 
     Ok(Json(BenchmarkResult {
-        benchmark_type: "proc_snapshot".to_string(),
+        benchmark_type: String::from("proc_snapshot"),
         score,
         duration_ms: duration.as_millis() as u64,
         metrics,

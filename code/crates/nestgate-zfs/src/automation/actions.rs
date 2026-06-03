@@ -123,13 +123,13 @@ fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
         .output()
     {
         Ok(out) if out.status.success() => Ok(ActionResult {
-            action: "compress".to_string(),
+            action: String::from("compress"),
             success: true,
-            message: "Compression property set to lz4".to_string(),
+            message: String::from("Compression property set to lz4"),
             timestamp,
         }),
         Ok(out) => Ok(ActionResult {
-            action: "compress".to_string(),
+            action: String::from("compress"),
             success: false,
             message: format!(
                 "zfs set compression failed: {}",
@@ -138,7 +138,7 @@ fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
             timestamp,
         }),
         Err(e) => Ok(ActionResult {
-            action: "compress".to_string(),
+            action: String::from("compress"),
             success: false,
             message: format!("failed to run zfs: {e}"),
             timestamp,
@@ -175,13 +175,13 @@ fn execute_snapshot_action(dataset_name: &str) -> Result<ActionResult> {
         .output()
     {
         Ok(out) if out.status.success() => Ok(ActionResult {
-            action: "create_snapshot".to_string(),
+            action: String::from("create_snapshot"),
             success: true,
             message: format!("Snapshot created: {full_snap}"),
             timestamp,
         }),
         Ok(out) => Ok(ActionResult {
-            action: "create_snapshot".to_string(),
+            action: String::from("create_snapshot"),
             success: false,
             message: format!(
                 "zfs snapshot failed: {}",
@@ -190,7 +190,7 @@ fn execute_snapshot_action(dataset_name: &str) -> Result<ActionResult> {
             timestamp,
         }),
         Err(e) => Ok(ActionResult {
-            action: "create_snapshot".to_string(),
+            action: String::from("create_snapshot"),
             success: false,
             message: format!("failed to run zfs: {e}"),
             timestamp,
@@ -209,7 +209,7 @@ fn execute_optimization_action(
     );
 
     Ok(ActionResult {
-        action: "optimize_properties".to_string(),
+        action: String::from("optimize_properties"),
         success: false,
         message: NOT_WIRED_TO_ZFS_MSG.to_string(),
         timestamp: SystemTime::now(),

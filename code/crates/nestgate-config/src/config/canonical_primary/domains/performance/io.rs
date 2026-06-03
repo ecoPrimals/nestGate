@@ -92,8 +92,8 @@ impl IoPerformanceConfig {
     pub fn validate(&self) -> Result<()> {
         if self.buffering.buffer_size == 0 {
             return Err(NestGateError::configuration_error_detailed(
-                "io.buffering.buffer_size".to_string(),
-                "Buffer size cannot be zero".to_string(),
+                String::from("io.buffering.buffer_size"),
+                String::from("Buffer size cannot be zero"),
                 Some("0".into()),
                 Some(">0".into()),
                 true,

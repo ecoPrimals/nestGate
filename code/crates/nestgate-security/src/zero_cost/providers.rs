@@ -195,7 +195,7 @@ impl ZeroCostFileStorage {
     ///
     /// ```rust,ignore
     /// # use nestgate_core::zero_cost::providers::ZeroCostFileStorage;
-    /// let storage = ZeroCostFileStorage::new("/var/lib/nestgate".to_string());
+    /// let storage = ZeroCostFileStorage::new(String::from("/var/lib/nestgate"));
     /// ```
     #[must_use]
     pub const fn new(base_path: String) -> Self {
@@ -258,16 +258,16 @@ mod tests {
 
     #[test]
     fn test_file_storage_operations() {
-        let storage = ZeroCostFileStorage::new("/tmp".to_string());
+        let storage = ZeroCostFileStorage::new(String::from("/tmp"));
 
         assert_eq!(
-            storage.store("test_key".to_string(), vec![1, 2, 3]),
+            storage.store(String::from("test_key"), vec![1, 2, 3]),
             Err(ZeroCostError::DeprecatedStorage)
         );
 
-        assert!(storage.retrieve(&"test_key".to_string()).is_none());
+        assert!(storage.retrieve(&String::from("test_key")).is_none());
 
-        assert!(!storage.delete(&"test_key".to_string()));
+        assert!(!storage.delete(&String::from("test_key")));
     }
 
     #[test]
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn test_jwt_provider_authentication() {
         let provider = ZeroCostJwtProvider::new([0u8; 32]);
-        let result = provider.authenticate(&"testuser".to_string());
+        let result = provider.authenticate(&String::from("testuser"));
         assert!(result.is_ok());
         assert_eq!(result.expect("Operation failed"), "jwt_token_testuser");
     }
@@ -287,8 +287,8 @@ mod tests {
     #[test]
     fn test_jwt_provider_validation() {
         let provider = ZeroCostJwtProvider::new([0u8; 32]);
-        assert!(provider.validate(&"jwt_token_test".to_string()));
-        assert!(!provider.validate(&"invalid_token".to_string()));
+        assert!(provider.validate(&String::from("jwt_token_test")));
+        assert!(!provider.validate(&String::from("invalid_token")));
     }
 
     #[test]
@@ -296,11 +296,11 @@ mod tests {
         let cache: ZeroCostMemoryCache<16> = ZeroCostMemoryCache::new();
 
         // Test set operation
-        let result = cache.set("key1".to_string(), vec![1, 2, 3]);
+        let result = cache.set(String::from("key1"), vec![1, 2, 3]);
         assert!(result.is_ok());
 
         // Test remove operation
-        let removed = cache.remove(&"key1".to_string());
+        let removed = cache.remove(&String::from("key1"));
         assert!(removed);
     }
 }

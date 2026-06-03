@@ -40,18 +40,18 @@ impl ReplicationAnalytics {
 
         // Basic replication analysis
         if performance_data.transfer_rate < 10.0 {
-            recommendations.push("Consider async replication for better performance".to_string());
+            recommendations.push(String::from("Consider async replication for better performance"));
         }
 
         if performance_data.transfer_rate < 1.0 {
-            recommendations.push("Investigate network connectivity issues".to_string());
+            recommendations.push(String::from("Investigate network connectivity issues"));
         }
 
         if performance_data.compression_ratio < 1.2 {
-            recommendations.push("Consider enabling compression for better efficiency".to_string());
+            recommendations.push(String::from("Consider enabling compression for better efficiency"));
         }
         Ok(Self {
-            strategy: "sync".to_string(),
+            strategy: String::from("sync"),
             performance: performance_data.clone(),
             recommendations,
         })
@@ -72,8 +72,8 @@ mod tests {
         compression_ratio: f64,
     ) -> ReplicationPerformance {
         ReplicationPerformance {
-            source_dataset: "tank/source".to_string(),
-            target_dataset: "tank/target".to_string(),
+            source_dataset: String::from("tank/source"),
+            target_dataset: String::from("tank/target"),
             transfer_rate,
             compression_ratio,
             estimated_completion: std::time::SystemTime::now(),
@@ -85,7 +85,7 @@ mod tests {
         let perf = create_test_performance(50.0, 1.5);
         let analytics = ReplicationAnalytics::analyze_replication(
             "tank/source",
-            &["tank/target1".to_string()],
+            &[String::from("tank/target1")],
             &perf,
         )
         .unwrap();
@@ -99,7 +99,7 @@ mod tests {
         let perf = create_test_performance(5.0, 1.5);
         let analytics = ReplicationAnalytics::analyze_replication(
             "tank/source",
-            &["tank/target1".to_string()],
+            &[String::from("tank/target1")],
             &perf,
         )
         .unwrap();
@@ -117,7 +117,7 @@ mod tests {
         let perf = create_test_performance(0.5, 1.5);
         let analytics = ReplicationAnalytics::analyze_replication(
             "tank/source",
-            &["tank/target1".to_string()],
+            &[String::from("tank/target1")],
             &perf,
         )
         .unwrap();
@@ -135,7 +135,7 @@ mod tests {
         let perf = create_test_performance(50.0, 1.1);
         let analytics = ReplicationAnalytics::analyze_replication(
             "tank/source",
-            &["tank/target1".to_string()],
+            &[String::from("tank/target1")],
             &perf,
         )
         .unwrap();
@@ -153,7 +153,7 @@ mod tests {
         let perf = create_test_performance(50.0, 2.0);
         let analytics = ReplicationAnalytics::analyze_replication(
             "tank/source",
-            &["tank/target1".to_string()],
+            &[String::from("tank/target1")],
             &perf,
         )
         .unwrap();
@@ -165,9 +165,9 @@ mod tests {
     fn test_multiple_targets() {
         let perf = create_test_performance(50.0, 1.5);
         let targets = vec![
-            "target1".to_string(),
-            "target2".to_string(),
-            "target3".to_string(),
+            String::from("target1"),
+            String::from("target2"),
+            String::from("target3"),
         ];
         let analytics =
             ReplicationAnalytics::analyze_replication("source", &targets, &perf).unwrap();

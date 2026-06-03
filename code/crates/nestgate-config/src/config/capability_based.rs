@@ -287,8 +287,8 @@ impl CapabilityConfig {
                     endpoint,
                     metadata: {
                         let mut meta = HashMap::new();
-                        meta.insert("mode".to_string(), "local_fallback".to_string());
-                        meta.insert("source".to_string(), "environment".to_string());
+                        meta.insert(String::from("mode"), String::from("local_fallback"));
+                        meta.insert(String::from("source"), String::from("environment"));
                         meta
                     },
                     discovered_at: std::time::Instant::now(),
@@ -538,7 +538,7 @@ mod tests {
         assert_eq!(svc.endpoint.port(), 8080);
         assert_eq!(
             svc.metadata.get("mode"),
-            Some(&"local_fallback".to_string())
+            Some(&String::from("local_fallback"))
         );
     }
 

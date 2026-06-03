@@ -116,31 +116,31 @@ impl AdapterDiscoveryConfig {
         if let Some(endpoint) = env.get("ORCHESTRATION_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert("orchestration".to_string(), endpoint);
+                .insert(String::from("orchestration"), endpoint);
         }
 
         if let Some(endpoint) = env.get("COMPUTE_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert("compute".to_string(), endpoint);
+                .insert(String::from("compute"), endpoint);
         }
 
         if let Some(endpoint) = env.get("SECURITY_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert("security".to_string(), endpoint);
+                .insert(String::from("security"), endpoint);
         }
 
         if let Some(endpoint) = env.get("AI_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert("artificial_intelligence".to_string(), endpoint);
+                .insert(String::from("artificial_intelligence"), endpoint);
         }
 
         if let Some(endpoint) = env.get("ECOSYSTEM_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert("ecosystem".to_string(), endpoint);
+                .insert(String::from("ecosystem"), endpoint);
         }
 
         // Load from centralized runtime config
@@ -327,13 +327,13 @@ mod tests {
         let orch_meta = config
             .get_metadata("orchestration")
             .expect("Test: orchestration metadata should exist");
-        assert_eq!(orch_meta.get("tier"), Some(&"premium".to_string()));
-        assert_eq!(orch_meta.get("region"), Some(&"us-west".to_string()));
+        assert_eq!(orch_meta.get("tier"), Some(&String::from("premium")));
+        assert_eq!(orch_meta.get("region"), Some(&String::from("us-west")));
 
         let compute_meta = config
             .get_metadata("compute")
             .expect("Test: compute metadata should exist");
-        assert_eq!(compute_meta.get("tier"), Some(&"standard".to_string()));
+        assert_eq!(compute_meta.get("tier"), Some(&String::from("standard")));
 
         assert!(config.get_metadata("security").is_none());
     }
@@ -368,7 +368,7 @@ mod tests {
             "compute",
             format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS),
         );
-        let sec_endpoint = "http://sec:7070".to_string();
+        let sec_endpoint = String::from("http://sec:7070");
         config.set_discovery_endpoint("security", &sec_endpoint);
 
         let endpoints = config.get_all_discovery_endpoints();
@@ -383,7 +383,7 @@ mod tests {
         );
         assert_eq!(
             endpoints.get("security"),
-            Some(&"http://sec:7070".to_string())
+            Some(&String::from("http://sec:7070"))
         );
     }
 

@@ -248,8 +248,8 @@ mod tests {
     fn test_string_buffer() {
         let buffer = SafeRingBuffer::<String, 8>::new();
 
-        buffer.push("Hello".to_string()).unwrap();
-        buffer.push("World".to_string()).unwrap();
+        buffer.push(String::from("Hello")).unwrap();
+        buffer.push(String::from("World")).unwrap();
 
         assert_eq!(buffer.pop().as_deref(), Some("Hello"));
         assert_eq!(buffer.pop().as_deref(), Some("World"));

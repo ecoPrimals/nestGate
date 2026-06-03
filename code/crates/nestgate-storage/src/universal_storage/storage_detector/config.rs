@@ -99,15 +99,15 @@ impl DetectionConfig {
     /// - Network or I/O errors occur
     pub fn validate(&self) -> Result<(), String> {
         if self.minimum_storage_size == 0 {
-            return Err("minimum_storage_size must be greater than 0".to_string());
+            return Err(String::from("minimum_storage_size must be greater than 0"));
         }
 
         if self.detection_timeout_secs == 0 {
-            return Err("detection_timeout_secs must be greater than 0".to_string());
+            return Err(String::from("detection_timeout_secs must be greater than 0"));
         }
 
         if self.detection_timeout_secs > 300 {
-            return Err("detection_timeout_secs should not exceed 300 seconds".to_string());
+            return Err(String::from("detection_timeout_secs should not exceed 300 seconds"));
         }
 
         Ok(())

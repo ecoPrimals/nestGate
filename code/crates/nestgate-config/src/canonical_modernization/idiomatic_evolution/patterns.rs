@@ -142,7 +142,7 @@ mod tests {
         }
 
         fn build(self) -> String {
-            "built".to_string()
+            String::from("built")
         }
     }
 

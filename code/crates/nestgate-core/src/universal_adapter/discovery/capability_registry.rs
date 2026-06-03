@@ -71,32 +71,32 @@ impl CapabilityDiscovery {
 
         // Security capabilities
         self.registry.insert(
-            "security".to_string(),
+            String::from("security"),
             self.runtime_config.get_security_endpoint(&base_endpoint),
         );
 
         // AI capabilities
         self.registry.insert(
-            "ai".to_string(),
+            String::from("ai"),
             self.runtime_config.get_ai_endpoint(&base_endpoint),
         );
 
         // Orchestration capabilities
         self.registry.insert(
-            "orchestration".to_string(),
+            String::from("orchestration"),
             self.runtime_config
                 .get_orchestration_endpoint(&base_endpoint),
         );
 
         // Storage/ZFS capabilities
         self.registry.insert(
-            "storage".to_string(),
+            String::from("storage"),
             self.runtime_config.get_storage_endpoint(&base_endpoint),
         );
 
         // Compute capabilities
         self.registry.insert(
-            "compute".to_string(),
+            String::from("compute"),
             self.runtime_config.get_compute_endpoint(&base_endpoint),
         );
     }

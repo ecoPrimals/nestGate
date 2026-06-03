@@ -64,11 +64,11 @@ impl<'a> DetectionEngine<'a> {
             let mut storage = DetectedStorage::new(fs.id.clone(), fs.storage_type, fs.name.clone());
 
             storage.available_space = fs.available_bytes;
-            storage.add_metadata("filesystem_type".to_string(), fs.fs_type.clone());
-            storage.add_metadata("device".to_string(), fs.device.clone());
-            storage.add_metadata("total_bytes".to_string(), fs.total_bytes.to_string());
+            storage.add_metadata(String::from("filesystem_type"), fs.fs_type.clone());
+            storage.add_metadata(String::from("device"), fs.device.clone());
+            storage.add_metadata(String::from("total_bytes"), fs.total_bytes.to_string());
             storage.add_metadata(
-                "mount_point".to_string(),
+                String::from("mount_point"),
                 fs.mount_point.to_string_lossy().to_string(),
             );
 
@@ -192,9 +192,9 @@ impl<'a> DetectionEngine<'a> {
                 );
 
                 storage.available_space = fs.available_bytes;
-                storage.add_metadata("device".to_string(), fs.device.clone());
-                storage.add_metadata("filesystem_type".to_string(), fs.fs_type.clone());
-                storage.add_metadata("total_bytes".to_string(), fs.total_bytes.to_string());
+                storage.add_metadata(String::from("device"), fs.device.clone());
+                storage.add_metadata(String::from("filesystem_type"), fs.fs_type.clone());
+                storage.add_metadata(String::from("total_bytes"), fs.total_bytes.to_string());
 
                 for cap in fs.capabilities {
                     storage.add_capability(cap);
@@ -300,7 +300,7 @@ impl<'a> DetectionEngine<'a> {
             let mut storage =
                 DetectedStorage::new(id, UnifiedStorageType::Network, format!("iSCSI host {i}"));
             storage.add_metadata(
-                "iscsi_host".to_string(),
+                String::from("iscsi_host"),
                 host.file_name().to_string_lossy().to_string(),
             );
             targets.push(storage);
@@ -363,12 +363,12 @@ impl<'a> DetectionEngine<'a> {
                 let total = stat.f_blocks * block_size;
                 let avail = stat.f_bavail * block_size;
                 storage.available_space = avail;
-                storage.add_metadata("total_bytes".to_string(), total.to_string());
+                storage.add_metadata(String::from("total_bytes"), total.to_string());
             }
 
-            storage.add_metadata("device".to_string(), device.to_string());
-            storage.add_metadata("filesystem_type".to_string(), fs_type.to_string());
-            storage.add_metadata("mount_point".to_string(), mount_point.to_string());
+            storage.add_metadata(String::from("device"), device.to_string());
+            storage.add_metadata(String::from("filesystem_type"), fs_type.to_string());
+            storage.add_metadata(String::from("mount_point"), mount_point.to_string());
             results.push(storage);
         }
 

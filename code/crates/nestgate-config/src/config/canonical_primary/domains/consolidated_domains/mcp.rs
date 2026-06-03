@@ -68,7 +68,7 @@ pub struct McpProtocolConfig {
 impl Default for McpProtocolConfig {
     fn default() -> Self {
         Self {
-            version: "1.0".to_string(),
+            version: String::from("1.0"),
             message_format: McpMessageFormat::Json,
             compression: false,
             heartbeat_interval: Duration::from_secs(30),
@@ -136,7 +136,7 @@ impl DomainConfigValidation for McpDomainConfig {
 
         // Validate protocol version
         if self.protocol.version.is_empty() {
-            warnings.push("Protocol version is empty".to_string());
+            warnings.push(String::from("Protocol version is empty"));
         }
 
         Ok(warnings)

@@ -36,7 +36,7 @@ impl ZfsManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    "Failed to create pool: error details".to_string(),
+                    String::from("Failed to create pool: error details"),
                     ZfsOperation::PoolCreate,
                 )
             })?;
@@ -57,7 +57,7 @@ impl ZfsManager {
 
         self.pool_manager.destroy_pool(name).await.map_err(|_e| {
             create_zfs_error(
-                "Failed to destroy pool: error details".to_string(),
+                String::from("Failed to destroy pool: error details"),
                 ZfsOperation::PoolCreate,
             )
         })?;
@@ -76,7 +76,7 @@ impl ZfsManager {
     pub async fn get_pool_status(&self, name: &str) -> Result<String> {
         self.pool_manager.get_pool_status(name).await.map_err(|_e| {
             create_zfs_error(
-                "Failed to get pool status: error details".to_string(),
+                String::from("Failed to get pool status: error details"),
                 ZfsOperation::PoolCreate,
             )
         })
@@ -95,7 +95,7 @@ impl ZfsManager {
 
         self.pool_manager.scrub_pool(name).await.map_err(|_e| {
             create_zfs_error(
-                "Failed to scrub pool: error details".to_string(),
+                String::from("Failed to scrub pool: error details"),
                 ZfsOperation::PoolCreate,
             )
         })?;

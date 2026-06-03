@@ -211,7 +211,7 @@ fn socket_file_name(family_id: &str) -> String {
     if is_family_scoped(family_id) {
         format!("nestgate-{family_id}.sock")
     } else {
-        "nestgate.sock".to_string()
+        String::from("nestgate.sock")
     }
 }
 
