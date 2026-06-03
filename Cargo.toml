@@ -183,14 +183,12 @@ temp-env = { version = "0.3.6", features = ["async_closure"] }
 clap = { version = "4.5", features = ["derive"] }
 
 # Additional utilities
-walkdir = "2.0"
 
 # Web framework and HTTP
 tower = "0.5"
 tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
 
 # Streaming and async utilities
-async-stream = "0.3"
 tokio-util = { version = "0.7", features = ["codec"] }
 tokio-serde = { version = "0.8", features = ["json"] }
 tokio-stream = { version = "0.1", features = ["sync"] }

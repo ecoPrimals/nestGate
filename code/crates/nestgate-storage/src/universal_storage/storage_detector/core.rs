@@ -92,9 +92,13 @@ impl StorageDetectorUtils {
         }
     }
 
-    /// Check if storage type supports specific capability
+    /// Check if storage type supports a specific capability.
+    ///
+    /// Returns `false` by default — callers must not assume support.
+    /// Real capability detection requires probing the storage backend
+    /// via `storage.capabilities` RPC.
     #[must_use]
     pub const fn storage_supports_capability(_storage_type: &str, _capability: &str) -> bool {
-        true // Simplified implementation for compilation success
+        false
     }
 }

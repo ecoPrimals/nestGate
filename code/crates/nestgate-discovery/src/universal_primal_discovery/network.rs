@@ -275,33 +275,18 @@ impl NetworkDiscovery {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn get_available_interfaces(&self) -> Result<Vec<InterfaceInfo>> {
-        // Simplified implementation - in a real system this would use proper network interface APIs
-        let mut interfaces = Vec::new();
-
-        // Localhost (highest priority for development)
-        interfaces.push(InterfaceInfo {
+        // Only report the loopback interface as known-reachable.
+        // Real network interface enumeration requires `rustix`/netlink or
+        // the `nix` crate. Fabricating non-loopback IPs is worse than
+        // returning an incomplete list — callers that need LAN interfaces
+        // should use explicit endpoint configuration via env/config.
+        let interfaces = vec![InterfaceInfo {
             name: String::from("lo"),
             ip_endpoint: IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,
             priority_score: 100,
-        });
-
-        // Add common interface patterns with reasonable defaults
-        for (idx, interface_name) in self
-            .legacy_discovery
-            .preferred_interfaces
-            .iter()
-            .enumerate()
-        {
-            interfaces.push(InterfaceInfo {
-                name: interface_name.clone(),
-                ip_endpoint: IpAddr::V4(std::net::Ipv4Addr::new(192, 168, 1, 100)),
-                is_up: true,
-                is_loopback: false,
-                priority_score: 50 - i32::try_from(idx).unwrap_or(0),
-            });
-        }
+        }];
 
         Ok(interfaces)
     }
@@ -314,14 +299,14 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
+    pub fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
         // Runtime config override (immutable, thread-safe)
         if let Some(endpoint) = self.network_runtime.get_service_endpoint(service_name) {
             return Ok(endpoint.to_string());
         }
 
         // Network discovery fallback
-        self.scan_network_for_service(service_name).await
+        self.scan_network_for_service(service_name)
     }
 
     /// **NETWORK SCANNING**: Scan network for service
@@ -332,17 +317,11 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn scan_network_for_service(&self, service_name: &str) -> Result<String> {
-        // Simplified implementation - in a real system this would do actual network discovery
-        let bind_address = self.detect_optimal_bind_interface()?;
-        // Use the port range from discovery config
-        let (start_port, _end_port) = self.legacy_discovery.port_scan_range; // PEDANTIC: Fixed unused variable
-        // start_port is already available from the tuple above
-        let port = self
-            .discover_available_port(service_name, start_port)
-            .await?;
-
-        Ok(format!("http://{bind_address}:{port}"))
+    pub fn scan_network_for_service(&self, service_name: &str) -> Result<String> {
+        Err(NestGateError::not_implemented(format!(
+            "Network scanning for `{service_name}` not implemented — \
+             use explicit endpoint configuration via env or capability discovery"
+        )))
     }
 
     /// **CAPABILITY ENDPOINT DISCOVERY**: Discover capability endpoint through adapter
@@ -581,7 +560,7 @@ mod tests {
         let runtime_config = create_test_runtime_config();
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
-        let result = discovery.discover_service_endpoint("test_service").await;
+        let result = discovery.discover_service_endpoint("test_service");
         // Should resolve to some endpoint
         assert!(result.is_ok());
         if let Ok(endpoint) = result {
@@ -594,8 +573,8 @@ mod tests {
         let runtime_config = create_test_runtime_config();
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
-        let result1 = discovery.discover_service_endpoint("service1").await;
-        let result2 = discovery.discover_service_endpoint("service2").await;
+        let result1 = discovery.discover_service_endpoint("service1");
+        let result2 = discovery.discover_service_endpoint("service2");
 
         assert!(result1.is_ok());
         assert!(result2.is_ok());
@@ -677,7 +656,7 @@ mod tests {
         let services = vec!["service1", "service2", "service3"];
 
         for service in services {
-            let result = discovery.discover_service_endpoint(service).await;
+            let result = discovery.discover_service_endpoint(service);
             assert!(result.is_ok());
         }
     }

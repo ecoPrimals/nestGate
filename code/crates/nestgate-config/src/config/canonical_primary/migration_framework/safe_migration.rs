@@ -50,7 +50,12 @@ impl SafeConfigMigration {
         }
     }
 
-    /// Migrate with backup and rollback capability
+    /// Migrate with backup and rollback capability.
+    ///
+    /// Serializes `from` as backup, then returns the target config
+    /// unchanged. Real field-level migration transforms are not yet
+    /// implemented — callers should validate the result via
+    /// [`validate_migration`] before persisting.
     pub fn migrate_with_backup<T, U>(&mut self, from: T, to: U) -> Result<U>
     where
         T: Serialize,

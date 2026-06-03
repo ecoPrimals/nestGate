@@ -269,14 +269,18 @@ impl ConfigMigrator {
         Ok(())
     }
 
-    fn map_configurations(&mut self) -> Result<()> {
-        self.add_completed_step(String::from("Configuration mapping completed"));
-        Ok(())
+    fn map_configurations(&self) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "Configuration mapping not yet implemented — \
+             source-to-target field transforms require version-specific migration logic",
+        ))
     }
 
-    fn perform_migration(&mut self) -> Result<()> {
-        self.add_completed_step(String::from("Migration performed successfully"));
-        Ok(())
+    fn perform_migration(&self) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "Migration execution not yet implemented — \
+             use dry_run_migration() to validate target config without applying changes",
+        ))
     }
 
     fn validate_target(&mut self) -> Result<()> {
@@ -302,9 +306,11 @@ impl ConfigMigrator {
         }
     }
 
-    fn finalize_migration(&mut self) -> Result<()> {
-        self.add_completed_step(String::from("Migration finalized successfully"));
-        Ok(())
+    fn finalize_migration(&self) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "Migration finalization not yet implemented — \
+             requires config persistence and state reconciliation",
+        ))
     }
 
     fn dry_run_migration(&mut self) -> Result<NestGateCanonicalConfig> {

@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 88: Evolution sweep — fake success elimination, dependency hygiene (Jun 3, 2026)
+
+- **Production honesty sweep**: Eliminated 9 fake-success paths that pretended to
+  work without real implementations:
+  - `CertificateManager::get_certificate_info` → `NotImplemented` (was returning `"valid"`)
+  - `AuthMethod::Token` hybrid auth → error (was minting tokens without validation)
+  - `authenticate()` HTTP handler → `401 UNAUTHORIZED` (was returning 200 with `success: false`)
+  - `create_user()` → `501 NOT IMPLEMENTED` (was storing users without auth gate)
+  - `storage_supports_capability` → `false` default (was always returning `true`)
+  - `ConfigMigrator::perform_migration/map_configurations/finalize_migration` → `NotImplemented`
+    (were reporting success without migrating)
+  - `scan_network_for_service` → `NotImplemented` (was fabricating `http://` endpoints)
+  - `get_available_interfaces` → loopback only (was fabricating `192.168.1.100` IPs)
+- **Dependency hygiene**: Removed unused workspace deps `walkdir` and `async-stream`.
+- **Auth manager**: Added 3 new tests exercising all `Role` variants and `add_user`/
+  `validate_api_key` API. Forward-looking RBAC variants marked with
+  `#[expect(dead_code)]` for IdP integration.
+- **1,607 tests passing**, zero clippy warnings, zero fake production successes.
+
 ### Session 87: Deep debt sweep — modularization, honesty, idioms (Jun 3, 2026)
 
 - **`storage_stream.rs` split (1,101L → 676 + 455)**: Extracted content-addressed

@@ -15,11 +15,14 @@ use std::hash::{Hash, Hasher};
 pub enum Role {
     /// Administrator
     Admin,
-    /// Operator
+    /// Operator — used when identity provider is wired
+    #[expect(dead_code, reason = "forward-looking RBAC variant for IdP integration")]
     Operator,
-    /// Service account
+    /// Service account — used when identity provider is wired
+    #[expect(dead_code, reason = "forward-looking RBAC variant for IdP integration")]
     Service,
-    /// Read-only
+    /// Read-only — used when identity provider is wired
+    #[expect(dead_code, reason = "forward-looking RBAC variant for IdP integration")]
     ReadOnly,
     /// Standard user
     User,
@@ -141,6 +144,7 @@ impl AuthManager {
     }
 
     /// Registers or replaces a user entry.
+    #[expect(dead_code, reason = "forward-looking API for IdP-backed user provisioning")]
     pub fn add_user(
         &mut self,
         user_id: String,
@@ -175,5 +179,44 @@ impl AuthManager {
 impl Default for AuthManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_user_and_validate_api_key() {
+        let mut mgr = AuthManager::new();
+        mgr.add_user(
+            String::from("u1"),
+            String::from("alice"),
+            Role::Operator,
+            vec![Permission::new(&String::from("read"))],
+        );
+        mgr.add_api_key(String::from("key-1"), String::from("u1"));
+
+        let ctx = mgr.validate_api_key("key-1").expect("valid key");
+        assert_eq!(ctx.role, Role::Operator);
+    }
+
+    #[test]
+    fn all_role_variants_display() {
+        for role in [
+            Role::Admin,
+            Role::Operator,
+            Role::Service,
+            Role::ReadOnly,
+            Role::User,
+        ] {
+            assert!(!role.to_string().is_empty());
+        }
+    }
+
+    #[test]
+    fn invalid_api_key_returns_error() {
+        let mgr = AuthManager::new();
+        assert!(mgr.validate_api_key("nonexistent").is_err());
     }
 }

@@ -315,29 +315,10 @@ impl HybridAuthenticationManager {
                 }
             }
             AuthMethod::Token => {
-                if credentials.password.is_empty() {
-                    return Err(NestGateError::security_error("API token required"));
-                }
-                let token = ZeroCostAuthToken::new(
-                    format!("api_{}", uuid::Uuid::new_v4()),
-                    credentials.username.clone(),
-                    vec![String::from("api")],
-                    self.config.local_token_settings.token_expiry,
-                );
-
-                {
-                    let mut cache = self.token_cache.write().await;
-                    cache.insert(
-                        token.token.clone(),
-                        CachedToken {
-                            token: token.clone(),
-                            created_at: SystemTime::now(),
-                            _last_validated: SystemTime::now(),
-                        },
-                    );
-                }
-
-                Ok(token)
+                Err(NestGateError::security_error(
+                    "Token authentication requires external security provider — \
+                     token issuance and validation must not be self-minted",
+                ))
             }
             AuthMethod::Certificate => Err(NestGateError::security_error(
                 "Certificate auth requires external security provider",

@@ -83,11 +83,10 @@ impl CertificateManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn get_certificate_info(&self, cert_id: &str) -> Result<HashMap<String, String>> {
-        // Use the universal adapter for certificate operations
-        let mut info = HashMap::new();
-        info.insert(String::from("id"), cert_id.to_string());
-        info.insert(String::from("status"), String::from("valid"));
-        Ok(info)
+        Err(NestGateError::not_implemented(format!(
+            "Certificate info for `{cert_id}` requires security capability provider \
+             — use capability IPC to query the cert store"
+        )))
     }
 }
 
@@ -127,24 +126,25 @@ mod tests {
     }
 
     #[test]
-    fn get_certificate_info_with_explicit_adapter_endpoint() {
+    fn get_certificate_info_returns_not_implemented() {
         let env = MapEnv::from([(
             "NESTGATE_ADAPTER_ENDPOINT",
             "unix:///tmp/nestgate-adapter.sock",
         )]);
         let m = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
             .unwrap();
-        let info = m.get_certificate_info("cert-1").unwrap();
-        assert_eq!(info.get("id"), Some(&String::from("cert-1")));
-        assert_eq!(info.get("status"), Some(&String::from("valid")));
+        let err = m.get_certificate_info("cert-1").unwrap_err();
+        assert!(
+            err.to_string().contains("security capability provider"),
+            "expected not-implemented hint, got: {err}"
+        );
     }
 
     #[test]
     fn create_default_certificate_manager_uses_api_url_fallback() {
         let env = MapEnv::from([("NESTGATE_API_URL", "http://127.0.0.1:8080")]);
         let m = create_default_certificate_manager_from_env_source(&env).unwrap();
-        let info = m.get_certificate_info("x").unwrap();
-        assert_eq!(info.get("status"), Some(&String::from("valid")));
+        assert!(m.get_certificate_info("x").is_err());
     }
 
     #[test]
@@ -152,7 +152,6 @@ mod tests {
         let env = MapEnv::from([("NESTGATE_API_URL", "https://api.example.com/v1///")]);
         let m = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
             .unwrap();
-        let info = m.get_certificate_info("id").unwrap();
-        assert_eq!(info.get("id"), Some(&String::from("id")));
+        assert!(m.get_certificate_info("id").is_err());
     }
 }
