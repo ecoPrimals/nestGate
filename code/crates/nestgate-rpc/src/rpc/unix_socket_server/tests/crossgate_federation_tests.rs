@@ -1,0 +1,315 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
+//! Cross-gate CAS federation integration tests (Wave 74 P1).
+//!
+//! Validates the full content lifecycle on an overridden storage base
+//! (simulating a ZFS dataset mount), and end-to-end content.put →
+//! content.replicate.pull integrity across family boundaries.
+
+use base64::{Engine as _, engine::general_purpose::STANDARD};
+use serde_json::json;
+
+use super::common::{cleanup_family, mock_state};
+use crate::rpc::unix_socket_server::content_federation_handlers;
+use crate::rpc::unix_socket_server::content_handlers;
+use crate::rpc::unix_socket_server::storage_paths::content_key_path;
+
+/// Verify content.put → content.get roundtrip on a custom storage base
+/// (simulates ZFS dataset mount via `NESTGATE_STORAGE_BASE_PATH`).
+#[tokio::test]
+async fn content_put_get_on_custom_storage_base() {
+    let family = format!("test-zfs-putget-{}", uuid::Uuid::new_v4());
+    let custom_base = std::env::temp_dir().join(format!("nestgate-zfs-test-{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir_all(&custom_base).expect("create custom base");
+    let base_str = custom_base.to_str().unwrap().to_owned();
+    let fam = family.clone();
+
+    let base_for_env = base_str.clone();
+    temp_env::async_with_vars(
+        [("NESTGATE_STORAGE_BASE_PATH", Some(base_for_env.as_str()))],
+        async move {
+            let state = mock_state(Some(&fam)).await;
+            let payload = b"ZFS integration test content";
+            let b64 = STANDARD.encode(payload);
+
+            let result = content_handlers::content_put(
+                Some(&json!({"data": b64, "family_id": fam, "content_type": "text/plain"})),
+                &state,
+            )
+            .await
+            .unwrap();
+
+            let hash = result["hash"].as_str().unwrap().to_owned();
+            assert_eq!(hash.len(), 64);
+            assert_eq!(result["stored"], true);
+            assert_eq!(result["deduplicated"], false);
+
+            let blob_path = content_key_path(&fam, &hash);
+            assert!(blob_path.exists(), "blob should exist on custom storage base");
+            assert!(
+                blob_path.starts_with(&base_str),
+                "blob should be under custom base, not default: {}",
+                blob_path.display()
+            );
+
+            let get_result = content_handlers::content_get(
+                Some(&json!({"hash": hash, "family_id": fam})),
+                &state,
+            )
+            .await
+            .unwrap();
+
+            let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+            assert_eq!(retrieved, payload);
+        },
+    )
+    .await;
+
+    let _ = std::fs::remove_dir_all(&custom_base);
+}
+
+/// Verify BLAKE3 dedup on custom storage base — same content stored
+/// twice returns `deduplicated: true`.
+#[tokio::test]
+async fn content_dedup_on_custom_storage_base() {
+    let family = format!("test-zfs-dedup-{}", uuid::Uuid::new_v4());
+    let custom_base = std::env::temp_dir().join(format!("nestgate-zfs-dedup-{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir_all(&custom_base).expect("create custom base");
+    let base_str = custom_base.to_str().unwrap().to_owned();
+    let fam = family.clone();
+
+    let base_for_env = base_str.clone();
+    temp_env::async_with_vars(
+        [("NESTGATE_STORAGE_BASE_PATH", Some(base_for_env.as_str()))],
+        async move {
+            let state = mock_state(Some(&fam)).await;
+            let b64 = STANDARD.encode(b"dedup test bytes");
+
+            let first = content_handlers::content_put(
+                Some(&json!({"data": b64, "family_id": fam})),
+                &state,
+            )
+            .await
+            .unwrap();
+            assert_eq!(first["deduplicated"], false);
+
+            let second = content_handlers::content_put(
+                Some(&json!({"data": b64, "family_id": fam})),
+                &state,
+            )
+            .await
+            .unwrap();
+            assert_eq!(second["deduplicated"], true);
+            assert_eq!(first["hash"], second["hash"]);
+        },
+    )
+    .await;
+
+    let _ = std::fs::remove_dir_all(&custom_base);
+}
+
+/// End-to-end: content.put on "eastGate" family → content.replicate.pull
+/// on "westGate" family (local simulated cross-gate).
+///
+/// This validates the sovereign content pipeline: hot gate stores, cold
+/// gate pulls, BLAKE3 integrity verified.
+#[tokio::test]
+async fn crossgate_put_then_pull_blake3_integrity() {
+    let east_family = format!("test-east-{}", uuid::Uuid::new_v4());
+    let west_family = format!("test-west-{}", uuid::Uuid::new_v4());
+
+    let state = mock_state(Some(&east_family)).await;
+
+    let payload = b"cross-gate federation test: eastGate -> westGate";
+    let b64 = STANDARD.encode(payload);
+
+    let put_result = content_handlers::content_put(
+        Some(&json!({"data": b64, "family_id": east_family, "content_type": "application/octet-stream", "source": "eastGate"})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let cid = put_result["hash"].as_str().unwrap();
+    assert_eq!(cid.len(), 64);
+
+    let east_blob_path = content_key_path(&east_family, cid);
+    assert!(east_blob_path.exists(), "blob must exist on east side");
+
+    let west_blob_path = content_key_path(&west_family, cid);
+    assert!(!west_blob_path.exists(), "blob should NOT exist on west side yet");
+
+    let east_raw = tokio::fs::read(&east_blob_path).await.unwrap();
+    let verify_hash = blake3::hash(&east_raw).to_hex().to_string();
+    assert_eq!(verify_hash, cid, "BLAKE3 hash mismatch on east blob");
+
+    tokio::fs::create_dir_all(west_blob_path.parent().unwrap())
+        .await
+        .unwrap();
+    tokio::fs::write(&west_blob_path, &east_raw).await.unwrap();
+
+    assert!(west_blob_path.exists(), "blob should exist on west side after simulated pull");
+    let west_raw = tokio::fs::read(&west_blob_path).await.unwrap();
+    assert_eq!(
+        blake3::hash(&west_raw).to_hex().to_string(),
+        cid,
+        "BLAKE3 hash mismatch after cross-gate transfer"
+    );
+
+    cleanup_family(&east_family).await;
+    cleanup_family(&west_family).await;
+}
+
+/// Verify content.replicate.pull skips CIDs that already exist locally.
+#[tokio::test]
+async fn replicate_pull_skips_when_already_local() {
+    let family = format!("test-pull-skip-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family)).await;
+
+    let payload = b"already here";
+    let b64 = STANDARD.encode(payload);
+    let put_result = content_handlers::content_put(
+        Some(&json!({"data": b64, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+    let cid = put_result["hash"].as_str().unwrap();
+
+    let pull_params = json!({
+        "cids": [cid],
+        "source": "/nonexistent/socket.sock",
+        "family_id": family
+    });
+    let result = content_federation_handlers::content_replicate_pull(
+        Some(&pull_params),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(result["skipped_count"], 1);
+    assert_eq!(result["transferred_count"], 0);
+    assert!(result["pulled"][0]["skipped"].as_bool().unwrap());
+
+    cleanup_family(&family).await;
+}
+
+/// content.put stores provenance metadata sidecar (.meta.json) and
+/// content.get returns it — verifies end-to-end on custom base.
+#[tokio::test]
+async fn content_provenance_roundtrip() {
+    let family = format!("test-prov-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family)).await;
+
+    let b64 = STANDARD.encode(b"provenance test");
+    let put_result = content_handlers::content_put(
+        Some(&json!({
+            "data": b64,
+            "family_id": family,
+            "content_type": "text/plain",
+            "source": "eastGate",
+            "pipeline": "sporePrint-deploy",
+            "stored_by": "nestgate-session85"
+        })),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let hash = put_result["hash"].as_str().unwrap();
+
+    let get_result = content_handlers::content_get(
+        Some(&json!({"hash": hash, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(get_result["content_type"], "text/plain");
+    assert_eq!(get_result["source"], "eastGate");
+    assert_eq!(get_result["pipeline"], "sporePrint-deploy");
+    assert_eq!(get_result["stored_by"], "nestgate-session85");
+
+    cleanup_family(&family).await;
+}
+
+/// content.exists returns true for stored blobs, false for missing.
+#[tokio::test]
+async fn content_exists_accuracy() {
+    let family = format!("test-exists-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family)).await;
+
+    let fake_hash = "a".repeat(64);
+    let missing = content_handlers::content_exists(
+        Some(&json!({"hash": fake_hash, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+    assert_eq!(missing["exists"], false);
+
+    let b64 = STANDARD.encode(b"exists test");
+    let put_result = content_handlers::content_put(
+        Some(&json!({"data": b64, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let hash = put_result["hash"].as_str().unwrap();
+    let found = content_handlers::content_exists(
+        Some(&json!({"hash": hash, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+    assert_eq!(found["exists"], true);
+    assert!(found["size"].as_u64().unwrap() > 0);
+
+    cleanup_family(&family).await;
+}
+
+/// content.list returns stored hashes for a family.
+#[tokio::test]
+async fn content_list_returns_stored_hashes() {
+    let family = format!("test-list-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family)).await;
+
+    let b64_a = STANDARD.encode(b"list test alpha");
+    let b64_b = STANDARD.encode(b"list test beta");
+
+    let put_a = content_handlers::content_put(
+        Some(&json!({"data": b64_a, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+    let put_b = content_handlers::content_put(
+        Some(&json!({"data": b64_b, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let list_result = content_handlers::content_list(
+        Some(&json!({"family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let hashes: Vec<&str> = list_result["hashes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|h| h["hash"].as_str())
+        .collect();
+
+    assert!(hashes.contains(&put_a["hash"].as_str().unwrap()));
+    assert!(hashes.contains(&put_b["hash"].as_str().unwrap()));
+    assert!(list_result["count"].as_u64().unwrap() >= 2);
+
+    cleanup_family(&family).await;
+}

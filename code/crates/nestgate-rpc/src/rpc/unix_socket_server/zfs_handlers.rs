@@ -372,6 +372,96 @@ pub(super) async fn zfs_health(_params: Option<&Value>) -> Result<Value> {
     }))
 }
 
+/// `zfs.snapshot.create` — create a ZFS snapshot.
+///
+/// Params: `{ "dataset": "<pool/dataset>", "name": "<snapshot_name>" }`
+///
+/// The snapshot name defaults to `nestgate-{unix_timestamp}` if omitted.
+///
+/// # Errors
+///
+/// Returns an error if `zfs` is unavailable, the dataset doesn't exist,
+/// or the snapshot creation fails.
+pub(super) async fn zfs_snapshot_create(params: Option<&Value>) -> Result<Value> {
+    let params = params
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+    let dataset = params["dataset"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
+    let name = params["name"].as_str().map_or_else(
+        || {
+            let ts = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_secs());
+            format!("nestgate-{ts}")
+        },
+        str::to_owned,
+    );
+
+    debug!("zfs.snapshot.create dataset={dataset} name={name}");
+
+    if !is_zfs_available().await {
+        return Err(zfs_unavailable("zfs"));
+    }
+
+    let snapshot_path = format!("{dataset}@{name}");
+    let (_, stderr, ok) = run_zfs_cmd("zfs", &["snapshot", &snapshot_path]).await?;
+    if !ok {
+        return Err(NestGateError::internal(format!(
+            "zfs snapshot create failed: {stderr}"
+        )));
+    }
+
+    Ok(json!({
+        "status": "success",
+        "snapshot": snapshot_path,
+        "dataset": dataset,
+        "name": name,
+    }))
+}
+
+/// `zfs.snapshot.destroy` — destroy a ZFS snapshot.
+///
+/// Params: `{ "snapshot": "<pool/dataset@name>" }`
+///
+/// # Errors
+///
+/// Returns an error if `zfs` is unavailable or the destroy fails.
+pub(super) async fn zfs_snapshot_destroy(params: Option<&Value>) -> Result<Value> {
+    let params = params
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+    let snapshot = params["snapshot"]
+        .as_str()
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field("snapshot", "string required (pool/dataset@name)")
+        })?;
+
+    if !snapshot.contains('@') {
+        return Err(NestGateError::invalid_input_with_field(
+            "snapshot",
+            "must contain '@' (format: pool/dataset@snapshot_name)",
+        ));
+    }
+
+    debug!("zfs.snapshot.destroy snapshot={snapshot}");
+
+    if !is_zfs_available().await {
+        return Err(zfs_unavailable("zfs"));
+    }
+
+    let (_, stderr, ok) = run_zfs_cmd("zfs", &["destroy", snapshot]).await?;
+    if !ok {
+        return Err(NestGateError::internal(format!(
+            "zfs snapshot destroy failed: {stderr}"
+        )));
+    }
+
+    Ok(json!({
+        "status": "success",
+        "destroyed": snapshot,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -449,6 +539,29 @@ mod tests {
         } else {
             assert!(result.is_err());
         }
+    }
+
+    #[tokio::test]
+    async fn zfs_snapshot_create_requires_params() {
+        let result = zfs_snapshot_create(None).await;
+        assert!(result.is_err());
+
+        let result = zfs_snapshot_create(Some(&json!({}))).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn zfs_snapshot_destroy_requires_at_sign() {
+        let result = zfs_snapshot_destroy(Some(&json!({"snapshot": "pool/dataset"}))).await;
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("@"));
+    }
+
+    #[tokio::test]
+    async fn zfs_snapshot_destroy_requires_params() {
+        let result = zfs_snapshot_destroy(None).await;
+        assert!(result.is_err());
     }
 
     #[tokio::test]

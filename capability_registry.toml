@@ -82,6 +82,8 @@ methods = [
     "content.put", "content.get", "content.exists", "content.list",
     "content.publish", "content.resolve", "content.promote", "content.collections",
     "content.fetch_heads", "content.push", "content.replicate", "content.replicate.pull", "content.sync",
+    "content.store_stream", "content.store_stream_chunk",
+    "content.retrieve_stream", "content.retrieve_stream_chunk",
 ]
 
 # ── Content-addressed storage protocol (NG-1) ──────────────────────
@@ -113,8 +115,18 @@ methods = [
 #   Push-direction cross-gate blob transfer. Diff-based. Serves rootpulse.federate.
 # content.replicate.pull: {cids: ["<blake3_hex>"], source: "<socket_or_tcp>", family_id?} → {pulled: [{cid, pulled, size?}], total_bytes}
 #   Pull-direction cross-gate blob transfer. Cold-from-hot federation (Wave 73). Diff-based: skips blobs already present locally.
-# content.sync:           {repos: [{path, remote?, branch?, clone_url?}], parallel?, source?, clone_missing?} → {results: [{path, synced, action, commits_pulled?}], synced_count}
+# content.sync:                  {repos: [{path, remote?, branch?, clone_url?}], parallel?, source?, clone_missing?} → {results: [{path, synced, action, commits_pulled?}], synced_count}
 #   Cascade-pull from remote sources (Neural API equivalent of cascade-pull.sh). Serves ecosystem.pull.
+#
+# ── Content streaming (Wave 74 — chunked CAS for large blobs) ─────────
+# content.store_stream:          {total_size, family_id?, content_type?} → {stream_id, chunk_size}
+#   Begin a chunked CAS upload. Key is computed (BLAKE3) on finalize, not caller-supplied.
+# content.store_stream_chunk:    {stream_id, offset, data: "<base64>", is_last} → {stream_id, hash?, size?, stored?, deduplicated?}
+#   Append chunk. On is_last=true: computes BLAKE3, renames staging → CAS path, returns hash.
+# content.retrieve_stream:       {hash, family_id?, chunk_size?} → {stream_id, total_size, chunk_size, hash}
+#   Begin chunked CAS download by BLAKE3 hash.
+# content.retrieve_stream_chunk: {stream_id, offset} → {data, offset, length, total_size, is_last}
+#   Read next chunk. Reuses storage.retrieve_stream_chunk session infrastructure.
 
 [capabilities.repo]
 domain = "content"
@@ -201,8 +213,15 @@ description = "ZFS storage management — pools, datasets, snapshots"
 methods = [
     "zfs.pool.list", "zfs.pool.get", "zfs.pool.health",
     "zfs.dataset.list", "zfs.dataset.get",
-    "zfs.snapshot.list", "zfs.health",
+    "zfs.snapshot.list", "zfs.snapshot.create", "zfs.snapshot.destroy",
+    "zfs.health",
 ]
+
+# zfs.snapshot.create: {dataset: "<pool/dataset>", name?: "<snapshot_name>"} → {snapshot, dataset, name}
+#   Creates a ZFS snapshot. Name defaults to "nestgate-{unix_timestamp}" if omitted.
+#   Used for point-in-time CAS dataset recovery and federation state checkpoints.
+# zfs.snapshot.destroy: {snapshot: "<pool/dataset@name>"} → {destroyed: "<full_name>"}
+#   Destroys a ZFS snapshot. The snapshot param must contain '@'.
 
 [capabilities.health]
 domain = "health"

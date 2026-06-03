@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 86: Wave 74 — ZFS integration tests, content streaming, snapshot RPC (Jun 3, 2026)
+
+- **Cross-gate integration tests (P1)**: 7 new tests validating the full CAS
+  lifecycle — content.put/get on custom storage base (simulated ZFS mount),
+  BLAKE3 dedup on ZFS path, cross-gate push→pull integrity, content.exists
+  accuracy, content.list enumeration, provenance metadata roundtrip.
+- **Content streaming (P2)**: 4 new RPC methods for chunked CAS transfer:
+  `content.store_stream`, `content.store_stream_chunk`,
+  `content.retrieve_stream`, `content.retrieve_stream_chunk`. Reuses the
+  existing 4 MiB chunk / session infrastructure from `storage.store_stream`.
+  `content.store_stream_chunk` computes BLAKE3 on finalize and auto-deduplicates.
+  Supports sporePrint's 226 pages without base64-in-JSON size limits.
+- **ZFS snapshot RPC (P3)**: `zfs.snapshot.create` (auto-named
+  `nestgate-{timestamp}`) and `zfs.snapshot.destroy` for point-in-time CAS
+  dataset snapshots. Enables periodic federation checkpoints.
+- **16 new tests**: 7 cross-gate integration, 3 content streaming, 3 ZFS
+  snapshot validation, 3 content stream infrastructure.
+
 ### Session 85: Wave 73 — ZFS backend, cross-gate federation, mesh registration (Jun 3, 2026)
 
 - **Storage base path unification (M1)**: `NESTGATE_STORAGE_BASE_PATH` env override

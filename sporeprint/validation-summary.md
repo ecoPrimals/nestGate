@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,537+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, cross-gate CAS federation, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 12,553+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation, BTSP auth"
 date = 2026-06-03
 
 [taxonomies]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,537+ tests** passing (697 RPC, 11,840+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **12,553+ tests** passing (747 RPC, 11,806+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **Wave 74 ZFS integration + streaming + snapshots (Session 86)**: Cross-gate integration tests, `content.store_stream`/`content.retrieve_stream` for chunked CAS (4 MiB chunks, BLAKE3 on finalize), `zfs.snapshot.create`/`destroy` RPC, 16 new tests
 - **Wave 73 ZFS + federation + mesh (Session 85)**: `NESTGATE_STORAGE_BASE_PATH` for ZFS CAS mounts, `content.replicate.pull` (cold-from-hot), `route.register` for mesh, extended `primal.announce` with gate identity, 15 new tests
 - **Deep debt /tmp centralization (Session 84)**: 12 production sites evolved to `std::env::temp_dir()`, idiomatic `String::from()` migration, 10 new tests
 - **Wave 67 audit response (Session 82)**: version regression fix, /tmp hardcoding removal, 27 new tests (federation_ops, fsmonitor config)

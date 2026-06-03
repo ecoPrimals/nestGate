@@ -187,6 +187,31 @@ pub(super) async fn handle_request(
         "content.collections" => {
             content_handlers::content_collections(request.params.as_ref(), state).await
         }
+        // Content streaming (Wave 74 — chunked CAS for large blobs)
+        "content.store_stream" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::content_store_stream_begin(
+                params,
+                state.family_id.as_deref(),
+            )
+            .await
+        }
+        "content.store_stream_chunk" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::content_store_stream_chunk(params).await
+        }
+        "content.retrieve_stream" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::content_retrieve_stream_begin(
+                params,
+                state.family_id.as_deref(),
+            )
+            .await
+        }
+        "content.retrieve_stream_chunk" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
+        }
         // Content federation (Wave 60 — waterFall / rootPulse signal graphs)
         "content.fetch_heads" => {
             content_federation_handlers::content_fetch_heads(request.params.as_ref(), state).await
@@ -264,6 +289,10 @@ pub(super) async fn handle_request(
         "zfs.dataset.list" => zfs_handlers::zfs_dataset_list(request.params.as_ref()).await,
         "zfs.dataset.get" => zfs_handlers::zfs_dataset_get(request.params.as_ref()).await,
         "zfs.snapshot.list" => zfs_handlers::zfs_snapshot_list(request.params.as_ref()).await,
+        "zfs.snapshot.create" => zfs_handlers::zfs_snapshot_create(request.params.as_ref()).await,
+        "zfs.snapshot.destroy" => {
+            zfs_handlers::zfs_snapshot_destroy(request.params.as_ref()).await
+        }
         "zfs.health" => zfs_handlers::zfs_health(request.params.as_ref()).await,
         "btsp.capabilities" => Ok(json!({
             "protocol": "btsp-v1",
