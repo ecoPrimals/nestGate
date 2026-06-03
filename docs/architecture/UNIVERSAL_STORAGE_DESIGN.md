@@ -1,5 +1,5 @@
 > **Fossil Record**: Undated design doc. Preserved for historical context.
-> Canonical spec: [specs/UNIVERSAL_STORAGE_AGNOSTIC_ARCHITECTURE.md](../../specs/UNIVERSAL_STORAGE_AGNOSTIC_ARCHITECTURE.md).
+> Canonical spec: [CAPABILITY_MAPPINGS.md](../../CAPABILITY_MAPPINGS.md).
 
 # UNIVERSAL AGNOSTIC STORAGE DESIGN
 ## Pure Protocol-Based, Zero Vendor Coupling

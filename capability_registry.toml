@@ -14,7 +14,7 @@
 [primal]
 name = "nestgate"
 domain = "storage"
-version = "4.7.0-dev"
+version = "0.5.0"
 license = "AGPL-3.0-or-later"
 description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
 transport = ["uds", "tcp", "http"]

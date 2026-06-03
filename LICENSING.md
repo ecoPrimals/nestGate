@@ -45,7 +45,7 @@ Use these patterns unless a file explicitly states otherwise:
 
 ### CC-BY-SA 4.0 (see [`LICENSE-CC-BY-SA-4.0`](LICENSE-CC-BY-SA-4.0))
 
-- **Markdown and prose documentation** outside of executable source: e.g. root `*.md` (including this file), `docs/**`, `specs/**`, `examples/**/*.md`, `tests/**/*.md`, `benches/README.md`, and `README.md` / guide files under `code/crates/**` and `tools/**` when they are documentation, not code
+- **Markdown and prose documentation** outside of executable source: e.g. root `*.md` (including this file), `docs/**`, `capability_registry.toml`, `examples/**/*.md`, `tests/**/*.md`, `benches/README.md`, and `README.md` / guide files under `code/crates/**` and `tools/**` when they are documentation, not code
 - **Specifications and integration notes** expressed as prose or diagrams in those trees
 
 If a path is ambiguous (e.g. a `.md` file that is mostly embedded license text or a tiny pointer), prefer the intent: **prose/spec/docs → CC-BY-SA 4.0; executable source and build config → AGPL-3.0-or-later**.

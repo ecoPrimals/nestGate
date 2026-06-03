@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,555+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 3,732+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation, BTSP auth"
 date = 2026-06-03
 
 [taxonomies]
@@ -10,7 +10,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,558+ tests** passing (747 RPC, 11,811+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **3,732+ tests** passing (747 RPC, 2,985+ across 22 workspace packages), 0 failed, 0 clippy warnings
 - **Session 88 evolution sweep**: 9 fake-success paths eliminated (cert manager, auth token minting, credential validation, storage detector, migration framework, network discovery synthesis), unused deps removed (walkdir, async-stream), 3 new auth manager tests
 - **Session 87 deep debt sweep**: `storage_stream.rs` split (1,101→676+455), CapabilityRouter fake successes → explicit errors, `String::from()` migration (454 files), dispatch.rs dedup, fsmonitor XDG security defaults, 2 new tests
 - **Wave 74 ZFS integration + streaming + snapshots (Session 86)**: Cross-gate integration tests, `content.store_stream`/`content.retrieve_stream` for chunked CAS (4 MiB chunks, BLAKE3 on finalize), `zfs.snapshot.create`/`destroy` RPC, 16 new tests
@@ -19,7 +19,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 - **Wave 67 audit response (Session 82)**: version regression fix, /tmp hardcoding removal, 27 new tests (federation_ops, fsmonitor config)
 - **Deep debt sweep (Session 81)**: module split (937L → 525+430), placeholder metrics → honest zeroes, 501 endpoint evolution, 21 new tests
 - **Content federation (Wave 60)**: `content.fetch_heads`, `content.push`, `content.replicate`, `content.sync` — 4 new methods enabling waterFall / rootPulse signal graphs to graduate from bash to Neural API
-- **v0.5.0**: Unified version across all 21 workspace crates (was `4.7.0-dev` internal / `0.1.0` workspace / `2.1.0` binary)
+- **v0.5.0**: Unified version across all 22 workspace crates (was `4.7.0-dev` internal / `0.1.0` workspace / `2.1.0` binary)
 - **22 workspace packages** (nestgate-rpc, nestgate-api, nestgate-core, nestgate-config, nestgate-types, nestgate-storage, nestgate-security, nestgate-zfs, nestgate-cache, nestgate-discovery, nestgate-bin, and 11 more)
 - **16 capability domains** registered in `capability_registry.toml` — storage, content, model, templates, session, audit, nat, beacon, bonding, zfs, health, identity, discovery, lifecycle, auth, btsp
 - **4 transport surfaces** with full parity: SemanticRouter, isomorphic IPC (UDS), primary UDS dispatch, HTTP JSON-RPC

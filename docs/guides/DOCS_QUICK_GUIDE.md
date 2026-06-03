@@ -1,6 +1,6 @@
 # Documentation Quick Guide
 
-**Last Updated**: May 7, 2026 (Session 58)
+**Last Updated**: Jun 3, 2026 (Session 88)
 
 ---
 
@@ -15,7 +15,7 @@
 - [STATUS.md](../../STATUS.md) — Current measured metrics (ground truth)
 - [CAPABILITY_MAPPINGS.md](../../CAPABILITY_MAPPINGS.md) — Wire standard and method catalog
 - [CONTEXT.md](../../CONTEXT.md) — Project context for new contributors
-- [specs/](../../specs/) — Technical specifications
+- [capability_registry.toml](../../capability_registry.toml) — Capability and method registry
 
 ### Contribute
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — Contribution guidelines
@@ -36,7 +36,7 @@ nestgate/
 ├── CAPABILITY_MAPPINGS.md                 Wire standard compliance
 ├── capability_registry.toml               Machine-readable self-knowledge
 ├── code/crates/                           20 crates (22 workspace members total incl. root, fuzz)
-├── specs/                                 Protocol specifications
+├── capability_registry.toml              Capability and method registry
 ├── tests/                                 Integration, chaos, e2e tests
 ├── docs/
 │   ├── api/                               JSON-RPC API documentation
@@ -59,4 +59,4 @@ These are not in the nestgate repository — they live in the shared infra tree.
 
 ---
 
-**Last Updated**: May 7, 2026 (Session 58)
+**Last Updated**: Jun 3, 2026 (Session 88)

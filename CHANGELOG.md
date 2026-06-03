@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 89: Documentation & debris cleanup (Jun 3, 2026)
+
+- **Canonical test counts**: Established from fresh `cargo test` runs — 3,732 workspace,
+  2,267 lib-only, 747 RPC. Previous "12,522+" count corrected across all docs.
+- **Root doc sweep**: Updated 14 markdown files with current session, dates, and metrics.
+- **Broken `specs/` references**: Eliminated from 23 files — repointed to
+  `capability_registry.toml` and `CAPABILITY_MAPPINGS.md`.
+- **`capability_registry.toml`**: Version corrected from `"4.7.0-dev"` to `"0.5.0"`.
+- **Method count**: `CAPABILITY_MAPPINGS.md` updated from 68 to 77 UDS methods.
+
 ### Session 88: Evolution sweep — fake success elimination, dependency hygiene (Jun 3, 2026)
 
 - **Production honesty sweep**: Eliminated 9 fake-success paths that pretended to

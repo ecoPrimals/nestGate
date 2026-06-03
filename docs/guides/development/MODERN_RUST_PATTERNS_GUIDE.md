@@ -1,5 +1,5 @@
 > **Historical**: This document was written in November 18, 2025. Current architecture
-> and patterns may differ. See root-level docs and `specs/` for current specifications.
+> and patterns may differ. See root-level docs and `capability_registry.toml` for current specifications.
 
 # MODERN RUST PATTERNS IN NESTGATE
 

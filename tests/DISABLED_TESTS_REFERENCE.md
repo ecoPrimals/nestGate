@@ -1,6 +1,6 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: May 2, 2026  
+**Last Updated**: Jun 3, 2026  
 **Status**: Active
 
 ---
@@ -48,7 +48,7 @@ See [README.md](README.md) for organization and **`cargo test --workspace`** (fu
 
 | Metric | Value |
 |--------|--------|
-| Passing (lib only) | 8,879 |
+| Passing (lib only) | 2,267 |
 | Failed | 0 |
 | Ignored (lib only) | 60 |
 | Workspace coverage (line) | 84.12%+ |

@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 84)
-Tests:       PASS — 682 RPC lib, 12,522+ workspace, 0 failures (STATUS.md)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 88)
+Tests:       PASS — 747 RPC lib, 3,732+ workspace, 0 failures (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 84)
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 88)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -173,10 +173,10 @@ RUST_LOG=info                       # Logging level
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — Development guidelines
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capabilities
 - [CHANGELOG.md](./CHANGELOG.md) — Version history
-- [specs/](./specs/) — Protocol specifications
+- [capability_registry.toml](./capability_registry.toml) — Capability and method registry
 - [docs/](./docs/) — Architecture, guides, session archives
 
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jun 2, 2026 (Session 84)
+**Last Updated**: Jun 3, 2026 (Session 88)

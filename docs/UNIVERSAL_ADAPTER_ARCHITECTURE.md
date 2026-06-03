@@ -1,5 +1,5 @@
 > **Fossil Record**: Written September 2025 (v2.0). Preserved for historical context.
-> Canonical spec: [specs/UNIVERSAL_ADAPTER_MODULE_ARCHITECTURE_SPEC.md](../specs/UNIVERSAL_ADAPTER_MODULE_ARCHITECTURE_SPEC.md).
+> Canonical spec: [CAPABILITY_MAPPINGS.md](../CAPABILITY_MAPPINGS.md).
 
 # Universal Adapter Architecture - Primal Sovereignty Pattern
 

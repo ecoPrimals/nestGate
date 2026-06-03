@@ -1,5 +1,5 @@
 > **Fossil Record**: Written January 2025 (v2.0). Preserved for historical context.
-> Canonical spec: [specs/ZERO_COST_ARCHITECTURE_FINAL_SPECIFICATION.md](../specs/ZERO_COST_ARCHITECTURE_FINAL_SPECIFICATION.md).
+> Canonical spec: [CAPABILITY_MAPPINGS.md](../CAPABILITY_MAPPINGS.md).
 
 # **NestGate Zero-Cost Architecture Guide**
 

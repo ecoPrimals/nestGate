@@ -539,7 +539,7 @@ See: [`BUFFER_SIZES_EXPLAINED.md`](./BUFFER_SIZES_EXPLAINED.md) for an example o
 ## 📚 Related Documentation
 
 - **[`BUFFER_SIZES_EXPLAINED.md`](./BUFFER_SIZES_EXPLAINED.md)** - Why buffer sizes differ (MUST READ)
-- **`../../../specs/`** - System specifications
+- **`../../../capability_registry.toml`** - Capability registry
 - **`../../docs/`** - General documentation
 - **Migration guides** - In root docs
 
