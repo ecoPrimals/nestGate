@@ -161,6 +161,96 @@ async fn crossgate_put_then_pull_blake3_integrity() {
     cleanup_family(&west_family).await;
 }
 
+/// Verify that content written to one family and read back through
+/// content.get maintains BLAKE3 integrity — the hash of the retrieved
+/// bytes matches the CID returned by content.put.
+///
+/// This is the local-path validation that a cross-gate pull would perform
+/// after receiving bytes from a remote NestGate.
+#[tokio::test]
+async fn content_get_blake3_roundtrip_integrity() {
+    let family = format!("test-b3rt-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family)).await;
+
+    let payloads: &[&[u8]] = &[
+        b"short",
+        b"",
+        &[0xDE, 0xAD, 0xBE, 0xEF],
+        &vec![0x42; 8192],
+    ];
+
+    for payload in payloads {
+        let b64 = STANDARD.encode(payload);
+        let put_result = content_handlers::content_put(
+            Some(&json!({"data": b64, "family_id": family})),
+            &state,
+        )
+        .await
+        .unwrap();
+
+        let cid = put_result["hash"].as_str().unwrap();
+        let expected_hash = blake3::hash(payload).to_hex().to_string();
+        assert_eq!(cid, expected_hash, "put CID must match BLAKE3 of input");
+
+        let get_result = content_handlers::content_get(
+            Some(&json!({"hash": cid, "family_id": family})),
+            &state,
+        )
+        .await
+        .unwrap();
+
+        let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+        let retrieved_hash = blake3::hash(&retrieved).to_hex().to_string();
+        assert_eq!(
+            retrieved_hash, cid,
+            "retrieved content BLAKE3 must match CID (self-certifying)"
+        );
+        assert_eq!(&retrieved, payload, "byte-identical roundtrip");
+    }
+
+    cleanup_family(&family).await;
+}
+
+/// Verify that on-disk content with a tampered blob is detected when
+/// re-read through content.get — the CID path still exists but the
+/// bytes no longer match. This proves CAS integrity is hash-as-key.
+#[tokio::test]
+async fn corrupted_blob_detected_by_blake3_mismatch() {
+    let family = format!("test-corrupt-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family)).await;
+
+    let payload = b"pristine content for corruption test";
+    let b64 = STANDARD.encode(payload);
+    let put_result = content_handlers::content_put(
+        Some(&json!({"data": b64, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let cid = put_result["hash"].as_str().unwrap().to_owned();
+    let blob_path = content_key_path(&family, &cid);
+    assert!(blob_path.exists());
+
+    tokio::fs::write(&blob_path, b"TAMPERED CONTENT").await.unwrap();
+
+    let get_result = content_handlers::content_get(
+        Some(&json!({"hash": cid, "family_id": family})),
+        &state,
+    )
+    .await
+    .unwrap();
+
+    let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+    let actual_hash = blake3::hash(&retrieved).to_hex().to_string();
+    assert_ne!(
+        actual_hash, cid,
+        "tampered blob hash must NOT match original CID"
+    );
+
+    cleanup_family(&family).await;
+}
+
 /// Verify content.replicate.pull skips CIDs that already exist locally.
 #[tokio::test]
 async fn replicate_pull_skips_when_already_local() {

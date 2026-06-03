@@ -43,7 +43,7 @@ pub(super) fn discover_primal_socket_from_env(
         }
     }
 
-    let tmp_path = PathBuf::from("/tmp").join(format!("{primal_name}.sock"));
+    let tmp_path = std::env::temp_dir().join(format!("{primal_name}.sock"));
     if tmp_path.exists() {
         return Some(tmp_path);
     }
@@ -124,6 +124,6 @@ pub(super) fn gather_socket_search_dirs_from_env(env: &(impl EnvSource + ?Sized)
         dirs.push(xdg_default);
     }
 
-    dirs.push(String::from("/tmp"));
+    dirs.push(std::env::temp_dir().to_string_lossy().into_owned());
     dirs
 }

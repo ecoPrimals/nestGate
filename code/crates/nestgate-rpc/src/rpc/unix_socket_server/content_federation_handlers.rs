@@ -428,7 +428,12 @@ pub async fn content_replicate_pull(params: Option<&Value>, state: &StorageState
     }))
 }
 
-/// Fetch a blob from a remote `NestGate` via `content.get` and write locally.
+/// Fetch a blob from a remote `NestGate` via `content.get`, verify BLAKE3
+/// integrity, and write to local CAS path.
+///
+/// The BLAKE3 hash of the received bytes **must** match the requested CID.
+/// Content is self-certifying: the hash IS the authority, regardless of which
+/// gate served it.
 async fn pull_blob_from_remote(
     cid: &str,
     source: &str,
@@ -457,6 +462,15 @@ async fn pull_blob_from_remote(
     let raw = STANDARD
         .decode(data_b64)
         .map_err(|e| NestGateError::internal(format!("base64 decode failed: {e}")))?;
+
+    let actual_hash = blake3::hash(&raw).to_hex().to_string();
+    if actual_hash != cid {
+        return Err(NestGateError::internal(format!(
+            "BLAKE3 integrity failure: expected {cid}, got {actual_hash} \
+             (remote {source} served corrupted content)"
+        )));
+    }
+
     let size = raw.len() as u64;
 
     ensure_parent_dirs(local_path).await?;

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 90: Content trust + /tmp evolution (Jun 3, 2026)
+
+- **BLAKE3 integrity verification in `content.replicate.pull`** (P0): `pull_blob_from_remote`
+  now hashes received bytes and rejects content where `blake3::hash(received) != cid`.
+  Content is self-certifying — the hash IS the authority, regardless of source gate.
+- **2 new content integrity tests**: `content_get_blake3_roundtrip_integrity` (multi-payload
+  BLAKE3 verification through put→get cycle) and `corrupted_blob_detected_by_blake3_mismatch`
+  (on-disk tampering detection).
+- **`/tmp` hardcoding eliminated**: 3 production sites evolved to `std::env::temp_dir()`
+  (socket discovery in `isomorphic_ipc/atomic/discovery.rs`, candidate dirs in
+  `transport/security.rs`). Fourth site (`probes.rs`) retained — legitimate mount point probe.
+- **Codebase metrics**: 11,546 test functions, 372,042 lines of Rust, 0 files >800L,
+  0 unsafe, 0 clippy warnings.
+
 ### Session 89: Documentation & debris cleanup (Jun 3, 2026)
 
 - **Canonical test counts**: Established from fresh `cargo test` runs — 3,732 workspace,

@@ -123,16 +123,15 @@ impl SecurityProviderClient {
     /// Candidate directories where primal sockets may live, ordered by preference:
     /// 1. `XDG_RUNTIME_DIR` (recommended, per-user, tmpfs)
     /// 2. /run/user/{uid} (standard XDG fallback)
-    /// 3. /tmp (least secure, universal fallback)
+    /// 3. `std::env::temp_dir()` (least secure, universal fallback)
     fn candidate_socket_dirs_from_env(env: &(impl EnvSource + ?Sized)) -> Vec<String> {
         let mut dirs = Vec::with_capacity(3);
         if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
             dirs.push(xdg);
-            // XDG_RUNTIME_DIR is typically /run/user/{uid} — no need to duplicate
         } else if let Some(uid) = env.get("UID").or_else(|| env.get("EUID")) {
             dirs.push(format!("/run/user/{uid}"));
         }
-        dirs.push(String::from("/tmp"));
+        dirs.push(std::env::temp_dir().to_string_lossy().into_owned());
         dirs
     }
 

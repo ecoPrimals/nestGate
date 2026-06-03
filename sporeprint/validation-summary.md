@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **3,732+ tests** passing (747 RPC, 2,985+ across 22 workspace packages), 0 failed, 0 clippy warnings
+- **3,732+ tests** passing (747 RPC, 2,985+ across 22 workspace packages), **11,546 test functions**, 0 clippy warnings
+- **Session 90 content trust (Wave 75)**: BLAKE3 integrity verification in `content.replicate.pull` — content is self-certifying; `/tmp` hardcoding eliminated (3 sites → `std::env::temp_dir()`); 2 new integrity tests
 - **Session 88 evolution sweep**: 9 fake-success paths eliminated (cert manager, auth token minting, credential validation, storage detector, migration framework, network discovery synthesis), unused deps removed (walkdir, async-stream), 3 new auth manager tests
 - **Session 87 deep debt sweep**: `storage_stream.rs` split (1,101→676+455), CapabilityRouter fake successes → explicit errors, `String::from()` migration (454 files), dispatch.rs dedup, fsmonitor XDG security defaults, 2 new tests
 - **Wave 74 ZFS integration + streaming + snapshots (Session 86)**: Cross-gate integration tests, `content.store_stream`/`content.retrieve_stream` for chunked CAS (4 MiB chunks, BLAKE3 on finalize), `zfs.snapshot.create`/`destroy` RPC, 16 new tests
