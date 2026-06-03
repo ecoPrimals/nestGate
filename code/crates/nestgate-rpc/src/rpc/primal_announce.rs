@@ -24,9 +24,20 @@ const ANNOUNCED_CAPABILITIES: &[&str] = &["storage", "content"];
 /// Signal tier — `NestGate` participates in the Nest Atomic composition.
 const SIGNAL_TIERS: &[&str] = &["nest"];
 
+/// Federation-capable methods advertised for cross-gate routing.
+const FEDERATION_METHODS: &[&str] = &[
+    "content.replicate",
+    "content.replicate.pull",
+    "content.fetch_heads",
+    "content.push",
+    "content.sync",
+];
+
 /// Build the `primal.announce` JSON-RPC params payload.
 ///
 /// `own_socket` is the path to `NestGate`'s bound Unix socket.
+/// The payload includes gate identity and federation endpoints for mesh
+/// routing (cross-gate CAS access).
 #[must_use]
 pub fn build_announce_payload(own_socket: &Path) -> Value {
     let methods: Vec<&str> = UNIX_SOCKET_SUPPORTED_METHODS
@@ -35,12 +46,43 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
         .copied()
         .collect();
 
+    let gate_id = std::env::var("NESTGATE_GATE_ID")
+        .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+        .unwrap_or_else(|_| String::from("standalone"));
+
+    let mut endpoints = serde_json::Map::new();
+    endpoints.insert(
+        String::from("uds"),
+        Value::String(own_socket.to_string_lossy().into_owned()),
+    );
+    if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
+        endpoints.insert(
+            String::from("tcp"),
+            Value::String(format!("tcp://127.0.0.1:{port}")),
+        );
+    }
+
+    let mut storage_backend = serde_json::Map::new();
+    if let Ok(dataset) = std::env::var("NESTGATE_ZFS_CAS_DATASET") {
+        storage_backend.insert(String::from("type"), Value::String(String::from("zfs")));
+        storage_backend.insert(String::from("dataset"), Value::String(dataset));
+    } else {
+        storage_backend.insert(
+            String::from("type"),
+            Value::String(String::from("filesystem")),
+        );
+    }
+
     json!({
         "primal": "nestgate",
         "socket": own_socket.to_string_lossy(),
         "pid": std::process::id(),
+        "gate_id": gate_id,
         "capabilities": ANNOUNCED_CAPABILITIES,
         "methods": methods,
+        "federation_methods": FEDERATION_METHODS,
+        "endpoints": endpoints,
+        "storage_backend": storage_backend,
         "signal_tiers": SIGNAL_TIERS,
         "cost_hints": {
             "storage": 10.0,
@@ -220,5 +262,70 @@ mod tests {
         use nestgate_types::MapEnv;
         let env = MapEnv::new();
         assert!(discover_biomeos_socket(&env).is_none());
+    }
+
+    #[test]
+    fn payload_includes_gate_id() {
+        let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+        assert!(payload["gate_id"].is_string());
+    }
+
+    #[test]
+    fn payload_includes_endpoints() {
+        let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+        assert!(payload["endpoints"].is_object());
+        assert_eq!(payload["endpoints"]["uds"], "/tmp/nestgate.sock");
+    }
+
+    #[test]
+    fn payload_includes_federation_methods() {
+        let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+        let fed: Vec<&str> = payload["federation_methods"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(Value::as_str)
+            .collect();
+        assert!(fed.contains(&"content.replicate"));
+        assert!(fed.contains(&"content.replicate.pull"));
+        assert!(fed.contains(&"content.sync"));
+    }
+
+    #[test]
+    fn payload_includes_storage_backend() {
+        let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+        assert!(payload["storage_backend"].is_object());
+        assert!(payload["storage_backend"]["type"].is_string());
+    }
+
+    #[test]
+    fn gate_id_defaults_to_standalone() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_GATE_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            || {
+                let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+                assert_eq!(payload["gate_id"], "standalone");
+            },
+        );
+    }
+
+    #[test]
+    fn gate_id_from_env() {
+        temp_env::with_var("NESTGATE_GATE_ID", Some("eastGate"), || {
+            let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+            assert_eq!(payload["gate_id"], "eastGate");
+        });
+    }
+
+    #[test]
+    fn zfs_backend_from_env() {
+        temp_env::with_var("NESTGATE_ZFS_CAS_DATASET", Some("tank/nestgate-cas"), || {
+            let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+            assert_eq!(payload["storage_backend"]["type"], "zfs");
+            assert_eq!(payload["storage_backend"]["dataset"], "tank/nestgate-cas");
+        });
     }
 }

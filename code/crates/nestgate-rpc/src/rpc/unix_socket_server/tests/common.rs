@@ -23,6 +23,7 @@ pub async fn mock_state(family_id: Option<&str>) -> StorageState {
             crate::rpc::method_gate::EnforcementMode::Permissive,
         ),
         caller_context: crate::rpc::method_gate::CallerContext::unix(),
+        socket_path: None,
     }
 }
 
@@ -44,5 +45,6 @@ pub fn encrypted_state(family_id: &str) -> StorageState {
             crate::rpc::method_gate::EnforcementMode::Permissive,
         ),
         caller_context: crate::rpc::method_gate::CallerContext::unix(),
+        socket_path: None,
     }
 }

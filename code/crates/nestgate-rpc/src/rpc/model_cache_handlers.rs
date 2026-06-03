@@ -177,6 +177,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "capabilities.list",
     "discover_capabilities",
     "discovery.capability.register",
+    "route.register",
     // Method gate introspection (JH-0)
     "auth.check",
     "auth.mode",
@@ -212,6 +213,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "content.fetch_heads",
     "content.push",
     "content.replicate",
+    "content.replicate.pull",
     "content.sync",
     // Ionic bond ledger persistence (security capability provider)
     "bonding.ledger.store",

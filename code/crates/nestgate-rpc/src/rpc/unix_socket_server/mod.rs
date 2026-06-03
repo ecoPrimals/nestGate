@@ -171,6 +171,8 @@ pub(crate) struct StorageState {
     pub(crate) method_gate: crate::rpc::method_gate::MethodGate,
     /// Caller identity for the current connection.
     pub(crate) caller_context: crate::rpc::method_gate::CallerContext,
+    /// Bound socket path for announce/route payloads.
+    pub(crate) socket_path: Option<String>,
 }
 
 impl StorageState {
@@ -184,6 +186,7 @@ impl StorageState {
             encryption: None,
             method_gate: crate::rpc::method_gate::MethodGate::from_env(),
             caller_context: crate::rpc::method_gate::CallerContext::unix(),
+            socket_path: None,
         })
     }
 }
@@ -242,7 +245,8 @@ impl JsonRpcUnixServer {
 
         // Initialize persistent storage backend
         info!("Initializing persistent storage backend...");
-        let state = StorageState::new()?;
+        let mut state = StorageState::new()?;
+        state.socket_path = Some(socket_path.to_string_lossy().into_owned());
         info!("Storage backend initialized");
 
         Ok(Self {

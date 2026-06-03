@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.5.0] - 2026-06-02
+## [0.5.0] - 2026-06-03
+
+### Session 85: Wave 73 — ZFS backend, cross-gate federation, mesh registration (Jun 3, 2026)
+
+- **Storage base path unification (M1)**: `NESTGATE_STORAGE_BASE_PATH` env override
+  now honored by `storage_base_path()`, enabling ZFS dataset mounts as the CAS root
+  on westGate. Falls back to `{data_dir}/storage` when unset.
+- **`content.replicate.pull` (M2)**: New pull-direction federation handler. Inverse of
+  `content.replicate` — cold-storage gates pull blobs from hot gates. Diff-based:
+  skips CIDs already present locally.
+- **Extended `primal.announce` payload (M3)**: Now includes `gate_id` (from
+  `NESTGATE_GATE_ID` / `NESTGATE_FAMILY_ID`), `endpoints` (UDS + TCP when
+  `NESTGATE_API_PORT` set), `federation_methods`, and `storage_backend` (type
+  `"zfs"` when `NESTGATE_ZFS_CAS_DATASET` set, else `"filesystem"`).
+- **`route.register` method (M3)**: New semantic method for mesh capability
+  registration. Writes storage + content capabilities to local route manifest
+  with configurable TTL. Returns gate identity, federation endpoints, and
+  storage backend info for cross-gate routing.
+- **15 new tests**: `content.replicate.pull` validation (5), announce payload
+  (8 including env-driven gate_id and ZFS backend), `route.register` dispatch (2).
+- Capability registry updated with `content.replicate.pull`, `route.register`,
+  and extended announce schema documentation.
 
 ### Session 84: Deep debt — /tmp centralization, idiomatic Rust, coverage (Jun 2, 2026)
 

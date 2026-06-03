@@ -156,6 +156,7 @@ pub(crate) fn is_btsp_exempt_method(method: &str) -> bool {
             | "discover_capabilities"
             | "discover.capabilities"
             | "discovery.capability.register"
+            | "route.register"
             | "lifecycle.status"
     )
 }
@@ -195,6 +196,7 @@ mod tests {
             "discover_capabilities",
             "discover.capabilities",
             "discovery.capability.register",
+            "route.register",
         ] {
             assert!(
                 is_btsp_exempt_method(method),

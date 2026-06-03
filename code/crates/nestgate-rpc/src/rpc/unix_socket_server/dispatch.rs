@@ -108,6 +108,8 @@ pub(super) async fn handle_request(
             model_cache_handlers::discover_capabilities()
         }
         "discovery.capability.register" => discovery_capability_register(request.params.as_ref()),
+        // Mesh routing — cross-gate capability registration (Wave 73)
+        "route.register" => route_register(request.params.as_ref(), state),
         // Storage operations (filesystem-backed, durable)
         "storage.store" | "storage.put" => {
             storage_handlers::storage_store(request.params.as_ref(), state).await
@@ -194,6 +196,10 @@ pub(super) async fn handle_request(
         }
         "content.replicate" => {
             content_federation_handlers::content_replicate(request.params.as_ref(), state).await
+        }
+        "content.replicate.pull" => {
+            content_federation_handlers::content_replicate_pull(request.params.as_ref(), state)
+                .await
         }
         "content.sync" => {
             content_federation_handlers::content_sync(request.params.as_ref(), state).await
@@ -332,5 +338,63 @@ pub(super) fn discovery_capability_register(
     Ok(json!({
         "success": true,
         "message": format!("Capability {capability} registered and announced"),
+    }))
+}
+
+/// Handle `route.register` — register `NestGate`'s storage capabilities with
+/// the ecosystem mesh for cross-gate routing.
+///
+/// This builds the full announce payload (including gate identity, federation
+/// endpoints, and storage backend info) and writes it to the local route
+/// manifest. An external mesh coordinator or biomeOS can consume this manifest
+/// to route cross-gate `content.*` and `storage.*` requests.
+///
+/// Optional params:
+/// - `gate_id`: Override gate identity (default: `NESTGATE_GATE_ID` env)
+/// - `ttl_seconds`: Manifest TTL (default: 300)
+pub(super) fn route_register(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> std::result::Result<Value, NestGateError> {
+    let socket_path = state
+        .socket_path
+        .as_deref()
+        .map_or_else(|| std::path::Path::new("/dev/null"), std::path::Path::new);
+
+    let payload = super::super::primal_announce::build_announce_payload(socket_path);
+
+    let gate_id = params
+        .and_then(|p| p.get("gate_id"))
+        .and_then(Value::as_str)
+        .map_or_else(
+            || payload["gate_id"].as_str().unwrap_or("standalone").to_owned(),
+            str::to_owned,
+        );
+
+    let ttl = params
+        .and_then(|p| p.get("ttl_seconds"))
+        .and_then(Value::as_u64)
+        .unwrap_or(300);
+
+    let endpoint = payload["socket"].as_str().unwrap_or_default();
+    nestgate_config::config::capability_discovery::announce_capability(
+        "storage",
+        endpoint,
+        std::time::Duration::from_secs(ttl),
+    )?;
+    nestgate_config::config::capability_discovery::announce_capability(
+        "content",
+        endpoint,
+        std::time::Duration::from_secs(ttl),
+    )?;
+
+    Ok(json!({
+        "registered": true,
+        "gate_id": gate_id,
+        "capabilities": ["storage", "content"],
+        "federation_methods": payload["federation_methods"],
+        "endpoints": payload["endpoints"],
+        "storage_backend": payload["storage_backend"],
+        "ttl_seconds": ttl,
     }))
 }

@@ -81,7 +81,7 @@ description = "Content-addressed storage with versioned manifests — BLAKE3 has
 methods = [
     "content.put", "content.get", "content.exists", "content.list",
     "content.publish", "content.resolve", "content.promote", "content.collections",
-    "content.fetch_heads", "content.push", "content.replicate", "content.sync",
+    "content.fetch_heads", "content.push", "content.replicate", "content.replicate.pull", "content.sync",
 ]
 
 # ── Content-addressed storage protocol (NG-1) ──────────────────────
@@ -109,9 +109,11 @@ methods = [
 #   Read-only freshness check — git ls-remote without pulling. Serves ecosystem.check.
 # content.push:        {repos: [{path, remote?, branch?}]} → {results: [{path, pushed, already_up_to_date?, error?}], pushed_count}
 #   Push to Forgejo (periplasm) or other remote. Serves ecosystem.push.
-# content.replicate:   {cids: ["<blake3_hex>"], target: "<socket_or_tcp>", family_id?} → {replicated: [{cid, transferred, size?}], total_bytes}
-#   Cross-gate content blob transfer. Diff-based: skips blobs the remote already has. Serves rootpulse.federate.
-# content.sync:        {repos: [{path, remote?, branch?, clone_url?}], parallel?, source?, clone_missing?} → {results: [{path, synced, action, commits_pulled?}], synced_count}
+# content.replicate:      {cids: ["<blake3_hex>"], target: "<socket_or_tcp>", family_id?} → {replicated: [{cid, transferred, size?}], total_bytes}
+#   Push-direction cross-gate blob transfer. Diff-based. Serves rootpulse.federate.
+# content.replicate.pull: {cids: ["<blake3_hex>"], source: "<socket_or_tcp>", family_id?} → {pulled: [{cid, pulled, size?}], total_bytes}
+#   Pull-direction cross-gate blob transfer. Cold-from-hot federation (Wave 73). Diff-based: skips blobs already present locally.
+# content.sync:           {repos: [{path, remote?, branch?, clone_url?}], parallel?, source?, clone_missing?} → {results: [{path, synced, action, commits_pulled?}], synced_count}
 #   Cascade-pull from remote sources (Neural API equivalent of cascade-pull.sh). Serves ecosystem.pull.
 
 [capabilities.repo]
@@ -217,8 +219,13 @@ methods = ["identity.get"]
 [capabilities.discovery]
 domain = "discovery"
 stability = "stable"
-description = "Capability advertisement and listing"
-methods = ["capabilities.list", "discover.capabilities"]
+description = "Capability advertisement, listing, and mesh route registration"
+methods = ["capabilities.list", "discover.capabilities", "discovery.capability.register", "route.register"]
+
+# route.register:              {gate_id?, ttl_seconds?} → {registered, gate_id, capabilities, federation_methods, endpoints, storage_backend, ttl_seconds}
+#   Mesh capability registration (Wave 73). Registers NestGate's storage and content capabilities
+#   with the local route manifest for cross-gate discovery. Includes gate identity, federation
+#   endpoints (UDS/TCP), storage backend type (filesystem/zfs), and federation method list.
 
 [capabilities.lifecycle]
 domain = "lifecycle"
@@ -238,16 +245,20 @@ stability = "stable"
 description = "BTSP security capabilities — protocol version, cipher suite, handshake requirement"
 methods = ["btsp.capabilities"]
 
-# Neural API announce — self-registration with biomeOS (Wave 43)
+# Neural API announce — self-registration with biomeOS (Wave 43, extended Wave 73)
 [announce]
 method = "primal.announce"
 target = "biomeos"
 signal_tiers = ["nest"]
 capabilities = ["storage", "content"]
+federation_methods = ["content.replicate", "content.replicate.pull", "content.fetch_heads", "content.push", "content.sync"]
 cost_hints = { storage = 10.0, content = 15.0 }
 latency_estimates = { storage = 50, content = 20 }
 wire_schema = "WAVE42_NEURAL_API_DEPLOYMENT_GUIDE.md"
 trigger = "post-bind"
+# Wave 73 extensions: gate_id, endpoints (uds/tcp), storage_backend (filesystem/zfs), federation_methods
+# gate_id resolved from NESTGATE_GATE_ID → NESTGATE_FAMILY_ID → "standalone"
+# storage_backend.type = "zfs" when NESTGATE_ZFS_CAS_DATASET is set
 
 # Consumed capabilities — what NestGate needs from other primals
 [consumed_capabilities.security]

@@ -121,3 +121,39 @@ async fn handle_connection_skips_empty_lines_before_request() {
     drop(c_write);
     let _ = h.await;
 }
+
+#[tokio::test]
+async fn handle_request_route_register_returns_gate_id() {
+    let mut state = StorageState::new().expect("storage state");
+    state.socket_path = Some(String::from("/tmp/nestgate-test.sock"));
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "route.register".into(),
+        params: Some(json!({"gate_id": "eastGate", "ttl_seconds": 60})),
+        id: Some(json!(99)),
+    };
+    let resp = handle_request(req, &state).await;
+    assert!(resp.error.is_none(), "expected success: {:?}", resp.error);
+    let result = resp.result.unwrap();
+    assert_eq!(result["registered"], true);
+    assert_eq!(result["gate_id"], "eastGate");
+    assert!(result["capabilities"].is_array());
+    assert!(result["federation_methods"].is_array());
+    assert_eq!(result["ttl_seconds"], 60);
+}
+
+#[tokio::test]
+async fn handle_request_route_register_defaults() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "route.register".into(),
+        params: None,
+        id: Some(json!(100)),
+    };
+    let resp = handle_request(req, &state).await;
+    assert!(resp.error.is_none(), "expected success: {:?}", resp.error);
+    let result = resp.result.unwrap();
+    assert_eq!(result["registered"], true);
+    assert_eq!(result["ttl_seconds"], 300);
+}

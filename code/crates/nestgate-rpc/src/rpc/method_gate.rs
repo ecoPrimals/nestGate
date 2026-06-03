@@ -48,6 +48,7 @@ const PUBLIC_METHODS: &[&str] = &[
     "discover_capabilities",
     "discover.capabilities",
     "discovery.capability.register",
+    "route.register",
     "lifecycle.status",
 ];
 

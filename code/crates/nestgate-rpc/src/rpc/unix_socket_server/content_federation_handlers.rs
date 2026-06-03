@@ -28,6 +28,8 @@ use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::Path;
 
+use super::storage_paths::ensure_parent_dirs;
+
 use super::StorageState;
 use super::federation_ops;
 use super::storage_paths::{content_key_path, resolve_family_id};
@@ -334,6 +336,137 @@ pub async fn content_sync(params: Option<&Value>, _state: &StorageState) -> Resu
     }))
 }
 
+/// `content.replicate.pull` — pull CIDs from a remote `NestGate` to local storage.
+///
+/// The inverse of `content.replicate` (which pushes). Used for cold-from-hot
+/// federation: a cold-storage gate schedules pulls from the hot gate.
+///
+/// Diff-based: only fetches blobs the local store lacks.
+pub async fn content_replicate_pull(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let cids = params["cids"]
+        .as_array()
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field(
+                "cids",
+                "cids array required: [\"<blake3_hex>\", ...]",
+            )
+        })?;
+
+    let source = params["source"]
+        .as_str()
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field(
+                "source",
+                "source required: socket path or tcp://host:port of remote nestgate",
+            )
+        })?;
+
+    let family_id = resolve_family_id(params, state)?;
+
+    let mut pulled = Vec::with_capacity(cids.len());
+    let mut total_bytes: u64 = 0;
+    let mut transferred_count: u64 = 0;
+    let mut skipped_count: u64 = 0;
+
+    for cid_val in cids {
+        let cid = match cid_val.as_str() {
+            Some(c) if c.len() == 64 => c,
+            Some(c) => {
+                pulled.push(json!({
+                    "cid": c,
+                    "pulled": false,
+                    "error": "invalid CID: expected 64-char BLAKE3 hex"
+                }));
+                continue;
+            }
+            None => continue,
+        };
+
+        let local_path = content_key_path(family_id, cid);
+        if local_path.exists() {
+            skipped_count += 1;
+            pulled.push(json!({
+                "cid": cid,
+                "pulled": false,
+                "skipped": true,
+                "reason": "already exists locally"
+            }));
+            continue;
+        }
+
+        match pull_blob_from_remote(cid, source, family_id, &local_path).await {
+            Ok(size) => {
+                transferred_count += 1;
+                total_bytes += size;
+                pulled.push(json!({
+                    "cid": cid,
+                    "pulled": true,
+                    "size": size
+                }));
+            }
+            Err(e) => {
+                pulled.push(json!({
+                    "cid": cid,
+                    "pulled": false,
+                    "error": e.to_string()
+                }));
+            }
+        }
+    }
+
+    Ok(json!({
+        "pulled": pulled,
+        "transferred_count": transferred_count,
+        "skipped_count": skipped_count,
+        "total_bytes": total_bytes,
+        "source": source,
+        "family_id": family_id,
+        "pulled_at": chrono::Utc::now().to_rfc3339()
+    }))
+}
+
+/// Fetch a blob from a remote `NestGate` via `content.get` and write locally.
+async fn pull_blob_from_remote(
+    cid: &str,
+    source: &str,
+    family_id: &str,
+    local_path: &Path,
+) -> Result<u64> {
+    let get_request = json!({
+        "jsonrpc": "2.0",
+        "method": "content.get",
+        "params": {"hash": cid, "family_id": family_id},
+        "id": 1
+    });
+
+    let get_response = federation_ops::send_jsonrpc(source, &get_request).await?;
+
+    if let Some(err) = get_response.get("error") {
+        return Err(NestGateError::internal(format!(
+            "remote content.get failed: {err}"
+        )));
+    }
+
+    let data_b64 = get_response["result"]["data"]
+        .as_str()
+        .ok_or_else(|| NestGateError::internal(String::from("remote returned no data field")))?;
+
+    let raw = STANDARD
+        .decode(data_b64)
+        .map_err(|e| NestGateError::internal(format!("base64 decode failed: {e}")))?;
+    let size = raw.len() as u64;
+
+    ensure_parent_dirs(local_path).await?;
+    tokio::fs::write(local_path, &raw)
+        .await
+        .map_err(|e| NestGateError::internal(format!("write blob {cid}: {e}")))?;
+
+    Ok(size)
+}
+
 /// Transfer a single content blob to a remote `NestGate` via JSON-RPC `content.put`.
 ///
 /// Checks remote `content.exists` first — skips transfer if already present.
@@ -521,5 +654,60 @@ mod tests {
         assert!(content_push(None, &state).await.is_err());
         assert!(content_replicate(None, &state).await.is_err());
         assert!(content_sync(None, &state).await.is_err());
+        assert!(content_replicate_pull(None, &state).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn replicate_pull_rejects_missing_cids() {
+        let state = mock_state();
+        let params = json!({"source": "/tmp/test.sock"});
+        let err = content_replicate_pull(Some(&params), &state).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn replicate_pull_rejects_missing_source() {
+        let state = mock_state();
+        let params = json!({"cids": ["abc"]});
+        let err = content_replicate_pull(Some(&params), &state).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn replicate_pull_rejects_invalid_cid_length() {
+        let state = mock_state();
+        let params = json!({
+            "cids": ["tooshort"],
+            "source": "/tmp/test.sock",
+            "family_id": "test"
+        });
+        let result = content_replicate_pull(Some(&params), &state).await.unwrap();
+        assert!(result["pulled"][0]["error"].as_str().unwrap().contains("invalid CID"));
+    }
+
+    #[tokio::test]
+    async fn replicate_pull_skips_existing_local_blob() {
+        let state = mock_state();
+        let family_id = "test_pull_skip";
+        let cid = "a".repeat(64);
+        let blob_path = content_key_path(family_id, &cid);
+        tokio::fs::create_dir_all(blob_path.parent().unwrap()).await.unwrap();
+        tokio::fs::write(&blob_path, b"test data").await.unwrap();
+
+        let params = json!({
+            "cids": [cid],
+            "source": "/tmp/nonexistent.sock",
+            "family_id": family_id
+        });
+        let result = content_replicate_pull(Some(&params), &state).await.unwrap();
+        assert_eq!(result["skipped_count"], 1);
+        assert!(result["pulled"][0]["skipped"].as_bool().unwrap());
+
+        let _ = tokio::fs::remove_dir_all(
+            nestgate_config::config::storage_paths::get_storage_base_path()
+                .join("datasets")
+                .join(family_id),
+        )
+        .await;
     }
 }

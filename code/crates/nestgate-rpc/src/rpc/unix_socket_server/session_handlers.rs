@@ -131,6 +131,7 @@ mod tests {
                 crate::rpc::method_gate::EnforcementMode::Permissive,
             ),
             caller_context: crate::rpc::method_gate::CallerContext::unix(),
+            socket_path: None,
         }
     }
 

@@ -111,10 +111,14 @@ impl StoragePaths {
         &self.runtime_dir
     }
 
-    /// Get storage base path (datasets, objects)
+    /// Get storage base path (datasets, objects).
+    ///
+    /// Resolution: `NESTGATE_STORAGE_BASE_PATH` env override (e.g. ZFS dataset
+    /// mount on westGate), then `{data_dir}/storage` default.
     #[must_use]
     pub fn storage_base_path(&self) -> PathBuf {
-        self.data_dir.join("storage")
+        env::var("NESTGATE_STORAGE_BASE_PATH")
+            .map_or_else(|_| self.data_dir.join("storage"), PathBuf::from)
     }
 
     /// Get ZFS binary path with environment override
@@ -231,6 +235,31 @@ mod tests {
         let paths = StoragePaths::from_env_source(&MapEnv::new());
         temp_env::with_vars([("NESTGATE_ZPOOL_BINARY", None::<&str>)], || {
             assert_eq!(paths.zpool_binary_path(), PathBuf::from("/usr/sbin/zpool"));
+        });
+    }
+
+    #[test]
+    fn storage_base_path_env_override() {
+        let env = MapEnv::from([("NESTGATE_DATA_DIR", "/data/ng")]);
+        let paths = StoragePaths::from_env_source(&env);
+        temp_env::with_var(
+            "NESTGATE_STORAGE_BASE_PATH",
+            Some("/tank/nestgate-cas"),
+            || {
+                assert_eq!(
+                    paths.storage_base_path(),
+                    PathBuf::from("/tank/nestgate-cas")
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn storage_base_path_falls_back_to_data_dir() {
+        let env = MapEnv::from([("NESTGATE_DATA_DIR", "/data/ng")]);
+        let paths = StoragePaths::from_env_source(&env);
+        temp_env::with_var("NESTGATE_STORAGE_BASE_PATH", None::<&str>, || {
+            assert_eq!(paths.storage_base_path(), PathBuf::from("/data/ng/storage"));
         });
     }
 }
