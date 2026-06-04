@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,551 tests (9,083 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation, BTSP auth"
-date = 2026-06-03
+description = "Content-addressed storage primal v0.5.0 — 12,566 tests (9,098 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, BTSP auth"
+date = 2026-06-04
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,551 tests** passing (9,083 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **12,566 tests** passing (9,098 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 93 HTTP content federation parity**: 5 UDS-only methods surfaced on HTTP transport (`content.replicate.pull`, `content.store_stream*`, `content.retrieve_stream*`); 15 new tests across content_ops, json_rpc_handler, and crossgate_federation; westGate ZFS readiness verified
 - **Session 92 deep debt evolution**: Load testing fake data → 501 NOT_IMPLEMENTED (3 handlers, 9 tests); `/etc`+`/tmp` hardcoded config defaults → XDG/env-based (TLS certs, ZFS keys, workflows, cache, SSL discovery); `String::from()` batch migration; env-var race fix in `nestgate-config` (20 tests serialized)
 - **Session 91 zero failures (Wave 76)**: 16 stale test assertions fixed (auth, migration, discovery, security); env-var race eliminated with `#[serial]` on 55 filesystem tests
 - **Session 90 content trust (Wave 75)**: BLAKE3 integrity verification in `content.replicate.pull` — content is self-certifying; `/tmp` hardcoding eliminated (3 sites → `std::env::temp_dir()`); 2 new integrity tests

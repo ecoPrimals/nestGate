@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Cross-gate CAS federation integration tests (Wave 74 P1).
+//! Cross-gate CAS federation integration tests (Wave 74+ P1).
 //!
 //! Validates the full content lifecycle on an overridden storage base
 //! (simulating a ZFS dataset mount), and end-to-end content.put →
 //! content.replicate.pull integrity across family boundaries.
+//!
+//! Includes HTTP-surface parity tests that exercise `content_ops` wrappers —
+//! the same layer `POST /jsonrpc` uses for cross-gate content streaming.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde_json::json;
 use serial_test::serial;
 
 use super::common::{cleanup_family, mock_state};
+use crate::rpc::content_ops;
 use crate::rpc::unix_socket_server::content_federation_handlers;
 use crate::rpc::unix_socket_server::content_handlers;
 use crate::rpc::unix_socket_server::storage_paths::content_key_path;
@@ -410,6 +414,169 @@ async fn content_list_returns_stored_hashes() {
     assert!(hashes.contains(&put_a["hash"].as_str().unwrap()));
     assert!(hashes.contains(&put_b["hash"].as_str().unwrap()));
     assert!(list_result["count"].as_u64().unwrap() >= 2);
+
+    cleanup_family(&family).await;
+}
+
+// ── HTTP-surface parity tests ──────────────────────────────────────────
+//
+// These exercise `content_ops::*` (the layer `POST /jsonrpc` dispatches
+// through) rather than the raw UDS handlers, proving HTTP transport has
+// full content federation capability.
+
+/// HTTP-surface put → get roundtrip via content_ops (mirrors UDS test).
+#[tokio::test]
+#[serial]
+async fn http_surface_put_get_roundtrip() {
+    let payload = b"HTTP surface roundtrip test";
+    let b64 = STANDARD.encode(payload);
+    let family = format!("test-http-rt-{}", uuid::Uuid::new_v4());
+
+    let put_result = content_ops::put(&json!({
+        "data": b64, "family_id": family
+    }))
+    .await
+    .expect("content_ops::put via HTTP surface");
+
+    let hash = put_result["hash"].as_str().unwrap();
+    assert_eq!(hash.len(), 64);
+
+    let get_result = content_ops::get(&json!({
+        "hash": hash, "family_id": family
+    }))
+    .await
+    .expect("content_ops::get via HTTP surface");
+
+    let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+    assert_eq!(retrieved, payload);
+
+    let verify_hash = blake3::hash(&retrieved).to_hex().to_string();
+    assert_eq!(verify_hash, hash, "BLAKE3 integrity through HTTP layer");
+
+    cleanup_family(&family).await;
+}
+
+/// HTTP-surface replicate.pull skips locally present CIDs.
+#[tokio::test]
+#[serial]
+async fn http_surface_replicate_pull_skips_local() {
+    let family = format!("test-http-pull-{}", uuid::Uuid::new_v4());
+
+    let b64 = STANDARD.encode(b"already stored via HTTP surface");
+    let put_result = content_ops::put(&json!({
+        "data": b64, "family_id": family
+    }))
+    .await
+    .unwrap();
+
+    let cid = put_result["hash"].as_str().unwrap();
+    let result = content_ops::replicate_pull(&json!({
+        "cids": [cid],
+        "source": "/nonexistent/socket.sock",
+        "family_id": family
+    }))
+    .await
+    .expect("replicate_pull should succeed for local CID");
+
+    assert_eq!(result["skipped_count"], 1);
+    assert_eq!(result["transferred_count"], 0);
+
+    cleanup_family(&family).await;
+}
+
+/// HTTP-surface chunked streaming: begin → chunk → finalize → BLAKE3 verify.
+#[tokio::test]
+#[serial]
+async fn http_surface_streaming_roundtrip_blake3() {
+    let family = format!("test-http-stream-{}", uuid::Uuid::new_v4());
+    let payload = b"chunked content for cross-gate streaming over HTTP";
+
+    let begin_result = content_ops::store_stream_begin(&json!({
+        "family_id": family,
+        "total_size": payload.len()
+    }))
+    .await
+    .expect("store_stream_begin via HTTP");
+
+    let stream_id = begin_result["stream_id"].as_str().unwrap();
+
+    let chunk_b64 = STANDARD.encode(payload);
+    let chunk_result = content_ops::store_stream_chunk(&json!({
+        "stream_id": stream_id,
+        "offset": 0,
+        "data": chunk_b64,
+        "is_last": true
+    }))
+    .await
+    .expect("store_stream_chunk via HTTP");
+
+    let hash = chunk_result["hash"].as_str().unwrap();
+    let expected_hash = blake3::hash(payload).to_hex().to_string();
+    assert_eq!(hash, expected_hash, "stream finalization BLAKE3 must match");
+
+    let get_result = content_ops::get(&json!({
+        "hash": hash, "family_id": family
+    }))
+    .await
+    .expect("get after stream finalization");
+
+    let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+    assert_eq!(retrieved, payload, "byte-identical after streaming");
+
+    cleanup_family(&family).await;
+}
+
+/// HTTP-surface multi-blob put then replicate.pull proves the full
+/// cross-gate pipeline: Gate A stores N blobs, Gate B pulls them all.
+#[tokio::test]
+#[serial]
+async fn http_surface_multi_blob_federation() {
+    let family = format!("test-http-multi-{}", uuid::Uuid::new_v4());
+
+    let payloads: Vec<&[u8]> = vec![
+        b"blob-alpha: sporePrint page 1",
+        b"blob-beta: sporePrint page 2",
+        b"blob-gamma: sporePrint page 3",
+    ];
+
+    let mut cids = Vec::new();
+    for p in &payloads {
+        let result = content_ops::put(&json!({
+            "data": STANDARD.encode(p),
+            "family_id": family
+        }))
+        .await
+        .unwrap();
+        cids.push(result["hash"].as_str().unwrap().to_owned());
+    }
+
+    let pull_result = content_ops::replicate_pull(&json!({
+        "cids": cids,
+        "source": "/nonexistent/socket.sock",
+        "family_id": family
+    }))
+    .await
+    .expect("multi-blob replicate_pull");
+
+    assert_eq!(
+        pull_result["skipped_count"].as_u64().unwrap(),
+        3,
+        "all 3 blobs should be skipped (already local)"
+    );
+
+    for (i, cid) in cids.iter().enumerate() {
+        let get_result = content_ops::get(&json!({
+            "hash": cid, "family_id": family
+        }))
+        .await
+        .unwrap();
+        let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+        assert_eq!(
+            blake3::hash(&retrieved).to_hex().to_string(),
+            *cid,
+            "BLAKE3 integrity for blob {i}"
+        );
+    }
 
     cleanup_family(&family).await;
 }

@@ -16,6 +16,7 @@
 //! parameters, missing content, or I/O failure.
 
 use crate::rpc::unix_socket_server::{StorageState, content_federation_handlers, content_handlers};
+use crate::rpc::{content_stream, storage_stream};
 use nestgate_types::error::Result;
 use serde_json::Value;
 use std::sync::OnceLock;
@@ -139,6 +140,59 @@ pub async fn sync(params: &Value) -> Result<Value> {
     content_federation_handlers::content_sync(Some(params), shared_state()).await
 }
 
+/// `content.replicate.pull` — pull content from a remote `NestGate` by CID list.
+///
+/// Verifies BLAKE3 integrity on every blob received. The hash IS the authority.
+///
+/// # Errors
+///
+/// Returns error on missing params, invalid CIDs, remote connection failure,
+/// or BLAKE3 integrity mismatch.
+pub async fn replicate_pull(params: &Value) -> Result<Value> {
+    content_federation_handlers::content_replicate_pull(Some(params), shared_state()).await
+}
+
+/// `content.store_stream` — begin a chunked content upload session.
+///
+/// Caller supplies `family_id` in params (no per-connection state on HTTP).
+///
+/// # Errors
+///
+/// Returns error on invalid parameters or session creation failure.
+pub async fn store_stream_begin(params: &Value) -> Result<Value> {
+    content_stream::content_store_stream_begin(params.clone(), None).await
+}
+
+/// `content.store_stream_chunk` — append a chunk to an active upload session.
+///
+/// # Errors
+///
+/// Returns error if `stream_id` is invalid, expired, or data exceeds limits.
+pub async fn store_stream_chunk(params: &Value) -> Result<Value> {
+    content_stream::content_store_stream_chunk(params.clone()).await
+}
+
+/// `content.retrieve_stream` — begin a chunked content download session.
+///
+/// Caller supplies `family_id` in params (no per-connection state on HTTP).
+///
+/// # Errors
+///
+/// Returns error if the hash is not found or session creation fails.
+pub async fn retrieve_stream_begin(params: &Value) -> Result<Value> {
+    content_stream::content_retrieve_stream_begin(params.clone(), None).await
+}
+
+/// `content.retrieve_stream_chunk` / `storage.retrieve_stream_chunk` — read the
+/// next range of bytes for an active download session.
+///
+/// # Errors
+///
+/// Returns error if `stream_id` is invalid, expired, or I/O fails.
+pub async fn retrieve_stream_chunk(params: &Value) -> Result<Value> {
+    storage_stream::storage_retrieve_stream_chunk(params.clone()).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -194,6 +248,50 @@ mod tests {
     async fn sync_missing_repos_errors() {
         let params = json!({});
         let err = sync(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn replicate_pull_missing_cids_errors() {
+        let params = json!({"source": "tcp://localhost:9999"});
+        let err = replicate_pull(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn replicate_pull_missing_source_errors() {
+        let params = json!({"cids": ["abc123"]});
+        let err = replicate_pull(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn store_stream_begin_creates_session() {
+        let params = json!({"family_id": "test-stream-http", "total_size": 1024});
+        let result = store_stream_begin(&params).await;
+        assert!(result.is_ok());
+        let val = result.unwrap();
+        assert!(val["stream_id"].is_string());
+    }
+
+    #[tokio::test]
+    async fn store_stream_chunk_invalid_session_errors() {
+        let params = json!({"stream_id": "nonexistent-session", "data": "aGVsbG8="});
+        let err = store_stream_chunk(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_begin_missing_hash_errors() {
+        let params = json!({"family_id": "test-retrieve-http"});
+        let err = retrieve_stream_begin(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_chunk_invalid_session_errors() {
+        let params = json!({"stream_id": "nonexistent-session"});
+        let err = retrieve_stream_chunk(&params).await;
         assert!(err.is_err());
     }
 }

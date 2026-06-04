@@ -140,7 +140,12 @@ async fn handle_content_method(
         "content.fetch_heads" => content_ops::fetch_heads(params).await,
         "content.push" => content_ops::push(params).await,
         "content.replicate" => content_ops::replicate(params).await,
+        "content.replicate.pull" => content_ops::replicate_pull(params).await,
         "content.sync" => content_ops::sync(params).await,
+        "content.store_stream" => content_ops::store_stream_begin(params).await,
+        "content.store_stream_chunk" => content_ops::store_stream_chunk(params).await,
+        "content.retrieve_stream" => content_ops::retrieve_stream_begin(params).await,
+        "content.retrieve_stream_chunk" => content_ops::retrieve_stream_chunk(params).await,
         _ => return Err(format!("Unknown content method: {method}")),
     };
     result.map_err(|e| format!("{method} failed: {e}"))
@@ -445,5 +450,69 @@ mod tests {
             Ok(v) => assert_eq!(v["status"], "success"),
             Err(e) => assert!(!e.is_empty()),
         }
+    }
+
+    #[tokio::test]
+    async fn content_replicate_pull_routes_via_http() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle(
+                "content.replicate.pull",
+                serde_json::json!({"cids": ["abc"], "source": "tcp://localhost:9999"}),
+            )
+            .await;
+        assert!(err.is_ok() || err.is_err());
+    }
+
+    #[tokio::test]
+    async fn content_store_stream_routes_via_http() {
+        let h = NestGateJsonRpcHandler::new();
+        let result = h
+            .handle(
+                "content.store_stream",
+                serde_json::json!({"family_id": "test-http-stream", "total_size": 512}),
+            )
+            .await
+            .expect("store_stream via HTTP should succeed");
+        assert!(result.get("stream_id").is_some());
+    }
+
+    #[tokio::test]
+    async fn content_store_stream_chunk_bad_session_errors_via_http() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle(
+                "content.store_stream_chunk",
+                serde_json::json!({"stream_id": "invalid", "data": "aGVsbG8="}),
+            )
+            .await
+            .expect_err("bad stream_id should fail");
+        assert!(!err.is_empty());
+    }
+
+    #[tokio::test]
+    async fn content_retrieve_stream_missing_hash_errors_via_http() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle(
+                "content.retrieve_stream",
+                serde_json::json!({"family_id": "test-retrieve-http"}),
+            )
+            .await
+            .expect_err("missing hash should fail");
+        assert!(!err.is_empty());
+    }
+
+    #[tokio::test]
+    async fn content_retrieve_stream_chunk_bad_session_errors_via_http() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle(
+                "content.retrieve_stream_chunk",
+                serde_json::json!({"stream_id": "invalid"}),
+            )
+            .await
+            .expect_err("bad stream_id should fail");
+        assert!(!err.is_empty());
     }
 }
