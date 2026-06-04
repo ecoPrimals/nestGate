@@ -81,6 +81,12 @@ mod ai_first_example_tests;
 #[cfg(test)]
 mod ai_first_handler_tests;
 
+/// **CONTENT SERVE MODULE**
+///
+/// Direct HTTP content serving — `GET /content/:hash` for raw BLAKE3-addressed
+/// blobs with immutable caching. Powers `nestgate.io/<hash>` via Caddy reverse proxy.
+pub mod content_serve;
+
 /// **COMPLIANCE MODULE**
 ///
 /// Compliance and regulatory management for storage systems.

@@ -9,8 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-04
 
-### Session 93: HTTP content federation parity + cross-gate test prep (Jun 4, 2026)
+### Session 93: HTTP content federation parity + content serving endpoint (Jun 4, 2026)
 
+- **`GET /content/:hash` — direct HTTP content serving**: New endpoint serves raw
+  content-addressed blobs by BLAKE3 hash with correct `Content-Type` from `.meta.json`
+  sidecar (falls back to `application/octet-stream`). Immutable cache headers
+  (`max-age=31536000, immutable`) and `ETag` set since BLAKE3 hashes never change.
+  Designed for Caddy reverse proxy: `nestgate.io/<hash>` → NestGate `/content/<hash>`.
+  New `content_ops::get_raw` bypasses base64 to return raw bytes directly.
 - **HTTP transport parity for content streaming**: Surfaced 5 methods on `POST /jsonrpc`
   that were previously UDS-only — `content.replicate.pull`, `content.store_stream`,
   `content.store_stream_chunk`, `content.retrieve_stream`, `content.retrieve_stream_chunk`.
@@ -19,14 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **HTTP-surface federation tests**: 4 new integration tests in `crossgate_federation_tests.rs`
   exercise put → get, replicate.pull skip-local, chunked streaming → BLAKE3, and multi-blob
   federation — all through the `content_ops` layer (same path HTTP uses).
-- **JSON-RPC handler tests**: 5 new tests in `json_rpc_handler.rs` validate HTTP dispatch
-  for `replicate.pull`, `store_stream`, `store_stream_chunk`, `retrieve_stream`,
-  `retrieve_stream_chunk`.
-- **content_ops adapter tests**: 6 new unit tests for the wrapper functions.
+- **Content serve tests**: 5 tests in `content_serve.rs` (200 with correct MIME, 404
+  for missing, 400 for invalid hash, BLAKE3 integrity verification, default MIME fallback).
+- **JSON-RPC handler tests**: 5 new tests in `json_rpc_handler.rs` validate HTTP dispatch.
+- **content_ops adapter tests**: 9 new unit tests (6 for streaming/federation + 3 for `get_raw`).
 - **westGate ZFS readiness**: Verified `NESTGATE_STORAGE_BASE_PATH` is respected across all
-  CAS paths (blobs, manifests, staging). `primal.announce` correctly reports `storage_backend:
-  "zfs"` when `NESTGATE_ZFS_CAS_DATASET` is set. Ready for 76TB cold storage.
-- **Workspace result**: 12,566 total tests, 9,098 lib tests, 0 failures, 0 clippy warnings.
+  CAS paths. `primal.announce` reports `storage_backend: "zfs"` when configured. Ready for
+  76TB cold storage.
+- **Workspace result**: 12,574+ total tests, 9,100+ lib tests, 0 failures, 0 clippy warnings.
 
 ### Session 92: Deep debt evolution — fake success + hardcoding + env-race (Jun 3, 2026)
 

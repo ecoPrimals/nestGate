@@ -17,6 +17,7 @@
 
 use crate::rpc::unix_socket_server::{StorageState, content_federation_handlers, content_handlers};
 use crate::rpc::{content_stream, storage_stream};
+pub use content_handlers::RawContent;
 use nestgate_types::error::Result;
 use serde_json::Value;
 use std::sync::OnceLock;
@@ -48,6 +49,19 @@ pub async fn put(params: &Value) -> Result<Value> {
 /// Returns error if the hash is invalid, not found, or I/O fails.
 pub async fn get(params: &Value) -> Result<Value> {
     content_handlers::content_get(Some(params), shared_state()).await
+}
+
+/// Retrieve raw content bytes for direct HTTP serving (no base64 encoding).
+///
+/// Returns `Ok(None)` when the hash is not found (caller should return 404).
+/// The [`RawContent`] struct carries decrypted bytes, the MIME type from the
+/// `.meta.json` sidecar, and the BLAKE3 hash (for `ETag`).
+///
+/// # Errors
+///
+/// Returns error on invalid hash format, I/O failure, or decryption failure.
+pub async fn get_raw(hash: &str, family_id: &str) -> Result<Option<RawContent>> {
+    content_handlers::content_get_raw(hash, family_id, shared_state()).await
 }
 
 /// `content.exists` — check if a BLAKE3 hash exists in the content store.
@@ -292,6 +306,40 @@ mod tests {
     async fn retrieve_stream_chunk_invalid_session_errors() {
         let params = json!({"stream_id": "nonexistent-session"});
         let err = retrieve_stream_chunk(&params).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_raw_returns_bytes_and_content_type() {
+        use base64::Engine as _;
+        let family = format!("test-raw-{}", uuid::Uuid::new_v4());
+        let payload = b"raw content serving test payload";
+        let b64 = base64::engine::general_purpose::STANDARD.encode(payload);
+
+        let put_result = put(&json!({
+            "data": b64, "family_id": family, "content_type": "text/plain"
+        }))
+        .await
+        .unwrap();
+        let hash = put_result["hash"].as_str().unwrap();
+
+        let raw = get_raw(hash, &family).await.unwrap().unwrap();
+        assert_eq!(raw.data, payload);
+        assert_eq!(raw.content_type.as_deref(), Some("text/plain"));
+        assert_eq!(raw.hash, hash);
+    }
+
+    #[tokio::test]
+    async fn get_raw_returns_none_for_missing_hash() {
+        let family = format!("test-raw-missing-{}", uuid::Uuid::new_v4());
+        let fake = "b".repeat(64);
+        let result = get_raw(&fake, &family).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn get_raw_invalid_hash_errors() {
+        let err = get_raw("short", "family").await;
         assert!(err.is_err());
     }
 }

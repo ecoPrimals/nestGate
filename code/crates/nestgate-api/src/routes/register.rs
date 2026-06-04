@@ -8,6 +8,7 @@ use axum::{
     routing::{delete, get, patch, post, put},
 };
 
+use crate::handlers::content_serve::serve_content_by_hash;
 use crate::handlers::load_testing::{
     get_load_test_history, get_load_test_results, get_performance_baselines, start_load_test,
 };
@@ -81,6 +82,7 @@ fn attach_core_routes(router: Router<AppState>) -> Router<AppState> {
         .route("/api/v1/storage/datasets", get(get_storage_datasets))
         .route("/api/v1/storage/snapshots", get(get_storage_snapshots))
         .route("/api/v1/storage/metrics", get(get_storage_metrics))
+        .route("/content/:hash", get(serve_content_by_hash))
         .route("/jsonrpc", post(handle_jsonrpc))
         .route(
             "/api/v1/protocol/capabilities",
