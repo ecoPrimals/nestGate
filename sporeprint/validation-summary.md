@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **3,732+ tests** passing (749 RPC, 2,279 lib, 3,732 full workspace), **11,546 test functions**, **0 failures** (serial and parallel), 0 clippy warnings
+- **12,551 tests** passing (9,083 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 92 deep debt evolution**: Load testing fake data → 501 NOT_IMPLEMENTED (3 handlers, 9 tests); `/etc`+`/tmp` hardcoded config defaults → XDG/env-based (TLS certs, ZFS keys, workflows, cache, SSL discovery); `String::from()` batch migration; env-var race fix in `nestgate-config` (20 tests serialized)
 - **Session 91 zero failures (Wave 76)**: 16 stale test assertions fixed (auth, migration, discovery, security); env-var race eliminated with `#[serial]` on 55 filesystem tests
 - **Session 90 content trust (Wave 75)**: BLAKE3 integrity verification in `content.replicate.pull` — content is self-certifying; `/tmp` hardcoding eliminated (3 sites → `std::env::temp_dir()`); 2 new integrity tests
 - **Session 88 evolution sweep**: 9 fake-success paths eliminated (cert manager, auth token minting, credential validation, storage detector, migration framework, network discovery synthesis), unused deps removed (walkdir, async-stream), 3 new auth manager tests

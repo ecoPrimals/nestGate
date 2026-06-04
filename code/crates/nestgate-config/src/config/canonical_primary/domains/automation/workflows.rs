@@ -64,7 +64,10 @@ impl WorkflowsConfig {
             max_concurrent_workflows: 20,
             workflow_timeout: Duration::from_secs(1800),
             scheduling_enabled: true,
-            definitions_dir: String::from("/etc/nestgate/workflows"),
+            definitions_dir: crate::config::storage_paths::get_config_dir()
+                .join("workflows")
+                .to_string_lossy()
+                .into_owned(),
             versioning_enabled: true,
         }
     }

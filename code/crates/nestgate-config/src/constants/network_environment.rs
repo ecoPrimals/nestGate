@@ -319,6 +319,7 @@ mod tests {
     use std::env;
 
     #[test]
+    #[serial_test::serial]
     fn test_api_port_default() {
         temp_env::with_vars([("NESTGATE_API_PORT", None::<&str>)], || {
             assert_eq!(api_port(), DEFAULT_API_PORT);
@@ -326,6 +327,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_api_port_environment() {
         temp_env::with_vars([("NESTGATE_API_PORT", Some("9999"))], || {
             assert_eq!(api_port(), 9999);

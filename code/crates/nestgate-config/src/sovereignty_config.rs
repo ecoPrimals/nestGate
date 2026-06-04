@@ -125,8 +125,10 @@ impl SovereigntyConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn api_endpoint_errors_when_unset() {
         temp_env::with_vars([("NESTGATE_API_ENDPOINT", None::<&str>)], || {
             assert!(SovereigntyConfig::api_endpoint().is_err());
@@ -136,6 +138,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn api_endpoint_returns_env_value() {
         temp_env::with_vars([("NESTGATE_API_ENDPOINT", Some("http://10.0.0.5:8443"))], || {
             assert_eq!(SovereigntyConfig::api_endpoint().unwrap(), "http://10.0.0.5:8443");
@@ -143,6 +146,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn websocket_endpoint_errors_when_unset() {
         temp_env::with_vars([("NESTGATE_WS_ENDPOINT", None::<&str>)], || {
             assert!(SovereigntyConfig::websocket_endpoint().is_err());
@@ -150,6 +154,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn websocket_endpoint_returns_env_value() {
         temp_env::with_vars([("NESTGATE_WS_ENDPOINT", Some("ws://gate:9000"))], || {
             assert_eq!(SovereigntyConfig::websocket_endpoint().unwrap(), "ws://gate:9000");
@@ -170,6 +175,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn discovery_endpoint_respects_env() {
         temp_env::with_vars([("NESTGATE_DISCOVERY_ENDPOINT", Some("http://custom:7703/d"))], || {
             assert_eq!(SovereigntyConfig::discovery_endpoint(), "http://custom:7703/d");
@@ -177,6 +183,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn database_url_composes_default() {
         temp_env::with_vars(
             [
@@ -192,6 +199,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn database_url_respects_override() {
         temp_env::with_vars(
             [("NESTGATE_DATABASE_URL", Some("postgresql://db:5433/custom"))],
@@ -202,6 +210,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn validate_sovereignty_fails_without_endpoint() {
         temp_env::with_vars([("NESTGATE_API_ENDPOINT", None::<&str>)], || {
             assert!(SovereigntyConfig::validate_sovereignty().is_err());

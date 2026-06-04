@@ -41,9 +41,9 @@ pub fn create_handler() -> Router {
 /// Simple example handler
 async fn example_handler() -> Json<AIFirstResponse<String>> {
     Json(AIFirstResponse {
-        data: "AI First Example".to_string(),
+        data: String::from("AI First Example"),
         success: true,
-        message: "Example working".to_string(),
+        message: String::from("Example working"),
         confidence_score: 0.95,
     })
 }
@@ -97,7 +97,7 @@ pub fn ai_success_with_confidence<T>(data: T, confidence: f64) -> AIFirstRespons
     AIFirstResponse {
         data,
         success: true,
-        message: "Operation completed successfully".to_string(),
+        message: String::from("Operation completed successfully"),
         confidence_score: confidence,
     }
 }
@@ -107,7 +107,7 @@ pub fn ai_response_with_actions<T>(data: T, _actions: Vec<SuggestedAction>) -> A
     AIFirstResponse {
         data,
         success: true,
-        message: "Operation completed with suggested actions".to_string(),
+        message: String::from("Operation completed with suggested actions"),
         confidence_score: 0.85,
     }
 }
@@ -175,20 +175,20 @@ pub async fn get_storage_info(
     // Simulate storage data retrieval
     let storage_pools = vec![
         StorageInfo {
-            pool_name: "main-pool".to_string(),
+            pool_name: String::from("main-pool"),
             total_size_gb: 1000,
             used_size_gb: 650,
             available_size_gb: 350,
-            health_status: "ONLINE".to_string(),
-            last_scrub: Some("2025-01-29T10:00:00Z".to_string()),
+            health_status: String::from("ONLINE"),
+            last_scrub: Some(String::from("2025-01-29T10:00:00Z")),
         },
         StorageInfo {
-            pool_name: "backup-pool".to_string(),
+            pool_name: String::from("backup-pool"),
             total_size_gb: 500,
             used_size_gb: 200,
             available_size_gb: 300,
-            health_status: "ONLINE".to_string(),
-            last_scrub: Some("2025-01-28T15:30:00Z".to_string()),
+            health_status: String::from("ONLINE"),
+            last_scrub: Some(String::from("2025-01-28T15:30:00Z")),
         },
     ];
     // Filter by pool if specified
@@ -265,8 +265,8 @@ pub async fn get_pool_info(
             total_size_gb: 1000,
             used_size_gb: 650,
             available_size_gb: 350,
-            health_status: "ONLINE".to_string(),
-            last_scrub: Some("2025-01-29T10:00:00Z".to_string()),
+            health_status: String::from("ONLINE"),
+            last_scrub: Some(String::from("2025-01-29T10:00:00Z")),
         })
     } else if pool_name == "backup-pool" {
         Some(PoolInfo {
@@ -274,8 +274,8 @@ pub async fn get_pool_info(
             total_size_gb: 500,
             used_size_gb: 200,
             available_size_gb: 300,
-            health_status: "DEGRADED".to_string(),
-            last_scrub: Some("2025-01-20T08:00:00Z".to_string()),
+            health_status: String::from("DEGRADED"),
+            last_scrub: Some(String::from("2025-01-20T08:00:00Z")),
         })
     } else {
         None
@@ -290,9 +290,9 @@ pub async fn get_pool_info(
             };
 
             let mut suggestions = vec![SuggestedAction {
-                action_id: "monitor_pool".to_string(),
+                action_id: String::from("monitor_pool"),
                 action_type: ActionType::Monitor,
-                description: "Continue monitoring pool health".to_string(),
+                description: String::from("Continue monitoring pool health"),
                 confidence: 0.9,
                 parameters: HashMap::new(),
                 priority: 2, // Medium priority
@@ -303,14 +303,14 @@ pub async fn get_pool_info(
             // Add scrub suggestion if pool is degraded or scrub is old
             if info.health_status == "DEGRADED" {
                 suggestions.push(SuggestedAction {
-                    action_id: "scrub_pool".to_string(),
+                    action_id: String::from("scrub_pool"),
                     action_type: ActionType::Optimize,
-                    description: "Consider running pool scrub to check integrity".to_string(),
+                    description: String::from("Consider running pool scrub to check integrity"),
                     confidence: 0.8,
                     parameters: {
                         let mut params = HashMap::new();
                         params.insert(
-                            "pool_name".to_string(),
+                            String::from("pool_name"),
                             serde_json::Value::String(pool_name),
                         );
                         params
@@ -343,21 +343,21 @@ pub async fn execute_storage_operation(
     // Simulate operation execution
     let result = match request.b_operation.as_str() {
         "scrub" => {
-            let message = "Scrub operation started for pool".to_string();
+            let message = String::from("Scrub operation started for pool");
 
             let suggestions = vec![SuggestedAction {
-                action_id: "poll_scrub_status".to_string(),
+                action_id: String::from("poll_scrub_status"),
                 action_type: ActionType::Monitor,
-                description: "Poll scrub status every 5 minutes".to_string(),
+                description: String::from("Poll scrub status every 5 minutes"),
                 confidence: 0.9,
                 parameters: {
                     let mut params = HashMap::new();
                     params.insert(
-                        "poll_interval_ms".to_string(),
+                        String::from("poll_interval_ms"),
                         serde_json::Value::Number(serde_json::Number::from(300_000)),
                     );
                     params.insert(
-                        "pool_name".to_string(),
+                        String::from("pool_name"),
                         serde_json::Value::String(request.pool_name.clone()),
                     );
                     params
@@ -376,9 +376,9 @@ pub async fn execute_storage_operation(
             let message = format!("Export initiated for pool: {}", request.pool_name);
 
             let suggestions = vec![SuggestedAction {
-                action_id: "verify_export".to_string(),
+                action_id: String::from("verify_export"),
                 action_type: ActionType::Monitor,
-                description: "Verify export completion and data integrity".to_string(),
+                description: String::from("Verify export completion and data integrity"),
                 confidence: 0.85,
                 parameters: HashMap::new(),
                 priority: 2, // Medium priority
@@ -403,30 +403,30 @@ pub async fn execute_storage_operation(
 pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationScenario>>> {
     let demos = vec![
         OptimizationScenario {
-            scenario: "High confidence - verified data".to_string(),
+            scenario: String::from("High confidence - verified data"),
             confidence: 0.95,
-            description: "Data verified from multiple sources, high reliability".to_string(),
+            description: String::from("Data verified from multiple sources, high reliability"),
         },
         OptimizationScenario {
-            scenario: "Medium confidence - single source".to_string(),
+            scenario: String::from("Medium confidence - single source"),
             confidence: 0.7,
-            description: "Data from single source, moderate reliability".to_string(),
+            description: String::from("Data from single source, moderate reliability"),
         },
         OptimizationScenario {
-            scenario: "Low confidence - estimated data".to_string(),
+            scenario: String::from("Low confidence - estimated data"),
             confidence: 0.3,
-            description: "Estimated data based on heuristics, low reliability".to_string(),
+            description: String::from("Estimated data based on heuristics, low reliability"),
         },
         OptimizationScenario {
-            scenario: "No confidence - error condition".to_string(),
+            scenario: String::from("No confidence - error condition"),
             confidence: 0.0,
-            description: "Error occurred, no reliable data available".to_string(),
+            description: String::from("Error occurred, no reliable data available"),
         },
     ];
     let suggestions = vec![SuggestedAction {
-        action_id: "improve_data_sources".to_string(),
+        action_id: String::from("improve_data_sources"),
         action_type: ActionType::Optimize,
-        description: "Consider adding more data sources to improve confidence".to_string(),
+        description: String::from("Consider adding more data sources to improve confidence"),
         confidence: 0.8,
         parameters: HashMap::new(),
         priority: 3, // Low priority
@@ -441,37 +441,37 @@ pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationSc
 pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapability>>> {
     let demos = vec![
         AutomationCapability {
-            category: "Monitoring".to_string(),
-            description: "Continuous health monitoring with alerts".to_string(),
-            automation_level: "Fully Automated".to_string(),
+            category: String::from("Monitoring"),
+            description: String::from("Continuous health monitoring with alerts"),
+            automation_level: String::from("Fully Automated"),
         },
         AutomationCapability {
-            category: "Optimization".to_string(),
-            description: "Performance tuning based on usage patterns".to_string(),
-            automation_level: "Semi-Automated".to_string(),
+            category: String::from("Optimization"),
+            description: String::from("Performance tuning based on usage patterns"),
+            automation_level: String::from("Semi-Automated"),
         },
         AutomationCapability {
-            category: "Recovery".to_string(),
-            description: "Automated recovery from common failure modes".to_string(),
-            automation_level: "Fully Automated".to_string(),
+            category: String::from("Recovery"),
+            description: String::from("Automated recovery from common failure modes"),
+            automation_level: String::from("Fully Automated"),
         },
         AutomationCapability {
-            category: "Scaling".to_string(),
-            description: "Resource scaling based on demand".to_string(),
-            automation_level: "Manual Approval Required".to_string(),
+            category: String::from("Scaling"),
+            description: String::from("Resource scaling based on demand"),
+            automation_level: String::from("Manual Approval Required"),
         },
     ];
     let comprehensive_suggestions = vec![
         SuggestedAction {
-            action_id: "enable_monitoring".to_string(),
+            action_id: String::from("enable_monitoring"),
             action_type: ActionType::Monitor,
-            description: "Enable comprehensive monitoring dashboard".to_string(),
+            description: String::from("Enable comprehensive monitoring dashboard"),
             confidence: 0.95,
             parameters: {
                 let mut params = HashMap::new();
                 params.insert(
-                    "dashboard_type".to_string(),
-                    serde_json::Value::String("comprehensive".to_string()),
+                    String::from("dashboard_type"),
+                    serde_json::Value::String(String::from("comprehensive")),
                 );
                 params
             },
@@ -480,25 +480,25 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
             estimated_duration_ms: Some(5000),
         },
         SuggestedAction {
-            action_id: "configure_alerts".to_string(),
+            action_id: String::from("configure_alerts"),
             action_type: ActionType::Optimize,
-            description: "Configure intelligent alerting based on thresholds".to_string(),
+            description: String::from("Configure intelligent alerting based on thresholds"),
             confidence: 0.9,
             parameters: HashMap::new(),
             priority: 2, // Medium priority
-            dependencies: vec!["enable_monitoring".to_string()],
+            dependencies: vec![String::from("enable_monitoring")],
             estimated_duration_ms: Some(10_000),
         },
         SuggestedAction {
-            action_id: "setup_automation".to_string(),
+            action_id: String::from("setup_automation"),
             action_type: ActionType::Optimize,
-            description: "Setup automated response workflows".to_string(),
+            description: String::from("Setup automated response workflows"),
             confidence: 0.85,
             parameters: HashMap::new(),
             priority: 3, // Lower priority (depends on others)
             dependencies: vec![
-                "enable_monitoring".to_string(),
-                "configure_alerts".to_string(),
+                String::from("enable_monitoring"),
+                String::from("configure_alerts"),
             ],
             estimated_duration_ms: Some(30000),
         },
@@ -572,8 +572,8 @@ pub fn ai_pool_status(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Poo
         total_size_gb: 1000,
         used_size_gb: 400,
         available_size_gb: 600,
-        health_status: "Healthy".to_string(),
-        last_scrub: Some("2024-01-15T10:30:00Z".to_string()),
+        health_status: String::from("Healthy"),
+        last_scrub: Some(String::from("2024-01-15T10:30:00Z")),
     };
 
     Json(ai_success_with_confidence(pool_info, 0.95))

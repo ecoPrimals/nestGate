@@ -34,10 +34,11 @@ impl CertificateManagementConfig {
     /// Uses temporary certificate paths suitable for development environments.
     #[must_use]
     pub fn development_optimized() -> Self {
+        let tmp = std::env::temp_dir();
         Self {
             auto_renewal: false,
-            cert_path: PathBuf::from("/tmp/dev-cert.pem"),
-            key_path: PathBuf::from("/tmp/dev-key.pem"),
+            cert_path: tmp.join("dev-cert.pem"),
+            key_path: tmp.join("dev-key.pem"),
         }
     }
 
@@ -46,10 +47,11 @@ impl CertificateManagementConfig {
     /// Enables auto-renewal and uses standard system certificate paths.
     #[must_use]
     pub fn compliance_focused() -> Self {
+        let config = crate::config::storage_paths::get_config_dir();
         Self {
             auto_renewal: true,
-            cert_path: PathBuf::from("/etc/ssl/certs/nestgate.pem"),
-            key_path: PathBuf::from("/etc/ssl/private/nestgate.key"),
+            cert_path: config.join("ssl").join("nestgate.pem"),
+            key_path: config.join("ssl").join("nestgate.key"),
         }
     }
 
@@ -58,10 +60,11 @@ impl CertificateManagementConfig {
     /// Enables auto-renewal and uses production-specific certificate paths.
     #[must_use]
     pub fn production_hardened() -> Self {
+        let config = crate::config::storage_paths::get_config_dir();
         Self {
             auto_renewal: true,
-            cert_path: PathBuf::from("/etc/ssl/certs/nestgate-prod.pem"),
-            key_path: PathBuf::from("/etc/ssl/private/nestgate-prod.key"),
+            cert_path: config.join("ssl").join("nestgate-prod.pem"),
+            key_path: config.join("ssl").join("nestgate-prod.key"),
         }
     }
 

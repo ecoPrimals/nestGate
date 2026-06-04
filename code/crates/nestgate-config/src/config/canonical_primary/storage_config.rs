@@ -126,7 +126,7 @@ impl CacheConfig {
             enabled: true,
             size_bytes: 256 * 1024 * 1024, // 256MB
             cache_type: String::from("lru"),
-            cache_dir: Some(String::from("/tmp/nestgate/cache").into()),
+            cache_dir: Some(std::env::temp_dir().join("nestgate").join("cache")),
             policy: Some(String::from("lru")),
             hot_tier_size: Some(64 * 1024 * 1024),   // 64MB
             warm_tier_size: Some(128 * 1024 * 1024), // 128MB

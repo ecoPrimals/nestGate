@@ -31,6 +31,7 @@ nestgate-platform = { path = "../nestgate-platform" }
 temp-env = { workspace = true }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }
+serial_test = { workspace = true }
 
 [features]
 default = []

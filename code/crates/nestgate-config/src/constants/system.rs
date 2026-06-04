@@ -293,6 +293,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn ecosystem_path_segment_reads_ecosystem_name_from_process_env() {
         temp_env::with_vars(
             [
@@ -307,6 +308,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn ecosystem_path_segment_legacy_biomeos_when_ecosystem_unset() {
         temp_env::with_vars(
             [
@@ -320,6 +322,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn ecosystem_path_segment_defaults_when_no_env() {
         temp_env::with_vars(
             [

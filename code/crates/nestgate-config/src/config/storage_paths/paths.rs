@@ -184,9 +184,11 @@ impl StoragePaths {
 mod tests {
     use super::*;
     use nestgate_types::MapEnv;
+    use serial_test::serial;
     use std::path::PathBuf;
 
     #[test]
+    #[serial]
     fn runtime_dir_used_for_pid_and_lock_paths() {
         let env = MapEnv::from([("NESTGATE_RUNTIME_DIR", "/rt/nest")]);
         let paths = StoragePaths::from_env_source(&env);
@@ -202,6 +204,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn xdg_runtime_dir_nested_nestgate_for_sockets_and_pid() {
         let env = MapEnv::from([("XDG_RUNTIME_DIR", "/run/user/1000")]);
         let paths = StoragePaths::from_env_source(&env);
@@ -214,6 +217,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn storage_base_derived_from_data_dir() {
         let env = MapEnv::from([("NESTGATE_DATA_DIR", "/data/ng")]);
         let paths = StoragePaths::from_env_source(&env);
@@ -222,6 +226,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn zfs_binary_path_respects_nestgate_zfs_binary_env() {
         let paths =
             StoragePaths::from_env_source(&MapEnv::from([("HOME", "/tmp/nestgate-test-home")]));
@@ -231,6 +236,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn zpool_binary_path_falls_back_when_env_unset() {
         let paths = StoragePaths::from_env_source(&MapEnv::new());
         temp_env::with_vars([("NESTGATE_ZPOOL_BINARY", None::<&str>)], || {
@@ -239,6 +245,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn storage_base_path_env_override() {
         let env = MapEnv::from([("NESTGATE_DATA_DIR", "/data/ng")]);
         let paths = StoragePaths::from_env_source(&env);
@@ -255,6 +262,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn storage_base_path_falls_back_to_data_dir() {
         let env = MapEnv::from([("NESTGATE_DATA_DIR", "/data/ng")]);
         let paths = StoragePaths::from_env_source(&env);

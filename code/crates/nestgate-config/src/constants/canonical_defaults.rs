@@ -558,6 +558,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn build_api_url_reads_process_env() {
         temp_env::with_vars(
             [
@@ -572,6 +573,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn build_websocket_url_reads_process_env() {
         temp_env::with_vars(
             [

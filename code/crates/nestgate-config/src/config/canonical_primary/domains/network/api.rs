@@ -338,11 +338,12 @@ impl ApiConfig {
 }
 
 impl Default for TlsConfig {
-    /// Returns the default instance
     fn default() -> Self {
+        let ssl_dir = crate::config::storage_paths::get_config_dir()
+            .join("ssl");
         Self {
-            cert_path: String::from("/etc/ssl/certs/nestgate.pem"),
-            key_path: String::from("/etc/ssl/private/nestgate.key"),
+            cert_path: ssl_dir.join("nestgate.pem").to_string_lossy().into_owned(),
+            key_path: ssl_dir.join("nestgate.key").to_string_lossy().into_owned(),
             ca_path: None,
             verify_client: false,
         }
@@ -350,16 +351,18 @@ impl Default for TlsConfig {
 }
 
 impl TlsConfig {
-    /// Creates a production TLS configuration with strict security
+    /// Creates a production TLS configuration with strict security.
     ///
-    /// Returns a `TlsConfig` with production certificates, CA bundle, and client
-    /// verification enabled for secure production deployments.
+    /// Derives certificate paths from the XDG-resolved config directory and
+    /// enables client verification for secure production deployments.
     #[must_use]
     pub fn production() -> Self {
+        let ssl_dir = crate::config::storage_paths::get_config_dir()
+            .join("ssl");
         Self {
-            cert_path: String::from("/etc/ssl/certs/nestgate-prod.pem"),
-            key_path: String::from("/etc/ssl/private/nestgate-prod.key"),
-            ca_path: Some(String::from("/etc/ssl/certs/ca-bundle.pem")),
+            cert_path: ssl_dir.join("nestgate-prod.pem").to_string_lossy().into_owned(),
+            key_path: ssl_dir.join("nestgate-prod.key").to_string_lossy().into_owned(),
+            ca_path: Some(ssl_dir.join("ca-bundle.pem").to_string_lossy().into_owned()),
             verify_client: true,
         }
     }

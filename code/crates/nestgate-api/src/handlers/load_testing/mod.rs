@@ -86,88 +86,28 @@ pub async fn start_load_test(
     Ok(Json(execution))
 }
 
-/// **GET LOAD TEST RESULTS HANDLER**
-///
 /// Retrieve results from completed load tests.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
+/// Real load test execution requires a performance testing capability
+/// provider. Returns `501 NOT IMPLEMENTED` until wired.
 pub async fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode> {
-    let results = vec![
-        TestResult {
-            success: true,
-            duration_seconds: 300,
-            total_requests: 15000,
-            successful_requests: 14850,
-            failed_requests: 150,
-            avg_response_time_ms: 125.5,
-        },
-        TestResult {
-            success: true,
-            duration_seconds: 600,
-            total_requests: 30000,
-            successful_requests: 29700,
-            failed_requests: 300,
-            avg_response_time_ms: 98.2,
-        },
-    ];
-
-    Ok(Json(results))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
-/// **GET LOAD TEST HISTORY HANDLER**
-///
 /// Retrieve historical load test execution records.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
+/// History persistence requires a storage-backed load test registry.
+/// Returns `501 NOT IMPLEMENTED` until wired.
 pub async fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, StatusCode> {
-    let history = vec![LoadTestHistoryEntry {
-        test_id: "test_001".to_string(),
-        test_name: "API Stress Test".to_string(),
-        executed_at: std::time::SystemTime::now(),
-        duration_seconds: 300,
-        result: TestResult {
-            success: true,
-            duration_seconds: 300,
-            total_requests: 15000,
-            successful_requests: 14850,
-            failed_requests: 150,
-            avg_response_time_ms: 125.5,
-        },
-    }];
-
-    Ok(Json(history))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
-/// **GET PERFORMANCE BASELINES HANDLER**
-///
 /// Retrieve performance baselines for load test comparison.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
+/// Baseline management requires a performance testing capability provider.
+/// Returns `501 NOT IMPLEMENTED` until wired.
 pub async fn get_performance_baselines() -> Result<Json<Vec<PerformanceBaseline>>, StatusCode> {
-    let baselines = vec![
-        PerformanceBaseline {
-            baseline_id: "baseline_001".to_string(),
-            name: "API Response Time Baseline".to_string(),
-            expected_response_time_ms: 100.0,
-            expected_throughput_rps: 1000.0,
-            max_error_rate_percent: 1.0,
-        },
-        PerformanceBaseline {
-            baseline_id: "baseline_002".to_string(),
-            name: "Database Query Baseline".to_string(),
-            expected_response_time_ms: 50.0,
-            expected_throughput_rps: 2000.0,
-            max_error_rate_percent: 0.5,
-        },
-    ];
-
-    Ok(Json(baselines))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 // Re-export commonly used types
@@ -199,68 +139,28 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_load_test_results() {
+    async fn test_get_load_test_results_returns_not_implemented() {
         let result = get_load_test_results().await;
-        assert!(result.is_ok());
-
-        let results = result
-            .expect("Test: get_load_test_results should return Ok")
-            .0;
-        assert_eq!(results.len(), 2);
-
-        // Verify first result
-        assert!(results[0].success);
-        assert_eq!(results[0].duration_seconds, 300);
-        assert_eq!(results[0].total_requests, 15000);
-        assert_eq!(results[0].successful_requests, 14850);
-
-        // Verify second result
-        assert!(results[1].success);
-        assert_eq!(results[1].duration_seconds, 600);
-        assert_eq!(results[1].total_requests, 30000);
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
-    async fn test_get_load_test_history() {
+    async fn test_get_load_test_history_returns_not_implemented() {
         let result = get_load_test_history().await;
-        assert!(result.is_ok());
-
-        let history = result
-            .expect("Test: get_load_test_history should return Ok")
-            .0;
-        assert_eq!(history.len(), 1);
-
-        assert_eq!(history[0].test_id, "test_001");
-        assert_eq!(history[0].test_name, "API Stress Test");
-        assert_eq!(history[0].duration_seconds, 300);
-        assert!(history[0].result.success);
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
-    async fn test_get_performance_baselines() {
+    async fn test_get_performance_baselines_returns_not_implemented() {
         let result = get_performance_baselines().await;
-        assert!(result.is_ok());
-
-        let baselines = result
-            .expect("Test: get_performance_baselines should return Ok")
-            .0;
-        assert_eq!(baselines.len(), 2);
-
-        // Verify first baseline
-        assert_eq!(baselines[0].baseline_id, "baseline_001");
-        assert_eq!(baselines[0].expected_response_time_ms, 100.0);
-        assert_eq!(baselines[0].expected_throughput_rps, 1000.0);
-
-        // Verify second baseline
-        assert_eq!(baselines[1].baseline_id, "baseline_002");
-        assert_eq!(baselines[1].expected_response_time_ms, 50.0);
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[test]
     fn test_load_test_history_entry_serialization() {
         let entry = LoadTestHistoryEntry {
-            test_id: "test_123".to_string(),
-            test_name: "Test".to_string(),
+            test_id: String::from("test_123"),
+            test_name: String::from("Test"),
             executed_at: std::time::SystemTime::now(),
             duration_seconds: 60,
             result: TestResult {
@@ -280,8 +180,8 @@ mod tests {
     #[test]
     fn test_performance_baseline_serialization() {
         let baseline = PerformanceBaseline {
-            baseline_id: "test_baseline".to_string(),
-            name: "Test Baseline".to_string(),
+            baseline_id: String::from("test_baseline"),
+            name: String::from("Test Baseline"),
             expected_response_time_ms: 100.0,
             expected_throughput_rps: 500.0,
             max_error_rate_percent: 1.0,

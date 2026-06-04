@@ -8,6 +8,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+fn nestgate_config_dir() -> PathBuf {
+    if let Ok(v) = std::env::var("NESTGATE_CONFIG_DIR") {
+        return PathBuf::from(v);
+    }
+    if let Ok(v) = std::env::var("XDG_CONFIG_HOME") {
+        return PathBuf::from(v).join("nestgate");
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        return PathBuf::from(home).join(".config").join("nestgate");
+    }
+    PathBuf::from("/etc/nestgate")
+}
+
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for Security
@@ -85,10 +98,9 @@ impl Default for SecurityConfig {
 }
 
 impl Default for KeyManagementConfig {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
-            key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys"),
+            key_storage_path: nestgate_config_dir().join("zfs").join("keys"),
             rotation_interval_days: 90,
             backup_locations: vec![],
         }
@@ -100,7 +112,7 @@ impl KeyManagementConfig {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys/production"),
+            key_storage_path: nestgate_config_dir().join("zfs").join("keys").join("production"),
             rotation_interval_days: 30,
             backup_locations: vec![
                 PathBuf::from("/backup/nestgate/keys"),

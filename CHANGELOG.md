@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 92: Deep debt evolution — fake success + hardcoding + env-race (Jun 3, 2026)
+
+- **Load testing fake data eliminated**: `get_load_test_results`, `get_load_test_history`, and
+  `get_performance_baselines` evolved from returning fabricated demo data to honest
+  `501 NOT IMPLEMENTED`. 9 tests updated to assert the new contract across
+  `load_testing_handler_read_tests.rs` and `load_testing_handler_edge_tests.rs`.
+- **Hardcoded `/etc` paths evolved to XDG resolution**: TLS certificate defaults
+  (`TlsConfig::default()`, `production()`, `compliance_focused()`, `production_hardened()`)
+  now derive paths from `get_config_dir()/ssl/` instead of `/etc/ssl/`. ZFS key management
+  defaults now resolve via `NESTGATE_CONFIG_DIR`/`XDG_CONFIG_HOME`/`HOME/.config/nestgate`.
+  Workflow definitions dir uses `get_config_dir()/workflows`. Cache dir uses `std::env::temp_dir()`.
+- **Hardcoded `/tmp` paths evolved**: Dev TLS cert presets use `std::env::temp_dir()`.
+  Cache config uses `std::env::temp_dir()` for dev defaults.
+- **SSL cert discovery made env-aware**: `CertificateDiscoverySettings` default now reads
+  `SSL_CERT_DIR` env var before falling back to `/etc/ssl/certs`.
+- **`String::from()` migration**: Remaining ~60 production `.to_string()` calls in
+  `ai_first_example.rs` and `load_testing/` batch-converted to `String::from()`.
+- **Env-var race conditions in `nestgate-config` fixed**: Added `#[serial]` to 20 tests across
+  `storage_paths/paths.rs`, `sovereignty_config.rs`, `canonical_defaults.rs`,
+  `network_environment.rs`, and `system.rs` that mutate env vars via `temp_env`.
+- **Workspace result**: 12,551 total tests, 9,083 lib tests, 0 failures, 0 clippy warnings.
+
 ### Session 91: Zero test failures + stale assertion sweep (Jun 3, 2026)
 
 - **Zero test failures**: Achieved 0 failures in both serial and parallel execution

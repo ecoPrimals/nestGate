@@ -299,10 +299,7 @@ async fn test_responses_have_correct_content_type() {
 
     let response = server.get("/load-test/results").await;
 
-    response.assert_status_ok();
-
-    // Verify response is valid JSON
-    let _body: serde_json::Value = response.json();
+    response.assert_status(StatusCode::NOT_IMPLEMENTED);
 }
 
 #[tokio::test]

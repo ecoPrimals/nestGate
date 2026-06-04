@@ -129,7 +129,7 @@ impl Default for LoadTestConfig {
             concurrent_users: 10,
             requests_per_second: 1.0,
             scenario: TestScenario::ConstantLoad,
-            endpoints: vec!["/health".to_string()],
+            endpoints: vec![String::from("/health")],
             test_data: TestDataConfig::default(),
             thresholds: PerformanceThresholds::default(),
         }
@@ -250,7 +250,7 @@ mod tests {
         let execution = LoadTestExecution {
             config: LoadTestConfig::default(),
             started_at: Some(std::time::SystemTime::now()),
-            test_id: "test_456".to_string(),
+            test_id: String::from("test_456"),
         };
 
         assert_eq!(execution.test_id, "test_456");
