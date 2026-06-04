@@ -1,7 +1,7 @@
 # NestGate Quick Start
 
 **Version**: 0.5.0  
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)
 
 ---
 
@@ -12,7 +12,7 @@
 
 **Optional**: ZFS (for tiered storage features)
 
-**Current build status** (Session 88): 22 workspace packages; 747 RPC lib tests, 3,732+ full workspace, 0 failures; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
+**Current build status** (Session 92): 22 workspace packages; 749 RPC tests, 12,551 workspace, 0 failures; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
 
 ---
 
@@ -25,7 +25,7 @@ curl -sSL https://raw.githubusercontent.com/ecoPrimals/plasmidBin/main/fetch.sh 
 # Binary: $XDG_DATA_HOME/ecoPrimals/plasmidBin/primals/{triple}/nestgate
 ```
 
-See `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md` for composition details.
+Production binaries are distributed via `plasmidBin` — see upstream `primalSpring` wateringHole for composition details.
 
 ## Build (Local Development)
 
@@ -127,4 +127,4 @@ RUST_LOG=info                    # Logging level
 ---
 
 **License**: AGPL-3.0-or-later  
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)

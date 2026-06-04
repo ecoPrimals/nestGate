@@ -1,6 +1,6 @@
 # Documentation Quick Guide
 
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)
 
 ---
 
@@ -59,4 +59,4 @@ These are not in the nestgate repository — they live in the shared infra tree.
 
 ---
 
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)

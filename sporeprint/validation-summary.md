@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,732+ tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 12,551 tests (9,083 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation, BTSP auth"
 date = 2026-06-03
 
 [taxonomies]

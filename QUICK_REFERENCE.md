@@ -1,18 +1,18 @@
 # NestGate - Quick Reference
 
 **Version**: 0.5.0  
-**Tests**: 747 RPC lib, 3,732+ full workspace — 0 failures (see STATUS.md)  
+**Tests**: 749 RPC, 12,551 workspace — 0 failures (see STATUS.md)  
 **Coverage**: 84%+ line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 88)  
+**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 92)  
 **Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)
 
 ---
 
 ## Quick Start
 
-**Production**: Use `plasmidBin` — see `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md`.
+**Production**: Use `plasmidBin` — see upstream `primalSpring` wateringHole for the depot pattern.
 
 **Local development**:
 
@@ -225,4 +225,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)

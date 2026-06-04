@@ -1,7 +1,7 @@
 # NestGate Testing Guide
 
 **Last Updated**: Jun 3, 2026  
-**Library tests (`cargo test --workspace --lib`)**: 2,267 passing, 0 ignored, 0 failures  
+**Library tests (`cargo test --workspace --lib`)**: 9,083 passing, 0 ignored, 0 failures  
 **Coverage**: 84.12%+ line (workspace, all features)  
 **Goal**: Maintain high coverage with clean, maintainable tests  
 
@@ -18,7 +18,7 @@ cargo test --workspace
 ## Quick Stats
 
 ```
-Lib tests passing:       2,267
+Lib tests passing:       9,083
 Failures:                0
 Ignored (lib only):        0 (see tests/DISABLED_TESTS_REFERENCE.md)
 Crates with tests:       Workspace-wide (22 members)

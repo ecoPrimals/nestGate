@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 88)
-Tests:       PASS — 747 RPC lib, 3,732+ workspace, 0 failures (STATUS.md)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 92)
+Tests:       PASS — 749 RPC, 12,551 workspace, 0 failures (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 88)
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 92)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -25,7 +25,7 @@ See [STATUS.md](./STATUS.md) for full measured metrics.
 
 ### Production Deployment
 
-Post-primordial, all NUCLEUS binaries come from `plasmidBin`. See `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md`.
+Post-primordial, all NUCLEUS binaries come from `plasmidBin`. See upstream `primalSpring` wateringHole for the depot pattern.
 
 ### 1. Build (Local Development)
 
@@ -179,4 +179,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)

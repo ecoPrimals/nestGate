@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)
 
 ---
 
@@ -390,7 +390,7 @@ impl StorageService {
 
 ### **How biomeOS Routes NestGate Requests**
 
-Authoritative capability and method inventory: [`capability_registry.toml`](capability_registry.toml) at the NestGate repository root (not under `graphs/`). The `graphs/` directory in this repo holds other TOML assets (for example `nestgate_standalone.toml`); it does not define a separate `nestgate_capabilities.toml`.
+Authoritative capability and method inventory: [`capability_registry.toml`](capability_registry.toml) at the NestGate repository root.
 
 **Illustrative biomeOS graph fragment** (conceptual routing example):
 
@@ -521,4 +521,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: Jun 3, 2026 (Session 88)
+**Last Updated**: Jun 3, 2026 (Session 92)

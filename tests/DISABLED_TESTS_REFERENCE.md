@@ -48,7 +48,7 @@ See [README.md](README.md) for organization and **`cargo test --workspace`** (fu
 
 | Metric | Value |
 |--------|--------|
-| Passing (lib only) | 2,267 |
+| Passing (lib only) | 9,083 |
 | Failed | 0 |
 | Ignored (lib only) | 60 |
 | Workspace coverage (line) | 84.12%+ |

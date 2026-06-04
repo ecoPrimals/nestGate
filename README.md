@@ -2,16 +2,16 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-02, Session 88)**  
+**Verification (as of 2026-06-03, Session 92)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 747 RPC lib tests, 3,732+ full workspace — 0 failures  
+- **Tests**: 12,551 total (9,083 lib), 0 failures  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 747 RPC / 3,732+ full workspace, 0 failures
+- **Tests (last recorded)**: 12,551 total (9,083 lib), 0 failures
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -157,14 +157,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-02 (Session 88).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-02 (Session 92).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 747 RPC lib tests, 3,732+ full workspace — 0 failures |
+| Tests | 749 RPC tests, 12,551 workspace — 0 failures |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -312,4 +312,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 88)
+**Latest**: May 2026 (Session 92)

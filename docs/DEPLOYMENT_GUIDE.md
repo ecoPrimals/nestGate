@@ -4,7 +4,7 @@
 >
 > **Post-primordial (Wave 49+)**: All NUCLEUS primal binaries come from `plasmidBin`.
 > Do not deploy from `target/release/` or `cargo install` in production. See
-> `primalSpring/wateringHole/PLASMIDBIN_DEPOT_PATTERN.md` for the canonical deployment pattern.
+> See upstream `primalSpring` wateringHole for the canonical `plasmidBin` deployment pattern.
 >
 > **Note**: References to `deploy/` directory paths below are aspirational — that directory has not been created yet. NestGate currently deploys as a single static binary (`nestgate daemon`). See README.md for current quick start.
 
