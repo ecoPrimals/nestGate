@@ -6,6 +6,7 @@
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde_json::json;
+use serial_test::serial;
 
 use super::super::StorageState;
 use super::super::content_handlers::*;
@@ -15,6 +16,7 @@ use super::common::{cleanup_family, mock_state};
 // ── NG-1: Content-addressed storage tests ────────────────────────────
 
 #[tokio::test]
+#[serial]
 async fn content_put_and_get_round_trip() {
     let state = mock_state(Some("test-content")).await;
     let family_id = format!("test-cas-{}", uuid::Uuid::new_v4());
@@ -47,6 +49,7 @@ async fn content_put_and_get_round_trip() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_put_deduplicates() {
     let state = mock_state(Some("test-dedup")).await;
     let family_id = format!("test-dedup-{}", uuid::Uuid::new_v4());
@@ -65,6 +68,7 @@ async fn content_put_deduplicates() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_exists_returns_correct_state() {
     let state = mock_state(Some("test-exists")).await;
     let family_id = format!("test-exists-{}", uuid::Uuid::new_v4());
@@ -88,6 +92,7 @@ async fn content_exists_returns_correct_state() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_list_returns_stored_hashes() {
     let state = mock_state(Some("test-list")).await;
     let family_id = format!("test-list-{}", uuid::Uuid::new_v4());
@@ -108,6 +113,7 @@ async fn content_list_returns_stored_hashes() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_get_returns_null_for_missing() {
     let state = mock_state(Some("test-miss")).await;
     let hash = "a".repeat(64);
@@ -117,6 +123,7 @@ async fn content_get_returns_null_for_missing() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_put_requires_data() {
     let state = mock_state(Some("test")).await;
     let params = json!({"family_id": "test"});
@@ -124,6 +131,7 @@ async fn content_put_requires_data() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_get_rejects_invalid_hash() {
     let state = mock_state(Some("test")).await;
     let params = json!({"family_id": "test", "hash": "tooshort"});
@@ -140,6 +148,7 @@ async fn put_test_content(state: &StorageState, family_id: &str, data: &[u8]) ->
 }
 
 #[tokio::test]
+#[serial]
 async fn publish_and_resolve_round_trip() {
     let state = mock_state(Some("test-pub")).await;
     let family_id = format!("test-pub-{}", uuid::Uuid::new_v4());
@@ -178,6 +187,7 @@ async fn publish_and_resolve_round_trip() {
 }
 
 #[tokio::test]
+#[serial]
 async fn promote_alias_resolves_correctly() {
     let state = mock_state(Some("test-promo")).await;
     let family_id = format!("test-promo-{}", uuid::Uuid::new_v4());
@@ -212,6 +222,7 @@ async fn promote_alias_resolves_correctly() {
 }
 
 #[tokio::test]
+#[serial]
 async fn collections_lists_manifests() {
     let state = mock_state(Some("test-coll")).await;
     let family_id = format!("test-coll-{}", uuid::Uuid::new_v4());
@@ -235,6 +246,7 @@ async fn collections_lists_manifests() {
 }
 
 #[tokio::test]
+#[serial]
 async fn publish_rejects_missing_content_hash() {
     let state = mock_state(Some("test-reject")).await;
     let family_id = format!("test-reject-{}", uuid::Uuid::new_v4());
@@ -249,6 +261,7 @@ async fn publish_rejects_missing_content_hash() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_inline_returns_content() {
     let state = mock_state(Some("test-inline")).await;
     let family_id = format!("test-inline-{}", uuid::Uuid::new_v4());
@@ -281,6 +294,7 @@ async fn resolve_inline_returns_content() {
 // ── Path normalization (index.html fallback for static sites) ──────────
 
 #[tokio::test]
+#[serial]
 async fn resolve_trailing_slash_falls_back_to_index_html() {
     let state = mock_state(Some("test-idx-slash")).await;
     let family_id = format!("test-idx-slash-{}", uuid::Uuid::new_v4());
@@ -307,6 +321,7 @@ async fn resolve_trailing_slash_falls_back_to_index_html() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_bare_path_falls_back_to_dir_index_html() {
     let state = mock_state(Some("test-idx-bare")).await;
     let family_id = format!("test-idx-bare-{}", uuid::Uuid::new_v4());
@@ -333,6 +348,7 @@ async fn resolve_bare_path_falls_back_to_dir_index_html() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_exact_match_has_no_resolved_path() {
     let state = mock_state(Some("test-idx-exact")).await;
     let family_id = format!("test-idx-exact-{}", uuid::Uuid::new_v4());
@@ -362,6 +378,7 @@ async fn resolve_exact_match_has_no_resolved_path() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_includes_timing_metadata() {
     let state = mock_state(Some("test-timing")).await;
     let family_id = format!("test-timing-{}", uuid::Uuid::new_v4());
@@ -399,6 +416,7 @@ async fn resolve_includes_timing_metadata() {
 // ── SP-4 compatibility: content_base64 alias + nested metadata ─────────
 
 #[tokio::test]
+#[serial]
 async fn content_put_accepts_content_base64_alias() {
     let state = mock_state(Some("test-sp4-alias")).await;
     let family_id = format!("test-sp4-alias-{}", uuid::Uuid::new_v4());
@@ -425,6 +443,7 @@ async fn content_put_accepts_content_base64_alias() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_put_extracts_nested_metadata() {
     let state = mock_state(Some("test-sp4-meta")).await;
     let family_id = format!("test-sp4-meta-{}", uuid::Uuid::new_v4());
@@ -452,6 +471,7 @@ async fn content_put_extracts_nested_metadata() {
 }
 
 #[tokio::test]
+#[serial]
 async fn content_put_top_level_provenance_overrides_nested() {
     let state = mock_state(Some("test-sp4-override")).await;
     let family_id = format!("test-sp4-override-{}", uuid::Uuid::new_v4());

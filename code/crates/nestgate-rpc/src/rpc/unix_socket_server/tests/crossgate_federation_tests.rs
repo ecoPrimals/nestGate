@@ -9,6 +9,7 @@
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde_json::json;
+use serial_test::serial;
 
 use super::common::{cleanup_family, mock_state};
 use crate::rpc::unix_socket_server::content_federation_handlers;
@@ -18,6 +19,7 @@ use crate::rpc::unix_socket_server::storage_paths::content_key_path;
 /// Verify content.put → content.get roundtrip on a custom storage base
 /// (simulates ZFS dataset mount via `NESTGATE_STORAGE_BASE_PATH`).
 #[tokio::test]
+#[serial]
 async fn content_put_get_on_custom_storage_base() {
     let family = format!("test-zfs-putget-{}", uuid::Uuid::new_v4());
     let custom_base = std::env::temp_dir().join(format!("nestgate-zfs-test-{}", uuid::Uuid::new_v4()));
@@ -72,6 +74,7 @@ async fn content_put_get_on_custom_storage_base() {
 /// Verify BLAKE3 dedup on custom storage base — same content stored
 /// twice returns `deduplicated: true`.
 #[tokio::test]
+#[serial]
 async fn content_dedup_on_custom_storage_base() {
     let family = format!("test-zfs-dedup-{}", uuid::Uuid::new_v4());
     let custom_base = std::env::temp_dir().join(format!("nestgate-zfs-dedup-{}", uuid::Uuid::new_v4()));
@@ -115,6 +118,7 @@ async fn content_dedup_on_custom_storage_base() {
 /// This validates the sovereign content pipeline: hot gate stores, cold
 /// gate pulls, BLAKE3 integrity verified.
 #[tokio::test]
+#[serial]
 async fn crossgate_put_then_pull_blake3_integrity() {
     let east_family = format!("test-east-{}", uuid::Uuid::new_v4());
     let west_family = format!("test-west-{}", uuid::Uuid::new_v4());
@@ -168,6 +172,7 @@ async fn crossgate_put_then_pull_blake3_integrity() {
 /// This is the local-path validation that a cross-gate pull would perform
 /// after receiving bytes from a remote NestGate.
 #[tokio::test]
+#[serial]
 async fn content_get_blake3_roundtrip_integrity() {
     let family = format!("test-b3rt-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;
@@ -215,6 +220,7 @@ async fn content_get_blake3_roundtrip_integrity() {
 /// re-read through content.get — the CID path still exists but the
 /// bytes no longer match. This proves CAS integrity is hash-as-key.
 #[tokio::test]
+#[serial]
 async fn corrupted_blob_detected_by_blake3_mismatch() {
     let family = format!("test-corrupt-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;
@@ -253,6 +259,7 @@ async fn corrupted_blob_detected_by_blake3_mismatch() {
 
 /// Verify content.replicate.pull skips CIDs that already exist locally.
 #[tokio::test]
+#[serial]
 async fn replicate_pull_skips_when_already_local() {
     let family = format!("test-pull-skip-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;
@@ -289,6 +296,7 @@ async fn replicate_pull_skips_when_already_local() {
 /// content.put stores provenance metadata sidecar (.meta.json) and
 /// content.get returns it — verifies end-to-end on custom base.
 #[tokio::test]
+#[serial]
 async fn content_provenance_roundtrip() {
     let family = format!("test-prov-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;
@@ -327,6 +335,7 @@ async fn content_provenance_roundtrip() {
 
 /// content.exists returns true for stored blobs, false for missing.
 #[tokio::test]
+#[serial]
 async fn content_exists_accuracy() {
     let family = format!("test-exists-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;
@@ -363,6 +372,7 @@ async fn content_exists_accuracy() {
 
 /// content.list returns stored hashes for a family.
 #[tokio::test]
+#[serial]
 async fn content_list_returns_stored_hashes() {
     let family = format!("test-list-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;

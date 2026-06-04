@@ -72,8 +72,7 @@ async fn test_authenticate_with_missing_user() {
         .await
         .into_response()
         .status();
-    // Current stub accepts all credentials; will reject once real backend is wired
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -88,8 +87,7 @@ async fn test_authenticate_with_empty_username() {
         .await
         .into_response()
         .status();
-    // Current stub accepts all credentials; will reject empties once real backend is wired
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -104,7 +102,7 @@ async fn test_authenticate_with_empty_password() {
         .await
         .into_response()
         .status();
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -118,8 +116,7 @@ async fn test_validate_token_delegates_to_authenticate() {
         .await
         .into_response()
         .status();
-    // validate_token delegates to authenticate, which currently accepts all
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -133,7 +130,7 @@ async fn test_validate_token_with_empty_token() {
         .await
         .into_response()
         .status();
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -221,17 +218,14 @@ async fn test_create_user_with_duplicate_id() {
         permissions: vec!["read".to_string()],
     };
 
-    let _response1 = create_user(State(handler.clone()), Json(request1.clone())).await;
-
     let status = create_user(State(handler), Json(request1))
         .await
         .into_response()
         .status();
-    assert!(
-        status == StatusCode::OK
-            || status == StatusCode::CONFLICT
-            || status == StatusCode::BAD_REQUEST,
-        "Expected OK, CONFLICT, or BAD_REQUEST, got {status:?}",
+    assert_eq!(
+        status,
+        StatusCode::NOT_IMPLEMENTED,
+        "create_user must return 501 until IdP is wired",
     );
 }
 
@@ -249,9 +243,10 @@ async fn test_create_user_with_empty_permissions() {
         .await
         .into_response()
         .status();
-    assert!(
-        status == StatusCode::OK || status == StatusCode::CREATED,
-        "Expected OK or CREATED, got {status:?}",
+    assert_eq!(
+        status,
+        StatusCode::NOT_IMPLEMENTED,
+        "create_user must return 501 until IdP is wired",
     );
 }
 
@@ -269,12 +264,10 @@ async fn test_create_user_with_invalid_role() {
         .await
         .into_response()
         .status();
-    assert!(
-        status == StatusCode::OK
-            || status == StatusCode::CREATED
-            || status == StatusCode::BAD_REQUEST
-            || status == StatusCode::INTERNAL_SERVER_ERROR,
-        "Expected OK, CREATED, BAD_REQUEST, or INTERNAL_SERVER_ERROR, got {status:?}",
+    assert_eq!(
+        status,
+        StatusCode::NOT_IMPLEMENTED,
+        "create_user must return 501 until IdP is wired",
     );
 }
 

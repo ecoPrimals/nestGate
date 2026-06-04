@@ -6,6 +6,7 @@
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use serde_json::json;
+use serial_test::serial;
 
 use super::super::storage_handlers::*;
 use super::super::storage_paths::{dataset_key_path, extract_namespace, resolve_family_id};
@@ -13,6 +14,7 @@ use super::super::storage_paths::{dataset_key_path, extract_namespace, resolve_f
 use super::common::{cleanup_family, encrypted_state, mock_state};
 
 #[tokio::test]
+#[serial]
 async fn resolve_family_id_from_params() {
     let state = mock_state(Some("server-family")).await;
     let params = json!({"family_id": "explicit-family"});
@@ -21,6 +23,7 @@ async fn resolve_family_id_from_params() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_family_id_falls_back_to_state() {
     let state = mock_state(Some("server-family")).await;
     let params = json!({"key": "some-key"});
@@ -29,6 +32,7 @@ async fn resolve_family_id_falls_back_to_state() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_family_id_errors_when_missing() {
     let state = mock_state(None).await;
     let params = json!({"key": "some-key"});
@@ -37,6 +41,7 @@ async fn resolve_family_id_errors_when_missing() {
 }
 
 #[tokio::test]
+#[serial]
 async fn resolve_family_id_param_overrides_state() {
     let state = mock_state(Some("default")).await;
     let params = json!({"family_id": "override"});
@@ -45,6 +50,7 @@ async fn resolve_family_id_param_overrides_state() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_store_requires_params() {
     let state = mock_state(Some("test")).await;
     let result = storage_store(None, &state).await;
@@ -52,6 +58,7 @@ async fn storage_store_requires_params() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_store_requires_key() {
     let state = mock_state(Some("test")).await;
     let params = Some(json!({"family_id": "test", "dataset": "ds"}));
@@ -60,6 +67,7 @@ async fn storage_store_requires_key() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_retrieve_requires_params() {
     let state = mock_state(Some("test")).await;
     let result = storage_retrieve(None, &state).await;
@@ -67,6 +75,7 @@ async fn storage_retrieve_requires_params() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_exists_requires_params() {
     let state = mock_state(Some("test")).await;
     let result = storage_exists(None, &state);
@@ -74,6 +83,7 @@ async fn storage_exists_requires_params() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_delete_requires_params() {
     let state = mock_state(Some("test")).await;
     let result = storage_delete(None, &state).await;
@@ -81,6 +91,7 @@ async fn storage_delete_requires_params() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_list_requires_params() {
     let state = mock_state(Some("test")).await;
     let result = storage_list(None, &state).await;
@@ -88,6 +99,7 @@ async fn storage_list_requires_params() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_store_and_retrieve_round_trip() {
     let state = mock_state(Some("test-rt")).await;
     let family_id = format!("test-dataset-{}", uuid::Uuid::new_v4());
@@ -133,6 +145,7 @@ async fn storage_store_and_retrieve_round_trip() {
 
 /// GAP-21: family_id omitted in params — server uses its own family as default.
 #[tokio::test]
+#[serial]
 async fn store_retrieve_without_family_id_uses_server_default() {
     let server_family = format!("gap21-test-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&server_family)).await;
@@ -181,6 +194,7 @@ async fn store_retrieve_without_family_id_uses_server_default() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_list_returns_stored_keys() {
     let state = mock_state(Some("test-list")).await;
     let family_id = format!("test-list-{}", uuid::Uuid::new_v4());
@@ -201,6 +215,7 @@ async fn storage_list_returns_stored_keys() {
 }
 
 #[tokio::test]
+#[serial]
 async fn storage_nested_key_paths_work() {
     let state = mock_state(Some("test-nested")).await;
     let family_id = format!("test-nested-{}", uuid::Uuid::new_v4());
@@ -224,6 +239,7 @@ async fn storage_nested_key_paths_work() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespaces_list_returns_dirs_only() {
     let state = mock_state(Some("test-ns")).await;
     let family_id = format!("test-ns-{}", uuid::Uuid::new_v4());
@@ -253,6 +269,7 @@ async fn namespaces_list_returns_dirs_only() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespaces_list_empty_for_missing_family() {
     let state = mock_state(Some("test-ns-missing")).await;
     let params = json!({"family_id": "nonexistent-family-12345"});
@@ -264,6 +281,7 @@ async fn namespaces_list_empty_for_missing_family() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespaces_list_uses_state_family_id() {
     let family_id = format!("test-ns-state-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family_id)).await;
@@ -281,6 +299,7 @@ async fn namespaces_list_uses_state_family_id() {
 }
 
 #[tokio::test]
+#[serial]
 async fn encrypted_store_and_retrieve_round_trip() {
     let family_id = format!("test-enc-rt-{}", uuid::Uuid::new_v4());
     let state = encrypted_state(&family_id);
@@ -322,6 +341,7 @@ async fn encrypted_store_and_retrieve_round_trip() {
 }
 
 #[tokio::test]
+#[serial]
 async fn encrypted_state_reads_unencrypted_data() {
     let family_id = format!("test-enc-compat-{}", uuid::Uuid::new_v4());
     let plain_state = mock_state(Some(&family_id)).await;
@@ -342,6 +362,7 @@ async fn encrypted_state_reads_unencrypted_data() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespace_store_and_retrieve_round_trip() {
     let state = mock_state(Some("test-ns-rt")).await;
     let family_id = format!("test-ns-rt-{}", uuid::Uuid::new_v4());
@@ -376,6 +397,7 @@ async fn namespace_store_and_retrieve_round_trip() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespace_retrieve_falls_back_to_flat() {
     let state = mock_state(Some("test-ns-fb")).await;
     let family_id = format!("test-ns-fb-{}", uuid::Uuid::new_v4());
@@ -402,6 +424,7 @@ async fn namespace_retrieve_falls_back_to_flat() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespace_list_scopes_to_namespace() {
     let state = mock_state(Some("test-ns-list")).await;
     let family_id = format!("test-ns-list-{}", uuid::Uuid::new_v4());
@@ -428,6 +451,7 @@ async fn namespace_list_scopes_to_namespace() {
 }
 
 #[tokio::test]
+#[serial]
 async fn namespace_rejects_path_traversal() {
     let params = json!({"namespace": "../escape"});
     assert!(extract_namespace(&params).is_err());

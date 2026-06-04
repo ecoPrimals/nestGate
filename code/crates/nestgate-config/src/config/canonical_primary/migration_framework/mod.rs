@@ -174,7 +174,11 @@ mod tests {
         };
         let migrator = ConfigMigrator::from_final_config(&config, options).unwrap();
         let result = migrator.migrate();
-        assert!(result.is_ok());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("not yet implemented"),
+            "non-dry-run migration must return NotImplemented until field transforms are wired"
+        );
     }
 
     #[test]

@@ -561,11 +561,11 @@ mod tests {
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
         let result = discovery.discover_service_endpoint("test_service");
-        // Should resolve to some endpoint
-        assert!(result.is_ok());
-        if let Ok(endpoint) = result {
-            assert!(endpoint.starts_with("http://"));
-        }
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("not implemented"),
+            "network scan fallback must return NotImplemented"
+        );
     }
 
     #[tokio::test]
@@ -576,8 +576,8 @@ mod tests {
         let result1 = discovery.discover_service_endpoint("service1");
         let result2 = discovery.discover_service_endpoint("service2");
 
-        assert!(result1.is_ok());
-        assert!(result2.is_ok());
+        assert!(result1.is_err());
+        assert!(result2.is_err());
     }
 
     #[tokio::test]
@@ -657,7 +657,10 @@ mod tests {
 
         for service in services {
             let result = discovery.discover_service_endpoint(service);
-            assert!(result.is_ok());
+            assert!(
+                result.is_err(),
+                "scan fallback for {service} must return NotImplemented"
+            );
         }
     }
 

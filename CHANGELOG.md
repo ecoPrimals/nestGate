@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-03
 
+### Session 91: Zero test failures + stale assertion sweep (Jun 3, 2026)
+
+- **Zero test failures**: Achieved 0 failures in both serial and parallel execution
+  (previously 12-17 depending on thread count).
+- **Stale assertion sweep**: 16 tests across 5 files were still asserting old "fake success"
+  behavior from pre-Session 88. Updated to assert honest error responses:
+  - `nestgate-api`: 12 auth tests (4 in `tests.rs`, 8 in `auth_production_tests.rs`)
+  - `nestgate-config`: 1 migration chain test
+  - `nestgate-discovery`: 3 network discovery tests
+  - `nestgate-security`: 9 token/hybrid auth tests (4 in `tests.rs`, 5 in `hybrid_manager.rs`)
+- **Env-var race condition fix**: Added `#[serial]` from `serial_test` to 55 filesystem-backed
+  storage tests in `nestgate-rpc` that share `NESTGATE_STORAGE_BASE_PATH`. Tests now pass
+  reliably in parallel execution.
+- **Workspace result**: 2,279 lib tests, 749 RPC tests, 0 failures, 0 clippy warnings.
+
 ### Session 90: Content trust + /tmp evolution (Jun 3, 2026)
 
 - **BLAKE3 integrity verification in `content.replicate.pull`** (P0): `pull_blob_from_remote`

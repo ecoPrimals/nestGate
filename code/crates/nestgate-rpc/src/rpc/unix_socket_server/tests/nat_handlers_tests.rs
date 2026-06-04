@@ -3,10 +3,13 @@
 
 //! Filesystem-backed NAT / beacon handler coverage (`nat_handlers.rs`).
 
+use serial_test::serial;
+
 use super::super::StorageState;
 use super::super::nat_handlers;
 
 #[tokio::test]
+#[serial]
 async fn nat_store_retrieve_roundtrip() {
     let state = StorageState::new().expect("storage state");
     let peer_id = format!("nat-peer-{}", uuid::Uuid::new_v4());
@@ -35,6 +38,7 @@ async fn nat_store_retrieve_roundtrip() {
 }
 
 #[tokio::test]
+#[serial]
 async fn nat_retrieve_not_found() {
     let state = StorageState::new().expect("storage state");
     let peer_id = format!("nat-missing-{}", uuid::Uuid::new_v4());
@@ -51,6 +55,7 @@ async fn nat_retrieve_not_found() {
 }
 
 #[tokio::test]
+#[serial]
 async fn nat_retrieve_corrupted_file() {
     let state = StorageState::new().expect("storage state");
     let peer_id = format!("nat-bad-json-{}", uuid::Uuid::new_v4());
@@ -77,6 +82,7 @@ async fn nat_retrieve_corrupted_file() {
 }
 
 #[tokio::test]
+#[serial]
 async fn beacon_store_retrieve_list_delete_roundtrip() {
     let state = StorageState::new().expect("storage state");
     let peer_id = format!("beacon-{}", uuid::Uuid::new_v4());

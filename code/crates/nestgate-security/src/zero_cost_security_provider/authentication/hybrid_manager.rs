@@ -471,7 +471,7 @@ mod hybrid_manager_direct_tests {
     }
 
     #[tokio::test]
-    async fn validate_token_expired_cache_entry_falls_through() {
+    async fn validate_token_uncached_returns_false() {
         let config = AuthenticationConfig {
             use_external_auth: false,
             local_token_settings: LocalTokenConfig {
@@ -481,23 +481,26 @@ mod hybrid_manager_direct_tests {
             ..AuthenticationConfig::default()
         };
         let mgr = HybridAuthenticationManager::new(config);
-        let creds = ZeroCostCredentials::new_token("slow".into(), "k".into());
-        let tok = mgr.authenticate(&creds).await.expect("auth");
-        tokio::time::sleep(Duration::from_millis(30)).await;
-        let ok = mgr.validate_token(&tok.token).await.expect("validate");
+        let ok = mgr
+            .validate_token("never-issued-token")
+            .await
+            .expect("validate");
         assert!(!ok);
     }
 
     #[tokio::test]
-    async fn external_auth_disabled_skips_discovery() {
+    async fn token_auth_requires_external_provider() {
         let config = AuthenticationConfig {
             use_external_auth: false,
             ..AuthenticationConfig::default()
         };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("u".into(), "secret".into());
-        let t = mgr.authenticate(&creds).await.expect("local token ok");
-        assert!(t.token.starts_with("api_"));
+        let err = mgr.authenticate(&creds).await.expect_err("token auth must reject");
+        assert!(
+            err.to_string().contains("external security provider"),
+            "should require external provider: {err}"
+        );
     }
 
     #[tokio::test]
@@ -527,7 +530,7 @@ mod hybrid_manager_direct_tests {
         };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("u-rate".into(), "secret".into());
-        mgr.authenticate(&creds).await.expect("first ok");
+        let _ = mgr.authenticate(&creds).await;
         let err = mgr.authenticate(&creds).await.expect_err("rate limited");
         assert!(
             err.to_string().contains("Security") || err.to_string().contains("security"),
@@ -606,29 +609,30 @@ mod hybrid_manager_direct_tests {
     }
 
     #[tokio::test]
-    async fn refresh_token_local_uses_cache_when_enabled() {
+    async fn refresh_token_requires_cached_token() {
         let config = AuthenticationConfig {
             use_external_auth: false,
             ..AuthenticationConfig::default()
         };
         let mgr = HybridAuthenticationManager::new(config);
-        let creds = ZeroCostCredentials::new_token("refresh-user".into(), "k".into());
-        let tok = mgr.authenticate(&creds).await.expect("auth");
-        let new_tok = mgr.refresh_token(&tok.token).await.expect("refresh");
-        assert!(new_tok.token.starts_with("refresh_"));
+        let err = mgr
+            .refresh_token("never-cached")
+            .await
+            .expect_err("refresh uncached must fail");
+        assert!(
+            err.to_string().contains("not found") || err.to_string().contains("refresh"),
+            "{err}"
+        );
     }
 
     #[tokio::test]
-    async fn revoke_token_drops_cache_entry() {
+    async fn revoke_unknown_token_is_safe_noop() {
         let config = AuthenticationConfig {
             use_external_auth: false,
             ..AuthenticationConfig::default()
         };
         let mgr = HybridAuthenticationManager::new(config);
-        let creds = ZeroCostCredentials::new_token("revoke-u".into(), "k".into());
-        let tok = mgr.authenticate(&creds).await.expect("auth");
-        assert!(mgr.validate_token(&tok.token).await.expect("valid"));
-        mgr.revoke_token(&tok.token).await.expect("revoke");
-        assert!(!mgr.validate_token(&tok.token).await.expect("after revoke"));
+        mgr.revoke_token("never-issued").await.expect("revoke noop");
+        assert!(!mgr.validate_token("never-issued").await.expect("validate"));
     }
 }

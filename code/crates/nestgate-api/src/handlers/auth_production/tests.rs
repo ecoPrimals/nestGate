@@ -22,7 +22,7 @@ async fn test_create_user() {
     };
 
     let result = create_user(State(handler), Json(request)).await;
-    assert!(result.is_ok());
+    assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
 }
 
 #[tokio::test]
@@ -67,7 +67,6 @@ async fn revoke_token(
     (StatusCode::OK, Json(serde_json::json!({"success": true})))
 }
 
-// Import error handling tests from auth_production_tests
 #[tokio::test]
 async fn test_authenticate_with_missing_user() {
     let handler = ProductionAuthHandler::new();
@@ -77,9 +76,7 @@ async fn test_authenticate_with_missing_user() {
     };
 
     let result = authenticate(State(handler), Json(credentials)).await;
-    // In current implementation, all authentications succeed (stub)
-    // In production, this would fail
-    assert!(result.is_ok());
+    assert_eq!(result.unwrap_err(), StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -91,8 +88,7 @@ async fn test_authenticate_with_empty_username() {
     };
 
     let result = authenticate(State(handler), Json(credentials)).await;
-    // Currently succeeds, but in production would validate
-    assert!(result.is_ok());
+    assert_eq!(result.unwrap_err(), StatusCode::UNAUTHORIZED);
 }
 
 #[tokio::test]
@@ -127,38 +123,25 @@ async fn test_create_api_key_response_format() {
 async fn test_create_user_with_various_roles() {
     let handler = ProductionAuthHandler::new();
 
-    // Test admin role
-    let admin_request = CreateUserRequest {
-        user_id: "admin_user".to_string(),
-        username: "admin".to_string(),
-        role: "admin".to_string(),
-        permissions: vec!["all".to_string()],
-    };
+    for (user_id, username, role) in [
+        ("admin_user", "admin", "admin"),
+        ("operator_user", "operator", "operator"),
+        ("readonly_user", "readonly", "read_only"),
+    ] {
+        let request = CreateUserRequest {
+            user_id: user_id.to_string(),
+            username: username.to_string(),
+            role: role.to_string(),
+            permissions: vec!["read".to_string()],
+        };
 
-    let result = create_user(State(handler.clone()), Json(admin_request)).await;
-    assert!(result.is_ok());
-
-    // Test operator role
-    let operator_request = CreateUserRequest {
-        user_id: "operator_user".to_string(),
-        username: "operator".to_string(),
-        role: "operator".to_string(),
-        permissions: vec!["read".to_string(), "write".to_string()],
-    };
-
-    let result = create_user(State(handler.clone()), Json(operator_request)).await;
-    assert!(result.is_ok());
-
-    // Test read_only role
-    let readonly_request = CreateUserRequest {
-        user_id: "readonly_user".to_string(),
-        username: "readonly".to_string(),
-        role: "read_only".to_string(),
-        permissions: vec!["read".to_string()],
-    };
-
-    let result = create_user(State(handler), Json(readonly_request)).await;
-    assert!(result.is_ok());
+        let result = create_user(State(handler.clone()), Json(request)).await;
+        assert_eq!(
+            result.unwrap_err(),
+            StatusCode::NOT_IMPLEMENTED,
+            "create_user for role {role} must return 501 until IdP is wired"
+        );
+    }
 }
 
 #[tokio::test]

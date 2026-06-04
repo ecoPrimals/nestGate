@@ -35,26 +35,26 @@ async fn test_password_auth_requires_crypto_provider() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_token_auth_succeeds_without_crypto_provider() -> Result<()> {
+async fn test_token_auth_requires_external_provider() -> Result<()> {
     let config = AuthenticationConfig::default();
     let auth_manager = HybridAuthenticationManager::new(config);
     let credentials = ZeroCostCredentials::new_token("api-user".to_string(), "api-key".to_string());
-    let token = auth_manager.authenticate(&credentials).await?;
-    assert!(token.token.starts_with("api_"));
-    assert_eq!(token.user_id, "api-user");
+    let result = auth_manager.authenticate(&credentials).await;
+    let err = result.expect_err("token auth must require external provider");
+    assert!(
+        err.to_string().contains("external security provider"),
+        "should indicate external provider needed: {err}"
+    );
     Ok(())
 }
 
 #[tokio::test]
-async fn test_token_cache_validation() -> Result<()> {
+async fn test_validate_cached_token_not_found() -> Result<()> {
     let config = AuthenticationConfig::default();
     let auth_manager = HybridAuthenticationManager::new(config);
 
-    let credentials = ZeroCostCredentials::new_token("user".to_string(), "key".to_string());
-    let token = auth_manager.authenticate(&credentials).await?;
-
-    let is_valid = auth_manager.validate_token(&token.token).await?;
-    assert!(is_valid);
+    let is_valid = auth_manager.validate_token("nonexistent-token").await?;
+    assert!(!is_valid, "uncached token should not validate");
     Ok(())
 }
 
@@ -68,16 +68,13 @@ async fn test_validate_unknown_token() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_revoke_token() -> Result<()> {
+async fn test_revoke_unknown_token_is_noop() -> Result<()> {
     let config = AuthenticationConfig::default();
     let auth_manager = HybridAuthenticationManager::new(config);
 
-    let credentials = ZeroCostCredentials::new_token("user".to_string(), "key".to_string());
-    let token = auth_manager.authenticate(&credentials).await?;
-
-    auth_manager.revoke_token(&token.token).await?;
-    let is_valid = auth_manager.validate_token(&token.token).await?;
-    assert!(!is_valid);
+    auth_manager.revoke_token("never-issued").await?;
+    let is_valid = auth_manager.validate_token("never-issued").await?;
+    assert!(!is_valid, "revoking unknown token should be safe noop");
     Ok(())
 }
 
@@ -106,16 +103,12 @@ async fn test_refresh_disabled() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_refresh_token_local() -> Result<()> {
+async fn test_refresh_token_requires_prior_issuance() -> Result<()> {
     let config = AuthenticationConfig::default();
     let auth_manager = HybridAuthenticationManager::new(config);
 
-    let credentials = ZeroCostCredentials::new_token("user".to_string(), "key".to_string());
-    let token = auth_manager.authenticate(&credentials).await?;
-
-    let refreshed = auth_manager.refresh_token(&token.token).await?;
-    assert_ne!(token.token, refreshed.token);
-    assert_eq!(refreshed.user_id, "user");
+    let result = auth_manager.refresh_token("never-issued").await;
+    assert!(result.is_err(), "refreshing unissued token must fail");
     Ok(())
 }
 
