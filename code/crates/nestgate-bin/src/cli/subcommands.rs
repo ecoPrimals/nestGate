@@ -136,6 +136,10 @@ pub enum Commands {
 pub enum ServiceAction {
     /// Start `NestGate` service
     Start {
+        /// Bind Unix domain socket at this path (overrides `NESTGATE_SOCKET` env).
+        /// Example: `--socket /run/membrane/nestgate.sock`
+        #[arg(long)]
+        socket: Option<PathBuf>,
         /// Port to bind to (can be overridden with `NESTGATE_API_PORT`)
         #[arg(short, long, default_value_t = nestgate_core::constants::get_api_port())]
         port: u16,

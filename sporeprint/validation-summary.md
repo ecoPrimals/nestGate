@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 13,035 tests (9,212 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 13,039 tests (9,216 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
 date = 2026-06-05
 
 [taxonomies]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **13,035 tests** passing (9,212 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **13,039 tests** passing (9,216 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 95 binary UDS compliance**: `service start --socket PATH` natively supported; `IsomorphicIpcServer` fallback now honors `NESTGATE_SOCKET`; unblocks VPS binary refresh for port-free deployment
 - **Session 94 Wave 78 parity + deep debt sweep**: `config/capability_registry.toml` at ecosystem convention path; 46 new content pipeline tests; `transport/handlers.rs` refactored (833→384L); primal coupling decoupled (`announce_to_coordinator`); ZFS placeholders evolved to real parsing; production stubs → honest errors; `std::sync::Mutex` → `tokio::sync::Mutex` in async handler; `.to_string()` → `String::from()` migration (32 sites)
 - **Session 93 HTTP parity + content serving**: `GET /content/:hash` direct content serving endpoint (raw bytes, correct MIME, immutable caching, `ETag`); 5 UDS-only methods surfaced on HTTP; `content_ops::get_raw` for binary content retrieval; 24 new tests total; westGate ZFS readiness verified
 - **Session 92 deep debt evolution**: Load testing fake data → 501 NOT_IMPLEMENTED (3 handlers, 9 tests); `/etc`+`/tmp` hardcoded config defaults → XDG/env-based (TLS certs, ZFS keys, workflows, cache, SSL discovery); `String::from()` batch migration; env-var race fix in `nestgate-config` (20 tests serialized)

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 95: Binary UDS compliance — native `--socket` on all entry paths (Jun 5, 2026)
+
+- **`service start --socket PATH`**: Added `--socket` flag to `ServiceAction::Start` (was only
+  on `server`/`daemon`). When provided, sets `NESTGATE_SOCKET` before service startup, ensuring
+  UDS mode activates and the socket binds at the exact path. This unblocks VPS binary refresh
+  for port-free deployment: `nestgate service start --socket /run/membrane/nestgate.sock`.
+- **`IsomorphicIpcServer` legacy fallback fixed**: The `get_socket_path()` fallback (used when
+  `SocketConfig::from_environment()` fails) now checks `NESTGATE_SOCKET` first, before falling
+  back to `XDG_RUNTIME_DIR` or temp dir. Previously this fallback ignored the explicit socket
+  path entirely.
+- **CLI tests**: 4 new tests — `parse_server_socket_path`, `parse_service_start_socket_path`,
+  `parse_service_start_without_socket`, `service_action_start_holds_socket_path`.
+- **Workspace result**: 13,039+ total tests, 9,216+ lib tests, 0 failures, 0 clippy warnings.
+
 ### Session 94: Wave 78 parity + deep debt sweep (Jun 5, 2026)
 
 - **`config/capability_registry.toml` — ecosystem convention**: Moved the root capability

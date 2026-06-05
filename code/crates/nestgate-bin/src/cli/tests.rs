@@ -310,6 +310,63 @@ mod cli_parse_tests {
         let err = Cli::try_parse_from(["nestgate", "server", "--socket-only", "--enable-http"]);
         assert!(err.is_err(), "socket_only conflicts with enable_http");
     }
+
+    #[test]
+    fn parse_server_socket_path() {
+        let cli = Cli::try_parse_from([
+            "nestgate",
+            "server",
+            "--socket",
+            "/run/membrane/nestgate.sock",
+        ])
+        .expect("parse server with socket");
+        match cli.command {
+            Commands::Server { socket, .. } => {
+                assert_eq!(
+                    socket.unwrap().to_str().unwrap(),
+                    "/run/membrane/nestgate.sock"
+                );
+            }
+            _ => panic!("expected server"),
+        }
+    }
+
+    #[test]
+    fn parse_service_start_socket_path() {
+        let cli = Cli::try_parse_from([
+            "nestgate",
+            "service",
+            "start",
+            "--socket",
+            "/run/membrane/nestgate.sock",
+        ])
+        .expect("parse service start with socket");
+        match cli.command {
+            Commands::Service {
+                action: crate::cli::ServiceAction::Start { socket, .. },
+            } => {
+                assert_eq!(
+                    socket.unwrap().to_str().unwrap(),
+                    "/run/membrane/nestgate.sock"
+                );
+            }
+            _ => panic!("expected service start"),
+        }
+    }
+
+    #[test]
+    fn parse_service_start_without_socket() {
+        let cli = Cli::try_parse_from(["nestgate", "service", "start"])
+            .expect("parse service start without socket");
+        match cli.command {
+            Commands::Service {
+                action: crate::cli::ServiceAction::Start { socket, .. },
+            } => {
+                assert!(socket.is_none());
+            }
+            _ => panic!("expected service start"),
+        }
+    }
 }
 
 mod port_env_tests {

@@ -600,9 +600,12 @@ impl IsomorphicIpcServer {
         })
     }
 
-    /// Get socket path (XDG-compliant)
+    /// Get socket path — checks `NESTGATE_SOCKET` first, then XDG, then temp dir.
     fn get_socket_path(&self) -> Result<std::path::PathBuf> {
-        // Try XDG_RUNTIME_DIR first (preferred)
+        if let Ok(explicit) = std::env::var("NESTGATE_SOCKET") {
+            return Ok(std::path::PathBuf::from(explicit));
+        }
+
         if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
             return Ok(std::path::PathBuf::from(format!(
                 "{}/{}.sock",
@@ -610,7 +613,6 @@ impl IsomorphicIpcServer {
             )));
         }
 
-        // Fallback to system temp dir
         Ok(std::env::temp_dir().join(format!("{}.sock", self.service_name)))
     }
 

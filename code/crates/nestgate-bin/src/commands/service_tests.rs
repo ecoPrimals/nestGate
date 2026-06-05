@@ -29,6 +29,7 @@ async fn test_execute_start_action() {
 
     let manager = ServiceManager::new();
     let _action = ServiceAction::Start {
+        socket: None,
         port: DEFAULT_API_PORT,
         bind: DEFAULT_BIND_ADDRESS.to_string(),
         listen: None,

@@ -34,11 +34,19 @@ impl ServiceManager {
     pub async fn execute(&mut self, action: ServiceAction) -> BinResult<()> {
         match action {
             ServiceAction::Start {
+                socket,
                 port,
                 bind,
                 listen,
                 daemon: _,
             } => {
+                if let Some(ref sock_path) = socket {
+                    nestgate_core::env_process::set_var(
+                        "NESTGATE_SOCKET",
+                        sock_path.to_string_lossy().as_ref(),
+                    );
+                    tracing::info!("Socket path (CLI): {}", sock_path.display());
+                }
                 self.start_service(Some(port), Some(bind.as_str()), listen, None)
                     .await
             }
@@ -611,6 +619,7 @@ mod service_manager_tests {
     fn service_action_start_holds_listen_port() {
         let addr: SocketAddr = "192.168.1.1:8080".parse().unwrap();
         let a = ServiceAction::Start {
+            socket: None,
             port: 8080,
             bind: "192.168.1.1".into(),
             listen: Some(addr),
@@ -620,6 +629,26 @@ mod service_manager_tests {
             ServiceAction::Start { listen, port, .. } => {
                 assert_eq!(port, 8080);
                 assert_eq!(listen, Some(addr));
+            }
+            _ => panic!("start"),
+        }
+    }
+
+    #[test]
+    fn service_action_start_holds_socket_path() {
+        let a = ServiceAction::Start {
+            socket: Some(std::path::PathBuf::from("/run/membrane/nestgate.sock")),
+            port: 8080,
+            bind: String::from("127.0.0.1"),
+            listen: None,
+            daemon: false,
+        };
+        match a {
+            ServiceAction::Start { socket, .. } => {
+                assert_eq!(
+                    socket.unwrap().to_str().unwrap(),
+                    "/run/membrane/nestgate.sock"
+                );
             }
             _ => panic!("start"),
         }
