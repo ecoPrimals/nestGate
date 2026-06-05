@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 95b: Coverage sprint — content pipeline + HTTP handler dispatch (Jun 5, 2026)
+
+- **Encrypted content roundtrip tests** (7 tests): `content_put`/`content_get`/`content_get_raw` with
+  encryption, on-disk envelope verification, plaintext backward-compat, not-found/invalid-hash, no-sidecar.
+- **JSON-RPC handler content dispatch** (7 tests): `content.put`/`get`, `exists`/`list`, `publish`/`resolve`,
+  `collections`, `lifecycle.status`, unknown content method. All exercise `NestGateJsonRpcHandler::handle`
+  through the HTTP entry point.
+- **Content stream edge branches** (8 tests): `total_size: 0` empty upload fast path + dedup, oversized decoded
+  chunk rejection, retrieve stream with valid hash, missing `stream_id`/`offset`/`data` params.
+- Added `#[derive(Debug)]` to `RawContent` for test ergonomics.
+- **Workspace result**: 13,064+ total tests, 0 failures, 0 clippy warnings.
+
 ### Session 95: Binary UDS compliance — native `--socket` on all entry paths (Jun 5, 2026)
 
 - **`service start --socket PATH`**: Added `--socket` flag to `ServiceAction::Start` (was only

@@ -271,6 +271,7 @@ async fn require_zfs() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::Engine as _;
 
     #[tokio::test]
     async fn handle_unknown_method_returns_error_string() {
@@ -514,5 +515,164 @@ mod tests {
             .await
             .expect_err("bad stream_id should fail");
         assert!(!err.is_empty());
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn content_put_and_get_through_http_handler() {
+        let h = NestGateJsonRpcHandler::new();
+        let family_id = format!("test-http-put-{}", uuid::Uuid::new_v4());
+        let raw = b"http dispatch content";
+        let encoded = base64::engine::general_purpose::STANDARD.encode(raw);
+
+        let put_r = h
+            .handle(
+                "content.put",
+                serde_json::json!({"family_id": &family_id, "data": encoded}),
+            )
+            .await
+            .expect("content.put");
+        assert!(put_r.get("hash").is_some());
+        let hash = put_r["hash"].as_str().unwrap();
+
+        let get_r = h
+            .handle(
+                "content.get",
+                serde_json::json!({"hash": hash, "family_id": &family_id}),
+            )
+            .await
+            .expect("content.get");
+        assert!(get_r.get("data").is_some());
+
+        let _ = tokio::fs::remove_dir_all(
+            nestgate_core::config::storage_paths::get_storage_base_path()
+                .join("datasets")
+                .join(&family_id),
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn content_exists_and_list_through_http_handler() {
+        let h = NestGateJsonRpcHandler::new();
+        let family_id = format!("test-http-exists-{}", uuid::Uuid::new_v4());
+        let encoded = base64::engine::general_purpose::STANDARD.encode(b"exists check");
+
+        let put_r = h
+            .handle(
+                "content.put",
+                serde_json::json!({"family_id": &family_id, "data": encoded}),
+            )
+            .await
+            .expect("put");
+        let hash = put_r["hash"].as_str().unwrap();
+
+        let exists_r = h
+            .handle(
+                "content.exists",
+                serde_json::json!({"hash": hash, "family_id": &family_id}),
+            )
+            .await
+            .expect("content.exists");
+        assert_eq!(exists_r["exists"], true);
+
+        let list_r = h
+            .handle(
+                "content.list",
+                serde_json::json!({"family_id": &family_id}),
+            )
+            .await
+            .expect("content.list");
+        assert!(list_r.get("items").is_some() || list_r.get("hashes").is_some());
+
+        let _ = tokio::fs::remove_dir_all(
+            nestgate_core::config::storage_paths::get_storage_base_path()
+                .join("datasets")
+                .join(&family_id),
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn content_publish_and_resolve_through_http_handler() {
+        let h = NestGateJsonRpcHandler::new();
+        let family_id = format!("test-http-pub-{}", uuid::Uuid::new_v4());
+        let encoded = base64::engine::general_purpose::STANDARD.encode(b"publish me");
+
+        let put_r = h
+            .handle(
+                "content.put",
+                serde_json::json!({"family_id": &family_id, "data": encoded}),
+            )
+            .await
+            .expect("put");
+        let hash = put_r["hash"].as_str().unwrap();
+
+        let pub_r = h
+            .handle(
+                "content.publish",
+                serde_json::json!({
+                    "family_id": &family_id,
+                    "collection": "test-pub",
+                    "manifest": { "/index.html": hash }
+                }),
+            )
+            .await
+            .expect("content.publish");
+        assert!(pub_r.get("collection").is_some() || pub_r.get("published").is_some());
+
+        let resolve_r = h
+            .handle(
+                "content.resolve",
+                serde_json::json!({"collection": "test-pub", "path": "/index.html", "family_id": &family_id}),
+            )
+            .await
+            .expect("content.resolve");
+        assert!(resolve_r.get("hash").is_some() || resolve_r.get("data").is_some());
+
+        let _ = tokio::fs::remove_dir_all(
+            nestgate_core::config::storage_paths::get_storage_base_path()
+                .join("datasets")
+                .join(&family_id),
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn content_collections_through_http_handler() {
+        let h = NestGateJsonRpcHandler::new();
+        let family_id = format!("test-http-coll-{}", uuid::Uuid::new_v4());
+        let r = h
+            .handle(
+                "content.collections",
+                serde_json::json!({"family_id": &family_id}),
+            )
+            .await
+            .expect("content.collections");
+        assert!(r.get("collections").is_some());
+    }
+
+    #[tokio::test]
+    async fn lifecycle_status_through_http_handler() {
+        let h = NestGateJsonRpcHandler::new();
+        let r = h
+            .handle("lifecycle.status", serde_json::json!({}))
+            .await
+            .expect("lifecycle.status");
+        assert_eq!(r["status"], "running");
+        assert_eq!(r["primal"], "nestgate");
+        assert!(r.get("version").is_some());
+    }
+
+    #[tokio::test]
+    async fn unknown_content_method_returns_clear_error() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle("content.nonexistent_xyz", serde_json::json!({}))
+            .await
+            .expect_err("unknown content method");
+        assert!(err.contains("Unknown content method"), "error: {err}");
     }
 }

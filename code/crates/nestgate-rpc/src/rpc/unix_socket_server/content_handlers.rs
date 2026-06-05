@@ -578,6 +578,7 @@ async fn resolve_manifest_target(
 }
 
 /// Raw content retrieval result for direct HTTP serving (no base64 encoding).
+#[derive(Debug)]
 pub struct RawContent {
     /// Decrypted content bytes.
     pub data: Vec<u8>,

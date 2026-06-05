@@ -11,7 +11,7 @@ use serial_test::serial;
 use super::super::StorageState;
 use super::super::content_handlers::*;
 
-use super::common::{cleanup_family, mock_state};
+use super::common::{cleanup_family, encrypted_state, mock_state};
 
 // ── NG-1: Content-addressed storage tests ────────────────────────────
 
@@ -493,6 +493,157 @@ async fn content_put_top_level_provenance_overrides_nested() {
         r["source"], "direct",
         "top-level source should take precedence"
     );
+
+    cleanup_family(&family_id).await;
+}
+
+// ── Encrypted content roundtrip tests ────────────────────────────────
+
+#[tokio::test]
+#[serial]
+async fn encrypted_content_put_and_get_roundtrip() {
+    let family_id = format!("test-enc-content-{}", uuid::Uuid::new_v4());
+    let state = encrypted_state(&family_id);
+    let raw = b"encrypted content data for CAS";
+    let encoded = STANDARD.encode(raw);
+    let expected_hash = blake3::hash(raw).to_hex().to_string();
+
+    let put_p = json!({
+        "family_id": &family_id,
+        "data": encoded,
+        "content_type": "text/plain"
+    });
+    let put_r = content_put(Some(&put_p), &state).await.unwrap();
+    assert_eq!(put_r["hash"].as_str().unwrap(), expected_hash);
+
+    let get_p = json!({"hash": &expected_hash, "family_id": &family_id});
+    let get_r = content_get(Some(&get_p), &state).await.unwrap();
+    let decoded = STANDARD
+        .decode(get_r["data"].as_str().unwrap())
+        .unwrap();
+    assert_eq!(decoded, raw);
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn encrypted_content_on_disk_is_envelope() {
+    let family_id = format!("test-enc-env-{}", uuid::Uuid::new_v4());
+    let state = encrypted_state(&family_id);
+    let raw = b"verify on-disk envelope";
+    let encoded = STANDARD.encode(raw);
+    let expected_hash = blake3::hash(raw).to_hex().to_string();
+
+    let p = json!({"family_id": &family_id, "data": encoded});
+    content_put(Some(&p), &state).await.unwrap();
+
+    let path = super::super::storage_paths::content_key_path(&family_id, &expected_hash);
+    let on_disk = tokio::fs::read(&path).await.unwrap();
+    assert!(
+        crate::rpc::storage_encryption::StorageEncryption::is_encrypted_envelope(&on_disk),
+        "on-disk data should be an encrypted envelope"
+    );
+    assert_ne!(on_disk, raw, "raw data should not appear on disk");
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn encrypted_state_reads_plaintext_content() {
+    let family_id = format!("test-enc-compat-content-{}", uuid::Uuid::new_v4());
+    let plain_state = mock_state(Some(&family_id)).await;
+    let raw = b"plaintext stored content";
+    let encoded = STANDARD.encode(raw);
+
+    let p = json!({"family_id": &family_id, "data": encoded});
+    let put_r = content_put(Some(&p), &plain_state).await.unwrap();
+    let hash = put_r["hash"].as_str().unwrap();
+
+    let enc_state = encrypted_state(&family_id);
+    let get_p = json!({"hash": hash, "family_id": &family_id});
+    let get_r = content_get(Some(&get_p), &enc_state).await.unwrap();
+    let decoded = STANDARD
+        .decode(get_r["data"].as_str().unwrap())
+        .unwrap();
+    assert_eq!(decoded, raw, "encrypted state should read plaintext transparently");
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn encrypted_content_get_raw_roundtrip() {
+    let family_id = format!("test-enc-raw-{}", uuid::Uuid::new_v4());
+    let state = encrypted_state(&family_id);
+    let raw = b"raw encrypted retrieval";
+    let encoded = STANDARD.encode(raw);
+
+    let p = json!({"family_id": &family_id, "data": encoded, "content_type": "application/octet-stream"});
+    let put_r = content_put(Some(&p), &state).await.unwrap();
+    let hash = put_r["hash"].as_str().unwrap();
+
+    let raw_content = content_get_raw(hash, &family_id, &state)
+        .await
+        .unwrap()
+        .expect("should find content");
+    assert_eq!(raw_content.data, raw);
+    assert_eq!(raw_content.hash, hash);
+    assert_eq!(
+        raw_content.content_type.as_deref(),
+        Some("application/octet-stream")
+    );
+
+    cleanup_family(&family_id).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn content_get_raw_not_found_returns_none() {
+    let family_id = format!("test-raw-404-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family_id)).await;
+    let fake_hash = "a".repeat(64);
+    let result = content_get_raw(&fake_hash, &family_id, &state)
+        .await
+        .unwrap();
+    assert!(result.is_none());
+}
+
+#[tokio::test]
+#[serial]
+async fn content_get_raw_invalid_hash_errors() {
+    let family_id = format!("test-raw-badhash-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family_id)).await;
+    let err = content_get_raw("not-hex-64", &family_id, &state)
+        .await
+        .unwrap_err();
+    let msg = format!("{err}");
+    assert!(msg.contains("hash") || msg.contains("hex"), "error: {msg}");
+}
+
+#[tokio::test]
+#[serial]
+async fn content_get_raw_without_sidecar_returns_none_content_type() {
+    let family_id = format!("test-raw-nosidecar-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&family_id)).await;
+    let raw = b"no sidecar data";
+    let hash = blake3::hash(raw).to_hex().to_string();
+    let encoded = STANDARD.encode(raw);
+
+    let p = json!({"family_id": &family_id, "data": encoded});
+    content_put(Some(&p), &state).await.unwrap();
+
+    let path = super::super::storage_paths::content_key_path(&family_id, &hash);
+    let meta_path = path.with_extension("meta.json");
+    let _ = tokio::fs::remove_file(&meta_path).await;
+
+    let raw_content = content_get_raw(&hash, &family_id, &state)
+        .await
+        .unwrap()
+        .expect("should find content");
+    assert_eq!(raw_content.data, raw);
+    assert!(raw_content.content_type.is_none());
 
     cleanup_family(&family_id).await;
 }

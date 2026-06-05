@@ -594,4 +594,160 @@ mod tests {
         assert!(result.is_ok(), "should succeed with fallback family");
         cleanup_family(&fam).await;
     }
+
+    #[tokio::test]
+    async fn empty_upload_fast_path_returns_hash() {
+        let fam = format!("cs-empty-{}", Uuid::new_v4());
+        let result = content_store_stream_begin(
+            json!({"family_id": &fam, "total_size": 0, "content_type": "text/plain"}),
+            None,
+        )
+        .await
+        .expect("empty upload should succeed");
+
+        let expected_hash = blake3::hash(&[]).to_hex().to_string();
+        assert_eq!(result["hash"].as_str().unwrap(), expected_hash);
+        assert_eq!(result["size"], 0);
+        assert_eq!(result["stored"], true);
+        assert_eq!(result["family_id"].as_str().unwrap(), fam);
+        assert!(result.get("stream_id").is_some());
+
+        let cas_path = content_cas_path(&fam, &expected_hash);
+        assert!(cas_path.exists(), "CAS file should exist for empty content");
+        let data = tokio::fs::read(&cas_path).await.unwrap();
+        assert!(data.is_empty(), "empty content should be zero bytes on disk");
+
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn empty_upload_dedup_on_second_call() {
+        let fam = format!("cs-empty-dedup-{}", Uuid::new_v4());
+        let params = json!({"family_id": &fam, "total_size": 0});
+
+        let first = content_store_stream_begin(params.clone(), None)
+            .await
+            .unwrap();
+        let second = content_store_stream_begin(params, None).await.unwrap();
+
+        assert_eq!(first["hash"], second["hash"]);
+        assert_eq!(second["deduplicated"], true);
+
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_rejects_oversized_decoded_data() {
+        let fam = format!("cs-chunkmax-{}", Uuid::new_v4());
+        let total = MAX_STREAM_CHUNK + 1024;
+        let begin = content_store_stream_begin(
+            json!({"family_id": &fam, "total_size": total}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let oversized = vec![0xCC_u8; (MAX_STREAM_CHUNK + 1) as usize];
+        let err = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": STANDARD.encode(&oversized),
+            "is_last": false
+        }))
+        .await;
+        assert!(err.is_err());
+        let msg = format!("{}", err.unwrap_err());
+        assert!(msg.contains("chunk exceeds") || msg.contains("MAX_STREAM_CHUNK"));
+
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_begin_valid_hash_returns_stream() {
+        let fam = format!("cs-retrieve-ok-{}", Uuid::new_v4());
+        let payload = b"retrieve me via stream";
+
+        let begin = content_store_stream_begin(
+            json!({"family_id": &fam, "total_size": payload.len()}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let fin = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": STANDARD.encode(payload),
+            "is_last": true
+        }))
+        .await
+        .unwrap();
+        let hash = fin["hash"].as_str().unwrap();
+
+        let r = content_retrieve_stream_begin(
+            json!({"family_id": &fam, "hash": hash}),
+            None,
+        )
+        .await
+        .expect("should open retrieve stream");
+        assert!(r.get("stream_id").is_some());
+        assert_eq!(r["total_size"].as_u64().unwrap(), payload.len() as u64);
+
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_missing_stream_id_param_errors() {
+        let err = content_store_stream_chunk(json!({
+            "offset": 0,
+            "data": STANDARD.encode(b"x"),
+            "is_last": true
+        }))
+        .await;
+        assert!(err.is_err(), "missing stream_id should be rejected");
+    }
+
+    #[tokio::test]
+    async fn chunk_missing_offset_param_errors() {
+        let fam = format!("cs-no-offset-{}", Uuid::new_v4());
+        let begin = content_store_stream_begin(
+            json!({"family_id": &fam, "total_size": 100}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let err = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "data": STANDARD.encode(b"x"),
+            "is_last": false
+        }))
+        .await;
+        assert!(err.is_err(), "missing offset should be rejected");
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_missing_data_param_errors() {
+        let fam = format!("cs-no-data-{}", Uuid::new_v4());
+        let begin = content_store_stream_begin(
+            json!({"family_id": &fam, "total_size": 100}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let err = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "is_last": false
+        }))
+        .await;
+        assert!(err.is_err(), "missing data should be rejected");
+        cleanup_family(&fam).await;
+    }
 }
