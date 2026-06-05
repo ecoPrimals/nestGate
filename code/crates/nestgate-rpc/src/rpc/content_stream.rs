@@ -452,4 +452,146 @@ mod tests {
         .await;
         assert!(err.is_err());
     }
+
+    #[tokio::test]
+    async fn begin_rejects_missing_total_size() {
+        let fam = format!("cs-no-size-{}", Uuid::new_v4());
+        let err = content_store_stream_begin(json!({"family_id": fam}), None).await;
+        assert!(err.is_err(), "missing total_size should be rejected");
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn begin_rejects_oversized_total() {
+        let fam = format!("cs-oversize-{}", Uuid::new_v4());
+        let err = content_store_stream_begin(
+            json!({"family_id": fam, "total_size": MAX_STREAM_TOTAL + 1}),
+            None,
+        )
+        .await;
+        assert!(err.is_err());
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_rejects_unknown_stream_id() {
+        let err = content_store_stream_chunk(json!({
+            "stream_id": "nonexistent-uuid",
+            "offset": 0,
+            "data": STANDARD.encode(b"x"),
+            "is_last": true
+        }))
+        .await;
+        assert!(err.is_err());
+        let msg = format!("{}", err.unwrap_err());
+        assert!(msg.contains("unknown") || msg.contains("expired"));
+    }
+
+    #[tokio::test]
+    async fn chunk_rejects_bad_offset() {
+        let fam = format!("cs-offset-{}", Uuid::new_v4());
+        let begin = content_store_stream_begin(
+            json!({"family_id": fam, "total_size": 100}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let err = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 50,
+            "data": STANDARD.encode(b"data"),
+            "is_last": false
+        }))
+        .await;
+        assert!(err.is_err());
+        let msg = format!("{}", err.unwrap_err());
+        assert!(msg.contains("expected 0"));
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_rejects_exceeding_total_size() {
+        let fam = format!("cs-exceed-{}", Uuid::new_v4());
+        let begin = content_store_stream_begin(
+            json!({"family_id": fam, "total_size": 4}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let err = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": STANDARD.encode(b"too much data for 4 bytes"),
+            "is_last": true
+        }))
+        .await;
+        assert!(err.is_err());
+        let msg = format!("{}", err.unwrap_err());
+        assert!(msg.contains("exceed"));
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_rejects_invalid_base64() {
+        let fam = format!("cs-b64-{}", Uuid::new_v4());
+        let begin = content_store_stream_begin(
+            json!({"family_id": fam, "total_size": 100}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let err = content_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": "not!valid!base64!!!",
+            "is_last": false
+        }))
+        .await;
+        assert!(err.is_err());
+        let msg = format!("{}", err.unwrap_err());
+        assert!(msg.contains("base64"));
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn begin_missing_family_id_errors() {
+        let err = content_store_stream_begin(
+            json!({"total_size": 10}),
+            None,
+        )
+        .await;
+        assert!(err.is_err());
+        let msg = format!("{}", err.unwrap_err());
+        assert!(msg.contains("family_id") || msg.contains("family"));
+    }
+
+    #[tokio::test]
+    async fn retrieve_begin_invalid_hash_format() {
+        let fam = format!("cs-badhash-{}", Uuid::new_v4());
+        let err = content_retrieve_stream_begin(
+            json!({"family_id": fam, "hash": "tooshort"}),
+            None,
+        )
+        .await;
+        assert!(err.is_err());
+        cleanup_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn begin_uses_family_fallback() {
+        let fam = format!("cs-fallback-{}", Uuid::new_v4());
+        let result = content_store_stream_begin(
+            json!({"total_size": 16}),
+            Some(&fam),
+        )
+        .await;
+        assert!(result.is_ok(), "should succeed with fallback family");
+        cleanup_family(&fam).await;
+    }
 }

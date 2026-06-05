@@ -157,3 +157,231 @@ async fn handle_request_route_register_defaults() {
     assert_eq!(result["registered"], true);
     assert_eq!(result["ttl_seconds"], 300);
 }
+
+// ── Content pipeline dispatch coverage ──────────────────────────────
+
+use base64::{Engine as _, engine::general_purpose::STANDARD};
+use serial_test::serial;
+use super::common::mock_state;
+
+fn content_rpc(method: &str, params: serde_json::Value) -> JsonRpcRequest {
+    JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: method.into(),
+        params: Some(params),
+        id: Some(json!(1)),
+    }
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_put_get_roundtrip() {
+    let fam = format!("test-disp-putget-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+    let data = STANDARD.encode(b"dispatch routing test");
+
+    let resp = handle_request(
+        content_rpc("content.put", json!({"data": data, "family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none(), "put: {:?}", resp.error);
+    let hash = resp.result.unwrap()["hash"].as_str().unwrap().to_owned();
+
+    let resp = handle_request(
+        content_rpc("content.get", json!({"hash": hash, "family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none(), "get: {:?}", resp.error);
+    assert_eq!(resp.result.unwrap()["hash"], hash);
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_exists_for_stored_blob() {
+    let fam = format!("test-disp-exists-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+    let data = STANDARD.encode(b"exists dispatch test");
+
+    let resp = handle_request(
+        content_rpc("content.put", json!({"data": data, "family_id": fam})),
+        &state,
+    )
+    .await;
+    let hash = resp.result.unwrap()["hash"].as_str().unwrap().to_owned();
+
+    let resp = handle_request(
+        content_rpc("content.exists", json!({"hash": hash, "family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none());
+    assert_eq!(resp.result.unwrap()["exists"], true);
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_list_returns_array() {
+    let fam = format!("test-disp-list-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+
+    let resp = handle_request(
+        content_rpc("content.list", json!({"family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none());
+    assert!(resp.result.unwrap()["hashes"].is_array());
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_publish_resolve_roundtrip() {
+    let fam = format!("test-disp-manifest-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+
+    let data = STANDARD.encode(b"manifest content");
+    let put = handle_request(
+        content_rpc("content.put", json!({"data": data, "family_id": fam})),
+        &state,
+    )
+    .await;
+    let hash = put.result.unwrap()["hash"].as_str().unwrap().to_owned();
+
+    let resp = handle_request(
+        content_rpc(
+            "content.publish",
+            json!({"collection": "site-v1", "manifest": {"/index.html": hash}, "family_id": fam}),
+        ),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none(), "publish: {:?}", resp.error);
+
+    let resp = handle_request(
+        content_rpc(
+            "content.resolve",
+            json!({"collection": "site-v1", "path": "/index.html", "family_id": fam}),
+        ),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none(), "resolve: {:?}", resp.error);
+    assert_eq!(resp.result.unwrap()["hash"], hash);
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_collections_returns_array() {
+    let fam = format!("test-disp-colls-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+
+    let resp = handle_request(
+        content_rpc("content.collections", json!({"family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none());
+    assert!(resp.result.unwrap()["collections"].is_array());
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_store_stream_begin() {
+    let fam = format!("test-disp-stream-{}", uuid::Uuid::new_v4());
+    let resp = handle_request(
+        content_rpc(
+            "content.store_stream",
+            json!({"total_size": 256, "family_id": fam}),
+        ),
+        &StorageState::new().unwrap(),
+    )
+    .await;
+    assert!(resp.error.is_none(), "store_stream: {:?}", resp.error);
+    assert!(resp.result.unwrap()["stream_id"].is_string());
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn dispatch_content_replicate_pull_skips_local() {
+    let fam = format!("test-disp-pull-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+    let data = STANDARD.encode(b"pull skip test");
+
+    let put = handle_request(
+        content_rpc("content.put", json!({"data": data, "family_id": fam})),
+        &state,
+    )
+    .await;
+    let cid = put.result.unwrap()["hash"].as_str().unwrap().to_owned();
+
+    let resp = handle_request(
+        content_rpc(
+            "content.replicate.pull",
+            json!({"cids": [cid], "source": "/nonexistent.sock", "family_id": fam}),
+        ),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none(), "pull: {:?}", resp.error);
+    assert_eq!(resp.result.unwrap()["skipped_count"], 1);
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+async fn dispatch_unknown_method_returns_error() {
+    let state = StorageState::new().unwrap();
+    let resp = handle_request(
+        content_rpc("nonexistent.method.xyz", json!({})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_some());
+}
+
+#[tokio::test]
+async fn dispatch_nestgate_prefix_strips_for_content() {
+    let fam = format!("test-disp-prefix-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+
+    let resp = handle_request(
+        content_rpc("nestgate.content.list", json!({"family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none(), "prefix strip: {:?}", resp.error);
+    assert!(resp.result.unwrap()["hashes"].is_array());
+
+    cleanup_family(&fam).await;
+}
+
+#[tokio::test]
+async fn dispatch_content_get_missing_returns_null_data() {
+    let fam = format!("test-disp-miss-{}", uuid::Uuid::new_v4());
+    let state = mock_state(Some(&fam)).await;
+    let fake_hash = "c".repeat(64);
+
+    let resp = handle_request(
+        content_rpc("content.get", json!({"hash": fake_hash, "family_id": fam})),
+        &state,
+    )
+    .await;
+    assert!(resp.error.is_none());
+    assert!(resp.result.unwrap()["data"].is_null());
+
+    cleanup_family(&fam).await;
+}

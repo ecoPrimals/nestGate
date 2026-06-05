@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,574 tests (9,101 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth"
-date = 2026-06-04
+description = "Content-addressed storage primal v0.5.0 — 13,035 tests (9,212 lib), 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth"
+date = 2026-06-05
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,574 tests** passing (9,101 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **13,035 tests** passing (9,212 lib), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 94 Wave 78 parity**: `config/capability_registry.toml` at ecosystem convention path; 46 new content pipeline + transport dispatch tests (dispatch routing, storage path builders, stream edge cases, transport handler content branches)
 - **Session 93 HTTP parity + content serving**: `GET /content/:hash` direct content serving endpoint (raw bytes, correct MIME, immutable caching, `ETag`); 5 UDS-only methods surfaced on HTTP; `content_ops::get_raw` for binary content retrieval; 24 new tests total; westGate ZFS readiness verified
 - **Session 92 deep debt evolution**: Load testing fake data → 501 NOT_IMPLEMENTED (3 handlers, 9 tests); `/etc`+`/tmp` hardcoded config defaults → XDG/env-based (TLS certs, ZFS keys, workflows, cache, SSL discovery); `String::from()` batch migration; env-var race fix in `nestgate-config` (20 tests serialized)
 - **Session 91 zero failures (Wave 76)**: 16 stale test assertions fixed (auth, migration, discovery, security); env-var race eliminated with `#[serial]` on 55 filesystem tests

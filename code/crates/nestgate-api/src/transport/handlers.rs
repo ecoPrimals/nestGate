@@ -672,4 +672,162 @@ mod tests {
             .expect("storage.store");
         assert_eq!(v["success"], true);
     }
+
+    // ── Content pipeline transport dispatch tests ──────────────────
+
+    use base64::{Engine as _, engine::general_purpose::STANDARD};
+    use serial_test::serial;
+
+    async fn cleanup_test_family(fam: &str) {
+        let _ = tokio::fs::remove_dir_all(
+            nestgate_core::config::storage_paths::get_storage_base_path()
+                .join("datasets")
+                .join(fam),
+        )
+        .await;
+    }
+
+    async fn content_dispatch(method: &str, params: serde_json::Value) -> Result<Value> {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler: NestGateRpcHandler<NoopStorage> = NestGateRpcHandler::new();
+        handler.handle_method(method, params).await
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_put_get_roundtrip() {
+        let fam = format!("t-content-rt-{}", uuid::Uuid::new_v4());
+        let data = STANDARD.encode(b"transport content test");
+
+        let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
+            .await
+            .expect("content.put");
+        let hash = put["hash"].as_str().unwrap().to_owned();
+        assert!(put["stored"].as_bool().unwrap());
+
+        let get = content_dispatch("content.get", serde_json::json!({"hash": &hash, "family_id": &fam}))
+            .await
+            .expect("content.get");
+        assert_eq!(get["hash"], hash);
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_exists_dispatch() {
+        let fam = format!("t-content-ex-{}", uuid::Uuid::new_v4());
+        let data = STANDARD.encode(b"exists via transport");
+
+        let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
+            .await
+            .unwrap();
+        let hash = put["hash"].as_str().unwrap();
+
+        let exists = content_dispatch("content.exists", serde_json::json!({"hash": hash, "family_id": &fam}))
+            .await
+            .unwrap();
+        assert_eq!(exists["exists"], true);
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_list_dispatch() {
+        let fam = format!("t-content-ls-{}", uuid::Uuid::new_v4());
+        let v = content_dispatch("content.list", serde_json::json!({"family_id": &fam}))
+            .await
+            .unwrap();
+        assert!(v["hashes"].is_array());
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_collections_dispatch() {
+        let fam = format!("t-content-col-{}", uuid::Uuid::new_v4());
+        let v = content_dispatch("content.collections", serde_json::json!({"family_id": &fam}))
+            .await
+            .unwrap();
+        assert!(v["collections"].is_array());
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_publish_resolve_dispatch() {
+        let fam = format!("t-content-pub-{}", uuid::Uuid::new_v4());
+        let data = STANDARD.encode(b"publish via transport");
+
+        let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
+            .await
+            .unwrap();
+        let hash = put["hash"].as_str().unwrap().to_owned();
+
+        let pub_res = content_dispatch(
+            "content.publish",
+            serde_json::json!({"collection": "t-site", "manifest": {"/page": hash}, "family_id": &fam}),
+        )
+        .await
+        .unwrap();
+        assert!(pub_res["stored"].as_bool().unwrap());
+
+        let resolve = content_dispatch(
+            "content.resolve",
+            serde_json::json!({"collection": "t-site", "path": "/page", "family_id": &fam}),
+        )
+        .await
+        .unwrap();
+        assert_eq!(resolve["hash"], hash);
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_store_stream_dispatch() {
+        let fam = format!("t-content-ss-{}", uuid::Uuid::new_v4());
+        let v = content_dispatch(
+            "content.store_stream",
+            serde_json::json!({"total_size": 128, "family_id": &fam}),
+        )
+        .await
+        .unwrap();
+        assert!(v["stream_id"].is_string());
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn transport_content_replicate_pull_dispatch() {
+        let fam = format!("t-content-rp-{}", uuid::Uuid::new_v4());
+        let data = STANDARD.encode(b"replicate pull via transport");
+
+        let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
+            .await
+            .unwrap();
+        let cid = put["hash"].as_str().unwrap();
+
+        let pull = content_dispatch(
+            "content.replicate.pull",
+            serde_json::json!({"cids": [cid], "source": "/nope.sock", "family_id": &fam}),
+        )
+        .await
+        .unwrap();
+        assert_eq!(pull["skipped_count"], 1);
+
+        cleanup_test_family(&fam).await;
+    }
+
+    #[tokio::test]
+    async fn transport_lifecycle_status_dispatch() {
+        let v = content_dispatch("lifecycle.status", serde_json::json!({}))
+            .await
+            .unwrap();
+        assert_eq!(v["status"], "running");
+    }
 }

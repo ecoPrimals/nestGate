@@ -12,4 +12,5 @@ mod health_tests;
 mod nat_handlers_tests;
 mod rpc_transport_tests;
 mod storage_handler_tests;
+mod storage_path_tests;
 mod storage_tests;

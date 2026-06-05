@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.5.0] - 2026-06-04
+## [0.5.0] - 2026-06-05
+
+### Session 94: Wave 78 parity — registry TOML + content coverage sprint (Jun 5, 2026)
+
+- **`config/capability_registry.toml` — ecosystem convention**: Moved the root capability
+  registry (294 lines, 18 capability sections, 81+ methods) to `config/capability_registry.toml`
+  per Wave 78 ecosystem standard. Root file kept as backward-compat pointer. Added HTTP direct
+  content serving documentation to the registry.
+- **Content dispatch coverage**: 10 new tests in `dispatch_coverage_tests.rs` exercise every
+  content method through the primary UDS dispatch table — `content.put`, `.get`, `.exists`,
+  `.list`, `.publish`/`.resolve`, `.collections`, `.store_stream`, `.replicate.pull`, plus
+  unknown method rejection and `nestgate.*` prefix stripping for content methods.
+- **Storage path builder coverage**: 19 new tests in `storage_path_tests.rs` directly test
+  `content_key_path` (shard prefix), `manifest_path`, `dataset_key_path`, `blob_key_path`
+  (flat + namespaced), `extract_namespace` (8 validation cases), `resolve_family_id` (3 cases),
+  and `ensure_parent_dirs`.
+- **Content stream edge cases**: 9 new tests in `content_stream.rs` cover missing `total_size`,
+  oversized total, unknown `stream_id`, bad offset, exceeding declared size, invalid base64,
+  missing `family_id`, invalid hash format, and family fallback.
+- **Transport handler content dispatch**: 8 new tests in `transport/handlers.rs` exercise every
+  content method through the HTTP transport layer — `content.put`/`.get` roundtrip, `.exists`,
+  `.list`, `.collections`, `.publish`/`.resolve`, `.store_stream`, `.replicate.pull`, and
+  `lifecycle.status`.
+- **Workspace result**: 13,035+ total tests, 9,212+ lib tests, 0 failures, 0 clippy warnings.
 
 ### Session 93: HTTP content federation parity + content serving endpoint (Jun 4, 2026)
 
