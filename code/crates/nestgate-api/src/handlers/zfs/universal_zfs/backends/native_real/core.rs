@@ -9,7 +9,9 @@
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 use std::time::{Duration, Instant, SystemTime};
 
 use std::process::Command;
@@ -139,7 +141,7 @@ impl NativeZfsService {
     }
 
     /// Track a request for metrics
-    pub fn track_request(&self, duration: Duration, success: bool) {
+    pub async fn track_request(&self, duration: Duration, success: bool) {
         let latency_ms = duration.as_millis() as u64;
 
         self.request_counter.fetch_add(1, Ordering::Relaxed);
@@ -150,9 +152,8 @@ impl NativeZfsService {
             .fetch_add(latency_ms, Ordering::Relaxed);
 
         // Record latency for percentile tracking
-        if let Ok(mut tracker) = self.latency_tracker.lock() {
-            tracker.record(latency_ms);
-        }
+        let mut tracker = self.latency_tracker.lock().await;
+        tracker.record(latency_ms);
     }
 
     /// Execute a ZFS command with error handling and metrics tracking
@@ -174,11 +175,11 @@ impl NativeZfsService {
 
         match result {
             Ok(output) if output.status.success() => {
-                self.track_request(duration, true);
+                self.track_request(duration, true).await;
                 Ok(String::from_utf8_lossy(&output.stdout).to_string())
             }
             Ok(output) => {
-                self.track_request(duration, false);
+                self.track_request(duration, false).await;
                 let error_msg = String::from_utf8_lossy(&output.stderr);
                 warn!("ZFS command failed: {} {:?} - {}", command, args, error_msg);
                 Err(UniversalZfsError::Internal {
@@ -186,7 +187,7 @@ impl NativeZfsService {
                 })
             }
             Err(e) => {
-                self.track_request(duration, false);
+                self.track_request(duration, false).await;
                 warn!(
                     "Failed to execute ZFS command: {} {:?} - {}",
                     command, args, e
@@ -200,17 +201,15 @@ impl NativeZfsService {
 
     /// Get service metrics for monitoring
     #[must_use]
-    pub fn get_service_metrics(&self) -> ServiceMetrics {
+    pub async fn get_service_metrics(&self) -> ServiceMetrics {
         let requests = self.request_counter.load(Ordering::Relaxed);
         let successes = self.success_counter.load(Ordering::Relaxed);
         let total_time = self.total_response_time.load(Ordering::Relaxed);
 
         // Calculate percentiles from latency tracker
-        let (latency_p95, latency_p99) = self
-            .latency_tracker
-            .lock()
-            .map(|tracker| (tracker.percentile(0.95), tracker.percentile(0.99)))
-            .unwrap_or((0.0, 0.0));
+        let tracker = self.latency_tracker.lock().await;
+        let latency_p95 = tracker.percentile(0.95);
+        let latency_p99 = tracker.percentile(0.99);
 
         ServiceMetrics {
             service_name: String::from("native_zfs"),
@@ -292,7 +291,7 @@ impl UniversalZfsService for NativeZfsService {
 
     /// Gets Metrics
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
-        Ok(self.get_service_metrics())
+        Ok(self.get_service_metrics().await)
     }
 
     /// Shutdown
@@ -461,22 +460,22 @@ mod tests {
         assert_eq!(d.service_name(), "native-zfs");
     }
 
-    #[test]
-    fn track_request_and_service_metrics_percentiles() {
+    #[tokio::test]
+    async fn track_request_and_service_metrics_percentiles() {
         let s = NativeZfsService::new();
-        s.track_request(Duration::from_millis(10), true);
-        s.track_request(Duration::from_millis(20), false);
-        let m = s.get_service_metrics();
+        s.track_request(Duration::from_millis(10), true).await;
+        s.track_request(Duration::from_millis(20), false).await;
+        let m = s.get_service_metrics().await;
         assert_eq!(m.service_name, "native_zfs");
         assert!(m.requests_total >= 2);
         assert!(m.latency_p95 >= 0.0);
         assert!(m.latency_p99 >= 0.0);
     }
 
-    #[test]
-    fn get_service_metrics_zero_requests_has_zero_error_rate() {
+    #[tokio::test]
+    async fn get_service_metrics_zero_requests_has_zero_error_rate() {
         let s = NativeZfsService::new();
-        let m = s.get_service_metrics();
+        let m = s.get_service_metrics().await;
         assert_eq!(m.requests_total, 0);
         assert_eq!(m.error_rate, 0.0);
         assert_eq!(m.latency_avg, 0.0);

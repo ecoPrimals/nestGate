@@ -39,7 +39,7 @@ pub async fn list_datasets(
     let mut datasets = Vec::new();
 
     for (dataset_name, engine) in pairs {
-        datasets.push(helpers::convert_engine_to_placeholder_dataset(
+        datasets.push(helpers::convert_engine_entry_to_dataset(
             &dataset_name,
             &engine,
         ));
@@ -129,9 +129,9 @@ pub async fn create_dataset(
     let _engine: Arc<dyn std::any::Any + Send + Sync> =
         Arc::new(format!("engine_{}", request.name));
 
-    state
-        .zfs_engines
-        .insert(request.name.clone(), String::from("placeholder_engine"));
+    let engine_entry = helpers::engine_entry_json_for_create(&request);
+    let dataset = helpers::convert_engine_entry_to_dataset(&request.name, &engine_entry);
+    state.zfs_engines.insert(request.name.clone(), engine_entry);
 
     let welcome_content = format!(
         "Welcome to your new ZFS dataset: {}\nCreated: {}\nCompression: {}\nChecksum: {}\n",
@@ -158,9 +158,6 @@ pub async fn create_dataset(
         debug!("Created welcome file for dataset {}", request.name);
     }
 
-    let dataset =
-        helpers::convert_engine_to_placeholder_dataset(&request.name, &String::from("placeholder"));
-
     info!("Successfully created ZFS dataset: {}", request.name);
     Ok(Json(DataResponse::new(dataset)))
 }
@@ -179,7 +176,7 @@ pub async fn get_dataset(
 
     match engine_opt {
         Some(engine) => Ok(Json(DataResponse::new(
-            helpers::convert_engine_to_placeholder_dataset(&dataset_name, &engine),
+            helpers::convert_engine_entry_to_dataset(&dataset_name, &engine),
         ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
@@ -203,7 +200,7 @@ pub async fn update_dataset(
 
     match engine_opt {
         Some(engine) => {
-            let dataset = helpers::convert_engine_to_placeholder_dataset(&dataset_name, &engine);
+            let dataset = helpers::convert_engine_entry_to_dataset(&dataset_name, &engine);
             info!("Dataset properties updated for: {}", dataset_name);
             Ok(Json(DataResponse::new(dataset)))
         }
@@ -252,7 +249,7 @@ pub async fn get_dataset_properties(
 
     match engine_opt {
         Some(engine) => Ok(Json(DataResponse::new(
-            helpers::convert_engine_to_placeholder_dataset(&dataset_name, &engine).properties,
+            helpers::convert_engine_entry_to_dataset(&dataset_name, &engine).properties,
         ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),

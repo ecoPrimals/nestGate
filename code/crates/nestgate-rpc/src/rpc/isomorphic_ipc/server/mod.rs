@@ -274,7 +274,7 @@ impl IsomorphicIpcServer {
             let announce_socket = socket_path.clone();
             tokio::spawn(async move {
                 if let Err(e) =
-                    crate::rpc::primal_announce::announce_to_biomeos(&announce_socket).await
+                    crate::rpc::primal_announce::announce_to_coordinator(&announce_socket).await
                 {
                     warn!("primal.announce failed: {e}");
                 }

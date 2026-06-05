@@ -132,27 +132,27 @@ impl RealZfsOperations {
             for pool in pool_array {
                 if let Some(name) = pool.get("name").and_then(|n| n.as_str()) {
                     pools.push(crate::handlers::PoolInfo {
-                        name: name.to_string(),
-                        state: pool
-                            .get("state")
-                            .and_then(|s| s.as_str())
-                            .unwrap_or("unknown")
-                            .to_string(),
-                        size: pool
-                            .get("size")
-                            .and_then(|s| s.as_str())
-                            .unwrap_or("0")
-                            .to_string(),
-                        allocated: pool
-                            .get("allocated")
-                            .and_then(|s| s.as_str())
-                            .unwrap_or("0")
-                            .to_string(),
-                        free: pool
-                            .get("free")
-                            .and_then(|s| s.as_str())
-                            .unwrap_or("0")
-                            .to_string(),
+                        name: String::from(name),
+                        state: String::from(
+                            pool.get("state")
+                                .and_then(|s| s.as_str())
+                                .unwrap_or("unknown"),
+                        ),
+                        size: String::from(
+                            pool.get("size")
+                                .and_then(|s| s.as_str())
+                                .unwrap_or("0"),
+                        ),
+                        allocated: String::from(
+                            pool.get("allocated")
+                                .and_then(|s| s.as_str())
+                                .unwrap_or("0"),
+                        ),
+                        free: String::from(
+                            pool.get("free")
+                                .and_then(|s| s.as_str())
+                                .unwrap_or("0"),
+                        ),
                         devices: Vec::new(), // Simplified for now
                     });
                 }
@@ -203,11 +203,11 @@ impl RealZfsOperations {
             .map(|line| {
                 let parts: Vec<&str> = line.split('\t').collect();
                 crate::handlers::DatasetInfo {
-                    name: parts.first().unwrap_or(&"").to_string(),
-                    used: parts.get(1).unwrap_or(&"").to_string(),
-                    available: parts.get(2).unwrap_or(&"").to_string(),
-                    referenced: parts.get(3).unwrap_or(&"").to_string(),
-                    mountpoint: parts.get(4).unwrap_or(&"").to_string(),
+                    name: String::from(parts.first().copied().unwrap_or("")),
+                    used: String::from(parts.get(1).copied().unwrap_or("")),
+                    available: String::from(parts.get(2).copied().unwrap_or("")),
+                    referenced: String::from(parts.get(3).copied().unwrap_or("")),
+                    mountpoint: String::from(parts.get(4).copied().unwrap_or("")),
                 }
             })
             .collect();
@@ -255,10 +255,10 @@ impl RealZfsOperations {
             .map(|line| {
                 let parts: Vec<&str> = line.split('\t').collect();
                 crate::handlers::SnapshotInfo {
-                    name: parts.first().unwrap_or(&"").to_string(),
-                    used: parts.get(1).unwrap_or(&"").to_string(),
-                    referenced: parts.get(2).unwrap_or(&"").to_string(),
-                    creation: parts.get(2).unwrap_or(&"").to_string(),
+                    name: String::from(parts.first().copied().unwrap_or("")),
+                    used: String::from(parts.get(1).copied().unwrap_or("")),
+                    referenced: String::from(parts.get(2).copied().unwrap_or("")),
+                    creation: String::from(parts.get(2).copied().unwrap_or("")),
                 }
             })
             .collect();

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! `primal.announce` — self-registration with biomeOS Neural API.
+//! `primal.announce` — self-registration with the ecosystem coordinator.
 //!
 //! On startup (after the Unix socket is bound), `NestGate` announces its
-//! capabilities to `biomeOS` so that `capability.call` routing can discover
-//! and score `NestGate` as a storage/content provider.
+//! capabilities to the ecosystem coordinator so that `capability.call` routing
+//! can discover and score `NestGate` as a storage/content provider.
 //!
-//! The announcement is **best-effort**: if biomeOS is unreachable the server
-//! continues normally. Re-announcement happens on reconnect or version change.
+//! The announcement is **best-effort**: if the coordinator is unreachable the
+//! server continues normally. Re-announcement happens on reconnect or version change.
 
 use nestgate_types::EnvSource;
 use nestgate_types::error::Result;
@@ -96,20 +96,21 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
     })
 }
 
-/// Discover the ecosystem orchestrator socket via standard locations.
+/// Discover the ecosystem coordinator socket via standard locations.
 ///
 /// Socket names are capability-based, not primal-specific. The ecosystem
 /// directory segment is resolved via `ECOSYSTEM_NAME` / `BIOMEOS_SERVICE_NAME`
 /// env, defaulting to `"biomeos"`.
 ///
 /// Search order:
-/// 1. `BIOMEOS_IPC_SOCKET` (explicit override)
-/// 2. `BIOMEOS_SOCKET_DIR/{ecosystem}.sock`
+/// 1. `BIOMEOS_IPC_SOCKET` (explicit override; protocol-level name, kept for compat)
+/// 2. `BIOMEOS_SOCKET_DIR/{ecosystem}.sock` (protocol-level name, kept for compat)
 /// 3. `$XDG_RUNTIME_DIR/{ecosystem}/{ecosystem}.sock` or `neural-api.sock`
 /// 4. `temp_dir()/{ecosystem}.sock`
-fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
+fn discover_coordinator_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
     let eco = nestgate_config::constants::system::ecosystem_name(env);
 
+    // Protocol-level env var name; kept for backward compatibility.
     if let Some(explicit) = env.get("BIOMEOS_IPC_SOCKET") {
         let p = PathBuf::from(explicit);
         if p.exists() {
@@ -117,6 +118,7 @@ fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
         }
     }
 
+    // Protocol-level env var name; kept for backward compatibility.
     if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
         let p = PathBuf::from(dir).join(format!("{eco}.sock"));
         if p.exists() {
@@ -142,28 +144,30 @@ fn discover_biomeos_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
     None
 }
 
-/// Send `primal.announce` to biomeOS. Best-effort — logs warnings on failure.
+/// Send `primal.announce` to the ecosystem coordinator. Best-effort — logs warnings on failure.
 ///
 /// # Errors
 ///
-/// Returns `Ok(())` even when biomeOS is unreachable (server must not block).
+/// Returns `Ok(())` even when the coordinator is unreachable (server must not block).
 /// Returns `Err` only on internal payload construction failures (should not happen).
-pub async fn announce_to_biomeos(own_socket: &Path) -> Result<()> {
+pub async fn announce_to_coordinator(own_socket: &Path) -> Result<()> {
     let env = nestgate_types::ProcessEnv;
-    let Some(biomeos_path) = discover_biomeos_socket(&env) else {
-        debug!("biomeOS socket not found — skipping primal.announce (will retry on reconnect)");
+    let Some(coordinator_path) = discover_coordinator_socket(&env) else {
+        debug!(
+            "ecosystem coordinator socket not found — skipping primal.announce (will retry on reconnect)"
+        );
         return Ok(());
     };
 
     let payload = build_announce_payload(own_socket);
-    let biomeos_str = biomeos_path.to_string_lossy().to_string();
+    let coordinator_str = coordinator_path.to_string_lossy().to_string();
 
     info!(
-        "Announcing to biomeOS at {} (capabilities: {:?})",
-        biomeos_str, ANNOUNCED_CAPABILITIES
+        "Announcing to ecosystem coordinator at {} (capabilities: {:?})",
+        coordinator_str, ANNOUNCED_CAPABILITIES
     );
 
-    match super::JsonRpcClient::connect_unix(&biomeos_str).await {
+    match super::JsonRpcClient::connect_unix(&coordinator_str).await {
         Ok(mut client) => match client.call("primal.announce", payload).await {
             Ok(resp) => {
                 info!("primal.announce accepted: {resp}");
@@ -175,7 +179,9 @@ pub async fn announce_to_biomeos(own_socket: &Path) -> Result<()> {
             }
         },
         Err(e) => {
-            warn!("Could not connect to biomeOS at {biomeos_str}: {e} — skipping announce");
+            warn!(
+                "Could not connect to ecosystem coordinator at {coordinator_str}: {e} — skipping announce"
+            );
             Ok(())
         }
     }
@@ -261,7 +267,7 @@ mod tests {
     fn discovery_returns_none_without_sockets() {
         use nestgate_types::MapEnv;
         let env = MapEnv::new();
-        assert!(discover_biomeos_socket(&env).is_none());
+        assert!(discover_coordinator_socket(&env).is_none());
     }
 
     #[test]

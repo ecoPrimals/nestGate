@@ -38,6 +38,8 @@
 
 pub mod config;
 pub mod handlers;
+#[cfg(test)]
+mod handler_tests;
 pub mod jsonrpc;
 pub mod security;
 pub mod server;

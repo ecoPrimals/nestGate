@@ -9,28 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
-### Session 94: Wave 78 parity — registry TOML + content coverage sprint (Jun 5, 2026)
+### Session 94: Wave 78 parity + deep debt sweep (Jun 5, 2026)
 
 - **`config/capability_registry.toml` — ecosystem convention**: Moved the root capability
   registry (294 lines, 18 capability sections, 81+ methods) to `config/capability_registry.toml`
-  per Wave 78 ecosystem standard. Root file kept as backward-compat pointer. Added HTTP direct
-  content serving documentation to the registry.
-- **Content dispatch coverage**: 10 new tests in `dispatch_coverage_tests.rs` exercise every
-  content method through the primary UDS dispatch table — `content.put`, `.get`, `.exists`,
-  `.list`, `.publish`/`.resolve`, `.collections`, `.store_stream`, `.replicate.pull`, plus
-  unknown method rejection and `nestgate.*` prefix stripping for content methods.
-- **Storage path builder coverage**: 19 new tests in `storage_path_tests.rs` directly test
-  `content_key_path` (shard prefix), `manifest_path`, `dataset_key_path`, `blob_key_path`
-  (flat + namespaced), `extract_namespace` (8 validation cases), `resolve_family_id` (3 cases),
-  and `ensure_parent_dirs`.
-- **Content stream edge cases**: 9 new tests in `content_stream.rs` cover missing `total_size`,
-  oversized total, unknown `stream_id`, bad offset, exceeding declared size, invalid base64,
-  missing `family_id`, invalid hash format, and family fallback.
-- **Transport handler content dispatch**: 8 new tests in `transport/handlers.rs` exercise every
-  content method through the HTTP transport layer — `content.put`/`.get` roundtrip, `.exists`,
-  `.list`, `.collections`, `.publish`/`.resolve`, `.store_stream`, `.replicate.pull`, and
-  `lifecycle.status`.
+  per Wave 78 ecosystem standard. Root file kept as backward-compat pointer.
+- **Content pipeline coverage sprint**: 46 new tests across dispatch routing (10), storage path
+  builders (19), content stream edge cases (9), and transport handler content dispatch (8).
+- **`transport/handlers.rs` refactored**: 833 lines → 384 lines production + 449-line extracted
+  test module (`handler_tests.rs`). Handler methods promoted to `pub(crate)` for clean test access.
+- **Primal coupling decoupled**: `discover_biomeos_socket()` → `discover_coordinator_socket()`,
+  `announce_to_biomeos()` → `announce_to_coordinator()`. Doc comments and log messages now refer
+  to "ecosystem coordinator" not a specific primal. Protocol-level env var names kept for compat.
+  `BEARDOG_SOCKET` documented as deprecated legacy alias in `storage_encryption.rs`.
+- **ZFS placeholder evolution**: `convert_engine_to_placeholder_dataset()` → `convert_engine_entry_to_dataset()`
+  with real JSON parsing from engine entries. Hardcoded compression/checksum/status replaced with
+  parsed values or honest unknowns (`DatasetStatus::Maintenance`, epoch timestamps).
+- **Production stubs → honest errors**: Hardware tuning `register_with_system()` /
+  `release_system_resources()` now return `NestGateError::not_implemented` instead of silent
+  success. Migration `restore_from_backup()` returns explicit not-implemented error.
+- **`std::sync::Mutex` → `tokio::sync::Mutex`**: Latency tracker in `native_real/core.rs`
+  now uses async-aware mutex to avoid blocking the tokio runtime under contention.
+- **`.to_string()` → `String::from()` migration**: 32 conversions in `nestgate-zfs/command.rs`
+  and `production_readiness/mod.rs` for workspace style consistency.
 - **Workspace result**: 13,035+ total tests, 9,212+ lib tests, 0 failures, 0 clippy warnings.
+  Net -213 lines (402 added, 615 removed).
 
 ### Session 93: HTTP content federation parity + content serving endpoint (Jun 4, 2026)
 

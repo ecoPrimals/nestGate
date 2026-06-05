@@ -11,7 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **13,035 tests** passing (9,212 lib), **0 failures** (serial and parallel), 0 clippy warnings
-- **Session 94 Wave 78 parity**: `config/capability_registry.toml` at ecosystem convention path; 46 new content pipeline + transport dispatch tests (dispatch routing, storage path builders, stream edge cases, transport handler content branches)
+- **Session 94 Wave 78 parity + deep debt sweep**: `config/capability_registry.toml` at ecosystem convention path; 46 new content pipeline tests; `transport/handlers.rs` refactored (833→384L); primal coupling decoupled (`announce_to_coordinator`); ZFS placeholders evolved to real parsing; production stubs → honest errors; `std::sync::Mutex` → `tokio::sync::Mutex` in async handler; `.to_string()` → `String::from()` migration (32 sites)
 - **Session 93 HTTP parity + content serving**: `GET /content/:hash` direct content serving endpoint (raw bytes, correct MIME, immutable caching, `ETag`); 5 UDS-only methods surfaced on HTTP; `content_ops::get_raw` for binary content retrieval; 24 new tests total; westGate ZFS readiness verified
 - **Session 92 deep debt evolution**: Load testing fake data → 501 NOT_IMPLEMENTED (3 handlers, 9 tests); `/etc`+`/tmp` hardcoded config defaults → XDG/env-based (TLS certs, ZFS keys, workflows, cache, SSL discovery); `String::from()` batch migration; env-var race fix in `nestgate-config` (20 tests serialized)
 - **Session 91 zero failures (Wave 76)**: 16 stale test assertions fixed (auth, migration, discovery, security); env-var race eliminated with `#[serial]` on 55 filesystem tests

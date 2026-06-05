@@ -63,12 +63,10 @@ impl RealHardwareTuningHandler {
     }
 
     /// Register with system service manager
-    #[expect(
-        clippy::missing_const_for_fn,
-        reason = "Instance stub; not meaningful as const fn on this handler type"
-    )]
-    fn register_with_system(&self, _service_name: &str) {
-        // Stub implementation
+    fn register_with_system(&self, _service_name: &str) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "System service manager registration not yet implemented",
+        ))
     }
 
     /// Get available system resources from `/proc` (CPU, RAM) and best-effort GPU detection.
@@ -125,12 +123,10 @@ impl RealHardwareTuningHandler {
     }
 
     /// Release system resources
-    #[expect(
-        clippy::missing_const_for_fn,
-        reason = "Instance stub; not meaningful as const fn on this handler type"
-    )]
-    fn release_system_resources(&self, _allocation_id: &str) {
-        // Stub implementation
+    fn release_system_resources(&self, _allocation_id: &str) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "System resource release not yet implemented",
+        ))
     }
 
     /// Capture a snapshot benchmark: samples live `/proc` metrics for the given type.
@@ -179,9 +175,7 @@ impl RealHardwareTuningHandler {
         info!("Detected system capabilities: {:?}", capabilities);
 
         // Register with system service manager
-        self.register_with_system(&registration.service_name);
-
-        Ok(())
+        self.register_with_system(&registration.service_name)
     }
 
     /// Request real compute resources from the system
@@ -316,9 +310,7 @@ impl RealHardwareTuningHandler {
         info!("Releasing resource allocation: {}", allocation_id);
 
         // Release actual system resources
-        self.release_system_resources(allocation_id);
-
-        Ok(())
+        self.release_system_resources(allocation_id)
     }
 
     // === PRIVATE IMPLEMENTATION METHODS ===
