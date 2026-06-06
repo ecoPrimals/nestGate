@@ -66,3 +66,90 @@ impl Default for StorageConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+
+    #[test]
+    fn default_storage_config_values() {
+        let cfg = StorageConfig::default();
+        assert_eq!(cfg.base_path, PathBuf::from("./data"));
+        assert_eq!(cfg.backend, "filesystem");
+        assert_eq!(cfg.quota_gb, 100);
+        assert_eq!(cfg.retention_days, 30);
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_uses_defaults_when_no_vars() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_STORAGE_PATH", None::<&str>),
+                ("NESTGATE_STORAGE_BACKEND", None::<&str>),
+                ("NESTGATE_STORAGE_QUOTA_GB", None::<&str>),
+                ("NESTGATE_STORAGE_RETENTION_DAYS", None::<&str>),
+            ],
+            || {
+                let cfg = StorageConfig::from_environment().unwrap();
+                assert_eq!(cfg.base_path, PathBuf::from("./data"));
+                assert_eq!(cfg.backend, "filesystem");
+                assert_eq!(cfg.quota_gb, 100);
+                assert_eq!(cfg.retention_days, 30);
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_reads_all_env_vars() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_STORAGE_PATH", Some("/mnt/zfs/nestgate")),
+                ("NESTGATE_STORAGE_BACKEND", Some("zfs")),
+                ("NESTGATE_STORAGE_QUOTA_GB", Some("500")),
+                ("NESTGATE_STORAGE_RETENTION_DAYS", Some("90")),
+            ],
+            || {
+                let cfg = StorageConfig::from_environment().unwrap();
+                assert_eq!(cfg.base_path, PathBuf::from("/mnt/zfs/nestgate"));
+                assert_eq!(cfg.backend, "zfs");
+                assert_eq!(cfg.quota_gb, 500);
+                assert_eq!(cfg.retention_days, 90);
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_invalid_quota_uses_default() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_STORAGE_QUOTA_GB", Some("not-a-number")),
+                ("NESTGATE_STORAGE_RETENTION_DAYS", Some("bad")),
+            ],
+            || {
+                let cfg = StorageConfig::from_environment().unwrap();
+                assert_eq!(cfg.quota_gb, 100);
+                assert_eq!(cfg.retention_days, 30);
+            },
+        );
+    }
+
+    #[test]
+    fn serde_roundtrip() {
+        let cfg = StorageConfig {
+            base_path: PathBuf::from("/custom/path"),
+            backend: String::from("zfs"),
+            quota_gb: 200,
+            retention_days: 60,
+        };
+        let json = serde_json::to_string(&cfg).unwrap();
+        let restored: StorageConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.base_path, cfg.base_path);
+        assert_eq!(restored.backend, cfg.backend);
+        assert_eq!(restored.quota_gb, cfg.quota_gb);
+        assert_eq!(restored.retention_days, cfg.retention_days);
+    }
+}

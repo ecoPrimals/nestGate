@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 96: Coverage sprint Tier 2 — ZFS helpers, route handlers, StorageConfig, content_ops facade (Jun 6, 2026)
+
+- **Route handler tests** (5 tests): `health_check`, `get_communication_stats` (zero + incremented),
+  `get_events` (empty + populated). First direct coverage of `routes/handlers.rs` (~38 prod lines).
+- **ZFS helpers parser tests** (18 tests): `parse_compression_type`, `parse_checksum_type`,
+  `parse_dataset_status`, `parse_dataset_type`, `parse_storage_backend`, `parse_datetime` (RFC-3339
+  + Unix epoch + bad string), `convert_engine_entry_to_dataset` (rich JSON + invalid JSON),
+  `create_storage_backend` (filesystem + unsupported), `engine_entry_json_for_create`,
+  `dataset_properties_from_engine` (None + rich). Covers ~140 previously untested prod lines.
+- **StorageConfig tests** (5 tests): `from_environment()` with defaults, full env override, invalid
+  values, serde roundtrip. Covers ~28 prod lines in `nestgate-config`.
+- **content_ops facade tests** (3 tests): `publish`/`resolve` roundtrip, `promote` with alias,
+  `collections` listing. Closes the last manifest operation without facade-level test coverage.
+- **Workspace result**: 13,095+ total tests, 0 failures, 0 clippy warnings.
+
 ### Session 95b: Coverage sprint — content pipeline + HTTP handler dispatch (Jun 5, 2026)
 
 - **Encrypted content roundtrip tests** (7 tests): `content_put`/`content_get`/`content_get_raw` with

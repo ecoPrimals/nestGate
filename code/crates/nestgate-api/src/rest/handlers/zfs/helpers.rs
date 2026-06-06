@@ -382,3 +382,253 @@ impl std::fmt::Display for StorageBackendType {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn parse_compression_known_types() {
+        for (input, expected) in [
+            ("lz4", CompressionType::Lz4),
+            ("gzip", CompressionType::Gzip),
+            ("gz", CompressionType::Gzip),
+            ("zstd", CompressionType::Zstd),
+            ("zstandard", CompressionType::Zstd),
+            ("off", CompressionType::None),
+            ("none", CompressionType::None),
+        ] {
+            assert_eq!(
+                parse_compression_type(&json!(input)),
+                Some(expected),
+                "failed for {input}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_compression_unknown_returns_none() {
+        assert!(parse_compression_type(&json!("brotli")).is_none());
+        assert!(parse_compression_type(&json!(42)).is_none());
+    }
+
+    #[test]
+    fn parse_checksum_known_types() {
+        for (input, expected) in [
+            ("fletcher2", ChecksumType::Fletcher2),
+            ("fletcher4", ChecksumType::Fletcher4),
+            ("sha256", ChecksumType::Sha256),
+            ("sha512", ChecksumType::Sha512),
+            ("skein", ChecksumType::Skein),
+            ("edonr", ChecksumType::EdonR),
+            ("edon-r", ChecksumType::EdonR),
+        ] {
+            assert_eq!(
+                parse_checksum_type(&json!(input)),
+                Some(expected),
+                "failed for {input}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_checksum_unknown_returns_none() {
+        assert!(parse_checksum_type(&json!("blake3")).is_none());
+    }
+
+    #[test]
+    fn parse_dataset_status_known_types() {
+        for (input, expected) in [
+            ("online", DatasetStatus::Online),
+            ("offline", DatasetStatus::Offline),
+            ("degraded", DatasetStatus::Degraded),
+            ("maintenance", DatasetStatus::Maintenance),
+            ("error", DatasetStatus::Error),
+        ] {
+            assert_eq!(
+                parse_dataset_status(&json!(input)),
+                Some(expected),
+                "failed for {input}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_dataset_status_unknown_returns_none() {
+        assert!(parse_dataset_status(&json!("rebuilding")).is_none());
+    }
+
+    #[test]
+    fn parse_dataset_type_known_types() {
+        for (input, expected) in [
+            ("filesystem", DatasetType::Filesystem),
+            ("volume", DatasetType::Volume),
+            ("snapshot", DatasetType::Snapshot),
+            ("bookmark", DatasetType::Bookmark),
+        ] {
+            assert_eq!(
+                parse_dataset_type(&json!(input)),
+                Some(expected),
+                "failed for {input}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_storage_backend_known_types() {
+        for (input, expected) in [
+            ("filesystem", StorageBackendType::Filesystem),
+            ("zfs", StorageBackendType::Filesystem),
+            ("memory", StorageBackendType::Memory),
+            ("local", StorageBackendType::Local),
+            ("remote", StorageBackendType::Remote),
+            ("cloud", StorageBackendType::Cloud),
+            ("network", StorageBackendType::Network),
+            ("block", StorageBackendType::Block),
+            ("file", StorageBackendType::File),
+        ] {
+            assert_eq!(
+                parse_storage_backend(&json!(input)),
+                Some(expected),
+                "failed for {input}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_datetime_rfc3339() {
+        let v = json!("2026-06-06T12:00:00Z");
+        let dt = parse_datetime(&v).unwrap();
+        assert_eq!(dt.year(), 2026);
+    }
+
+    #[test]
+    fn parse_datetime_unix_epoch() {
+        let v = json!(1717660800_i64);
+        let dt = parse_datetime(&v).unwrap();
+        assert!(dt.timestamp() > 0);
+    }
+
+    #[test]
+    fn parse_datetime_bad_string_returns_none() {
+        assert!(parse_datetime(&json!("not-a-date")).is_none());
+    }
+
+    #[test]
+    fn convert_engine_entry_with_rich_json() {
+        let engine = json!({
+            "backend": "zfs",
+            "path": "/tank/data",
+            "dataset_type": "filesystem",
+            "compression": true,
+            "compression_type": "lz4",
+            "checksum": true,
+            "checksum_type": "sha256",
+            "deduplication": false,
+            "encryption": true,
+            "readonly": false,
+            "status": "online",
+            "size_bytes": 1000,
+            "used_bytes": 500,
+            "available_bytes": 500,
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-06-01T00:00:00Z"
+        })
+        .to_string();
+
+        let ds = convert_engine_entry_to_dataset("tank/data", &engine);
+        assert_eq!(ds.name, "tank/data");
+        assert_eq!(ds.path, "/tank/data");
+        assert_eq!(ds.backend, StorageBackendType::Filesystem);
+        assert_eq!(ds.dataset_type, DatasetType::Filesystem);
+        assert_eq!(ds.status, DatasetStatus::Online);
+        assert_eq!(ds.size_bytes, 1000);
+        assert!(ds.properties.compression);
+        assert_eq!(ds.properties.compression_type, Some(CompressionType::Lz4));
+        assert!(ds.properties.encryption);
+    }
+
+    #[test]
+    fn convert_engine_entry_with_invalid_json() {
+        let ds = convert_engine_entry_to_dataset("test-ds", "not-json");
+        assert_eq!(ds.name, "test-ds");
+        assert_eq!(ds.backend, StorageBackendType::Filesystem);
+        assert_eq!(ds.status, DatasetStatus::Maintenance);
+    }
+
+    #[test]
+    fn create_storage_backend_filesystem_succeeds() {
+        let req = CreateDatasetRequest {
+            name: String::from("testpool/fs"),
+            dataset_type: DatasetType::Filesystem,
+            backend: StorageBackendType::Filesystem,
+            properties: None,
+            quota: None,
+            description: Some(String::from("/custom/path")),
+        };
+        let result = create_storage_backend(&req).unwrap();
+        assert_eq!(result["backend"], "filesystem");
+        assert_eq!(result["path"], "/custom/path");
+    }
+
+    #[test]
+    fn create_storage_backend_unsupported_returns_error() {
+        let req = CreateDatasetRequest {
+            name: String::from("test"),
+            dataset_type: DatasetType::Filesystem,
+            backend: StorageBackendType::Cloud,
+            properties: None,
+            quota: None,
+            description: None,
+        };
+        assert!(create_storage_backend(&req).is_err());
+    }
+
+    #[test]
+    fn engine_entry_json_for_create_includes_fields() {
+        let req = CreateDatasetRequest {
+            name: String::from("testpool/new"),
+            dataset_type: DatasetType::Filesystem,
+            backend: StorageBackendType::Filesystem,
+            properties: None,
+            quota: Some(1024),
+            description: Some(String::from("/mnt/data")),
+        };
+        let json_str = engine_entry_json_for_create(&req);
+        let v: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        assert_eq!(v["path"], "/mnt/data");
+        assert!(v.get("created").is_some());
+        assert_eq!(v["quota"], 1024);
+    }
+
+    #[test]
+    fn dataset_properties_from_engine_none_uses_defaults() {
+        let props = dataset_properties_from_engine("test", None);
+        assert!(!props.compression);
+        assert!(!props.checksum);
+        assert!(!props.deduplication);
+        assert!(
+            props
+                .custom
+                .contains_key("engine_metadata"),
+        );
+    }
+
+    #[test]
+    fn dataset_properties_from_engine_rich_json() {
+        let v = json!({
+            "compression": true,
+            "compression_type": "zstd",
+            "deduplication": true,
+            "quota": 500,
+        });
+        let props = dataset_properties_from_engine("test", Some(&v));
+        assert!(props.compression);
+        assert_eq!(props.compression_type, Some(CompressionType::Zstd));
+        assert!(props.deduplication);
+        assert_eq!(props.quota, Some(500));
+    }
+
+    use chrono::Datelike as _;
+}

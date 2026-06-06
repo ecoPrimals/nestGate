@@ -342,4 +342,70 @@ mod tests {
         let err = get_raw("short", "family").await;
         assert!(err.is_err());
     }
+
+    #[tokio::test]
+    async fn publish_resolve_facade_roundtrip() {
+        use base64::Engine as _;
+        let family = format!("test-facade-pub-{}", uuid::Uuid::new_v4());
+        let data = base64::engine::general_purpose::STANDARD.encode(b"facade publish");
+        let put_r = put(&json!({"data": data, "family_id": &family}))
+            .await
+            .unwrap();
+        let hash = put_r["hash"].as_str().unwrap();
+
+        let pub_r = publish(&json!({
+            "family_id": &family,
+            "collection": "test-facade",
+            "manifest": { "/index.html": hash }
+        }))
+        .await
+        .unwrap();
+        assert!(pub_r.get("collection").is_some() || pub_r.get("published").is_some());
+
+        let res_r = resolve(&json!({
+            "family_id": &family,
+            "collection": "test-facade",
+            "path": "/index.html"
+        }))
+        .await
+        .unwrap();
+        assert!(res_r.get("hash").is_some() || res_r.get("data").is_some());
+    }
+
+    #[tokio::test]
+    async fn promote_facade_roundtrip() {
+        use base64::Engine as _;
+        let family = format!("test-facade-promote-{}", uuid::Uuid::new_v4());
+        let data = base64::engine::general_purpose::STANDARD.encode(b"promote test");
+        let put_r = put(&json!({"data": data, "family_id": &family}))
+            .await
+            .unwrap();
+        let hash = put_r["hash"].as_str().unwrap();
+
+        publish(&json!({
+            "family_id": &family,
+            "collection": "staging",
+            "manifest": { "/app.js": hash }
+        }))
+        .await
+        .unwrap();
+
+        let promo_r = promote(&json!({
+            "family_id": &family,
+            "collection": "staging",
+            "alias": "production"
+        }))
+        .await
+        .unwrap();
+        assert!(
+            promo_r.get("alias").is_some() || promo_r.get("promoted").is_some(),
+        );
+    }
+
+    #[tokio::test]
+    async fn collections_facade_returns_array() {
+        let family = format!("test-facade-coll-{}", uuid::Uuid::new_v4());
+        let r = collections(&json!({"family_id": &family})).await.unwrap();
+        assert!(r.get("collections").is_some());
+    }
 }
