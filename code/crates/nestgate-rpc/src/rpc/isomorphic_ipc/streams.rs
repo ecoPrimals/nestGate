@@ -70,6 +70,7 @@ impl AsyncStream for TcpStream {}
 ///
 /// Wraps either Unix or TCP stream with a unified interface.
 /// Uses enum dispatch for zero-cost abstraction.
+#[derive(Debug)]
 pub enum IpcStream {
     /// Unix socket stream
     Unix(UnixStream),
@@ -192,6 +193,78 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
     }
 }
 
+/// Connect to a [`TransportEndpoint`] — the ecosystem-standard transport abstraction.
+///
+/// Routes UDS and TCP variants to their respective `tokio` stream connections.
+/// `MeshRelay` endpoints are not yet supported for direct connection; they require
+/// songBird relay negotiation (returns an error with guidance).
+///
+/// This is the primary replacement for raw `UnixStream::connect` / `TcpStream::connect`
+/// in production IPC paths. The launcher provides the endpoint via `TRANSPORT_ENDPOINT`
+/// env var; the primal calls `connect_transport()` instead of choosing its own transport.
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] when the connection fails or the transport variant
+/// is not supported for direct connection.
+pub async fn connect_transport(
+    endpoint: &nestgate_types::TransportEndpoint,
+) -> Result<IpcStream> {
+    use nestgate_types::TransportEndpoint;
+
+    debug!("Connecting via transport endpoint: {endpoint}");
+
+    match endpoint {
+        TransportEndpoint::Uds { path } => {
+            debug!("  Transport: UDS → {}", path.display());
+            let stream = UnixStream::connect(path)
+                .await
+                .map_err(|e| anyhow::anyhow!("UDS connect to {}: {e}", path.display()))?;
+            Ok(IpcStream::Unix(stream))
+        }
+        TransportEndpoint::Tcp { host, port } => {
+            let addr = format!("{host}:{port}");
+            debug!("  Transport: TCP → {addr}");
+            let stream = TcpStream::connect(&addr)
+                .await
+                .map_err(|e| anyhow::anyhow!("TCP connect to {addr}: {e}"))?;
+            Ok(IpcStream::Tcp(stream))
+        }
+        TransportEndpoint::MeshRelay {
+            peer_id,
+            capability,
+        } => Err(anyhow::anyhow!(
+            "MeshRelay transport ({peer_id}/{capability}) requires songBird relay negotiation — \
+             not yet wired for direct connect_transport()"
+        )),
+    }
+}
+
+/// Convert a [`TransportEndpoint`] to the legacy [`IpcEndpoint`] for backward-compatible
+/// code paths that still accept `IpcEndpoint`.
+///
+/// # Errors
+///
+/// Returns an error for `MeshRelay` endpoints which have no `IpcEndpoint` equivalent.
+pub fn transport_to_ipc_endpoint(
+    endpoint: &nestgate_types::TransportEndpoint,
+) -> Result<IpcEndpoint> {
+    use nestgate_types::TransportEndpoint;
+
+    match endpoint {
+        TransportEndpoint::Uds { path } => Ok(IpcEndpoint::UnixSocket(path.clone())),
+        TransportEndpoint::Tcp { host, port } => {
+            let addr: std::net::SocketAddr = format!("{host}:{port}").parse().map_err(|e| {
+                anyhow::anyhow!("Invalid TCP address {host}:{port}: {e}")
+            })?;
+            Ok(IpcEndpoint::TcpLocal(addr))
+        }
+        TransportEndpoint::MeshRelay { .. } => Err(anyhow::anyhow!(
+            "MeshRelay transport has no IpcEndpoint equivalent"
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -254,5 +327,56 @@ mod tests {
         let endpoint = IpcEndpoint::UnixSocket(std::path::PathBuf::from("/nonexistent/path.sock"));
         let result = connect_endpoint(&endpoint).await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn connect_transport_tcp_succeeds() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let ep = nestgate_types::TransportEndpoint::tcp("127.0.0.1", addr.port());
+        let stream = connect_transport(&ep).await.unwrap();
+        assert_eq!(stream.stream_type(), "TCP (localhost)");
+    }
+
+    #[tokio::test]
+    async fn connect_transport_uds_nonexistent_fails() {
+        let ep = nestgate_types::TransportEndpoint::uds("/nonexistent/test.sock");
+        let result = connect_transport(&ep).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn connect_transport_mesh_relay_not_supported() {
+        let ep = nestgate_types::TransportEndpoint::mesh_relay("peer1", "security");
+        let result = connect_transport(&ep).await;
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("MeshRelay"));
+        assert!(err_msg.contains("songBird"));
+    }
+
+    #[test]
+    fn transport_to_ipc_uds() {
+        let ep = nestgate_types::TransportEndpoint::uds("/tmp/test.sock");
+        let ipc = transport_to_ipc_endpoint(&ep).unwrap();
+        assert!(matches!(ipc, IpcEndpoint::UnixSocket(ref p) if p.to_str().unwrap() == "/tmp/test.sock"));
+    }
+
+    #[test]
+    fn transport_to_ipc_tcp() {
+        let ep = nestgate_types::TransportEndpoint::tcp("127.0.0.1", 9100);
+        let ipc = transport_to_ipc_endpoint(&ep).unwrap();
+        match ipc {
+            IpcEndpoint::TcpLocal(addr) => {
+                assert_eq!(addr.port(), 9100);
+                assert_eq!(addr.ip().to_string(), "127.0.0.1");
+            }
+            _ => panic!("expected TcpLocal"),
+        }
+    }
+
+    #[test]
+    fn transport_to_ipc_mesh_relay_errors() {
+        let ep = nestgate_types::TransportEndpoint::mesh_relay("peer", "cap");
+        assert!(transport_to_ipc_endpoint(&ep).is_err());
     }
 }

@@ -126,7 +126,8 @@ pub use unix_socket_server::{
 // NEW: Isomorphic IPC exports (v0.3.0)
 pub use isomorphic_ipc::{
     IpcEndpoint, IpcStream, IsomorphicIpcServer, RpcHandler, TcpFallbackServer,
-    UnixSocketRpcHandler, connect_endpoint, discover_ipc_endpoint, is_platform_constraint,
+    UnixSocketRpcHandler, connect_endpoint, connect_transport, discover_ipc_endpoint,
+    is_platform_constraint, transport_to_ipc_endpoint,
 };
 
 /// Returns `true` if `method` may be served on a BTSP-required socket

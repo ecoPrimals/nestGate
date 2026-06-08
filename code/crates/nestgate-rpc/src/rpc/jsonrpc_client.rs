@@ -71,6 +71,8 @@ use tracing::{debug, warn};
 
 use nestgate_types::error::{NestGateError, Result};
 
+use super::isomorphic_ipc::streams::IpcStream;
+
 /// JSON-RPC 2.0 request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
@@ -111,22 +113,20 @@ pub struct JsonRpcError {
     pub data: Option<Value>,
 }
 
-/// JSON-RPC client for calling external services
+/// JSON-RPC client for calling external services.
 ///
-/// Supports Unix socket connections (primary) with future support for
-/// other transports (HTTP, Named Pipes, etc.)
-///
-/// The underlying stream is wrapped in a persistent [`BufReader`] so that
-/// multiple sequential `call()` invocations on the **same** connection work
-/// correctly — buffered bytes from one response are not lost between calls.
-/// This is critical for the BTSP relay pattern where `btsp.session.create`
-/// and `btsp.session.verify` are sent over a single security-provider connection.
+/// Supports Unix socket, TCP, and ecosystem-standard [`TransportEndpoint`](nestgate_types::TransportEndpoint)
+/// connections. The underlying stream is wrapped in a persistent [`BufReader`] so that
+/// multiple sequential `call()` invocations on the **same** connection work correctly —
+/// buffered bytes from one response are not lost between calls. This is critical for the
+/// BTSP relay pattern where `btsp.session.create` and `btsp.session.verify` are sent over
+/// a single security-provider connection.
 #[derive(Debug)]
 pub struct JsonRpcClient {
-    /// Buffered reader over the Unix socket stream. Persistent across calls
+    /// Buffered reader over the polymorphic stream. Persistent across calls
     /// so that data buffered beyond one response line is available for the
     /// next `call()`.
-    stream: Option<BufReader<UnixStream>>,
+    stream: Option<BufReader<IpcStream>>,
     /// Request ID counter
     next_id: u64,
     /// Request timeout
@@ -134,23 +134,10 @@ pub struct JsonRpcClient {
 }
 
 impl JsonRpcClient {
-    /// Connect to a JSON-RPC service over Unix socket
-    ///
-    /// # Arguments
-    /// * `path` - Unix socket path (e.g., "/run/capability/orchestration.sock")
+    /// Connect to a JSON-RPC service over Unix socket.
     ///
     /// # Errors
-    /// Returns error if connection fails
-    ///
-    /// # Example
-    /// ```rust,ignore
-    /// use nestgate_core::rpc::JsonRpcClient;
-    ///
-    /// # async fn example() -> Result<(), nestgate_types::NestGateError> {
-    /// let client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
-    /// # Ok(())
-    /// # }
-    /// ```
+    /// Returns error if connection fails.
     pub async fn connect_unix(path: &str) -> Result<Self> {
         debug!("Connecting to JSON-RPC service at: {}", path);
 
@@ -161,7 +148,52 @@ impl JsonRpcClient {
         })?;
 
         Ok(Self {
-            stream: Some(BufReader::new(stream)),
+            stream: Some(BufReader::new(IpcStream::Unix(stream))),
+            next_id: 1,
+            timeout: Duration::from_secs(5),
+        })
+    }
+
+    /// Connect via an ecosystem-standard [`TransportEndpoint`](nestgate_types::TransportEndpoint).
+    ///
+    /// Routes UDS and TCP endpoints through the transport abstraction layer.
+    /// `MeshRelay` endpoints are not yet supported (requires songBird negotiation).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if the connection fails or the transport variant is unsupported.
+    pub async fn connect_transport(
+        endpoint: &nestgate_types::TransportEndpoint,
+    ) -> Result<Self> {
+        debug!("JSON-RPC client connecting via transport: {endpoint}");
+
+        let ipc_stream = super::isomorphic_ipc::streams::connect_transport(endpoint)
+            .await
+            .map_err(|e| NestGateError::network_error(format!("Transport connect failed: {e}")))?;
+
+        Ok(Self {
+            stream: Some(BufReader::new(ipc_stream)),
+            next_id: 1,
+            timeout: Duration::from_secs(5),
+        })
+    }
+
+    /// Connect to a JSON-RPC service over TCP.
+    ///
+    /// # Errors
+    /// Returns error if connection fails.
+    pub async fn connect_tcp(host: &str, port: u16) -> Result<Self> {
+        let addr = format!("{host}:{port}");
+        debug!("Connecting to JSON-RPC service at TCP: {addr}");
+
+        let stream = tokio::net::TcpStream::connect(&addr).await.map_err(|e| {
+            NestGateError::network_error(format!(
+                "Failed to connect to JSON-RPC service at {addr}: {e}"
+            ))
+        })?;
+
+        Ok(Self {
+            stream: Some(BufReader::new(IpcStream::Tcp(stream))),
             next_id: 1,
             timeout: Duration::from_secs(5),
         })
@@ -347,7 +379,7 @@ impl JsonRpcClient {
     /// Construct a client around an existing Unix stream (in-process pair testing).
     pub(crate) fn from_unix_stream_for_test(stream: UnixStream) -> Self {
         Self {
-            stream: Some(BufReader::new(stream)),
+            stream: Some(BufReader::new(IpcStream::Unix(stream))),
             next_id: 1,
             timeout: Duration::from_secs(5),
         }

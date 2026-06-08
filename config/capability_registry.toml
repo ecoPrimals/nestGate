@@ -21,6 +21,7 @@ version = "0.5.0"
 license = "AGPL-3.0-or-later"
 description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
 transport = ["uds", "tcp", "http"]
+transport_evolution = "phase1"  # Accepts TRANSPORT_ENDPOINT env var (Wave 100)
 protocol = "jsonrpc-2.0"
 
 [capabilities.storage]

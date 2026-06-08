@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 13,095 tests, 22 crates, 16 capability domains, 4 transport surfaces, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
-date = 2026-06-06
+description = "Content-addressed storage primal v0.5.0 — 13,116 tests, 22 crates, 16 capability domains, 4 transport surfaces, TRANSPORT_ENDPOINT Phase 1, BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
+date = 2026-06-08
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **13,095 tests** passing, **0 failures** (serial and parallel), 0 clippy warnings
+- **13,116 tests** passing, **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 97 Transport Evolution Phase 1**: 21 new tests — `TransportEndpoint` type (13), `connect_transport()` (3), `transport_to_ipc_endpoint()` (3), `resolve_outbound_endpoint()` (3); `JsonRpcClient` evolved to `BufReader<IpcStream>` with `connect_transport()` method; binary accepts `TRANSPORT_ENDPOINT` env var; HTTP mode documented as Tier 5 fallback; `capability_registry.toml` updated with `transport_evolution = "phase1"`
 - **Session 96 coverage Tier 2**: 31 new tests — route handlers (5), ZFS helpers parsers (18), StorageConfig (5), content_ops facade (3)
 - **Session 95b coverage sprint**: 22 new tests — encrypted content roundtrip (7), JSON-RPC handler content dispatch (7), content stream edge branches (8)
 - **Session 95 binary UDS compliance**: `service start --socket PATH` natively supported; `IsomorphicIpcServer` fallback now honors `NESTGATE_SOCKET`; unblocks VPS binary refresh for port-free deployment

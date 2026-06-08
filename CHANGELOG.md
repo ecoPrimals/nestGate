@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 97: Transport Evolution Phase 1 — ecosystem-standard TRANSPORT_ENDPOINT adoption (Jun 8, 2026)
+
+- **`TransportEndpoint` type** (13 tests): Protocol-compatible with sourDough wire format.
+  Serde-tagged enum (`uds`/`tcp`/`mesh_relay`) in `nestgate-types::transport`. Includes
+  `from_env()` parsing, `is_local()` classification, and `Display` formatting.
+- **`connect_transport()`** (3 tests): Polymorphic connection function in `nestgate-rpc` that
+  routes UDS/TCP `TransportEndpoint` variants to `IpcStream`. MeshRelay returns a clear error
+  pending songBird relay negotiation support.
+- **`transport_to_ipc_endpoint()`** (3 tests): Bridge from new `TransportEndpoint` to legacy
+  `IpcEndpoint` for backward-compatible code paths during incremental migration.
+- **`JsonRpcClient` transport evolution**: Internal stream type evolved from `BufReader<UnixStream>`
+  to `BufReader<IpcStream>`. Added `connect_transport()` method (ecosystem standard) and
+  `connect_tcp()` method. All 10 existing tests pass unchanged — backward-compatible.
+- **`IpcStream` now `Debug`**: Added `#[derive(Debug)]` for improved error reporting.
+- **`resolve_outbound_endpoint()`** (3 tests): Transport-aware outbound IPC resolution helper.
+  Checks `TRANSPORT_ENDPOINT` first (launcher-injected), falls back to legacy XDG/TCP discovery.
+  Returns `OutboundEndpoint` enum for incremental adoption by outbound call sites.
+- **Binary entry point**: `run_daemon()` logs `TRANSPORT_ENDPOINT` status at startup (set/not-set/parse-error).
+  `start_http_mode()` explicitly documented as Tier 5 fallback per ecosystem transport standard.
+- **Capability registry**: Added `transport_evolution = "phase1"` to `config/capability_registry.toml`.
+- **Workspace result**: 13,116 total tests, 0 failures, 0 clippy warnings.
+- **Compliance**: `TRANSPORT_ENDPOINT` accepted. `connect_transport()` available. Production default
+  is socket-only (no TCP self-bind). `--port`/`--enable-http` retained as Tier 5 debug fallback.
+
 ### Session 96: Coverage sprint Tier 2 — ZFS helpers, route handlers, StorageConfig, content_ops facade (Jun 6, 2026)
 
 - **Route handler tests** (5 tests): `health_check`, `get_communication_stats` (zero + incremented),

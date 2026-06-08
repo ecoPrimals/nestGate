@@ -20,6 +20,7 @@
 pub mod env_source;
 pub mod error;
 pub mod result_types;
+pub mod transport;
 pub mod unified_enums;
 
 pub use env_source::{EnvSource, MapEnv, ProcessEnv, env_parsed, env_var_or_default};
@@ -28,6 +29,7 @@ pub use error::{
     RetryInfo, TestResult,
 };
 pub use result_types::{ConnectionFactory, HealthCheckFn, ValidatorFn, VoidResult};
+pub use transport::{TransportEndpoint, TransportEndpointError};
 pub use unified_enums::UnifiedEnum;
 
 #[cfg(test)]

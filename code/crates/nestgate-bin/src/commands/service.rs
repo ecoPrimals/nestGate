@@ -204,7 +204,11 @@ impl ServiceManager {
         Ok(())
     }
 
-    // Start HTTP mode (standalone/development)
+    /// Start HTTP mode — **Tier 5 fallback** (standalone/development only).
+    ///
+    /// Production deployments use socket-only mode with transport injection via
+    /// `TRANSPORT_ENDPOINT`. This path self-binds TCP and is retained for
+    /// `--enable-http` debug/standalone scenarios per ecosystem standard.
     async fn start_http_mode(
         &self,
         port: Option<u16>,
@@ -426,6 +430,7 @@ impl Default for ServiceManager {
 /// - Socket-only mode (TRUE ecoBin default - zero external dependencies)
 /// - HTTP mode (optional - requires --enable-http flag)
 /// - Multi-family support (--family-id flag or `NESTGATE_FAMILY_ID` env var)
+/// - Transport injection via `TRANSPORT_ENDPOINT` env var (ecosystem standard)
 pub async fn run_daemon(
     port: Option<u16>,
     bind: &str,
@@ -440,9 +445,11 @@ pub async fn run_daemon(
         info!("Multi-family mode: family_id='{}'", fid);
     }
 
+    log_transport_endpoint();
+
     if enable_http {
         let resolved_port = port.unwrap_or_else(port_from_env_or_default);
-        info!("Starting NestGate with HTTP server (optional mode)");
+        info!("Starting NestGate with HTTP server (optional mode — Tier 5 fallback)");
         info!("   Port: {}, Bind: {}, Dev: {}", resolved_port, bind, dev);
 
         let manager = ServiceManager::new();
@@ -454,6 +461,27 @@ pub async fn run_daemon(
         let tcp_addr =
             resolve_socket_only_tcp_listen_port(port, listen, bind, &nestgate_types::ProcessEnv)?;
         run_socket_only_daemon(tcp_addr).await
+    }
+}
+
+/// Log `TRANSPORT_ENDPOINT` status at startup. When set, outbound IPC uses
+/// the ecosystem-standard transport layer instead of raw socket discovery.
+fn log_transport_endpoint() {
+    match nestgate_types::TransportEndpoint::from_env() {
+        Ok(ep) => {
+            info!("TRANSPORT_ENDPOINT: {ep}");
+            if ep.is_local() {
+                info!("  Transport class: local");
+            } else {
+                info!("  Transport class: remote / federated");
+            }
+        }
+        Err(nestgate_types::TransportEndpointError::NotSet) => {
+            info!("TRANSPORT_ENDPOINT: not set (using legacy discovery)");
+        }
+        Err(e) => {
+            tracing::warn!("TRANSPORT_ENDPOINT parse error: {e} (falling back to legacy discovery)");
+        }
     }
 }
 

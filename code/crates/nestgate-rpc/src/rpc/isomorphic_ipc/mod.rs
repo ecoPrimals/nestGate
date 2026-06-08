@@ -169,15 +169,16 @@ pub mod launcher;
 pub use discovery::{IpcEndpoint, discover_ipc_endpoint};
 pub use platform_detection::is_platform_constraint;
 pub use server::IsomorphicIpcServer;
-pub use streams::{IpcStream, connect_endpoint};
+pub use streams::{IpcStream, connect_endpoint, connect_transport, transport_to_ipc_endpoint};
 pub use tcp_fallback::{RpcHandler, TcpFallbackServer};
 pub use unix_adapter::UnixSocketRpcHandler;
 // Phase 3 re-exports
 pub use atomic::{AtomicStatus, AtomicType, verify_nest_health, verify_nestgate_health};
 pub use health::{HealthStatus, check_nestgate_health, check_nestgate_health_detailed};
 pub use launcher::{
-    connect_to_nestgate, connect_to_nestgate_with_retry, discover_nestgate_endpoint,
-    discover_nestgate_with_retry, is_nestgate_running,
+    OutboundEndpoint, connect_to_nestgate, connect_to_nestgate_with_retry,
+    discover_nestgate_endpoint, discover_nestgate_with_retry, is_nestgate_running,
+    resolve_outbound_endpoint,
 };
 
 #[cfg(test)]
