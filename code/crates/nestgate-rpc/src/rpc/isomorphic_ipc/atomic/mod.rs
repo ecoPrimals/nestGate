@@ -191,7 +191,8 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
 
     debug!("Connecting to {} at {}", primal_name, socket.display());
 
-    let stream = tokio::net::UnixStream::connect(&socket)
+    let endpoint = nestgate_types::TransportEndpoint::uds(&socket);
+    let stream = crate::rpc::connect_transport(&endpoint)
         .await
         .map_err(|e| {
             anyhow::anyhow!(
@@ -202,7 +203,7 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
             )
         })?;
 
-    let (reader, mut writer) = stream.into_split();
+    let (reader, mut writer) = tokio::io::split(stream);
 
     let health_request = serde_json::json!({
         "jsonrpc": "2.0",

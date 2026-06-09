@@ -130,12 +130,10 @@ impl BtspClient {
         Self::new(resolve_security_socket_path())
     }
 
-    fn socket_path_str(&self) -> Result<&str> {
-        self.security_socket.to_str().ok_or_else(|| {
-            NestGateError::validation_error(
-                "SECURITY_SOCKET path is not valid UTF-8 (security IPC requires UTF-8 paths)",
-            )
-        })
+    /// Connect to the security provider via transport abstraction layer.
+    async fn connect(&self) -> Result<JsonRpcClient> {
+        let endpoint = nestgate_types::TransportEndpoint::uds(&self.security_socket);
+        JsonRpcClient::connect_transport(&endpoint).await
     }
 
     /// Connects to the security provider, sends `btsp.session.create`, and returns the handshake outcome.
@@ -144,7 +142,7 @@ impl BtspClient {
     ///
     /// Returns an error if the socket connection fails or the provider returns a malformed response.
     pub async fn initiate_handshake(&self, family_id: &str) -> Result<BtspHandshakeResult> {
-        let mut client = JsonRpcClient::connect_unix(self.socket_path_str()?).await?;
+        let mut client = self.connect().await?;
         let result = client
             .call(
                 "btsp.session.create",
@@ -163,7 +161,7 @@ impl BtspClient {
     ///
     /// Returns an error if the socket connection fails or the response is unparseable.
     pub async fn verify_session(&self, session_id: &str) -> Result<bool> {
-        let mut client = JsonRpcClient::connect_unix(self.socket_path_str()?).await?;
+        let mut client = self.connect().await?;
         let result = client
             .call("btsp.session.verify", json!({ "session_id": session_id }))
             .await?;
@@ -176,7 +174,7 @@ impl BtspClient {
     ///
     /// Returns an error if the socket connection fails or the provider omits the cipher field.
     pub async fn negotiate_cipher(&self, session_id: &str, bond_type: &str) -> Result<String> {
-        let mut client = JsonRpcClient::connect_unix(self.socket_path_str()?).await?;
+        let mut client = self.connect().await?;
         let result = client
             .call(
                 "btsp.negotiate",

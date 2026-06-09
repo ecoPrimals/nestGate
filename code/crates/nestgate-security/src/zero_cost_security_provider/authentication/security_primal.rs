@@ -8,6 +8,7 @@ use nestgate_discovery::primal_discovery::PrimalConnection;
 use nestgate_types::{NestGateError, Result};
 use std::path::Path;
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 /// Call discovered Security primal for authentication via Unix socket IPC.
 ///
@@ -25,8 +26,8 @@ pub async fn call_security_primal(
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
     {
-        // Unix socket IPC path — preferred for primal-to-primal auth
-        let stream = tokio::net::UnixStream::connect(endpoint)
+        let transport = nestgate_types::TransportEndpoint::uds(endpoint);
+        let mut stream = nestgate_rpc::rpc::connect_transport(&transport)
             .await
             .map_err(|e| {
                 NestGateError::network_error(format!(
@@ -48,19 +49,15 @@ pub async fn call_security_primal(
             NestGateError::internal_error(format!("Serialize auth request: {e}"), "security")
         })?;
 
-        stream.writable().await.map_err(|e| {
-            NestGateError::network_error(format!("Security socket not writable: {e}"))
-        })?;
         stream
-            .try_write(&request_bytes)
+            .write_all(&request_bytes)
+            .await
             .map_err(|e| NestGateError::network_error(format!("Write to security primal: {e}")))?;
 
         let mut buf = vec![0u8; 4096];
-        stream.readable().await.map_err(|e| {
-            NestGateError::network_error(format!("Security socket not readable: {e}"))
-        })?;
         let n = stream
-            .try_read(&mut buf)
+            .read(&mut buf)
+            .await
             .map_err(|e| NestGateError::network_error(format!("Read from security primal: {e}")))?;
 
         let response: serde_json::Value = serde_json::from_slice(&buf[..n]).map_err(|e| {

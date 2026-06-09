@@ -122,7 +122,8 @@ impl CryptoDelegate {
             endpoint.name, endpoint.endpoint
         );
 
-        let client = JsonRpcClient::connect_unix(&endpoint.endpoint).await?;
+        let ep = nestgate_types::TransportEndpoint::uds(&endpoint.endpoint);
+        let client = JsonRpcClient::connect_transport(&ep).await?;
 
         Ok(Self {
             client: Mutex::new(client),
@@ -134,7 +135,8 @@ impl CryptoDelegate {
     pub async fn with_endpoint(path: &str) -> Result<Self> {
         debug!("Connecting directly to crypto provider: {path}");
 
-        let client = JsonRpcClient::connect_unix(path).await?;
+        let ep = nestgate_types::TransportEndpoint::uds(path);
+        let client = JsonRpcClient::connect_transport(&ep).await?;
 
         Ok(Self {
             client: Mutex::new(client),

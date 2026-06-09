@@ -167,7 +167,8 @@ pub async fn announce_to_coordinator(own_socket: &Path) -> Result<()> {
         coordinator_str, ANNOUNCED_CAPABILITIES
     );
 
-    match super::JsonRpcClient::connect_unix(&coordinator_str).await {
+    let endpoint = nestgate_types::TransportEndpoint::uds(&coordinator_path);
+    match super::JsonRpcClient::connect_transport(&endpoint).await {
         Ok(mut client) => match client.call("primal.announce", payload).await {
             Ok(resp) => {
                 info!("primal.announce accepted: {resp}");
@@ -180,7 +181,8 @@ pub async fn announce_to_coordinator(own_socket: &Path) -> Result<()> {
         },
         Err(e) => {
             warn!(
-                "Could not connect to ecosystem coordinator at {coordinator_str}: {e} — skipping announce"
+                "Could not connect to ecosystem coordinator at {}: {e} — skipping announce",
+                coordinator_path.display()
             );
             Ok(())
         }

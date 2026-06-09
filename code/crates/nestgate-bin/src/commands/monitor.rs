@@ -63,7 +63,8 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
         let socket_alive = match nestgate_core::rpc::SocketConfig::from_environment() {
             Ok(config) => {
                 if config.socket_path.exists() {
-                    tokio::net::UnixStream::connect(&config.socket_path)
+                    let probe = nestgate_types::TransportEndpoint::uds(&config.socket_path);
+                    nestgate_core::rpc::connect_transport(&probe)
                         .await
                         .is_ok()
                 } else {

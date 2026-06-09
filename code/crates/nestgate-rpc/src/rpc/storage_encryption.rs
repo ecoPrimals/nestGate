@@ -99,7 +99,8 @@ impl StorageEncryption {
         debug!("Attempting storage key retrieval from security provider at {socket_path}");
 
         let secret_name = format!("nucleus:{family_id}:purpose:storage");
-        let mut client = match super::JsonRpcClient::connect_unix(&socket_path).await {
+        let endpoint = nestgate_types::TransportEndpoint::uds(&socket_path);
+        let mut client = match super::JsonRpcClient::connect_transport(&endpoint).await {
             Ok(c) => c,
             Err(e) => {
                 debug!("Cannot connect to security provider for key retrieval: {e}");

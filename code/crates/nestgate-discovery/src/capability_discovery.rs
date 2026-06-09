@@ -291,7 +291,8 @@ impl CapabilityDiscovery {
                 "Trying orchestration IPC path from environment"
             );
             if Path::new(&path).exists() {
-                match JsonRpcClient::connect_unix(&path).await {
+                let endpoint = nestgate_types::TransportEndpoint::uds(&path);
+                match JsonRpcClient::connect_transport(&endpoint).await {
                     Ok(client) => {
                         tracing::info!(
                             path = path,
@@ -315,7 +316,8 @@ impl CapabilityDiscovery {
             .unwrap_or_else(|| String::from("/primal/orchestration"));
         tracing::debug!(path = %standard_path, "Trying standard IPC path");
         if Path::new(&standard_path).exists() {
-            match JsonRpcClient::connect_unix(&standard_path).await {
+            let endpoint = nestgate_types::TransportEndpoint::uds(&standard_path);
+            match JsonRpcClient::connect_transport(&endpoint).await {
                 Ok(client) => {
                     tracing::info!(
                         path = %standard_path,

@@ -338,11 +338,9 @@ where
         "BTSP: connecting to security provider at {}",
         security_path.display()
     );
-    let security_path_str = security_path.to_str().ok_or_else(|| {
-        NestGateError::validation_error("BTSP: security socket path is not valid UTF-8")
-    })?;
 
-    let mut bd_client = JsonRpcClient::connect_unix(security_path_str)
+    let endpoint = nestgate_types::TransportEndpoint::uds(&security_path);
+    let mut bd_client = JsonRpcClient::connect_transport(&endpoint)
         .await
         .map_err(|e| {
             error!(

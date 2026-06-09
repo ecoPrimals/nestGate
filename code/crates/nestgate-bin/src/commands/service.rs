@@ -379,7 +379,8 @@ impl ServiceManager {
         {
             let path = &config.socket_path;
             if path.exists() {
-                if tokio::net::UnixStream::connect(path).await.is_ok() {
+                let probe = nestgate_types::TransportEndpoint::uds(path);
+                if nestgate_core::rpc::connect_transport(&probe).await.is_ok() {
                     info!("  Socket: ALIVE ({})", path.display());
                     true
                 } else {

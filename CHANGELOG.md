@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 98: Transport Evolution Phase 2 — outbound IPC migration to connect_transport() (Jun 8, 2026)
+
+- **btsp_client.rs**: All 3 `connect_unix()` calls migrated to `connect_transport()` via shared
+  `BtspClient::connect()` helper. Eliminated `socket_path_str()` UTF-8 conversion — `TransportEndpoint::uds()`
+  accepts `PathBuf` directly.
+- **storage_encryption.rs**: `from_provider()` secret key retrieval now routes through transport abstraction
+  instead of raw `connect_unix()`.
+- **primal_announce.rs**: Coordinator announce connection migrated to `connect_transport()`. Dead
+  `coordinator_str` intermediate variable eliminated.
+- **capability_discovery.rs**: Both env-driven UDS paths and standard orchestration path now connect
+  via `TransportEndpoint::uds()` + `connect_transport()`.
+- **nestgate-api transport/security.rs**: All 4 `UnixStream::connect` calls eliminated — `connect()`,
+  `send_request()`, `try_socket()` (glob probe and direct probe) all routed through transport layer.
+  `tokio::net::UnixStream` import removed from module.
+- **nestgate-security crypto/delegate.rs**: Both discovery-based and explicit-endpoint connections migrated.
+- **nestgate-security authentication/security_primal.rs**: Raw `UnixStream::connect` + `writable()`/`try_write()`/
+  `readable()`/`try_read()` evolved to idiomatic `AsyncReadExt`/`AsyncWriteExt` trait methods on `IpcStream`.
+- **btsp_server_handshake/mod.rs**: Security provider connection migrated. Eliminated `security_path_str`
+  UTF-8 conversion intermediate.
+- **isomorphic_ipc/atomic/mod.rs**: Health probe `UnixStream::connect` + `into_split()` migrated to
+  `connect_transport()` + `tokio::io::split()`.
+- **CLI tools** (monitor, discover, service): Socket liveness probes migrated from raw
+  `UnixStream::connect` to `connect_transport()` for uniformity.
+- **Remaining raw connect sites**: Only transport layer implementations (`streams.rs`, `jsonrpc_client.rs`
+  method definitions) and test code retain direct `UnixStream::connect` — correct by design.
+- **Workspace result**: 13,116 total tests, 0 new failures, 0 clippy warnings.
+
 ### Session 97: Transport Evolution Phase 1 — ecosystem-standard TRANSPORT_ENDPOINT adoption (Jun 8, 2026)
 
 - **`TransportEndpoint` type** (13 tests): Protocol-compatible with sourDough wire format.

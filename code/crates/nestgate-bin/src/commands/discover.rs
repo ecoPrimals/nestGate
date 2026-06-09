@@ -47,7 +47,8 @@ async fn discover_primals_from_env_source(env: &(impl EnvSource + ?Sized)) -> Bi
                     if name_str.ends_with(".sock") {
                         let primal_name = name_str.trim_end_matches(".sock");
                         // Check if socket is alive
-                        let status = if tokio::net::UnixStream::connect(entry.path()).await.is_ok()
+                        let probe = nestgate_types::TransportEndpoint::uds(entry.path());
+                        let status = if nestgate_core::rpc::connect_transport(&probe).await.is_ok()
                         {
                             "ALIVE"
                         } else {

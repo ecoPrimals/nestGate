@@ -15,7 +15,6 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::UnixStream;
 use tracing::{info, warn};
 
 /// Client for whichever primal provides the "security" capability.
@@ -164,11 +163,11 @@ impl SecurityProviderClient {
                 let candidate = entry.path();
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if name.starts_with(prefix)
-                    && name.ends_with(suffix)
-                    && UnixStream::connect(&candidate).await.is_ok()
-                {
-                    return Ok(candidate);
+                if name.starts_with(prefix) && name.ends_with(suffix) {
+                    let probe = nestgate_types::TransportEndpoint::uds(&candidate);
+                    if nestgate_core::rpc::connect_transport(&probe).await.is_ok() {
+                        return Ok(candidate);
+                    }
                 }
             }
             return Err(NestGateError::network_error(
@@ -178,8 +177,8 @@ impl SecurityProviderClient {
 
         let path = PathBuf::from(pattern);
         if path.exists() {
-            // Try to connect
-            UnixStream::connect(&path)
+            let probe = nestgate_types::TransportEndpoint::uds(&path);
+            nestgate_core::rpc::connect_transport(&probe)
                 .await
                 .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
             Ok(path)
@@ -188,7 +187,7 @@ impl SecurityProviderClient {
         }
     }
 
-    /// Connect to the security provider.
+    /// Connect to the security provider via transport abstraction.
     ///
     /// # Errors
     ///
@@ -201,9 +200,12 @@ impl SecurityProviderClient {
             )));
         }
 
-        let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
-            NestGateError::network_error(format!("Failed to connect to security provider: {e}"))
-        })?;
+        let endpoint = nestgate_types::TransportEndpoint::uds(&self.socket_path);
+        let _stream = nestgate_core::rpc::connect_transport(&endpoint)
+            .await
+            .map_err(|e| {
+                NestGateError::network_error(format!("Failed to connect to security provider: {e}"))
+            })?;
 
         self.connected = true;
         info!(
@@ -302,7 +304,8 @@ impl SecurityProviderClient {
         &self,
         request: &SecurityProviderRequest,
     ) -> Result<SecurityProviderResponse> {
-        let mut stream = UnixStream::connect(&self.socket_path)
+        let endpoint = nestgate_types::TransportEndpoint::uds(&self.socket_path);
+        let mut stream = nestgate_core::rpc::connect_transport(&endpoint)
             .await
             .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
 
