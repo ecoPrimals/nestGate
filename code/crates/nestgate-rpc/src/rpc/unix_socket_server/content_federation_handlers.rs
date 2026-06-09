@@ -32,7 +32,7 @@ use super::storage_paths::ensure_parent_dirs;
 
 use super::StorageState;
 use super::federation_ops;
-use super::storage_paths::{content_key_path, resolve_family_id};
+use super::storage_paths::{content_hash_hex, content_key_path, resolve_family_id};
 
 /// `content.fetch_heads` — read-only freshness check against remote repos.
 ///
@@ -463,7 +463,7 @@ async fn pull_blob_from_remote(
         .decode(data_b64)
         .map_err(|e| NestGateError::internal(format!("base64 decode failed: {e}")))?;
 
-    let actual_hash = blake3::hash(&raw).to_hex().to_string();
+    let actual_hash = content_hash_hex(&raw);
     if actual_hash != cid {
         return Err(NestGateError::internal(format!(
             "BLAKE3 integrity failure: expected {cid}, got {actual_hash} \

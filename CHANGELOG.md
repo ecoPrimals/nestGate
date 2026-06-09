@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 100: Deep Debt Sweep Pass 2 — BLAKE3 centralization, constant dedup, coverage sprint (Jun 9, 2026)
+
+- **BLAKE3 hash centralization**: Extracted `content_hash_hex()` and `content_cas_path()` into
+  `storage_paths` module as the single canonical hashing and CAS path entry points. Eliminated
+  repeated `blake3::hash(&data).to_hex().to_string()` expressions from 4 production files
+  (`content_handlers.rs`, `content_stream.rs`, `content_federation_handlers.rs`, `external_handlers.rs`).
+  Removed duplicate `content_cas_path()` from `content_stream.rs` (was identical to `content_key_path()`).
+- **CONNECTION_IDLE_LIMIT dedup**: Consolidated 3 identical `Duration::from_secs(300)` definitions
+  (in `connection.rs`, `isomorphic_ipc/server/mod.rs`, `tcp_fallback.rs`) into a single shared constant
+  in `protocol.rs`. Connection handlers reference the canonical source.
+- **Coverage sprint — 45 new tests**:
+  - `template_storage::operations`: 19 tests covering store/retrieve roundtrip, input validation
+    (empty name/family/user), family isolation, list filtering (user, tags, niche), community
+    ranking (scoring, min usage, limit, niche filter), increment usage, success rate validation.
+  - `storage_paths`: 13 tests covering `content_hash_hex()` determinism and collision resistance,
+    `content_cas_path()` layout, `content_key_path()` delegation, `extract_namespace()` validation
+    (valid, absent, path traversal, slashes, dot/underscore prefixes, empty), `manifest_path()` layout.
+  - `validation::runner`: 6 tests covering `ConfigValidator::validate()`, `validate_strict()`,
+    and `generate_report()` across valid, invalid, and warning configurations.
+  - `protocol`: 1 test asserting `CONNECTION_IDLE_LIMIT` is 5 minutes.
+- **Module visibility evolution**: `storage_paths` module upgraded from `mod` to `pub(crate) mod`
+  to enable cross-module access to shared CAS helpers (BLAKE3 hash, CAS path).
+- **Workspace result**: 3,790+ tests passing, 0 new failures, 0 clippy warnings.
+
 ### Session 99: Deep Debt Sweep — production stubs → real implementations, dependency hygiene, legacy env deprecation (Jun 8, 2026)
 
 - **Security auth HMAC evolution**: `validate_token_signature` now verifies HMAC-SHA256 signatures

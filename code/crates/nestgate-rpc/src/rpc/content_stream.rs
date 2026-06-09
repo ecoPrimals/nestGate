@@ -8,7 +8,6 @@
 //! On finalize, computes BLAKE3 and renames staging → final CAS path.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
-use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
@@ -21,6 +20,7 @@ use super::storage_stream::{
     MAX_STREAM_CHUNK, MAX_STREAM_TOTAL, RetrieveSession, StoreUpload, ensure_parent, maps,
     prune_stale_streams, resolve_family_id, staging_path, ttl_expired, validate_segment,
 };
+use super::unix_socket_server::storage_paths::{content_cas_path, content_hash_hex};
 
 /// `content.store_stream` — begin a chunked CAS upload.
 ///
@@ -56,7 +56,7 @@ pub async fn content_store_stream_begin(
     ensure_parent(&temp_path).await?;
 
     if total_size == 0 {
-        let empty_hash = blake3::hash(&[]).to_hex().to_string();
+        let empty_hash = content_hash_hex(&[]);
         let final_path = content_cas_path(family_id, &empty_hash);
         ensure_parent(&final_path).await?;
         if !final_path.exists() {
@@ -213,7 +213,7 @@ pub async fn content_store_stream_chunk(params: Value) -> Result<Value> {
     let raw = tokio::fs::read(&upload.temp_path)
         .await
         .map_err(|e| NestGateError::io_error(format!("read staging for hash: {e}")))?;
-    let blake3_hex = blake3::hash(&raw).to_hex().to_string();
+    let blake3_hex = content_hash_hex(&raw);
     let final_path = content_cas_path(&family_id, &blake3_hex);
 
     let deduplicated = final_path.exists();
@@ -299,14 +299,6 @@ pub async fn content_retrieve_stream_begin(
     }))
 }
 
-fn content_cas_path(family_id: &str, blake3_hex: &str) -> PathBuf {
-    get_storage_base_path()
-        .join("datasets")
-        .join(family_id)
-        .join("_content")
-        .join(&blake3_hex[..2])
-        .join(blake3_hex)
-}
 
 #[cfg(test)]
 mod tests {
@@ -359,7 +351,7 @@ mod tests {
                 let hash = result["hash"].as_str().unwrap();
                 assert_eq!(hash.len(), 64);
                 assert_eq!(
-                    blake3::hash(&payload).to_hex().to_string(),
+                    content_hash_hex(&payload),
                     hash,
                     "BLAKE3 mismatch"
                 );
@@ -605,7 +597,7 @@ mod tests {
         .await
         .expect("empty upload should succeed");
 
-        let expected_hash = blake3::hash(&[]).to_hex().to_string();
+        let expected_hash = content_hash_hex(&[]);
         assert_eq!(result["hash"].as_str().unwrap(), expected_hash);
         assert_eq!(result["size"], 0);
         assert_eq!(result["stored"], true);

@@ -101,7 +101,7 @@ pub(crate) mod external_handlers;
 mod nat_handlers;
 mod session_handlers;
 mod storage_handlers;
-mod storage_paths;
+pub(crate) mod storage_paths;
 mod template_handlers;
 mod zfs_handlers;
 

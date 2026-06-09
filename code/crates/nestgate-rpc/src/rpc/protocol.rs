@@ -4,6 +4,14 @@
 //! Shared JSON-RPC protocol helpers (method name normalization, etc.).
 
 use std::borrow::Cow;
+use std::time::Duration;
+
+/// Maximum idle time before a keep-alive JSON-RPC connection is closed.
+///
+/// The timer resets on every successful request so active connections are never
+/// reaped. Only truly idle (half-open, abandoned) connections are affected.
+/// Shared by UDS, isomorphic IPC, and TCP fallback connection handlers.
+pub const CONNECTION_IDLE_LIMIT: Duration = Duration::from_secs(300);
 
 /// Normalize a JSON-RPC method name by stripping legacy prefixes.
 ///
@@ -76,5 +84,13 @@ mod tests {
             Cow::Borrowed(s) => assert_eq!(s, ""),
             Cow::Owned(_) => panic!("expected borrowed empty remainder"),
         }
+    }
+
+    #[test]
+    fn connection_idle_limit_is_five_minutes() {
+        assert_eq!(
+            super::CONNECTION_IDLE_LIMIT,
+            std::time::Duration::from_secs(300),
+        );
     }
 }

@@ -20,9 +20,7 @@ use super::dispatch::handle_request;
 use super::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState};
 use nestgate_types::error::{NestGateError, Result};
 
-/// Maximum idle time before a keep-alive connection is closed. The timer
-/// resets on every successful request so active connections are never reaped.
-const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
+use crate::rpc::protocol::CONNECTION_IDLE_LIMIT;
 
 /// Handle a single Unix socket connection.
 ///

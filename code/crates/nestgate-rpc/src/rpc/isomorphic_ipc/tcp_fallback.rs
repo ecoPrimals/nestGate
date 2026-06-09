@@ -195,10 +195,7 @@ impl TcpFallbackServer {
         }
     }
 
-    /// Handle TCP connection (persistent keep-alive JSON-RPC over TCP).
-    ///
-    /// Maximum idle time before a keep-alive TCP connection is closed.
-    const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
+    const CONNECTION_IDLE_LIMIT: std::time::Duration = crate::rpc::protocol::CONNECTION_IDLE_LIMIT;
 
     /// Event-driven TCP JSON-RPC keep-alive loop.
     ///

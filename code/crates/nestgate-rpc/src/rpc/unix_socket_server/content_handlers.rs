@@ -26,7 +26,7 @@ use tracing::debug;
 
 use super::StorageState;
 use super::storage_paths::{
-    content_key_path, ensure_parent_dirs, manifest_path, resolve_family_id,
+    content_hash_hex, content_key_path, ensure_parent_dirs, manifest_path, resolve_family_id,
 };
 
 /// `content.put` — store content-addressed data (BLAKE3 hash as key, automatic dedup).
@@ -64,7 +64,7 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
         NestGateError::invalid_input_with_field("data", format!("invalid base64: {e}"))
     })?;
 
-    let blake3_hex = blake3::hash(&raw).to_hex().to_string();
+    let blake3_hex = content_hash_hex(&raw);
     let object_path = content_key_path(family_id, &blake3_hex);
 
     if object_path.exists() {

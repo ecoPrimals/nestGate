@@ -458,12 +458,7 @@ impl IsomorphicIpcServer {
         Ok(())
     }
 
-    /// Maximum idle time before a keep-alive connection is closed.
-    ///
-    /// The timer resets on every successful request, so active connections
-    /// are never reaped. Only truly idle (half-open, abandoned) connections
-    /// are affected.
-    const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
+    const CONNECTION_IDLE_LIMIT: std::time::Duration = crate::rpc::protocol::CONNECTION_IDLE_LIMIT;
 
     /// Event-driven JSON-RPC keep-alive loop.
     ///

@@ -15,6 +15,29 @@ use tracing::debug;
 
 use super::StorageState;
 
+/// Compute the BLAKE3 content hash of `data` and return it as a lowercase hex string.
+///
+/// This is the single canonical hashing entry point for content-addressed storage.
+/// Every CAS write/verify path must use this to avoid drift if the hashing
+/// algorithm or encoding changes.
+#[must_use]
+pub fn content_hash_hex(data: &[u8]) -> String {
+    blake3::hash(data).to_hex().to_string()
+}
+
+/// Build the filesystem path for a content-addressed object (BLAKE3 hash as key).
+///
+/// Layout: `{base}/datasets/{family}/_content/{hex[..2]}/{hex}`
+/// The 2-char prefix directory prevents flat-directory blowup at scale.
+pub fn content_cas_path(family_id: &str, blake3_hex: &str) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join("_content")
+        .join(&blake3_hex[..2])
+        .join(blake3_hex)
+}
+
 /// Build the filesystem path for a key in a family's dataset.
 ///
 /// When `namespace` is `Some`, uses the isomorphic layout:
@@ -89,20 +112,12 @@ pub(in crate::rpc::unix_socket_server) async fn ensure_parent_dirs(path: &Path) 
     Ok(())
 }
 
-/// Build the filesystem path for a content-addressed object (BLAKE3 hash as key).
-///
-/// Layout: `{base}/datasets/{family}/_content/{hex[..2]}/{hex}`
-/// The 2-char prefix directory prevents flat-directory blowup at scale.
+/// Legacy alias — delegates to [`content_cas_path`].
 pub(in crate::rpc::unix_socket_server) fn content_key_path(
     family_id: &str,
     blake3_hex: &str,
 ) -> PathBuf {
-    get_storage_base_path()
-        .join("datasets")
-        .join(family_id)
-        .join("_content")
-        .join(&blake3_hex[..2])
-        .join(blake3_hex)
+    content_cas_path(family_id, blake3_hex)
 }
 
 /// Build the filesystem path for a content manifest (versioned collection).
@@ -147,4 +162,99 @@ pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
         "family_id",
         "family_id required — set NESTGATE_FAMILY_ID or pass family_id in params",
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn content_hash_hex_deterministic() {
+        let h1 = content_hash_hex(b"hello world");
+        let h2 = content_hash_hex(b"hello world");
+        assert_eq!(h1, h2);
+        assert_eq!(h1.len(), 64, "BLAKE3 hex is always 64 chars");
+    }
+
+    #[test]
+    fn content_hash_hex_differs_for_different_input() {
+        let h1 = content_hash_hex(b"aaa");
+        let h2 = content_hash_hex(b"bbb");
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn content_hash_hex_empty_input() {
+        let h = content_hash_hex(&[]);
+        assert_eq!(h.len(), 64);
+        assert_ne!(h, content_hash_hex(b"notempty"));
+    }
+
+    #[test]
+    fn content_cas_path_layout() {
+        let hash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
+        let path = content_cas_path("my-family", hash);
+        let s = path.to_string_lossy();
+        assert!(s.contains("datasets/my-family/_content/ab/"));
+        assert!(s.ends_with(hash));
+    }
+
+    #[test]
+    fn content_key_path_delegates_to_cas_path() {
+        let hash = "ff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+        assert_eq!(
+            content_key_path("fam", hash),
+            content_cas_path("fam", hash),
+        );
+    }
+
+    #[test]
+    fn extract_namespace_valid() {
+        let params = json!({"namespace": "myns"});
+        assert_eq!(extract_namespace(&params).unwrap(), Some("myns"));
+    }
+
+    #[test]
+    fn extract_namespace_absent() {
+        let params = json!({});
+        assert_eq!(extract_namespace(&params).unwrap(), None);
+    }
+
+    #[test]
+    fn extract_namespace_rejects_path_traversal() {
+        let params = json!({"namespace": "../etc"});
+        assert!(extract_namespace(&params).is_err());
+    }
+
+    #[test]
+    fn extract_namespace_rejects_slash() {
+        let params = json!({"namespace": "a/b"});
+        assert!(extract_namespace(&params).is_err());
+    }
+
+    #[test]
+    fn extract_namespace_rejects_dot_prefix() {
+        let params = json!({"namespace": ".hidden"});
+        assert!(extract_namespace(&params).is_err());
+    }
+
+    #[test]
+    fn extract_namespace_rejects_underscore_prefix() {
+        let params = json!({"namespace": "_internal"});
+        assert!(extract_namespace(&params).is_err());
+    }
+
+    #[test]
+    fn extract_namespace_rejects_empty() {
+        let params = json!({"namespace": ""});
+        assert!(extract_namespace(&params).is_err());
+    }
+
+    #[test]
+    fn manifest_path_layout() {
+        let path = manifest_path("fam", "staging");
+        let s = path.to_string_lossy();
+        assert!(s.contains("datasets/fam/_manifests/staging.json"));
+    }
 }

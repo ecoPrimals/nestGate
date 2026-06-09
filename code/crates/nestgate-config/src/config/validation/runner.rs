@@ -81,3 +81,111 @@ impl ConfigValidator {
         report
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::types::{
+        ValidationError, ValidationErrorType, ValidationResult, ValidationSchema,
+        ValidationSuggestion, ValidationWarning, WarningSeverity,
+    };
+
+    fn empty_schema() -> ValidationSchema {
+        ValidationSchema {
+            fields: std::collections::HashMap::new(),
+            dependencies: Vec::new(),
+        }
+    }
+
+    struct ValidConfig;
+    impl ConfigValidation for ValidConfig {
+        fn validate(&self) -> ValidationResult {
+            ValidationResult::success()
+        }
+        fn schema() -> ValidationSchema {
+            empty_schema()
+        }
+    }
+
+    struct InvalidConfig;
+    impl ConfigValidation for InvalidConfig {
+        fn validate(&self) -> ValidationResult {
+            ValidationResult::with_errors(vec![ValidationError {
+                field: String::from("port"),
+                message: String::from("port must be > 0"),
+                error_type: ValidationErrorType::OutOfRange,
+                current_value: Some(String::from("0")),
+                expected_format: Some(String::from("1..65535")),
+            }])
+        }
+        fn schema() -> ValidationSchema {
+            empty_schema()
+        }
+    }
+
+    struct WarningConfig;
+    impl ConfigValidation for WarningConfig {
+        fn validate(&self) -> ValidationResult {
+            ValidationResult::success()
+                .with_warning(ValidationWarning {
+                    field: String::from("timeout"),
+                    message: String::from("timeout is very high"),
+                    severity: WarningSeverity::Medium,
+                })
+                .with_suggestion(ValidationSuggestion {
+                    field: String::from("timeout"),
+                    message: String::from("consider lowering timeout"),
+                    suggested_value: Some(String::from("30")),
+                })
+        }
+        fn schema() -> ValidationSchema {
+            empty_schema()
+        }
+    }
+
+    #[test]
+    fn validate_valid_config() {
+        let result = ConfigValidator::validate(&ValidConfig);
+        assert!(result.is_valid);
+        assert!(result.errors.is_empty());
+    }
+
+    #[test]
+    fn validate_strict_valid_config() {
+        assert!(ConfigValidator::validate_strict(&ValidConfig).is_ok());
+    }
+
+    #[test]
+    fn validate_strict_invalid_config() {
+        assert!(ConfigValidator::validate_strict(&InvalidConfig).is_err());
+    }
+
+    #[test]
+    fn generate_report_valid() {
+        let report = ConfigValidator::generate_report(&ValidConfig);
+        assert!(report.contains("VALID"));
+        assert!(!report.contains("Errors:"));
+    }
+
+    #[test]
+    fn generate_report_invalid_contains_errors() {
+        let report = ConfigValidator::generate_report(&InvalidConfig);
+        assert!(report.contains("INVALID"));
+        assert!(report.contains("Errors:"));
+        assert!(report.contains("port must be > 0"));
+        assert!(report.contains("Current: 0"));
+        assert!(report.contains("Expected: 1..65535"));
+    }
+
+    #[test]
+    fn generate_report_warnings_and_suggestions() {
+        let report = ConfigValidator::generate_report(&WarningConfig);
+        assert!(report.contains("VALID"));
+        assert!(report.contains("Warnings:"));
+        assert!(report.contains("[medium]"));
+        assert!(report.contains("timeout is very high"));
+        assert!(report.contains("Suggestions:"));
+        assert!(report.contains("consider lowering timeout"));
+        assert!(report.contains("Suggested: 30"));
+    }
+}

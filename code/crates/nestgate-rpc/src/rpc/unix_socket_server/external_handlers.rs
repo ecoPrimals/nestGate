@@ -11,7 +11,8 @@ use tracing::debug;
 
 use super::StorageState;
 use super::storage_paths::{
-    blob_key_path, dataset_key_path, ensure_parent_dirs, extract_namespace, resolve_family_id,
+    blob_key_path, content_hash_hex, dataset_key_path, ensure_parent_dirs, extract_namespace,
+    resolve_family_id,
 };
 
 /// `storage.object.size` — get size of a stored object without reading its content.
@@ -187,7 +188,7 @@ async fn do_external_fetch(
 
     let payload_bytes = bytes::Bytes::from(payload_bytes);
 
-    let blake3_hex = blake3::hash(&payload_bytes).to_hex().to_string();
+    let blake3_hex = content_hash_hex(&payload_bytes);
     debug!(
         "storage.fetch_external: fetched {} bytes, blake3={blake3_hex}",
         payload_bytes.len()
@@ -369,7 +370,7 @@ mod tests {
         let payload = br#"{"result": "cached_data"}"#;
         tokio::fs::write(&cache_path, payload).await.unwrap();
 
-        let blake3_hex = blake3::hash(payload).to_hex().to_string();
+        let blake3_hex = content_hash_hex(payload);
         let meta = json!({
             "url": "https://example.com/cached",
             "blake3": blake3_hex,
