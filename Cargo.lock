@@ -2103,7 +2103,6 @@ version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
- "etcetera",
  "nestgate-core",
  "nestgate-types",
  "parking_lot",
@@ -2154,7 +2153,6 @@ dependencies = [
  "dashmap",
  "fastrand",
  "futures-util",
- "getrandom 0.3.4",
  "hex",
  "lru",
  "nestgate-cache",
@@ -2337,7 +2335,6 @@ dependencies = [
 name = "nestgate-platform"
 version = "0.5.0"
 dependencies = [
- "etcetera",
  "nestgate-env-process-shim",
  "rustix 0.38.44",
  "sysinfo",
@@ -2392,6 +2389,7 @@ dependencies = [
  "base64",
  "chrono",
  "hex",
+ "hmac",
  "nestgate-config",
  "nestgate-discovery",
  "nestgate-platform",

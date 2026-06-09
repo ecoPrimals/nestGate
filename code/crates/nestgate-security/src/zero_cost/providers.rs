@@ -124,52 +124,60 @@ impl ZeroCostJwtProvider {
         &self.secret
     }
 
-    /// Verifies the signature of a JWT token
+    /// Verify an HMAC-SHA256 signature on a `payload.hex_mac` format token.
     ///
-    /// This is a simplified implementation for demonstration purposes.
-    /// In production, use a proper JWT library like `jsonwebtoken`.
-    ///
-    /// # Arguments
-    ///
-    /// * `token` - The JWT token string to verify
-    ///
-    /// # Returns
-    ///
-    /// `true` if the signature is valid, `false` otherwise
-    ///
-    /// # Examples
-    ///
-    /// ```rust,ignore
-    /// # use nestgate_core::zero_cost::providers::ZeroCostJwtProvider;
-    /// # let provider = ZeroCostJwtProvider::new([0u8; 32]);
-    /// let is_valid = provider.verify_signature("eyJhbGc...");
-    /// ```
+    /// Recomputes HMAC-SHA256 over the payload portion using this provider's
+    /// secret key and compares against the appended hex-encoded MAC.
     #[must_use]
-    pub const fn verify_signature(&self, token: &str) -> bool {
-        // Simplified JWT verification using the secret
-        !token.is_empty() && self.secret[0] != 0
+    pub fn verify_signature(&self, token: &str) -> bool {
+        let Some((payload, provided_mac)) = token.rsplit_once('.') else {
+            return false;
+        };
+        if payload.is_empty() {
+            return false;
+        }
+        let expected = Self::compute_hmac(&self.secret, payload);
+        expected == provided_mac
+    }
+
+    fn compute_hmac(key: &[u8; 32], data: &str) -> String {
+        use hmac::{Hmac, Mac};
+        use sha2::Sha256;
+        let Ok(mut mac) = <Hmac<Sha256>>::new_from_slice(key) else {
+            unreachable!("HMAC-SHA256 accepts any key length")
+        };
+        mac.update(data.as_bytes());
+        hex::encode(mac.finalize().into_bytes())
+    }
+
+    fn sign_payload(&self, payload: &str) -> String {
+        let mac = Self::compute_hmac(&self.secret, payload);
+        format!("{payload}.{mac}")
     }
 }
 
 impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
-    /// Authenticate
+    /// Authenticate credentials and return an HMAC-signed token.
     fn authenticate(&self, credentials: &String) -> Result<String, ZeroCostError> {
         if credentials.len() > 3 {
-            Ok(format!("jwt_token_{credentials}"))
+            Ok(self.sign_payload(&format!("jwt_token_{credentials}")))
         } else {
             Err(ZeroCostError::SecurityError)
         }
     }
 
-    /// Validates data
+    /// Validate an HMAC-signed token.
     fn validate(&self, token: &String) -> bool {
-        token.starts_with("jwt_token_")
+        self.verify_signature(token)
     }
 
-    /// Refresh
+    /// Refresh a validated token by issuing a new HMAC-signed version.
     fn refresh(&self, token: &String) -> Result<String, ZeroCostError> {
         if self.validate(token) {
-            Ok(format!("{token}_refreshed"))
+            let Some((payload, _)) = token.rsplit_once('.') else {
+                return Err(ZeroCostError::SecurityError);
+            };
+            Ok(self.sign_payload(&format!("{payload}_refreshed")))
         } else {
             Err(ZeroCostError::SecurityError)
         }
@@ -278,17 +286,42 @@ mod tests {
 
     #[test]
     fn test_jwt_provider_authentication() {
-        let provider = ZeroCostJwtProvider::new([0u8; 32]);
+        let provider = ZeroCostJwtProvider::new([1u8; 32]);
         let result = provider.authenticate(&String::from("testuser"));
         assert!(result.is_ok());
-        assert_eq!(result.expect("Operation failed"), "jwt_token_testuser");
+        let token = result.expect("auth should succeed");
+        assert!(token.starts_with("jwt_token_testuser."));
+        assert!(provider.verify_signature(&token));
     }
 
     #[test]
     fn test_jwt_provider_validation() {
-        let provider = ZeroCostJwtProvider::new([0u8; 32]);
-        assert!(provider.validate(&String::from("jwt_token_test")));
+        let provider = ZeroCostJwtProvider::new([1u8; 32]);
+        let token = provider
+            .authenticate(&String::from("testuser"))
+            .expect("auth");
+        assert!(provider.validate(&token));
         assert!(!provider.validate(&String::from("invalid_token")));
+        assert!(!provider.validate(&String::from("unsigned.payload")));
+    }
+
+    #[test]
+    fn test_jwt_provider_rejects_wrong_key() {
+        let p1 = ZeroCostJwtProvider::new([1u8; 32]);
+        let p2 = ZeroCostJwtProvider::new([2u8; 32]);
+        let token = p1.authenticate(&String::from("alice")).expect("auth");
+        assert!(!p2.validate(&token));
+    }
+
+    #[test]
+    fn test_jwt_provider_refresh_signs_new_token() {
+        let provider = ZeroCostJwtProvider::new([1u8; 32]);
+        let token = provider
+            .authenticate(&String::from("testuser"))
+            .expect("auth");
+        let refreshed = provider.refresh(&token).expect("refresh");
+        assert_ne!(token, refreshed);
+        assert!(provider.validate(&refreshed));
     }
 
     #[test]

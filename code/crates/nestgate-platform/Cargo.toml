@@ -13,7 +13,7 @@ workspace = true
 nestgate-env-process-shim = { path = "../nestgate-env-process-shim" }
 rustix = { workspace = true }
 # uzers removed — replaced by rustix::process::getuid/getgid (already in dep tree)
-etcetera = { workspace = true }
+
 tracing = { workspace = true }
 
 # sysinfo: optional fallback in `linux_proc::physical_cpu_count` on non-Linux (Linux uses `/proc`).

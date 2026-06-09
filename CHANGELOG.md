@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 99: Deep Debt Sweep — production stubs → real implementations, dependency hygiene, legacy env deprecation (Jun 8, 2026)
+
+- **Security auth HMAC evolution**: `validate_token_signature` now verifies HMAC-SHA256 signatures
+  (was: `!token.is_empty()`). `create_token` appends HMAC-SHA256 hex signature to payload.
+  `ZeroCostJwtProvider::verify_signature` and `authenticate` evolved from fake acceptance
+  to real HMAC-SHA256 sign/verify. 4 new tests (tampered, wrong-key, refresh, cross-key rejection).
+- **Legacy env deprecation warnings**: `BEARDOG_SOCKET` and `BEARDOG_FAMILY_SEED` now emit
+  `warn!` with migration guidance when resolved. `SECURITY_PROVIDER_SOCKET` / `SECURITY_SOCKET`
+  and `FAMILY_SEED` / `SECURITY_FAMILY_SEED` remain the preferred names.
+- **Unused dependency removal**: `getrandom` removed from `nestgate-core`, `etcetera` removed
+  from `nestgate-canonical` and `nestgate-platform` (zero usage in source).
+- **Migration framework validators evolved**: `validate_required_fields` checks
+  `storage.default_backend` non-empty. `validate_value_ranges` checks `storage.enabled`.
+  `validate_source` / `analyze_source` guard against empty `source_type`. Fixed typo
+  `validatevalue_ranges` → `validate_value_ranges`. Removed `#![expect(clippy::unnecessary_wraps)]`
+  — validators now genuinely can fail.
+- **TLS validate() evolved**: Checks cert_path and key_path are non-empty when TLS is enabled
+  (was: always `Ok(())`).
+- **Hardware helpers renamed**: `create_stub_*` → `snapshot_*` across `stub_helpers.rs`,
+  `dev_stubs/hardware.rs`, and `dev_stubs/mod.rs`. Functions were already reading real procfs
+  data — names now reflect actual behavior.
+- **Workspace result**: 13,120 total tests (+4 new), 0 new failures, 0 clippy warnings.
+
 ### Session 98: Transport Evolution Phase 2 — outbound IPC migration to connect_transport() (Jun 8, 2026)
 
 - **btsp_client.rs**: All 3 `connect_unix()` calls migrated to `connect_transport()` via shared

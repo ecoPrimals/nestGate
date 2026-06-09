@@ -6,8 +6,7 @@
 //! Best-effort hardware snapshots from Linux procfs and sysfs.
 //!
 //! On non-Linux hosts, or when `/proc` is unreadable, these helpers fall back to safe defaults
-//! (zeros or minimal resource counts) without panicking. The `create_*` names are kept for
-//! compatibility with older dev-stub call sites.
+//! (zeros or minimal resource counts) without panicking.
 
 use super::linux_proc;
 use super::types::{
@@ -23,7 +22,7 @@ pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
 
 /// Compute resources discovered via [`linux_proc::compute_resources_from_proc`], with fallbacks.
 #[must_use]
-pub fn create_stub_compute_resources() -> ComputeResources {
+pub fn snapshot_compute_resources() -> ComputeResources {
     linux_proc::compute_resources_from_proc().unwrap_or(ComputeResources {
         available_cpu: 1,
         available_memory_gb: 1,
@@ -33,8 +32,8 @@ pub fn create_stub_compute_resources() -> ComputeResources {
 
 /// Allocation matching the current host snapshot (full available resources).
 #[must_use]
-pub fn create_stub_compute_allocation() -> ComputeAllocation {
-    let r = create_stub_compute_resources();
+pub fn snapshot_compute_allocation() -> ComputeAllocation {
+    let r = snapshot_compute_resources();
     ComputeAllocation {
         cpu_cores: r.available_cpu,
         memory_gb: r.available_memory_gb,
@@ -44,8 +43,8 @@ pub fn create_stub_compute_allocation() -> ComputeAllocation {
 
 /// Derived profile strings from CPU model, memory, and `/sys/block` / `/sys/class/net`.
 #[must_use]
-pub fn create_stub_system_profile() -> SystemProfile {
-    let cpu = create_stub_cpu_info();
+pub fn snapshot_system_profile() -> SystemProfile {
+    let cpu = snapshot_cpu_info();
     let mem_gb = linux_proc::mem_total_gib().unwrap_or(1);
     SystemProfile {
         cpu_profile: format!("{} cores: {}", cpu.cores, cpu.model),
@@ -57,10 +56,10 @@ pub fn create_stub_system_profile() -> SystemProfile {
 
 /// Observational tuning report using live metrics before/after sampling (no privileged changes).
 #[must_use]
-pub fn create_stub_tuning_result() -> TuningResult {
+pub fn snapshot_tuning_result() -> TuningResult {
     let before_metrics = linux_proc::live_hardware_metrics_best_effort();
     let after_metrics = linux_proc::live_hardware_metrics_best_effort();
-    let profile = create_stub_system_profile();
+    let profile = snapshot_system_profile();
     let profile_name = profile.cpu_profile;
     TuningResult {
         profile_name,
@@ -77,7 +76,7 @@ pub fn create_stub_tuning_result() -> TuningResult {
 
 /// Benchmark envelope carrying a live metrics snapshot from procfs.
 #[must_use]
-pub fn create_stub_benchmark_result(
+pub fn snapshot_benchmark_result(
     benchmark_type: &str,
     score: f64,
     duration_ms: u64,
@@ -92,7 +91,7 @@ pub fn create_stub_benchmark_result(
 
 /// CPU model and core count from `/proc/cpuinfo` (Linux) or host parallelism (other Unix).
 #[must_use]
-pub fn create_stub_cpu_info() -> CpuInfo {
+pub fn snapshot_cpu_info() -> CpuInfo {
     let cores = linux_proc::logical_cpu_count()
         .map(|n| usize::try_from(n.max(1)).unwrap_or(1))
         .unwrap_or(1);
@@ -125,15 +124,15 @@ mod tests {
 
     #[test]
     fn stub_compute_resources_nonzero_cpu() {
-        let resources = create_stub_compute_resources();
+        let resources = snapshot_compute_resources();
         assert!(resources.available_cpu >= 1);
         assert!(resources.available_memory_gb >= 1);
     }
 
     #[test]
     fn stub_allocation_matches_resources() {
-        let r = create_stub_compute_resources();
-        let allocation = create_stub_compute_allocation();
+        let r = snapshot_compute_resources();
+        let allocation = snapshot_compute_allocation();
         assert_eq!(allocation.cpu_cores, r.available_cpu);
         assert_eq!(allocation.memory_gb, r.available_memory_gb);
         assert_eq!(allocation.gpu_count, r.available_gpu);
@@ -141,7 +140,7 @@ mod tests {
 
     #[test]
     fn stub_system_profile_strings_nonempty() {
-        let profile = create_stub_system_profile();
+        let profile = snapshot_system_profile();
         assert!(!profile.cpu_profile.is_empty());
         assert!(!profile.memory_profile.is_empty());
         assert!(!profile.storage_profile.is_empty());
@@ -150,21 +149,21 @@ mod tests {
 
     #[test]
     fn stub_tuning_result_uses_observational_profile() {
-        let result = create_stub_tuning_result();
+        let result = snapshot_tuning_result();
         assert!(!result.profile_name.is_empty());
         assert_eq!(result.optimizations_applied.len(), 2);
     }
 
     #[test]
     fn stub_benchmark_carries_type() {
-        let result = create_stub_benchmark_result("cpu_test", 85.0, 5000);
+        let result = snapshot_benchmark_result("cpu_test", 85.0, 5000);
         assert_eq!(result.benchmark_type, "cpu_test");
         assert_eq!(result.score, 85.0);
     }
 
     #[test]
     fn stub_cpu_info_matches_probe() {
-        let cpu = create_stub_cpu_info();
+        let cpu = snapshot_cpu_info();
         assert!(cpu.cores >= 1);
         assert!(!cpu.model.is_empty());
     }
@@ -172,11 +171,11 @@ mod tests {
     #[test]
     fn stub_functions_do_not_panic() {
         let _ = create_zero_hardware_metrics();
-        let _ = create_stub_compute_resources();
-        let _ = create_stub_compute_allocation();
-        let _ = create_stub_system_profile();
-        let _ = create_stub_tuning_result();
-        let _ = create_stub_benchmark_result("test", 0.0, 0);
-        let _ = create_stub_cpu_info();
+        let _ = snapshot_compute_resources();
+        let _ = snapshot_compute_allocation();
+        let _ = snapshot_system_profile();
+        let _ = snapshot_tuning_result();
+        let _ = snapshot_benchmark_result("test", 0.0, 0);
+        let _ = snapshot_cpu_info();
     }
 }

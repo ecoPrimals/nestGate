@@ -242,6 +242,11 @@ impl ConfigMigrator {
     }
 
     fn validate_source(&mut self) -> Result<()> {
+        if self.source_type.is_empty() {
+            return Err(NestGateError::validation_error(
+                "Migration source type must be specified before validation",
+            ));
+        }
         self.add_completed_step(String::from("Source validation completed"));
         Ok(())
     }
@@ -265,6 +270,11 @@ impl ConfigMigrator {
     }
 
     fn analyze_source(&mut self) -> Result<()> {
+        if self.source_type.is_empty() {
+            return Err(NestGateError::validation_error(
+                "Migration source type must be specified before analysis",
+            ));
+        }
         self.add_completed_step(String::from("Source analysis completed"));
         Ok(())
     }

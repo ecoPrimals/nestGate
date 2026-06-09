@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-
 //! Safe configuration migration with comprehensive validation.
 //!
 //! Provides migration with backup and rollback capability, plus
@@ -44,7 +39,7 @@ impl SafeConfigMigration {
                 ValidationRule {
                     name: String::from("value_ranges"),
                     description: String::from("Validate values are within acceptable ranges"),
-                    validator: Self::validatevalue_ranges,
+                    validator: Self::validate_value_ranges,
                 },
             ],
         }
@@ -117,11 +112,21 @@ impl SafeConfigMigration {
         })
     }
 
-    const fn validate_required_fields(_config: &NestGateCanonicalConfig) -> Result<()> {
+    fn validate_required_fields(config: &NestGateCanonicalConfig) -> Result<()> {
+        if config.storage.default_backend.is_empty() {
+            return Err(NestGateError::validation_error(
+                "storage.default_backend is required",
+            ));
+        }
         Ok(())
     }
 
-    const fn validatevalue_ranges(_config: &NestGateCanonicalConfig) -> Result<()> {
+    fn validate_value_ranges(config: &NestGateCanonicalConfig) -> Result<()> {
+        if !config.storage.enabled {
+            return Err(NestGateError::validation_error(
+                "storage must be enabled for migration",
+            ));
+        }
         Ok(())
     }
 }

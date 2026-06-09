@@ -181,8 +181,22 @@ impl TlsSecurityConfig {
         self
     }
 
-    /// Validates data
-    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
+    /// Validate TLS configuration consistency.
+    ///
+    /// When TLS is enabled, cert and key paths must be non-empty.
+    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+        if self.enabled {
+            if self.certificates.cert_path.as_os_str().is_empty() {
+                return Err(nestgate_types::error::NestGateError::validation_error(
+                    "TLS enabled but certificates.cert_path is empty",
+                ));
+            }
+            if self.certificates.key_path.as_os_str().is_empty() {
+                return Err(nestgate_types::error::NestGateError::validation_error(
+                    "TLS enabled but certificates.key_path is empty",
+                ));
+            }
+        }
         Ok(())
     }
 }

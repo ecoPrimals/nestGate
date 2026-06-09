@@ -21,11 +21,11 @@ impl AuthTokenManager {
         Self { signing_key }
     }
 
-    /// Create a new authentication token for a user.
+    /// Create a new HMAC-signed authentication token for a user.
     ///
-    /// Generates a UUID-based token. HMAC signing is delegated to the crypto
-    /// capability provider when available; falls back to unsigned tokens when
-    /// the provider is unavailable (standalone mode).
+    /// Generates a UUID-based payload and appends an HMAC-SHA256 signature
+    /// using the manager's signing key. The resulting token format is
+    /// `token_{user}_{uuid}.{hmac_hex}`, verifiable via [`validate_token_signature`].
     #[must_use]
     pub fn create_token(
         &self,
@@ -33,17 +33,37 @@ impl AuthTokenManager {
         permissions: Vec<String>,
         expiry: Duration,
     ) -> ZeroCostAuthToken {
-        let token_id = format!("token_{}_{}", user_id, uuid::Uuid::new_v4());
+        let payload = format!("token_{}_{}", user_id, uuid::Uuid::new_v4());
+        let mac = Self::compute_hmac(&self.signing_key, &payload);
+        let token_id = format!("{payload}.{mac}");
         ZeroCostAuthToken::new(token_id, user_id.to_string(), permissions, expiry)
     }
 
-    /// Validate a token's structure.
+    /// Validate a token's HMAC signature using the signing key.
     ///
-    /// Checks that the token string is non-empty and well-formed.
-    /// Full cryptographic verification requires the crypto capability provider.
+    /// Verifies that the token was issued by this manager by recomputing the
+    /// HMAC-SHA256 over the token prefix and comparing it to the embedded
+    /// signature suffix. Tokens without an HMAC suffix are rejected.
     #[must_use]
-    pub const fn validate_token_signature(&self, token: &str) -> bool {
-        !token.is_empty()
+    pub fn validate_token_signature(&self, token: &str) -> bool {
+        if token.is_empty() {
+            return false;
+        }
+        let Some((payload, provided_mac)) = token.rsplit_once('.') else {
+            return false;
+        };
+        let expected_mac = Self::compute_hmac(&self.signing_key, payload);
+        expected_mac == provided_mac
+    }
+
+    fn compute_hmac(key: &str, data: &str) -> String {
+        use hmac::{Hmac, Mac};
+        use sha2::Sha256;
+        let Ok(mut mac) = <Hmac<Sha256>>::new_from_slice(key.as_bytes()) else {
+            unreachable!("HMAC-SHA256 accepts any key length")
+        };
+        mac.update(data.as_bytes());
+        hex::encode(mac.finalize().into_bytes())
     }
 
     /// Creates a workspace secret by requesting random bytes from the crypto provider.
@@ -92,9 +112,32 @@ mod tests {
     }
 
     #[test]
-    fn validate_token_accepts_nonempty() {
+    fn validate_token_rejects_unsigned() {
         let mgr = manager();
-        assert!(mgr.validate_token_signature("some-token-string"));
+        assert!(!mgr.validate_token_signature("some-token-string"));
+    }
+
+    #[test]
+    fn validate_token_accepts_signed() {
+        let mgr = manager();
+        let token = mgr.create_token("carol", vec![], Duration::from_secs(60));
+        assert!(mgr.validate_token_signature(&token.token));
+    }
+
+    #[test]
+    fn validate_token_rejects_tampered() {
+        let mgr = manager();
+        let token = mgr.create_token("dave", vec![], Duration::from_secs(60));
+        let tampered = format!("{}x", token.token);
+        assert!(!mgr.validate_token_signature(&tampered));
+    }
+
+    #[test]
+    fn validate_token_rejects_wrong_key() {
+        let mgr1 = manager();
+        let mgr2 = AuthTokenManager::new(String::from("different-key"));
+        let token = mgr1.create_token("eve", vec![], Duration::from_secs(60));
+        assert!(!mgr2.validate_token_signature(&token.token));
     }
 
     #[test]

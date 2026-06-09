@@ -14,7 +14,7 @@ mod tests {
 
     #[test]
     fn reexported_helpers_are_callable() {
-        let _ = create_stub_system_profile();
-        let _ = create_stub_cpu_info();
+        let _ = snapshot_system_profile();
+        let _ = snapshot_cpu_info();
     }
 }

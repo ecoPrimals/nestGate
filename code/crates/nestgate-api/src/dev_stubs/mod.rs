@@ -57,8 +57,8 @@ pub mod zfs;
 
 // Re-export commonly used types for convenience
 pub use hardware::{
-    create_stub_benchmark_result, create_stub_compute_allocation, create_stub_compute_resources,
-    create_stub_system_profile, create_stub_tuning_result, create_zero_hardware_metrics,
+    create_zero_hardware_metrics, snapshot_benchmark_result, snapshot_compute_allocation,
+    snapshot_compute_resources, snapshot_system_profile, snapshot_tuning_result,
 };
 pub use testing::{
     MockingConfig, ResourceAllocation, WorkloadResult, build_mock_resource_allocation,
