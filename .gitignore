@@ -124,7 +124,6 @@ nestgate-port-manager-*.tar.gz
 /config-migration-backup/
 
 # IDE specific
-# .cargo/ - REMOVED: Now contains cross-compilation config for genomeBin
 .rustfmt.toml.bak
 
 # Local development
@@ -147,29 +146,15 @@ nestgate-port-manager-*.tar.gz
 # Monitoring and observability
 /monitoring/
 
-# Modernization artifacts
-/sporeHandoff/
-
 # Fuzz testing
 /fuzz/artifacts/
-/fuzz/corpus/ 
+/fuzz/corpus/
+
 # Audit and analysis artifacts
 .audit-artifacts/
 .audit-*.out
 /target-*/
 rust_out
-
-# Showcase output/generated files
-showcase/**/output/
-showcase/**/outputs/
-*.dat
-large-genome.fasta
-# Generated bioinformatics data (should not be tracked)
-*.fastq
-*.safetensors
-
-# Showcase timestamped run directories (generated test outputs)
-showcase/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]/
 
 # Build artifacts (should be in target/)
 **/*.rlib

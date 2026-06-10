@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jun 3, 2026 (Session 92)  
+**Last Updated**: Jun 10, 2026 (Session 101)  
 **Version**: 0.5.0
 
 ---
@@ -8,11 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Jun 3, 2026
-Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of Jun 3, 2026
-Format:             CLEAN (cargo fmt --check passes), as of Jun 3, 2026
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Jun 3, 2026
-Tests:              12,551 total (9,083 lib), 0 failures — as of Jun 3, 2026 (Session 92)
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of Jun 10, 2026
+Clippy:             PASS — cargo clippy --workspace -- -D warnings (zero warnings), as of Jun 10, 2026
+Format:             CLEAN (cargo fmt --check passes), as of Jun 10, 2026
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of Jun 10, 2026
+Tests:              3,863 total (2,325 lib, 867 RPC), 0 failures — as of Jun 10, 2026 (Session 101)
 Coverage:           84%+ line (cargo llvm-cov --workspace; measured May 26, 2026) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  ZERO in default production build
 Unwrap/Expect:      ZERO in production library code
@@ -48,4 +48,4 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–92) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
+Per-session detail (Sessions 43–101) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.

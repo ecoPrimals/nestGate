@@ -17,7 +17,7 @@
 
 use std::collections::BTreeSet;
 
-const REGISTRY_TOML: &str = include_str!("../capability_registry.toml");
+const REGISTRY_TOML: &str = include_str!("../config/capability_registry.toml");
 
 fn registry_methods() -> BTreeSet<String> {
     let table: toml::Table = REGISTRY_TOML.parse().expect("valid TOML");

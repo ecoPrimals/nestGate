@@ -1,10 +1,13 @@
-# NestGate Capability Registry — Backward-compatibility symlink
+# NestGate Capability Registry — Machine-Readable Self-Knowledge
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (c) 2025-2026 ecoPrimals Collective
 #
-# Canonical location: config/capability_registry.toml
-# This root copy is kept for backward compatibility with tooling that
-# expects the registry at the repo root. Edit config/ and copy here.
+# Canonical location for ecosystem tooling (Wave 78 convention).
+# A backward-compat copy lives at the repo root.
+#
+# This file is the single source of truth for NestGate's primal identity
+# and advertised capabilities. Wire Standard L3 responses and cross-check
+# tests derive from these definitions.
 #
 # Stability tiers:
 #   stable      — API surface frozen; breaking changes require major version bump
@@ -18,6 +21,7 @@ version = "0.5.0"
 license = "AGPL-3.0-or-later"
 description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
 transport = ["uds", "tcp", "http"]
+transport_evolution = "phase2"  # Phase 1: accepts TRANSPORT_ENDPOINT (Wave 100). Phase 2: all outbound IPC via connect_transport() (Wave 101)
 protocol = "jsonrpc-2.0"
 
 [capabilities.storage]
@@ -127,6 +131,13 @@ methods = [
 #   Begin chunked CAS download by BLAKE3 hash.
 # content.retrieve_stream_chunk: {stream_id, offset} → {data, offset, length, total_size, is_last}
 #   Read next chunk. Reuses storage.retrieve_stream_chunk session infrastructure.
+#
+# ── Direct HTTP content serving (Session 93) ──────────────────────
+# GET /content/:hash?family_id=<optional>
+#   Returns raw bytes (not JSON, not base64) with Content-Type from .meta.json sidecar.
+#   Cache-Control: public, max-age=31536000, immutable (BLAKE3 hashes are permanent).
+#   ETag: "<blake3_hash>". 404 for missing, 400 for malformed hash.
+#   Designed for Caddy reverse proxy: nestgate.io/<hash> → NestGate /content/<hash>.
 
 [capabilities.repo]
 domain = "content"

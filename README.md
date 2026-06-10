@@ -2,16 +2,16 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-03, Session 92)**  
+**Verification (as of 2026-06-10, Session 101)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 12,551 total (9,083 lib), 0 failures  
+- **Tests**: 3,863 total (2,325 lib, 867 RPC), 0 failures  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 12,551 total (9,083 lib), 0 failures
+- **Tests (last recorded)**: 3,863 total (2,325 lib, 867 RPC), 0 failures
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jun 3, 2026
+**Last Updated**: Jun 10, 2026
 
 ---
 
