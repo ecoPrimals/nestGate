@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 101b: NG-DOWNCAST-01 fix + doc refresh + debris cleanup (Jun 10, 2026)
+
+- **NG-DOWNCAST-01 fix**: `is_platform_constraint()` downcast was failing when `io::Error` was
+  wrapped through `.context()` or `anyhow::anyhow!()` — the direct `downcast_ref::<io::Error>()`
+  only matched the top-level error type. Introduced `find_io_error()` which walks the full
+  `source()` chain to find nested `io::Error`. Fixed `UnixListener::bind` error path to use
+  `.context()` (preserves type) instead of `anyhow::anyhow!()` (stringifies, destroys type).
+  7 new tests cover chain-walking, context-wrapped IO errors, bind mode env vars, and deeply
+  nested errors.
+- **Root docs refresh**: 8 root markdown files (README, STATUS, START_HERE, QUICK_START,
+  QUICK_REFERENCE, CONTRIBUTING, DOCUMENTATION_INDEX, CAPABILITY_MAPPINGS) updated from
+  Session 92 → Session 101 with honest test counts: 3,863 total (2,325 lib, 874 RPC).
+- **Registry sync**: Root `capability_registry.toml` synced from canonical `config/` source
+  (was 11 lines behind, missing `transport_evolution = "phase2"`). Crosscheck test pointed at
+  canonical `config/` path to prevent future drift.
+- **Gitignore cleanup**: Removed stale showcase/bioinformatics entries and dead `genomeBin` comment.
+- **cargo clean**: Freed 120.9 GB of build cache; clean rebuild from scratch validated.
+
 ### Session 101: Deep Debt Sweep Pass 3 — coverage sprint, capability TTL dedup, lint cleanup (Jun 10, 2026)
 
 - **Coverage sprint — 43 new tests** across 4 previously untested production modules:

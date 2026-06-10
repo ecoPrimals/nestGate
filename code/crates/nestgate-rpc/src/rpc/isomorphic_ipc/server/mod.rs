@@ -78,7 +78,7 @@
 //!
 //! Pattern validated in orchestration provider v3.33.0
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use serde_json::Value;
 use std::path::PathBuf;
@@ -260,7 +260,7 @@ impl IsomorphicIpcServer {
             };
 
         let listener = UnixListener::bind(&socket_path)
-            .map_err(|e| anyhow::anyhow!("Failed to bind Unix socket: {e}"))?;
+            .context("Failed to bind Unix socket")?;
 
         info!("Unix socket bound: {}", socket_path.display());
 

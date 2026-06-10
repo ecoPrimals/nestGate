@@ -56,7 +56,7 @@ use tracing::debug;
 /// * `true` - Error is a platform constraint (should adapt)
 /// * `false` - Error is a real failure (should report)
 pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
-    if let Some(io_err) = error.downcast_ref::<std::io::Error>() {
+    if let Some(io_err) = find_io_error(error) {
         match io_err.kind() {
             // Permission denied - check for SELinux/Android restrictions OR
             // explicit PRIMAL_BIND_MODE=fallback (grapheneGate deploy)
@@ -92,6 +92,23 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
         // Non-IO errors are not platform constraints
         debug!("Non-IO error (not platform constraint)");
         false
+    }
+}
+
+/// Walk the full anyhow error chain to find an `std::io::Error`.
+///
+/// `anyhow::Error::downcast_ref` only checks the top-level type. When
+/// the IO error is wrapped via `.context()` or a middleware error type,
+/// the direct downcast misses it. This walks `source()` links so that
+/// `is_platform_constraint` works even when the IO error is nested
+/// inside `anyhow::anyhow!("Failed to bind: {e}")` or similar wrappers.
+fn find_io_error(error: &anyhow::Error) -> Option<&std::io::Error> {
+    let mut current: &dyn std::error::Error = error.as_ref();
+    loop {
+        if let Some(io_err) = current.downcast_ref::<std::io::Error>() {
+            return Some(io_err);
+        }
+        current = current.source()?;
     }
 }
 
@@ -158,55 +175,124 @@ fn is_selinux_enforcing() -> bool {
 mod tests {
 
     use super::*;
+    use anyhow::Context;
     use std::io::Error as IoError;
 
     #[test]
-    fn test_selinux_detection_does_not_panic() {
-        // Should not panic regardless of platform
-        let result = is_selinux_enforcing();
-        // Result depends on platform, but function should complete
-        println!("SELinux enforcing: {}", result);
+    fn selinux_detection_does_not_panic() {
+        let _result = is_selinux_enforcing();
     }
 
     #[test]
-    fn test_unsupported_error_is_platform_constraint() {
+    fn unsupported_error_is_platform_constraint() {
         let io_err = IoError::new(ErrorKind::Unsupported, "Unix sockets not supported");
         let err = anyhow::Error::new(io_err);
-
         assert!(is_platform_constraint(&err));
     }
 
     #[test]
-    fn test_addr_not_available_is_platform_constraint() {
+    fn addr_not_available_is_platform_constraint() {
         let io_err = IoError::new(ErrorKind::AddrNotAvailable, "Address family not supported");
         let err = anyhow::Error::new(io_err);
-
         assert!(is_platform_constraint(&err));
     }
 
     #[test]
-    fn test_permission_denied_with_selinux() {
+    fn permission_denied_with_selinux() {
         let io_err = IoError::new(ErrorKind::PermissionDenied, "Permission denied");
         let err = anyhow::Error::new(io_err);
-
-        // Result depends on whether SELinux is actually enforcing
-        let result = is_platform_constraint(&err);
-        println!("Permission denied is platform constraint: {}", result);
-        // Don't assert - depends on platform
+        let _result = is_platform_constraint(&err);
     }
 
     #[test]
-    fn test_other_io_errors_not_platform_constraint() {
+    fn other_io_errors_not_platform_constraint() {
         let io_err = IoError::new(ErrorKind::NotFound, "File not found");
         let err = anyhow::Error::new(io_err);
-
         assert!(!is_platform_constraint(&err));
     }
 
     #[test]
-    fn test_non_io_error_not_platform_constraint() {
+    fn non_io_error_not_platform_constraint() {
         let err = anyhow::anyhow!("Some other error");
-
         assert!(!is_platform_constraint(&err));
+    }
+
+    // NG-DOWNCAST-01: io::Error wrapped via .context() was invisible to
+    // the old direct downcast_ref. Verify chain-walking finds it.
+    #[test]
+    fn context_wrapped_io_error_detected() {
+        let io_err = IoError::new(ErrorKind::Unsupported, "sockets not supported");
+        let err: anyhow::Error =
+            anyhow::Error::new(io_err).context("Failed to bind Unix socket");
+        assert!(
+            is_platform_constraint(&err),
+            "chain-walking should find io::Error through .context()"
+        );
+    }
+
+    #[test]
+    fn anyhow_anyhow_stringified_io_error_not_detected() {
+        let io_err = IoError::new(ErrorKind::Unsupported, "sockets not supported");
+        let err = anyhow::anyhow!("Failed to bind: {io_err}");
+        assert!(
+            !is_platform_constraint(&err),
+            "stringified io errors lose type information"
+        );
+    }
+
+    #[test]
+    fn deeply_nested_io_error_detected() {
+        let io_err = IoError::new(ErrorKind::AddrNotAvailable, "no AF_UNIX");
+        let err: anyhow::Error = anyhow::Error::new(io_err)
+            .context("socket preparation")
+            .context("server startup");
+        assert!(is_platform_constraint(&err));
+    }
+
+    #[test]
+    fn find_io_error_returns_none_for_non_io() {
+        let err = anyhow::anyhow!("not an io error");
+        assert!(find_io_error(&err).is_none());
+    }
+
+    #[test]
+    fn find_io_error_returns_correct_kind() {
+        let io_err = IoError::new(ErrorKind::PermissionDenied, "denied");
+        let err: anyhow::Error =
+            anyhow::Error::new(io_err).context("bind failed");
+        let found = find_io_error(&err).expect("should find io::Error");
+        assert_eq!(found.kind(), ErrorKind::PermissionDenied);
+    }
+
+    #[test]
+    fn bind_mode_fallback_triggers_on_permission_denied() {
+        let io_err = IoError::new(ErrorKind::PermissionDenied, "denied");
+        let err: anyhow::Error =
+            anyhow::Error::new(io_err).context("Failed to bind Unix socket");
+        temp_env::with_vars(
+            [("PRIMAL_BIND_MODE", Some("fallback"))],
+            || {
+                assert!(
+                    is_platform_constraint(&err),
+                    "fallback mode should treat PermissionDenied as constraint"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn tcp_only_mode_triggers_on_permission_denied() {
+        let io_err = IoError::new(ErrorKind::PermissionDenied, "denied");
+        let err: anyhow::Error =
+            anyhow::Error::new(io_err).context("bind failed");
+        temp_env::with_vars(
+            [("PRIMAL_BIND_MODE", Some("tcp_only"))],
+            || {
+                assert!(
+                    is_platform_constraint(&err),
+                    "tcp_only mode should treat PermissionDenied as constraint"
+                );
+            },
+        );
     }
 }

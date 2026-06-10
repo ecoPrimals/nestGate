@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **3,863 tests** (3,790 passing, 73 ignored, 867 RPC), **0 failures** (serial and parallel), 0 clippy warnings
+- **3,863 tests** (3,790 passing, 73 ignored, 874 RPC), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 101b NG-DOWNCAST-01 fix**: `is_platform_constraint()` chain-walking evolution — `find_io_error()` walks `source()` chain to find nested `io::Error` through `.context()` wrappers; `UnixListener::bind` error path preserved via `.context()` instead of `anyhow::anyhow!()`; 7 new tests; root docs refreshed to honest test counts; registry synced from canonical `config/`; gitignore cleaned
 - **Session 101 Deep Debt Sweep Pass 3**: 43 new tests (TLS validation 11, safe migration 10, config migrator 14, dispatch handlers 7, protocol 1); `CAPABILITY_ANNOUNCE_TTL` dedup (3 announce call sites → shared constant in `protocol.rs`); stale `#[expect(clippy::option_if_let_else)]` removed; `doc_markdown` lint fix for `SELinux`
 - **Session 100 Deep Debt Sweep Pass 2**: BLAKE3 hash centralization (`content_hash_hex()` + `content_cas_path()` as canonical CAS helpers — 4 production files consolidated); `CONNECTION_IDLE_LIMIT` dedup (3 identical definitions → shared constant in `protocol.rs`); 45 new tests (template storage 19, storage paths 13, validation runner 6, protocol 1, plus inline test updates); `storage_paths` module visibility evolved to `pub(crate)` for cross-module CAS access
 - **Session 99 Deep Debt Sweep**: Security auth stubs → real HMAC-SHA256 (4 new tests); legacy `BEARDOG_*` env vars emit deprecation warnings; 3 unused deps removed (`getrandom`, `etcetera` x2); migration validators → real field checks; TLS `validate()` → real cert path checks; `create_stub_*` → `snapshot_*` naming; `#![expect(clippy::unnecessary_wraps)]` removed
