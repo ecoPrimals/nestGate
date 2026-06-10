@@ -62,8 +62,13 @@ use tracing::debug;
 pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
     if let Some(io_err) = error.downcast_ref::<std::io::Error>() {
         match io_err.kind() {
-            // Permission denied - check for SELinux/Android restrictions
+            // Permission denied - check for SELinux/Android restrictions OR
+            // explicit PRIMAL_BIND_MODE=fallback (grapheneGate deploy)
             ErrorKind::PermissionDenied => {
+                if is_bind_mode_fallback() {
+                    debug!("Permission denied + PRIMAL_BIND_MODE=fallback — treating as platform constraint");
+                    return true;
+                }
                 let is_selinux = is_selinux_enforcing();
                 debug!("Permission denied - SELinux enforcing: {}", is_selinux);
                 is_selinux
@@ -92,6 +97,22 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
         debug!("Non-IO error (not platform constraint)");
         false
     }
+}
+
+/// Check if `PRIMAL_BIND_MODE` requests fallback behavior.
+///
+/// When `deploy_pixel.sh` exports `PRIMAL_BIND_MODE=fallback`, any
+/// `PermissionDenied` on UDS bind should trigger TCP fallback regardless
+/// of whether SELinux detection succeeds (Android sandbox may block
+/// `/sys/fs/selinux/enforce` reads).
+fn is_bind_mode_fallback() -> bool {
+    matches!(
+        std::env::var("PRIMAL_BIND_MODE")
+            .unwrap_or_default()
+            .to_lowercase()
+            .as_str(),
+        "fallback" | "auto" | "tcp_only" | "tcp"
+    )
 }
 
 /// Check if `SELinux` is enforcing (Android/Linux)
