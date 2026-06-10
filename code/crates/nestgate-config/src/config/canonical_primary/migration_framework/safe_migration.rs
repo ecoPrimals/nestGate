@@ -136,3 +136,109 @@ impl Default for SafeConfigMigration {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::canonical_primary::StandardConfig;
+
+    #[test]
+    fn new_has_two_validation_rules() {
+        let m = SafeConfigMigration::new();
+        assert_eq!(m.validation_rules.len(), 2);
+        assert_eq!(m.validation_rules[0].name, "required_fields");
+        assert_eq!(m.validation_rules[1].name, "value_ranges");
+    }
+
+    #[test]
+    fn default_equals_new() {
+        let d = SafeConfigMigration::default();
+        assert_eq!(d.validation_rules.len(), 2);
+        assert!(d.backup.is_none());
+    }
+
+    #[test]
+    fn migrate_with_backup_stores_backup() {
+        let mut m = SafeConfigMigration::new();
+        let source = serde_json::json!({"version": 1});
+        let target: StandardConfig = StandardConfig::default();
+        let result = m.migrate_with_backup(source, target);
+        assert!(result.is_ok());
+        assert!(m.backup.is_some());
+    }
+
+    #[test]
+    fn rollback_without_backup_errors() {
+        let m = SafeConfigMigration::new();
+        assert!(m.rollback().is_err());
+    }
+
+    #[test]
+    fn rollback_with_backup_succeeds() {
+        let mut m = SafeConfigMigration::new();
+        let target: StandardConfig = StandardConfig::default();
+        m.migrate_with_backup(serde_json::json!({}), target).unwrap();
+        assert!(m.rollback().is_ok());
+    }
+
+    #[test]
+    fn validate_migration_default_config_passes() {
+        let m = SafeConfigMigration::new();
+        let config: StandardConfig = StandardConfig::default();
+        let report = m.validate_migration(&config).unwrap();
+        assert!(
+            report.failed_steps.is_empty(),
+            "default config should pass all validation rules"
+        );
+        assert_eq!(report.progress_percentage, 100);
+        assert!(matches!(report.current_phase, MigrationPhase::Completed));
+    }
+
+    #[test]
+    fn validate_required_fields_rejects_empty_backend() {
+        let mut config: StandardConfig = StandardConfig::default();
+        config.storage.default_backend = String::new();
+        let err = SafeConfigMigration::validate_required_fields(&config);
+        assert!(err.is_err());
+        assert!(
+            err.unwrap_err()
+                .to_string()
+                .contains("default_backend"),
+        );
+    }
+
+    #[test]
+    fn validate_value_ranges_rejects_disabled_storage() {
+        let mut config: StandardConfig = StandardConfig::default();
+        config.storage.enabled = false;
+        let err = SafeConfigMigration::validate_value_ranges(&config);
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn validate_migration_reports_errors_for_bad_config() {
+        let m = SafeConfigMigration::new();
+        let mut config: StandardConfig = StandardConfig::default();
+        config.storage.default_backend = String::new();
+        let report = m.validate_migration(&config).unwrap();
+        assert!(
+            !report.failed_steps.is_empty(),
+            "empty backend should produce validation errors"
+        );
+        assert!(matches!(report.current_phase, MigrationPhase::Failed));
+    }
+
+    #[test]
+    fn validate_migration_backup_flag_reflects_state() {
+        let mut m = SafeConfigMigration::new();
+        let config: StandardConfig = StandardConfig::default();
+
+        let report_no_backup = m.validate_migration(&config).unwrap();
+        assert!(!report_no_backup.backup_created);
+
+        m.migrate_with_backup(serde_json::json!({}), config.clone())
+            .unwrap();
+        let report_with_backup = m.validate_migration(&config).unwrap();
+        assert!(report_with_backup.backup_created);
+    }
+}

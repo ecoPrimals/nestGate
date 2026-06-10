@@ -200,3 +200,136 @@ impl TlsSecurityConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_tls_config_validates() {
+        let config = TlsSecurityConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn disabled_tls_skips_path_checks() {
+        let config = TlsSecurityConfig {
+            enabled: false,
+            certificates: CertificateManagementConfig {
+                auto_renewal: false,
+                cert_path: PathBuf::new(),
+                key_path: PathBuf::new(),
+            },
+            ssl: SslConfig::default(),
+        };
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn enabled_tls_rejects_empty_cert_path() {
+        let config = TlsSecurityConfig {
+            enabled: true,
+            certificates: CertificateManagementConfig {
+                auto_renewal: false,
+                cert_path: PathBuf::new(),
+                key_path: PathBuf::from("/etc/ssl/private/key.pem"),
+            },
+            ssl: SslConfig::default(),
+        };
+        let err = config.validate();
+        assert!(err.is_err());
+        assert!(
+            err.unwrap_err().to_string().contains("cert_path"),
+            "error should mention cert_path"
+        );
+    }
+
+    #[test]
+    fn enabled_tls_rejects_empty_key_path() {
+        let config = TlsSecurityConfig {
+            enabled: true,
+            certificates: CertificateManagementConfig {
+                auto_renewal: true,
+                cert_path: PathBuf::from("/etc/ssl/certs/cert.pem"),
+                key_path: PathBuf::new(),
+            },
+            ssl: SslConfig::default(),
+        };
+        let err = config.validate();
+        assert!(err.is_err());
+        assert!(
+            err.unwrap_err().to_string().contains("key_path"),
+            "error should mention key_path"
+        );
+    }
+
+    #[test]
+    fn enabled_tls_accepts_valid_paths() {
+        let config = TlsSecurityConfig {
+            enabled: true,
+            certificates: CertificateManagementConfig {
+                auto_renewal: true,
+                cert_path: PathBuf::from("/etc/ssl/certs/nestgate.pem"),
+                key_path: PathBuf::from("/etc/ssl/private/nestgate.key"),
+            },
+            ssl: SslConfig::default(),
+        };
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn production_hardened_equals_default() {
+        let prod = TlsSecurityConfig::production_hardened();
+        let def = TlsSecurityConfig::default();
+        assert_eq!(prod.enabled, def.enabled);
+        assert_eq!(prod.ssl.min_version, def.ssl.min_version);
+    }
+
+    #[test]
+    fn development_optimized_cert_uses_temp_dir() {
+        let cert = CertificateManagementConfig::development_optimized();
+        assert!(!cert.auto_renewal);
+        let path_str = cert.cert_path.to_string_lossy();
+        assert!(
+            path_str.contains("dev-cert"),
+            "dev cert should use dev-cert name"
+        );
+    }
+
+    #[test]
+    fn compliance_focused_cert_enables_renewal() {
+        let cert = CertificateManagementConfig::compliance_focused();
+        assert!(cert.auto_renewal);
+    }
+
+    #[test]
+    fn production_hardened_cert_enables_renewal() {
+        let cert = CertificateManagementConfig::production_hardened();
+        assert!(cert.auto_renewal);
+    }
+
+    #[test]
+    fn cert_merge_overrides_all_fields() {
+        let base = CertificateManagementConfig {
+            auto_renewal: false,
+            cert_path: PathBuf::from("/old/cert"),
+            key_path: PathBuf::from("/old/key"),
+        };
+        let overlay = CertificateManagementConfig {
+            auto_renewal: true,
+            cert_path: PathBuf::from("/new/cert"),
+            key_path: PathBuf::from("/new/key"),
+        };
+        let merged = base.merge(overlay);
+        assert!(merged.auto_renewal);
+        assert_eq!(merged.cert_path, PathBuf::from("/new/cert"));
+        assert_eq!(merged.key_path, PathBuf::from("/new/key"));
+    }
+
+    #[test]
+    fn ssl_config_default_uses_tls12() {
+        let ssl = SslConfig::default();
+        assert_eq!(ssl.min_version, "TLSv1.2");
+        assert!(!ssl.cipher_suites.is_empty());
+    }
+}

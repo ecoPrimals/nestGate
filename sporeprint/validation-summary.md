@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 13,160+ tests, 22 crates, 16 capability domains, 4 transport surfaces, TRANSPORT_ENDPOINT Phase 2, deep debt sweep x2 (HMAC auth, BLAKE3 centralization, constant dedup, coverage sprint, dep hygiene, validator evolution), BLAKE3 dedup, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
-date = 2026-06-09
+description = "Content-addressed storage primal v0.5.0 — 13,200+ tests, 22 crates, 16 capability domains, 4 transport surfaces, TRANSPORT_ENDPOINT Phase 2, deep debt sweep x3 (HMAC auth, BLAKE3 centralization, CAPABILITY_ANNOUNCE_TTL dedup, constant dedup, coverage sprint x2, dep hygiene, validator evolution, TLS validation, migration framework, dispatch handler tests, lint cleanup), chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
+date = 2026-06-10
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **13,160+ tests** passing, **0 failures** (serial and parallel), 0 clippy warnings
+- **13,200+ tests** passing, **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 101 Deep Debt Sweep Pass 3**: 43 new tests (TLS validation 11, safe migration 10, config migrator 14, dispatch handlers 7, protocol 1); `CAPABILITY_ANNOUNCE_TTL` dedup (3 announce call sites → shared constant in `protocol.rs`); stale `#[expect(clippy::option_if_let_else)]` removed; `doc_markdown` lint fix for `SELinux`
 - **Session 100 Deep Debt Sweep Pass 2**: BLAKE3 hash centralization (`content_hash_hex()` + `content_cas_path()` as canonical CAS helpers — 4 production files consolidated); `CONNECTION_IDLE_LIMIT` dedup (3 identical definitions → shared constant in `protocol.rs`); 45 new tests (template storage 19, storage paths 13, validation runner 6, protocol 1, plus inline test updates); `storage_paths` module visibility evolved to `pub(crate)` for cross-module CAS access
 - **Session 99 Deep Debt Sweep**: Security auth stubs → real HMAC-SHA256 (4 new tests); legacy `BEARDOG_*` env vars emit deprecation warnings; 3 unused deps removed (`getrandom`, `etcetera` x2); migration validators → real field checks; TLS `validate()` → real cert path checks; `create_stub_*` → `snapshot_*` naming; `#![expect(clippy::unnecessary_wraps)]` removed
 - **Session 98 Transport Evolution Phase 2**: Outbound IPC migration complete — all production `connect_unix()` and raw `UnixStream::connect` calls (11 sites across 9 files) migrated to `connect_transport()` via `TransportEndpoint` abstraction. Only transport layer implementations and test code retain direct socket calls. `tokio::net::UnixStream` import removed from `transport/security.rs`. `security_primal.rs` evolved from UDS-specific `writable()`/`try_write()` to idiomatic `AsyncReadExt`/`AsyncWriteExt`.

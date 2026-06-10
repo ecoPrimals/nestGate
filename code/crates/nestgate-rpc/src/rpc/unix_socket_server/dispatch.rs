@@ -363,7 +363,7 @@ pub(super) fn discovery_capability_register(
     nestgate_config::config::capability_discovery::announce_capability(
         capability,
         endpoint,
-        std::time::Duration::from_secs(60),
+        crate::rpc::protocol::CAPABILITY_ANNOUNCE_TTL,
     )?;
     Ok(json!({
         "success": true,
@@ -427,4 +427,68 @@ pub(super) fn route_register(
         "storage_backend": payload["storage_backend"],
         "ttl_seconds": ttl,
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn capability_register_rejects_missing_params() {
+        assert!(discovery_capability_register(None).is_err());
+    }
+
+    #[test]
+    fn capability_register_rejects_missing_capability() {
+        let params = json!({"endpoint": "/tmp/test.sock"});
+        assert!(discovery_capability_register(Some(&params)).is_err());
+    }
+
+    #[test]
+    fn capability_register_rejects_missing_endpoint() {
+        let params = json!({"capability": "storage"});
+        assert!(discovery_capability_register(Some(&params)).is_err());
+    }
+
+    #[test]
+    fn capability_register_succeeds_with_valid_params() {
+        let params = json!({"capability": "storage", "endpoint": "/tmp/test.sock"});
+        let result = discovery_capability_register(Some(&params));
+        assert!(result.is_ok());
+        let val = result.unwrap();
+        assert_eq!(val["success"], true);
+    }
+
+    fn test_state() -> StorageState {
+        StorageState::new().expect("test storage state")
+    }
+
+    #[test]
+    fn route_register_with_no_params() {
+        let state = test_state();
+        let result = route_register(None, &state);
+        assert!(result.is_ok());
+        let val = result.unwrap();
+        assert_eq!(val["registered"], true);
+        assert_eq!(val["ttl_seconds"], 300);
+        assert!(val["capabilities"].is_array());
+    }
+
+    #[test]
+    fn route_register_with_custom_ttl() {
+        let state = test_state();
+        let params = json!({"ttl_seconds": 600});
+        let result = route_register(Some(&params), &state);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap()["ttl_seconds"], 600);
+    }
+
+    #[test]
+    fn route_register_with_custom_gate_id() {
+        let state = test_state();
+        let params = json!({"gate_id": "eastGate"});
+        let result = route_register(Some(&params), &state);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap()["gate_id"], "eastGate");
+    }
 }

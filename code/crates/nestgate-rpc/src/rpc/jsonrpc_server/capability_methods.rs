@@ -68,7 +68,7 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
             match nestgate_config::config::capability_discovery::announce_capability(
                 &p.capability,
                 &p.endpoint,
-                std::time::Duration::from_secs(60),
+                crate::rpc::protocol::CAPABILITY_ANNOUNCE_TTL,
             ) {
                 Ok(()) => {
                     info!("Capability '{}' registered successfully", p.capability);

@@ -354,3 +354,152 @@ impl ConfigMigrator {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn default_options() -> MigrationOptions {
+        MigrationOptions::default()
+    }
+
+    fn dry_run_options() -> MigrationOptions {
+        MigrationOptions {
+            dry_run: true,
+            ..MigrationOptions::default()
+        }
+    }
+
+    #[test]
+    fn new_migrator_starts_at_source_validation() {
+        let m = ConfigMigrator::new(String::from("test"), default_options());
+        assert_eq!(m.source_type, "test");
+        assert!(matches!(
+            m.progress.current_phase,
+            MigrationPhase::SourceValidation
+        ));
+        assert_eq!(m.progress.progress_percentage, 0);
+    }
+
+    #[test]
+    fn dry_run_returns_default_config() {
+        let m = ConfigMigrator::new(String::from("test"), dry_run_options());
+        let result = m.migrate();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn migrate_rejects_empty_source_type() {
+        let m = ConfigMigrator::new(String::new(), default_options());
+        let err = m.migrate();
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn rollback_without_backup_errors() {
+        let m = ConfigMigrator::new(String::from("test"), default_options());
+        assert!(m.rollback().is_err());
+    }
+
+    #[test]
+    fn get_migration_report_reflects_state() {
+        let m = ConfigMigrator::new(String::from("test"), default_options());
+        let report = m.get_migration_report();
+        assert_eq!(report.source_type, "test");
+        assert!(!report.backup_created);
+        assert!(matches!(
+            report.current_phase,
+            MigrationPhase::SourceValidation
+        ));
+    }
+
+    #[test]
+    fn from_primary_config_parses_system() {
+        let config = serde_json::json!({"system": {"name": "test"}});
+        let result = ConfigMigrator::from_primary_config(&config, default_options());
+        assert!(result.is_ok());
+        let m = result.unwrap();
+        assert!(
+            m.progress
+                .completed_steps
+                .iter()
+                .any(|s| s.contains("NestGatePrimaryConfig"))
+        );
+    }
+
+    #[test]
+    fn from_unified_config_parses_api() {
+        let config = serde_json::json!({"api": {"version": "1.0"}});
+        let result = ConfigMigrator::from_unified_config(&config, default_options());
+        assert!(result.is_ok());
+        let m = result.unwrap();
+        assert!(
+            m.progress
+                .completed_steps
+                .iter()
+                .any(|s| s.contains("UnifiedCanonicalExtensions"))
+        );
+    }
+
+    #[test]
+    fn from_final_config_parses_system() {
+        let config = serde_json::json!({"system": {}});
+        let result = ConfigMigrator::from_final_config(&config, default_options());
+        assert!(result.is_ok());
+        let m = result.unwrap();
+        assert!(
+            m.progress
+                .completed_steps
+                .iter()
+                .any(|s| s.contains("NestGateFinalConfig"))
+        );
+    }
+
+    #[test]
+    fn dry_run_report_has_completed_step() {
+        let mut m = ConfigMigrator::new(String::from("test"), dry_run_options());
+        let _ = m.dry_run_migration();
+        let report = m.get_migration_report();
+        assert!(
+            report
+                .completed_steps
+                .iter()
+                .any(|s| s.contains("Dry run"))
+        );
+    }
+
+    #[test]
+    fn migrate_with_backup_creates_backup() {
+        let opts = MigrationOptions {
+            create_backup: true,
+            dry_run: true,
+            ..MigrationOptions::default()
+        };
+        let m = ConfigMigrator::new(String::from("test"), opts);
+        let _ = m.migrate();
+    }
+
+    #[test]
+    fn validate_source_requires_source_type() {
+        let mut m = ConfigMigrator::new(String::from("valid"), default_options());
+        assert!(m.validate_source().is_ok());
+    }
+
+    #[test]
+    fn analyze_source_requires_source_type() {
+        let mut m = ConfigMigrator::new(String::from("valid"), default_options());
+        assert!(m.analyze_source().is_ok());
+    }
+
+    #[test]
+    fn map_configurations_not_implemented() {
+        let m = ConfigMigrator::new(String::from("test"), default_options());
+        assert!(m.map_configurations().is_err());
+    }
+
+    #[test]
+    fn perform_migration_not_implemented() {
+        let m = ConfigMigrator::new(String::from("test"), default_options());
+        assert!(m.perform_migration().is_err());
+    }
+}

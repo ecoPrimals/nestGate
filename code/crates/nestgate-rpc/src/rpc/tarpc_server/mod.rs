@@ -313,7 +313,7 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
         match capability_discovery::announce_capability(
             &registration.capability,
             endpoint,
-            std::time::Duration::from_secs(60),
+            crate::rpc::protocol::CAPABILITY_ANNOUNCE_TTL,
         ) {
             Ok(()) => {
                 info!(

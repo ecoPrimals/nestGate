@@ -13,6 +13,13 @@ use std::time::Duration;
 /// Shared by UDS, isomorphic IPC, and TCP fallback connection handlers.
 pub const CONNECTION_IDLE_LIMIT: Duration = Duration::from_secs(300);
 
+/// Default TTL for capability announcements via `announce_capability`.
+///
+/// Used by `discovery.capability.register`, `route.register`, and tarpc
+/// `register_capability` so that all announcement paths share a single
+/// source of truth.
+pub const CAPABILITY_ANNOUNCE_TTL: Duration = Duration::from_secs(60);
+
 /// Normalize a JSON-RPC method name by stripping legacy prefixes.
 ///
 /// Older clients may send `nestgate.storage.store` instead of `storage.store`.
@@ -91,6 +98,14 @@ mod tests {
         assert_eq!(
             super::CONNECTION_IDLE_LIMIT,
             std::time::Duration::from_secs(300),
+        );
+    }
+
+    #[test]
+    fn capability_announce_ttl_is_one_minute() {
+        assert_eq!(
+            super::CAPABILITY_ANNOUNCE_TTL,
+            std::time::Duration::from_secs(60),
         );
     }
 }

@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 101: Deep Debt Sweep Pass 3 — coverage sprint, capability TTL dedup, lint cleanup (Jun 10, 2026)
+
+- **Coverage sprint — 43 new tests** across 4 previously untested production modules:
+  - `tls::tests`: 11 tests covering `TlsSecurityConfig::validate()` (enabled/disabled, empty
+    cert/key path rejection, valid paths), `production_hardened`/`development_optimized`/
+    `compliance_focused`/`production_hardened` certificate presets, `CertificateManagementConfig::merge`
+    field override semantics, and `SslConfig` defaults (TLSv1.2).
+  - `safe_migration::tests`: 10 tests covering `SafeConfigMigration::new()`/`default()` rule
+    count, `migrate_with_backup` backup creation, rollback with/without backup, `validate_migration`
+    on valid/invalid configs, per-rule validation (`required_fields`, `value_ranges`), and
+    backup flag tracking across migration lifecycle.
+  - `migrator::tests`: 14 tests covering `ConfigMigrator::new()` initial state, dry-run migration,
+    empty source type rejection, rollback without backup, report generation, `from_primary_config`/
+    `from_unified_config`/`from_final_config` parsing and step tracking, `validate_source`/
+    `analyze_source`/`map_configurations`/`perform_migration` stub guards.
+  - `dispatch::tests`: 7 tests covering `discovery_capability_register` param validation
+    (missing params, missing capability, missing endpoint, success) and `route_register`
+    (no params defaults, custom TTL, custom gate_id).
+  - `protocol::tests`: 1 test for `CAPABILITY_ANNOUNCE_TTL` constant.
+- **CAPABILITY_ANNOUNCE_TTL dedup**: Extracted `Duration::from_secs(60)` from 3 capability
+  announcement call sites (`dispatch.rs`, `capability_methods.rs`, `tarpc_server/mod.rs`) into
+  a single `protocol::CAPABILITY_ANNOUNCE_TTL` constant.
+- **Lint cleanup**: Removed stale `#[expect(clippy::option_if_let_else)]` from
+  `platform_detection.rs` (rule no longer triggers). Fixed `doc_markdown` lint for unescaped
+  `SELinux` in doc comment.
+- **Workspace result**: 3,790+ tests passing (1 pre-existing ZFS bridge failure), 0 clippy warnings.
+
 ### Session 100: Deep Debt Sweep Pass 2 — BLAKE3 centralization, constant dedup, coverage sprint (Jun 9, 2026)
 
 - **BLAKE3 hash centralization**: Extracted `content_hash_hex()` and `content_cas_path()` into
