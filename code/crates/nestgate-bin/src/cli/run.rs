@@ -19,6 +19,25 @@ pub(super) fn resolve_family_id(
     cli_family_id.or(env_family_id)
 }
 
+/// Resolve whether HTTP should be enabled for `server` mode.
+///
+/// Default: HTTP enabled (guideStone standard).
+/// `--socket-only` disables HTTP.
+/// `PRIMAL_BIND_MODE` overrides both: `tcp_only`/`tcp` forces HTTP on,
+/// `uds_only` forces HTTP off.
+#[must_use]
+pub(super) fn resolve_enable_http(socket_only_flag: bool) -> bool {
+    let bind_mode = std::env::var("PRIMAL_BIND_MODE")
+        .unwrap_or_default()
+        .to_lowercase();
+
+    match bind_mode.as_str() {
+        "tcp_only" | "tcp" => true,
+        "uds_only" | "uds" => false,
+        _ => !socket_only_flag,
+    }
+}
+
 impl Cli {
     /// Run the CLI application
     pub async fn run(self) -> crate::error::BinResult<()> {
@@ -55,12 +74,10 @@ impl Cli {
                 bind,
                 listen,
                 dev,
-                enable_http,
+                socket_only,
                 family_id,
-                socket_only: _,
                 r#abstract,
             } => {
-                // --socket flag overrides NESTGATE_SOCKET env
                 if let Some(ref sock_path) = socket {
                     nestgate_core::env_process::set_var(
                         "NESTGATE_SOCKET",
@@ -69,7 +86,6 @@ impl Cli {
                     tracing::info!("Socket path (CLI): {}", sock_path.display());
                 }
 
-                // Multi-family support: CLI flag > env var > default
                 let resolved_family_id =
                     resolve_family_id(family_id, std::env::var("NESTGATE_FAMILY_ID").ok());
 
@@ -82,10 +98,12 @@ impl Cli {
                     tracing::info!("Abstract socket mode enabled (Android/SELinux substrate)");
                 }
 
+                let enable_http = resolve_enable_http(socket_only);
+
                 if enable_http {
-                    tracing::info!("Starting NestGate with HTTP server enabled");
+                    tracing::info!("Starting NestGate with HTTP server enabled (default)");
                 } else {
-                    tracing::info!("Starting NestGate in socket-only mode (default)");
+                    tracing::info!("Starting NestGate in socket-only mode (--socket-only)");
                 }
                 crate::commands::service::run_daemon(
                     port,

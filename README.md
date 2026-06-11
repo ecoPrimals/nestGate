@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-10, Session 101)**  
+**Verification (as of 2026-06-11, Session 102)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
 - **Tests**: 3,863 total (2,325 lib, 867 RPC), 0 failures  
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jun 10, 2026
+**Last Updated**: Jun 11, 2026
 
 ---
 
@@ -86,11 +86,14 @@ cargo build --release
 # Configure
 export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 
-# Run (socket-only by default — ecoBin compliant)
-./target/release/nestgate daemon
+# Run (HTTP enabled by default — guideStone standard)
+./target/release/nestgate server
 
-# Or with explicit socket path and HTTP:
-./target/release/nestgate daemon --socket "$XDG_RUNTIME_DIR/nestgate.sock" --enable-http
+# Or with explicit socket path:
+./target/release/nestgate server --socket "$XDG_RUNTIME_DIR/nestgate.sock"
+
+# Socket-only mode (NUCLEUS IPC, no HTTP):
+./target/release/nestgate server --socket-only
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health
@@ -179,7 +182,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-02 (Se
 | Standard | Status |
 |----------|--------|
 | UniBin | Pass — single `nestgate` binary |
-| ecoBin | Pass — pure Rust application code, socket-only default, zero C crypto deps (ring/rustls/reqwest eliminated) |
+| ecoBin | Pass — pure Rust application code, HTTP default (guideStone), `--socket-only` for NUCLEUS IPC, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass — Wire Standard L3 (Composable): `{primal, version, capabilities}` envelope, `provided_capabilities`, `consumed_capabilities` |
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*`, `btsp.*` |

@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 102: STARTUP-NG-01 — default HTTP in server mode (Jun 11, 2026)
+
+- **STARTUP-NG-01 (Stream 1)**: `nestgate server` now defaults to HTTP enabled. Previously
+  socket-only was the default and `--enable-http` was needed. The guideStone standard primal
+  startup contract (`$PRIMAL server --bind-mode $PRIMAL_BIND_MODE --port $PORT`) requires HTTP
+  as the universal transport. Changes:
+  - Removed `--enable-http` flag; HTTP is now the default for `nestgate server` / `nestgate daemon`.
+  - `--socket-only` flag added as the explicit opt-out for NUCLEUS inter-primal IPC.
+  - `PRIMAL_BIND_MODE` env respected: `tcp_only`/`tcp` forces HTTP on, `uds_only`/`uds` forces
+    socket-only, regardless of CLI flags.
+  - Legacy `nestgate-server` symlink also defaults to HTTP.
+  - 7 new tests for `resolve_enable_http` covering default, flag, and all `PRIMAL_BIND_MODE` values.
+  - 3 CLI parse tests updated/added: `server_defaults_http_enabled`, `server_socket_only_flag_disables_http`.
+- **Coverage**: 10 new tests for `commands/env.rs` — `env_port_if_set_source`, `tcp_jsonrpc_default_port_requested_source`, `jsonrpc_tcp_truthy` (truthy/falsy values).
+
 ### Session 101b: NG-DOWNCAST-01 fix + doc refresh + debris cleanup (Jun 10, 2026)
 
 - **NG-DOWNCAST-01 fix**: `is_platform_constraint()` downcast was failing when `io::Error` was

@@ -1,7 +1,7 @@
 # NestGate Quick Start
 
 **Version**: 0.5.0  
-**Last Updated**: Jun 10, 2026 (Session 101)
+**Last Updated**: Jun 11, 2026 (Session 102)
 
 ---
 
@@ -12,7 +12,7 @@
 
 **Optional**: ZFS (for tiered storage features)
 
-**Current build status** (Session 101): 22 workspace packages; 867 RPC tests, 3,863 workspace, 0 failures; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
+**Current build status** (Session 102): 22 workspace packages; 867 RPC tests, 3,880 workspace, 0 failures; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
 
 ---
 
@@ -55,8 +55,11 @@ export NESTGATE_BIND=127.0.0.1                         # Bind address
 # Socket-only (default, ecoBin compliant)
 ./target/release/nestgate daemon
 
-# With HTTP enabled
-./target/release/nestgate daemon --enable-http
+# HTTP is the default (guideStone standard):
+./target/release/nestgate server
+
+# Socket-only for NUCLEUS IPC:
+./target/release/nestgate server --socket-only
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health
@@ -127,4 +130,4 @@ RUST_LOG=info                    # Logging level
 ---
 
 **License**: AGPL-3.0-or-later  
-**Last Updated**: Jun 10, 2026 (Session 101)
+**Last Updated**: Jun 11, 2026 (Session 102)

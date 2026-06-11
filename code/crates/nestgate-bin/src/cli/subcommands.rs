@@ -10,7 +10,12 @@ use std::path::PathBuf;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Run `NestGate` as a server (primary mode) - `UniBin` pattern
+    /// Run `NestGate` as a server (primary mode) - `UniBin` pattern.
+    ///
+    /// HTTP is enabled by default (guideStone standard). Use `--socket-only`
+    /// to disable HTTP and run UDS-only for NUCLEUS inter-primal IPC.
+    /// `PRIMAL_BIND_MODE` overrides: `tcp_only` forces HTTP, `uds_only`
+    /// forces socket-only.
     #[command(name = "server", alias = "daemon")]
     #[command(about = "Run NestGate server")]
     Server {
@@ -18,13 +23,10 @@ pub enum Commands {
         /// Example: `--socket /run/user/1000/biomeos/nestgate.sock`
         #[arg(long)]
         socket: Option<PathBuf>,
-        /// Port for TCP JSON-RPC listener (alongside Unix socket). When omitted, TCP activates if
-        /// `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT` is explicitly set, or if
-        /// `NESTGATE_JSONRPC_TCP` is truthy (`1`/`true`/`yes`/`on`) for the default API port
-        /// (see `nestgate-config` / `DEFAULT_API_PORT`).
+        /// HTTP / TCP JSON-RPC port. Defaults to `NESTGATE_API_PORT` or 8080.
         #[arg(short, long)]
         port: Option<u16>,
-        /// Bind address for TCP JSON-RPC (`bind:port`; `--listen host:port` overrides).
+        /// Bind address (`bind:port`; `--listen host:port` overrides).
         /// Reads from: `NESTGATE_BIND`, `NESTGATE_BIND_ADDRESS`, or `NESTGATE_HOST`
         #[arg(long, default_value_t = bind_from_env_or_default())]
         bind: String,
@@ -34,15 +36,10 @@ pub enum Commands {
         /// Enable development mode
         #[arg(long)]
         dev: bool,
-        /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
-        /// Perfect for NUCLEUS atomic patterns and inter-primal communication
-        /// NOTE: Socket-only is now the DEFAULT per `PRIMAL_DEPLOYMENT_STANDARD`
-        #[arg(long, default_value_t = true)]
+        /// Disable HTTP and run Unix socket-only (NUCLEUS inter-primal IPC).
+        /// Overridden by `PRIMAL_BIND_MODE=tcp_only`.
+        #[arg(long)]
         socket_only: bool,
-        /// Enable HTTP server mode (legacy/standalone mode)
-        /// Only use when HTTP API is explicitly required
-        #[arg(long, conflicts_with = "socket_only")]
-        enable_http: bool,
         /// Family ID for multi-family socket support
         /// Creates family-scoped socket: nestgate-{family_id}.sock
         /// Reads from: `NESTGATE_FAMILY_ID` environment variable if not specified

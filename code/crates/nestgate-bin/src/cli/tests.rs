@@ -98,25 +98,45 @@ mod cli_parse_tests {
     }
 
     #[test]
-    fn server_parses_socket_only_and_family() {
-        let cli = Cli::try_parse_from([
-            "nestgate",
-            "server",
-            "--family-id",
-            "fam-a",
-            "--enable-http",
-        ])
-        .expect("parse");
+    fn server_parses_family_id() {
+        let cli = Cli::try_parse_from(["nestgate", "server", "--family-id", "fam-a"])
+            .expect("parse");
         match cli.command {
             Commands::Server {
                 family_id,
-                enable_http,
+                socket_only,
                 port,
                 ..
             } => {
                 assert_eq!(family_id.as_deref(), Some("fam-a"));
-                assert!(enable_http);
+                assert!(!socket_only, "socket_only defaults to false (HTTP on)");
                 assert!(port.is_none());
+            }
+            _ => panic!("server"),
+        }
+    }
+
+    #[test]
+    fn server_socket_only_flag_disables_http() {
+        let cli =
+            Cli::try_parse_from(["nestgate", "server", "--socket-only"]).expect("parse");
+        match cli.command {
+            Commands::Server { socket_only, .. } => {
+                assert!(socket_only, "--socket-only should be true when passed");
+            }
+            _ => panic!("server"),
+        }
+    }
+
+    #[test]
+    fn server_defaults_http_enabled() {
+        let cli = Cli::try_parse_from(["nestgate", "server"]).expect("parse bare server");
+        match cli.command {
+            Commands::Server { socket_only, .. } => {
+                assert!(
+                    !socket_only,
+                    "bare 'server' should default to HTTP enabled (socket_only=false)"
+                );
             }
             _ => panic!("server"),
         }
@@ -306,9 +326,9 @@ mod cli_parse_tests {
     }
 
     #[test]
-    fn parse_fails_on_server_conflicting_flags() {
-        let err = Cli::try_parse_from(["nestgate", "server", "--socket-only", "--enable-http"]);
-        assert!(err.is_err(), "socket_only conflicts with enable_http");
+    fn parse_fails_on_unknown_server_flag() {
+        let err = Cli::try_parse_from(["nestgate", "server", "--enable-http"]);
+        assert!(err.is_err(), "removed --enable-http flag should fail");
     }
 
     #[test]
@@ -478,5 +498,68 @@ mod setup_and_banner_tests {
     #[test]
     fn print_banner_runs_without_panic() {
         print_banner();
+    }
+}
+
+mod resolve_enable_http_tests {
+    use crate::cli::run::resolve_enable_http;
+
+    #[test]
+    fn default_enables_http() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", None::<&str>)], || {
+            assert!(resolve_enable_http(false), "HTTP should be on by default");
+        });
+    }
+
+    #[test]
+    fn socket_only_flag_disables_http() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", None::<&str>)], || {
+            assert!(
+                !resolve_enable_http(true),
+                "--socket-only should disable HTTP"
+            );
+        });
+    }
+
+    #[test]
+    fn bind_mode_tcp_only_forces_http() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("tcp_only"))], || {
+            assert!(
+                resolve_enable_http(true),
+                "PRIMAL_BIND_MODE=tcp_only overrides --socket-only"
+            );
+        });
+    }
+
+    #[test]
+    fn bind_mode_tcp_forces_http() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("tcp"))], || {
+            assert!(resolve_enable_http(true));
+        });
+    }
+
+    #[test]
+    fn bind_mode_uds_only_forces_socket_only() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("uds_only"))], || {
+            assert!(
+                !resolve_enable_http(false),
+                "PRIMAL_BIND_MODE=uds_only overrides HTTP default"
+            );
+        });
+    }
+
+    #[test]
+    fn bind_mode_uds_forces_socket_only() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("uds"))], || {
+            assert!(!resolve_enable_http(false));
+        });
+    }
+
+    #[test]
+    fn bind_mode_fallback_does_not_override() {
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("fallback"))], || {
+            assert!(resolve_enable_http(false), "fallback should not override default");
+            assert!(!resolve_enable_http(true), "fallback should not override --socket-only");
+        });
     }
 }

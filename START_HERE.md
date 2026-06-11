@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 101)
-Tests:       PASS — 867 RPC, 3,863 workspace, 0 failures (STATUS.md)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Session 102)
+Tests:       PASS — 867 RPC, 3,880 workspace, 0 failures (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 101)
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Session 102)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -54,8 +54,11 @@ export NESTGATE_API_PORT=8085                          # Optional (default: 8080
 # Socket-only mode (default, ecoBin compliant)
 ./target/release/nestgate daemon
 
-# Or with HTTP API:
-./target/release/nestgate daemon --enable-http --port 8085
+# HTTP is the default (guideStone standard):
+./target/release/nestgate server --port 8085
+
+# Socket-only for NUCLEUS IPC:
+./target/release/nestgate server --socket-only
 ```
 
 ### 4. Verify
@@ -179,4 +182,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jun 10, 2026 (Session 101)
+**Last Updated**: Jun 11, 2026 (Session 102)

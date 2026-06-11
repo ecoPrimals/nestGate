@@ -5,7 +5,7 @@
 NestGate is in active development. Current metrics:
 
 - **Build**: 22/22 workspace packages, 0 errors (`cargo check --workspace --all-features --all-targets`)
-- **Tests**: 867 RPC tests, 3,863 workspace, 0 failures (see STATUS.md)
+- **Tests**: 867 RPC tests, 3,880 workspace, 0 failures (see STATUS.md)
 - **Coverage**: 84%+ line (llvm-cov); 90% org target pending
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
 - **Safety**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)
@@ -18,7 +18,7 @@ See [STATUS.md](./STATUS.md) for full metrics.
 ## Architecture Principles
 
 1. **UniBin**: Single `nestgate` binary per platform
-2. **ecoBin**: Pure Rust, socket-only default, cross-compilation
+2. **ecoBin**: Pure Rust, HTTP default (guideStone), `--socket-only` for NUCLEUS IPC, cross-compilation
 3. **Primal Self-Knowledge**: No hardcoded primal names or ports — discover at runtime
 4. **Capability-Based Discovery**: Find primals by capability, not by name
 5. **JSON-RPC 2.0 + tarpc**: Dual IPC with semantic method naming
@@ -179,4 +179,4 @@ cargo llvm-cov --workspace --summary-only
 
 ---
 
-**Last Updated**: Jun 10, 2026 (Session 101)
+**Last Updated**: Jun 11, 2026 (Session 102)

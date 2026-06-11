@@ -1,12 +1,12 @@
 # NestGate - Quick Reference
 
 **Version**: 0.5.0  
-**Tests**: 867 RPC, 3,863 workspace — 0 failures (see STATUS.md)  
+**Tests**: 867 RPC, 3,880 workspace — 0 failures (see STATUS.md)  
 **Coverage**: 84%+ line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 101)  
+**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Session 102)  
 **Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: Jun 10, 2026 (Session 101)
+**Last Updated**: Jun 11, 2026 (Session 102)
 
 ---
 
@@ -20,11 +20,14 @@
 # Build
 cargo build --release
 
-# Run (socket-only by default — ecoBin compliant)
-./target/release/nestgate daemon
+# Run (HTTP enabled by default — guideStone standard)
+./target/release/nestgate server
 
-# Or with explicit socket + HTTP:
-./target/release/nestgate daemon --socket "$XDG_RUNTIME_DIR/nestgate.sock" --enable-http
+# Or with explicit socket path:
+./target/release/nestgate server --socket "$XDG_RUNTIME_DIR/nestgate.sock"
+
+# Socket-only mode (NUCLEUS IPC, no HTTP):
+./target/release/nestgate server --socket-only
 
 # Verify (HTTP mode)
 curl http://localhost:8085/health
@@ -70,9 +73,10 @@ cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
 ### Run
 
 ```bash
-cargo run -- daemon                               # Dev mode
-./target/release/nestgate daemon                  # Release
-NESTGATE_API_PORT=9000 ./target/release/nestgate daemon --enable-http
+cargo run -- server                               # Dev mode (HTTP default)
+./target/release/nestgate server                  # Release (HTTP default)
+NESTGATE_API_PORT=9000 ./target/release/nestgate server
+./target/release/nestgate server --socket-only    # NUCLEUS IPC only
 ```
 
 ---
@@ -225,4 +229,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: Jun 10, 2026 (Session 101)
+**Last Updated**: Jun 11, 2026 (Session 102)

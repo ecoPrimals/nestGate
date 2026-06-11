@@ -49,16 +49,13 @@ async fn main() -> BinResult<()> {
             .with_target(false)
             .init();
 
-        // Run daemon with socket-only mode as default (PRIMAL_DEPLOYMENT_STANDARD)
-        // CRITICAL: run_daemon's `enable_http` is NOT `socket_only`
-        // enable_http = false means socket-only mode (the correct default)
         return nestgate_bin::commands::service::run_daemon(
-            None, // no explicit `--port` — Unix socket only (same as `nestgate daemon` default)
+            None,
             nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS,
-            None, // listen: legacy symlink has no CLI
+            None,
             false,
-            false, // enable_http = false (socket-only is default)
-            None,  // family_id: discovered at runtime
+            true, // HTTP enabled by default (guideStone standard)
+            None,
         )
         .await;
     }

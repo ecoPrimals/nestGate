@@ -71,3 +71,77 @@ pub fn port_from_env_or_default() -> u16 {
 pub fn bind_from_env_or_default() -> String {
     bind_from_env_source(&nestgate_types::ProcessEnv)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::MapEnv;
+
+    #[test]
+    fn env_port_if_set_returns_none_when_empty() {
+        let env = MapEnv::new();
+        assert!(env_port_if_set_source(&env).is_none());
+    }
+
+    #[test]
+    fn env_port_if_set_returns_api_port() {
+        let env = MapEnv::from([("NESTGATE_API_PORT", "9090")]);
+        assert_eq!(env_port_if_set_source(&env), Some(9090));
+    }
+
+    #[test]
+    fn env_port_if_set_returns_http_port_when_api_missing() {
+        let env = MapEnv::from([("NESTGATE_HTTP_PORT", "9191")]);
+        assert_eq!(env_port_if_set_source(&env), Some(9191));
+    }
+
+    #[test]
+    fn env_port_if_set_returns_nestgate_port_when_others_missing() {
+        let env = MapEnv::from([("NESTGATE_PORT", "9292")]);
+        assert_eq!(env_port_if_set_source(&env), Some(9292));
+    }
+
+    #[test]
+    fn env_port_if_set_returns_none_on_invalid_parse() {
+        let env = MapEnv::from([("NESTGATE_API_PORT", "not-a-port")]);
+        assert!(env_port_if_set_source(&env).is_none());
+    }
+
+    #[test]
+    fn tcp_jsonrpc_truthy_values() {
+        for val in ["1", "true", "yes", "on", "TRUE", "Yes", " ON "] {
+            assert!(
+                jsonrpc_tcp_truthy(val),
+                "{val:?} should be truthy"
+            );
+        }
+    }
+
+    #[test]
+    fn tcp_jsonrpc_falsy_values() {
+        for val in ["0", "false", "no", "off", "", "maybe"] {
+            assert!(
+                !jsonrpc_tcp_truthy(val),
+                "{val:?} should be falsy"
+            );
+        }
+    }
+
+    #[test]
+    fn tcp_jsonrpc_default_port_requested_when_truthy() {
+        let env = MapEnv::from([("NESTGATE_JSONRPC_TCP", "1")]);
+        assert!(tcp_jsonrpc_default_port_requested_source(&env));
+    }
+
+    #[test]
+    fn tcp_jsonrpc_default_port_not_requested_when_missing() {
+        let env = MapEnv::new();
+        assert!(!tcp_jsonrpc_default_port_requested_source(&env));
+    }
+
+    #[test]
+    fn tcp_jsonrpc_default_port_not_requested_when_falsy() {
+        let env = MapEnv::from([("NESTGATE_JSONRPC_TCP", "0")]);
+        assert!(!tcp_jsonrpc_default_port_requested_source(&env));
+    }
+}
