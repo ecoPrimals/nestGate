@@ -335,6 +335,8 @@ impl IsomorphicIpcServer {
         let (reader, mut writer) = stream.into_split();
         let mut raw_reader = BufReader::new(reader);
 
+        crate::rpc::protocol::strip_ribocipher_prefix(&mut raw_reader).await;
+
         if crate::rpc::btsp_server_handshake::is_btsp_required() {
             // Peek buffered data. `{` may be plain JSON-RPC (biomeOS
             // composition) *or* a JSON-line BTSP ClientHello. Disambiguate:

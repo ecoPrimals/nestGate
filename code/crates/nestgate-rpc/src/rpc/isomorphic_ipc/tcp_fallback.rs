@@ -206,6 +206,9 @@ impl TcpFallbackServer {
     async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
+
+        crate::rpc::protocol::strip_ribocipher_prefix(&mut reader).await;
+
         let mut line = Vec::new();
         let mut requests_served: u64 = 0;
 

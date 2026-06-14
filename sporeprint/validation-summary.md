@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,880 tests (874 RPC), 22 crates, 16 capability domains, 4 transport surfaces, TRANSPORT_ENDPOINT Phase 2, STARTUP-NG-01 (HTTP default in server mode, guideStone Stream 1), deep debt sweep x3 (HMAC auth, BLAKE3 centralization, CAPABILITY_ANNOUNCE_TTL dedup, constant dedup, coverage sprint x2, dep hygiene, validator evolution, TLS validation, migration framework, dispatch handler tests, lint cleanup), chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
-date = 2026-06-11
+description = "Content-addressed storage primal v0.5.0 — 3,887 tests (881 RPC), 22 crates, 16 capability domains, 4 transport surfaces, TRANSPORT_ENDPOINT Phase 2, STARTUP-NG-01 (HTTP default in server mode, guideStone Stream 1), riboCipher [0xEC,0x01] signal acceptance (Wave 113), deep debt sweep x3, chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
+date = 2026-06-14
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **3,880 tests** (3,807 passing, 73 ignored, 874 RPC), **0 failures** (serial and parallel), 0 clippy warnings
+- **3,887 tests** (3,814 passing, 73 ignored, 881 RPC), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 103 riboCipher signal acceptance**: `[0xEC, 0x01]` prefix stripped via `fill_buf()`/`consume(2)` on production UDS, legacy UDS, and TCP fallback connection handlers — no-op for plain JSON-RPC clients; 7 new tests in `protocol.rs`
 - **Session 102 STARTUP-NG-01**: `nestgate server` defaults to HTTP (guideStone Stream 1 primal startup contract); `--enable-http` removed, `--socket-only` is the opt-out; `PRIMAL_BIND_MODE` env respected (`tcp_only`/`tcp` → HTTP, `uds_only`/`uds` → socket-only); legacy `nestgate-server` symlink defaults HTTP; 17 new tests (7 `resolve_enable_http`, 10 `commands/env.rs`)
 - **Session 101b NG-DOWNCAST-01 fix**: `is_platform_constraint()` chain-walking evolution — `find_io_error()` walks `source()` chain to find nested `io::Error` through `.context()` wrappers; `UnixListener::bind` error path preserved via `.context()` instead of `anyhow::anyhow!()`; 7 new tests; root docs refreshed to honest test counts; registry synced from canonical `config/`; gitignore cleaned
 - **Session 101 Deep Debt Sweep Pass 3**: 43 new tests (TLS validation 11, safe migration 10, config migrator 14, dispatch handlers 7, protocol 1); `CAPABILITY_ANNOUNCE_TTL` dedup (3 announce call sites → shared constant in `protocol.rs`); stale `#[expect(clippy::option_if_let_else)]` removed; `doc_markdown` lint fix for `SELinux`

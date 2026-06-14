@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 103: riboCipher signal acceptance on UDS (Jun 14, 2026)
+
+- **riboCipher `[0xEC, 0x01]` prefix acceptance** (Wave 113 guideStone amendment): all three
+  connection entry points — production UDS (`IsomorphicIpcServer::handle_unix_connection`),
+  legacy UDS (`connection::handle_connection`), and TCP fallback
+  (`TcpFallbackServer::handle_tcp_connection`) — now peek at the first 2 bytes via `fill_buf()`
+  and consume the riboCipher prefix if present, before any BTSP or JSON-RPC parsing. Plain
+  JSON-RPC clients (no prefix) are unaffected.
+  - `RIBOCIPHER_PREFIX` constant and `strip_ribocipher_prefix()` helper in `protocol.rs`.
+  - 7 new tests: constant value, prefix stripping, no-op on plain JSON, empty stream, single
+    byte, wrong second byte, full JSON-RPC roundtrip after prefix strip.
+
 ### Session 102: STARTUP-NG-01 — default HTTP in server mode (Jun 11, 2026)
 
 - **STARTUP-NG-01 (Stream 1)**: `nestgate server` now defaults to HTTP enabled. Previously
