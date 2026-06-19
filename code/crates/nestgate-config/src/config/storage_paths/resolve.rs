@@ -265,11 +265,13 @@ mod tests {
         let temp_str = temp.to_string_lossy();
         let runtime_str = runtime.to_string_lossy();
         assert!(
-            !temp_str.contains("/tmp/") || temp_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
+            !temp_str.contains("/tmp/")
+                || temp_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
             "temp path should use std::env::temp_dir(), not hardcoded /tmp"
         );
         assert!(
-            !runtime_str.contains("/tmp/") || runtime_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
+            !runtime_str.contains("/tmp/")
+                || runtime_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
             "runtime path should use std::env::temp_dir(), not hardcoded /tmp"
         );
     }

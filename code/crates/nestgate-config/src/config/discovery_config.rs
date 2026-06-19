@@ -65,7 +65,7 @@ impl ServiceDiscoveryConfig {
             discovery_base_port: env_parsed(
                 env,
                 "NESTGATE_DISCOVERY_BASE_PORT",
-                runtime_fallback_ports::HTTP,
+                runtime_fallback_ports::http(),
             ),
             discovery_port_range: env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 10),
             auto_discovery: env_parsed(env, "NESTGATE_AUTO_DISCOVERY", true),
@@ -90,7 +90,7 @@ impl ServiceDiscoveryConfig {
         let base_port: u16 = env_parsed(
             env,
             "NESTGATE_DISCOVERY_BASE_PORT",
-            runtime_fallback_ports::HTTP,
+            runtime_fallback_ports::http(),
         );
         let port_range: u16 = env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 3);
 
@@ -150,19 +150,19 @@ mod tests {
         // Test default values without relying on env var state
         let config = ServiceDiscoveryConfig {
             endpoints: vec![
-                format!("http://127.0.0.1:{}", runtime_fallback_ports::HTTP),
-                format!("http://127.0.0.1:{}", runtime_fallback_ports::HEALTH),
-                format!("http://127.0.0.1:{}", runtime_fallback_ports::WEBSOCKET),
+                format!("http://127.0.0.1:{}", runtime_fallback_ports::http()),
+                format!("http://127.0.0.1:{}", runtime_fallback_ports::health()),
+                format!("http://127.0.0.1:{}", runtime_fallback_ports::websocket()),
             ],
             discovery_host: String::from("127.0.0.1"),
-            discovery_base_port: runtime_fallback_ports::HTTP,
+            discovery_base_port: runtime_fallback_ports::http(),
             discovery_port_range: 10,
             auto_discovery: true,
             discovery_timeout_secs: 30,
         };
 
         assert_eq!(config.discovery_host, "127.0.0.1");
-        assert_eq!(config.discovery_base_port, runtime_fallback_ports::HTTP);
+        assert_eq!(config.discovery_base_port, runtime_fallback_ports::http());
         assert_eq!(config.discovery_port_range, 10);
         assert!(config.auto_discovery);
         assert_eq!(config.discovery_timeout_secs, 30);
@@ -185,16 +185,16 @@ mod tests {
         let config = ServiceDiscoveryConfig {
             endpoints: vec![],
             discovery_host: String::from("127.0.0.1"),
-            discovery_base_port: runtime_fallback_ports::HTTP,
+            discovery_base_port: runtime_fallback_ports::http(),
             discovery_port_range: 3,
             auto_discovery: true,
             discovery_timeout_secs: 30,
         };
 
-        let endpoint = config.build_endpoint(runtime_fallback_ports::HEALTH);
+        let endpoint = config.build_endpoint(runtime_fallback_ports::health());
         assert_eq!(
             endpoint,
-            format!("http://127.0.0.1:{}", runtime_fallback_ports::HEALTH)
+            format!("http://127.0.0.1:{}", runtime_fallback_ports::health())
         );
     }
 
@@ -204,14 +204,14 @@ mod tests {
         let config = ServiceDiscoveryConfig {
             endpoints: vec![],
             discovery_host: String::from("127.0.0.1"),
-            discovery_base_port: runtime_fallback_ports::HTTP,
+            discovery_base_port: runtime_fallback_ports::http(),
             discovery_port_range: 5,
             auto_discovery: true,
             discovery_timeout_secs: 30,
         };
 
         let ports = config.get_port_range();
-        let base = runtime_fallback_ports::HTTP;
+        let base = runtime_fallback_ports::http();
         assert_eq!(
             ports,
             (0..5).map(|offset| base + offset).collect::<Vec<_>>()
@@ -222,32 +222,31 @@ mod tests {
     fn test_endpoints_from_env() {
         let endpoints_csv = format!(
             "http://server1:{},http://server2:{},http://server3:{}",
-            runtime_fallback_ports::HTTP,
-            runtime_fallback_ports::HEALTH,
-            runtime_fallback_ports::WEBSOCKET
+            runtime_fallback_ports::http(),
+            runtime_fallback_ports::health(),
+            runtime_fallback_ports::websocket()
         );
         let env = MapEnv::from([("NESTGATE_DISCOVERY_ENDPOINTS", endpoints_csv.as_str())]);
         let config = ServiceDiscoveryConfig::from_env_source(&env);
         assert_eq!(config.endpoints.len(), 3);
-        assert!(
-            config
-                .endpoints
-                .contains(&format!("http://server1:{}", runtime_fallback_ports::HTTP))
-        );
+        assert!(config.endpoints.contains(&format!(
+            "http://server1:{}",
+            runtime_fallback_ports::http()
+        )));
         assert!(config.endpoints.contains(&format!(
             "http://server2:{}",
-            runtime_fallback_ports::HEALTH
+            runtime_fallback_ports::health()
         )));
         assert!(config.endpoints.contains(&format!(
             "http://server3:{}",
-            runtime_fallback_ports::WEBSOCKET
+            runtime_fallback_ports::websocket()
         )));
     }
 
     #[test]
     fn test_endpoints_generated_logic() {
         // Test the endpoint generation logic without relying on env state
-        let base = runtime_fallback_ports::HTTP;
+        let base = runtime_fallback_ports::http();
         let endpoints = (0..3)
             .map(|offset| format!("http://127.0.0.1:{}", base + offset))
             .collect::<Vec<_>>();
@@ -261,8 +260,8 @@ mod tests {
     #[test]
     fn test_with_endpoints_constructor() {
         let endpoints = vec![
-            format!("http://custom1:{}", runtime_fallback_ports::METRICS),
-            format!("http://custom2:{}", runtime_fallback_ports::METRICS + 1),
+            format!("http://custom1:{}", runtime_fallback_ports::metrics()),
+            format!("http://custom2:{}", runtime_fallback_ports::metrics() + 1),
         ];
 
         let config = ServiceDiscoveryConfig::with_endpoints(endpoints.clone());

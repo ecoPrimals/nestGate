@@ -611,7 +611,7 @@ impl Default for DiscoveredService {
             id: Uuid::new_v4().to_string(),
             name: String::from("unknown"),
             endpoint: addresses::LOCALHOST_NAME.to_string(),
-            port: runtime_fallback_ports::HTTP,
+            port: runtime_fallback_ports::http(),
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: std::time::SystemTime::now(),

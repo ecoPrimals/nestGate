@@ -5,15 +5,18 @@
 
 use serde_json::json;
 
+use super::common::mock_state;
 use crate::rpc::unix_socket_server::storage_paths::{
     blob_key_path, content_key_path, dataset_key_path, ensure_parent_dirs, extract_namespace,
     manifest_path, resolve_family_id,
 };
-use super::common::mock_state;
 
 #[test]
 fn content_key_path_uses_shard_prefix() {
-    let path = content_key_path("myFamily", "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890");
+    let path = content_key_path(
+        "myFamily",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    );
     let path_str = path.to_string_lossy();
     assert!(path_str.contains("_content/ab/abcdef"));
     assert!(path_str.contains("datasets/myFamily"));
@@ -136,8 +139,7 @@ async fn resolve_family_id_errors_when_both_missing() {
 
 #[tokio::test]
 async fn ensure_parent_dirs_creates_nested() {
-    let dir = std::env::temp_dir()
-        .join(format!("nestgate-test-ensure-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("nestgate-test-ensure-{}", uuid::Uuid::new_v4()));
     let path = dir.join("a").join("b").join("file.dat");
     ensure_parent_dirs(&path).await.unwrap();
     assert!(path.parent().unwrap().exists());

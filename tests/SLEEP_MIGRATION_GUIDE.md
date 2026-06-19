@@ -217,9 +217,9 @@ Before replacing a sleep:
 
 - Prefer **`crate::common::modern_sync`** for coordinators, barriers, event streams, and result channels (`tests/common/modern_sync.rs`, exported from `tests/common/mod.rs`).
 - Prefer **`crate::common::sync_utils`** for condition polling with timeout (`tests/common/sync_utils.rs`).
-- The file `tests/common/concurrent_sync.rs` is **not** wired into `tests/common/mod.rs`; do not import it as a stable module path—use `modern_sync` / `sync_utils` (or plain `tokio::sync` primitives) instead.
+- Prefer **`crate::common::concurrent_test_framework`** for higher-level concurrent test orchestration (`tests/common/concurrent_test_framework.rs`).
 
 Integration test binaries that use these helpers typically declare `mod common;` at the top of `tests/<suite>.rs`, which resolves to `tests/common/mod.rs` (same pattern as `tests/biomeos_integration_tests.rs`).
 
-**Last Updated**: March 29, 2026
+**Last Updated**: Jun 19, 2026
 

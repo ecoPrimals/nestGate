@@ -369,7 +369,10 @@ mod tests {
 
     #[test]
     fn test_create_zfs_error_pool_create() {
-        let error = create_zfs_error(String::from("Pool creation failed"), ZfsOperation::PoolCreate);
+        let error = create_zfs_error(
+            String::from("Pool creation failed"),
+            ZfsOperation::PoolCreate,
+        );
         let error_string = format!("{error:?}");
         assert!(error_string.contains("Pool creation failed"));
         assert!(error_string.contains("zfs-core"));

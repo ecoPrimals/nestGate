@@ -99,8 +99,8 @@ mod cli_parse_tests {
 
     #[test]
     fn server_parses_family_id() {
-        let cli = Cli::try_parse_from(["nestgate", "server", "--family-id", "fam-a"])
-            .expect("parse");
+        let cli =
+            Cli::try_parse_from(["nestgate", "server", "--family-id", "fam-a"]).expect("parse");
         match cli.command {
             Commands::Server {
                 family_id,
@@ -118,8 +118,7 @@ mod cli_parse_tests {
 
     #[test]
     fn server_socket_only_flag_disables_http() {
-        let cli =
-            Cli::try_parse_from(["nestgate", "server", "--socket-only"]).expect("parse");
+        let cli = Cli::try_parse_from(["nestgate", "server", "--socket-only"]).expect("parse");
         match cli.command {
             Commands::Server { socket_only, .. } => {
                 assert!(socket_only, "--socket-only should be true when passed");
@@ -558,8 +557,14 @@ mod resolve_enable_http_tests {
     #[test]
     fn bind_mode_fallback_does_not_override() {
         temp_env::with_vars([("PRIMAL_BIND_MODE", Some("fallback"))], || {
-            assert!(resolve_enable_http(false), "fallback should not override default");
-            assert!(!resolve_enable_http(true), "fallback should not override --socket-only");
+            assert!(
+                resolve_enable_http(false),
+                "fallback should not override default"
+            );
+            assert!(
+                !resolve_enable_http(true),
+                "fallback should not override --socket-only"
+            );
         });
     }
 }

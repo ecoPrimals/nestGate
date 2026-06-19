@@ -200,29 +200,15 @@ fn generate_challenge() -> [u8; 32] {
 
 /// Reads the family seed from the environment (typically a hex string).
 ///
-/// Checks canonical `FAMILY_SEED` first, then capability-scoped
-/// `SECURITY_FAMILY_SEED`, then legacy `BEARDOG_FAMILY_SEED` and
-/// `BIOMEOS_FAMILY_SEED` (lowest priority, backward compat only).
+/// Checks `FAMILY_SEED` first, then capability-scoped `SECURITY_FAMILY_SEED`.
 /// The value is trimmed to strip trailing newlines that `xxd -p` or
 /// similar tools may leave.
 pub(crate) fn resolve_family_seed() -> Result<String> {
-    for (var, deprecated) in [
-        ("FAMILY_SEED", false),
-        ("SECURITY_FAMILY_SEED", false),
-        ("BEARDOG_FAMILY_SEED", true),
-        ("BIOMEOS_FAMILY_SEED", true),
-    ] {
+    for var in ["FAMILY_SEED", "SECURITY_FAMILY_SEED"] {
         if let Ok(val) = std::env::var(var) {
             let trimmed = val.trim().to_string();
             if !trimmed.is_empty() {
-                if deprecated {
-                    warn!(
-                        "BTSP: resolved family seed from deprecated {var} — \
-                         migrate to FAMILY_SEED or SECURITY_FAMILY_SEED"
-                    );
-                } else {
-                    debug!("BTSP: resolved family seed from {var}");
-                }
+                debug!("BTSP: resolved family seed from {var}");
                 return Ok(trimmed);
             }
         }

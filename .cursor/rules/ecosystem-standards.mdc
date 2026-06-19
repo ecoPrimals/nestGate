@@ -35,4 +35,4 @@ alwaysApply: true
 ## Reference
 - `wateringHole/STANDARDS_AND_EXPECTATIONS.md`
 - `wateringHole/PRIMAL_IPC_PROTOCOL.md`
-- `specs/` when present in-repo
+- `config/capability_registry.toml` — authoritative method inventory

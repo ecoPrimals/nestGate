@@ -13,7 +13,7 @@ use std::time::Duration;
 #[tokio::test]
 async fn test_connection_is_alive_new() {
     use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
-    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::http()).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
     let connection = Connection::new(endpoint);
 
@@ -24,7 +24,7 @@ async fn test_connection_is_alive_new() {
 #[tokio::test]
 async fn test_connection_stats() {
     use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
-    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::http()).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
     let connection = Connection::new(endpoint);
 

@@ -28,11 +28,11 @@
 //! - `storage.dataset.delete` - Delete dataset
 //!
 //! Storage Object Operations (5):
-//! - `storage.object.store` - Store object in dataset
-//! - `storage.object.retrieve` - Retrieve object data
-//! - `storage.object.metadata` - Get object metadata
-//! - `storage.object.list` - List objects in dataset
-//! - `storage.object.delete` - Delete object
+//! - `storage.store` - Store object in dataset
+//! - `storage.retrieve` - Retrieve object data
+//! - `storage.metadata` - Get object metadata
+//! - `storage.list` - List objects in dataset
+//! - `storage.delete` - Delete object
 //!
 //! Streaming Storage Operations (4):
 //! - `storage.store_stream` - Begin chunked upload (returns `stream_id`)
@@ -103,7 +103,7 @@ impl Default for JsonRpcConfig {
         Self {
             addr: SocketAddr::new(
                 IpAddr::V6(Ipv6Addr::UNSPECIFIED),
-                nestgate_config::constants::hardcoding::runtime_fallback_ports::JSONRPC,
+                nestgate_config::constants::hardcoding::runtime_fallback_ports::jsonrpc(),
             ),
             log_requests: true,
             max_request_size: 100 * 1024 * 1024, // 100 MB for large objects

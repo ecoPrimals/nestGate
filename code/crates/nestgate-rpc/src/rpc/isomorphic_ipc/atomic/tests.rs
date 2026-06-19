@@ -14,10 +14,12 @@ fn test_atomic_type_required_capabilities() {
 
 #[test]
 fn test_atomic_capabilities_are_roles_not_primal_names() {
+    let self_id = discovery::local_primal_id();
     for cap in AtomicType::Nest.required_capabilities() {
-        assert!(
-            !["beardog", "songbird", "nestgate", "squirrel", "toadstool"].contains(&cap),
-            "Capability '{}' should be a role, not a primal name",
+        assert_ne!(
+            cap,
+            self_id.as_str(),
+            "Capability '{}' should be a role, not the local primal name",
             cap
         );
     }

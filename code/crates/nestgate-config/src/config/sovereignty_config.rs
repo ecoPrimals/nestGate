@@ -59,7 +59,7 @@ impl SovereigntyRuntimeConfig {
         let api_port = env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::HTTP);
+            .unwrap_or_else(crate::constants::hardcoding::runtime_fallback_ports::http);
         let bind_address = env::var("NESTGATE_BIND_ADDRESS")
             .unwrap_or_else(|_| crate::constants::LOCALHOST.to_string()); // Idiomatic: computed default
         let ws_endpoint = env::var("NESTGATE_WS_ENDPOINT").ok();
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = SovereigntyRuntimeConfig::new();
-        assert_eq!(config.api_port(), runtime_fallback_ports::HTTP);
+        assert_eq!(config.api_port(), runtime_fallback_ports::http());
         assert_eq!(config.bind_address(), crate::constants::LOCALHOST);
         assert!(config.api_endpoint().contains("127.0.0.1"));
         assert!(config.websocket_endpoint().starts_with("ws://"));
@@ -243,15 +243,18 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let config = SovereigntyRuntimeConfig::new()
-            .with_api_port(runtime_fallback_ports::METRICS)
+            .with_api_port(runtime_fallback_ports::metrics())
             .with_bind_address(String::from("0.0.0.0"))
-            .with_api_endpoint(format!("http://custom:{}", runtime_fallback_ports::METRICS));
+            .with_api_endpoint(format!(
+                "http://custom:{}",
+                runtime_fallback_ports::metrics()
+            ));
 
-        assert_eq!(config.api_port(), runtime_fallback_ports::METRICS);
+        assert_eq!(config.api_port(), runtime_fallback_ports::metrics());
         assert_eq!(config.bind_address(), "0.0.0.0");
         assert_eq!(
             config.api_endpoint(),
-            format!("http://custom:{}", runtime_fallback_ports::METRICS)
+            format!("http://custom:{}", runtime_fallback_ports::metrics())
         );
     }
 
@@ -303,12 +306,12 @@ mod tests {
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             SovereigntyRuntimeConfig::new()
-                .with_api_port(runtime_fallback_ports::HTTP)
+                .with_api_port(runtime_fallback_ports::http())
                 .with_bind_address(String::from("127.0.0.1")),
         );
         let config2 = Arc::new(
             SovereigntyRuntimeConfig::new()
-                .with_api_port(runtime_fallback_ports::METRICS)
+                .with_api_port(runtime_fallback_ports::metrics())
                 .with_bind_address(String::from("0.0.0.0")),
         );
 
@@ -324,8 +327,8 @@ mod tests {
         let endpoint1 = handle1.await.unwrap();
         let endpoint2 = handle2.await.unwrap();
 
-        assert!(endpoint1.contains(&format!("127.0.0.1:{}", runtime_fallback_ports::HTTP)));
-        assert!(endpoint2.contains(&format!("0.0.0.0:{}", runtime_fallback_ports::METRICS)));
+        assert!(endpoint1.contains(&format!("127.0.0.1:{}", runtime_fallback_ports::http())));
+        assert!(endpoint2.contains(&format!("0.0.0.0:{}", runtime_fallback_ports::metrics())));
         assert_ne!(endpoint1, endpoint2);
     }
 }

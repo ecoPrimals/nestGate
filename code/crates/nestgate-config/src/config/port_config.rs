@@ -118,12 +118,12 @@ impl PortConfiguration {
             health_port: DEFAULT_HEALTH_PORT,
             metrics_port: DEFAULT_METRICS_PORT,
             admin_port: DEFAULT_ADMIN_PORT,
-            websocket_port: p::WEBSOCKET,
-            rpc_port: p::GRPC,
+            websocket_port: p::defaults::WEBSOCKET,
+            rpc_port: p::defaults::GRPC,
             database_port: DEFAULT_POSTGRES_PORT,
             redis_port: DEFAULT_REDIS_PORT,
             message_queue_port: DEFAULT_RABBITMQ_PORT,
-            orchestration_port: p::ORCHESTRATION,
+            orchestration_port: p::defaults::ORCHESTRATION,
         }
     }
 

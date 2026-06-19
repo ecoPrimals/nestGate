@@ -32,9 +32,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Warning,
                 blocking: false,
             });
-            report
-                .recommendations
-                .push(String::from("Run on real hardware for production workloads"));
+            report.recommendations.push(String::from(
+                "Run on real hardware for production workloads",
+            ));
         }
 
         if !report.mock_dependencies.is_empty() {
@@ -47,9 +47,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report
-                .recommendations
-                .push(String::from("Disable mock mode for production: unset NESTGATE_MOCK_MODE"));
+            report.recommendations.push(String::from(
+                "Disable mock mode for production: unset NESTGATE_MOCK_MODE",
+            ));
         }
 
         if !report.performance_validated {
@@ -59,9 +59,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Warning,
                 blocking: false,
             });
-            report
-                .recommendations
-                .push(String::from("Ensure sufficient memory and CPU for production workloads"));
+            report.recommendations.push(String::from(
+                "Ensure sufficient memory and CPU for production workloads",
+            ));
         }
 
         if !report.security_validated {
@@ -71,9 +71,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report
-                .recommendations
-                .push(String::from("Enable ZFS encryption support for secure mode"));
+            report.recommendations.push(String::from(
+                "Enable ZFS encryption support for secure mode",
+            ));
         }
 
         if !report.configuration_validated {
@@ -83,21 +83,21 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report
-                .recommendations
-                .push(String::from("Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable"));
+            report.recommendations.push(String::from(
+                "Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable",
+            ));
         }
 
         // Add general production recommendations
-        report
-            .recommendations
-            .push(String::from("Review logs for any warnings during operation"));
-        report
-            .recommendations
-            .push(String::from("Monitor ZFS pool health and performance metrics"));
-        report
-            .recommendations
-            .push(String::from("Ensure backup and recovery procedures are tested"));
+        report.recommendations.push(String::from(
+            "Review logs for any warnings during operation",
+        ));
+        report.recommendations.push(String::from(
+            "Monitor ZFS pool health and performance metrics",
+        ));
+        report.recommendations.push(String::from(
+            "Ensure backup and recovery procedures are tested",
+        ));
 
         Ok(())
     }

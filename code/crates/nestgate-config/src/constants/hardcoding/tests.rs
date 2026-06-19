@@ -17,11 +17,11 @@ fn test_addresses_are_valid() {
 fn test_ports_are_in_valid_range() {
     // All ports are u16, which are always >= 0, so just verify they're defined
     // These checks serve as documentation that these ports exist and are configured
-    assert_eq!(fb::HTTP, 8080);
-    assert_eq!(fb::HTTPS, 8443);
-    assert_eq!(fb::API, 3000);
-    assert_eq!(fb::METRICS, 9090);
-    assert_eq!(fb::HEALTH, 8081);
+    assert_eq!(fb::defaults::HTTP, 8080);
+    assert_eq!(fb::defaults::HTTPS, 8443);
+    assert_eq!(fb::defaults::API, 3000);
+    assert_eq!(fb::defaults::METRICS, 9090);
+    assert_eq!(fb::defaults::HEALTH, 8081);
 }
 
 #[test]
@@ -64,13 +64,13 @@ fn test_limits_are_reasonable() {
 fn test_all_port_constants_are_unique() {
     // Ensure no port collisions in defaults
     let ports_vec = vec![
-        fb::HTTP,
-        fb::HTTPS,
-        fb::METRICS,
-        fb::HEALTH,
-        fb::GRPC,
-        fb::WEBSOCKET,
-        fb::ADMIN,
+        fb::defaults::HTTP,
+        fb::defaults::HTTPS,
+        fb::defaults::METRICS,
+        fb::defaults::HEALTH,
+        fb::defaults::GRPC,
+        fb::defaults::WEBSOCKET,
+        fb::defaults::ADMIN,
     ];
 
     // At least verify ports are in valid ranges
@@ -86,18 +86,18 @@ fn test_all_port_constants_are_unique() {
 
 #[test]
 fn test_database_ports() {
-    assert_eq!(fb::POSTGRES, 5432);
-    assert_eq!(fb::REDIS, 6379);
-    assert_eq!(fb::MONGODB, 27017);
-    assert_eq!(fb::MYSQL, 3306);
+    assert_eq!(fb::defaults::POSTGRES, 5432);
+    assert_eq!(fb::defaults::REDIS, 6379);
+    assert_eq!(fb::defaults::MONGODB, 27017);
+    assert_eq!(fb::defaults::MYSQL, 3306);
 }
 
 #[test]
 fn test_service_ports() {
-    assert_eq!(fb::DISCOVERY_SERVICE, 3010);
-    assert_eq!(fb::ORCHESTRATOR_DEFAULT, 8090);
-    assert_eq!(fb::STORAGE, 5000);
-    assert_eq!(fb::COMPUTE, 8085);
+    assert_eq!(fb::defaults::DISCOVERY_SERVICE, 3010);
+    assert_eq!(fb::defaults::ORCHESTRATOR_DEFAULT, 8090);
+    assert_eq!(fb::defaults::STORAGE, 5000);
+    assert_eq!(fb::defaults::COMPUTE, 8085);
 }
 
 #[test]
@@ -123,14 +123,14 @@ fn test_discovery_constants() {
 #[test]
 fn test_get_metrics_port() {
     let port = get_metrics_port();
-    assert_eq!(port, fb::METRICS);
+    assert_eq!(port, fb::metrics());
     assert!(port > 0);
 }
 
 #[test]
 fn test_get_health_port() {
     let port = get_health_port();
-    assert_eq!(port, fb::HEALTH);
+    assert_eq!(port, fb::health());
     assert!(port > 0);
 }
 
@@ -195,16 +195,16 @@ fn test_retry_configuration() {
 #[test]
 fn test_service_capability_ports() {
     // Generic service defaults (capability-based discovery preferred)
-    assert_eq!(fb::HEALTH, 8081);
-    assert_eq!(fb::WEBSOCKET, 8082);
-    assert_ne!(fb::HEALTH, fb::WEBSOCKET);
+    assert_eq!(fb::defaults::HEALTH, 8081);
+    assert_eq!(fb::defaults::WEBSOCKET, 8082);
+    assert_ne!(fb::defaults::HEALTH, fb::defaults::WEBSOCKET);
 }
 
 #[test]
 fn test_extended_services_port() {
-    assert_eq!(fb::EXTENDED_SERVICES, 3002);
-    assert_eq!(fb::API_ALT, 3001);
-    assert_ne!(fb::EXTENDED_SERVICES, fb::API);
+    assert_eq!(fb::defaults::EXTENDED_SERVICES, 3002);
+    assert_eq!(fb::defaults::API_ALT, 3001);
+    assert_ne!(fb::defaults::EXTENDED_SERVICES, fb::defaults::API);
 }
 
 #[test]

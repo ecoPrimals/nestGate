@@ -63,7 +63,6 @@ impl HealthMonitoringConfig {
     /// Like [`Self::production`], but reads alert-related env vars from an injectable [`EnvSource`].
     #[must_use]
     pub fn production_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
-        const DEV_HTTP_FALLBACK: u16 = 8080;
         Self {
             enabled: true,
             check_interval_seconds: 60,
@@ -89,7 +88,7 @@ impl HealthMonitoringConfig {
                         let dev_port = env
                             .get("NESTGATE_DEV_PORT")
                             .and_then(|s| s.parse().ok())
-                            .unwrap_or(DEV_HTTP_FALLBACK);
+                            .unwrap_or_else(crate::constants::dev_http_fallback);
 
                         vec![
                             format!("email:dev@{dev_host}"),

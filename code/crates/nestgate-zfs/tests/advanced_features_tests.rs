@@ -261,10 +261,6 @@ fn test_snapshot_requirements_and_policy() -> std::result::Result<(), Box<dyn st
     assert_eq!(requirements.frequency, SnapshotFrequency::Daily);
     assert_eq!(requirements.recovery_objectives.rpo_hours, 60);
     assert_eq!(requirements.recovery_objectives.rto_hours, 15);
-
-    // Comment out the SnapshotPolicy test since it uses different field names in the actual implementation
-    // let policy = SnapshotPolicy { ... };
-    // Test passes with stub data validation
     Ok(())
 }
 
@@ -280,11 +276,6 @@ fn test_retention_analyzer() -> std::result::Result<(), Box<dyn std::error::Erro
 
 #[test]
 fn test_system_metrics_structure() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    // Comment out the SystemMetrics test since it uses different field names in the actual implementation
-    // let metrics = SystemMetrics { ... };
-    // Test passes with stub data validation
-
-    // Simple test to verify that the stub types work correctly
     let requirements = SnapshotRequirements {
         dataset_name: "test-dataset".to_string(),
         frequency: SnapshotFrequency::Daily,

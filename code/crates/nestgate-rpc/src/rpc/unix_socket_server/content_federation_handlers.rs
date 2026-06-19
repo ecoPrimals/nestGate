@@ -44,14 +44,12 @@ pub async fn content_fetch_heads(params: Option<&Value>, _state: &StorageState) 
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let repos = params["repos"]
-        .as_array()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "repos",
-                "repos array required: [{path, remote?, branch?}]",
-            )
-        })?;
+    let repos = params["repos"].as_array().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "repos",
+            "repos array required: [{path, remote?, branch?}]",
+        )
+    })?;
 
     let mut heads = Vec::with_capacity(repos.len());
     let mut error_count: u64 = 0;
@@ -103,14 +101,12 @@ pub async fn content_push(params: Option<&Value>, _state: &StorageState) -> Resu
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let repos = params["repos"]
-        .as_array()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "repos",
-                "repos array required: [{path, remote?, branch?}]",
-            )
-        })?;
+    let repos = params["repos"].as_array().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "repos",
+            "repos array required: [{path, remote?, branch?}]",
+        )
+    })?;
 
     let mut results = Vec::with_capacity(repos.len());
     let mut pushed_count: u64 = 0;
@@ -168,23 +164,19 @@ pub async fn content_replicate(params: Option<&Value>, state: &StorageState) -> 
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let cids = params["cids"]
-        .as_array()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "cids",
-                "cids array required: [\"<blake3_hex>\", ...]",
-            )
-        })?;
+    let cids = params["cids"].as_array().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "cids",
+            "cids array required: [\"<blake3_hex>\", ...]",
+        )
+    })?;
 
-    let target = params["target"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "target",
-                "target required: socket path or tcp://host:port of remote nestgate",
-            )
-        })?;
+    let target = params["target"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "target",
+            "target required: socket path or tcp://host:port of remote nestgate",
+        )
+    })?;
 
     let family_id = resolve_family_id(params, state)?;
 
@@ -268,14 +260,12 @@ pub async fn content_sync(params: Option<&Value>, _state: &StorageState) -> Resu
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let repos = params["repos"]
-        .as_array()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "repos",
-                "repos array required: [{path, remote?, branch?}]",
-            )
-        })?;
+    let repos = params["repos"].as_array().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "repos",
+            "repos array required: [{path, remote?, branch?}]",
+        )
+    })?;
 
     let parallel = params["parallel"].as_u64().unwrap_or(4).min(16);
     let clone_missing = params["clone_missing"].as_bool().unwrap_or(false);
@@ -346,23 +336,19 @@ pub async fn content_replicate_pull(params: Option<&Value>, state: &StorageState
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let cids = params["cids"]
-        .as_array()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "cids",
-                "cids array required: [\"<blake3_hex>\", ...]",
-            )
-        })?;
+    let cids = params["cids"].as_array().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "cids",
+            "cids array required: [\"<blake3_hex>\", ...]",
+        )
+    })?;
 
-    let source = params["source"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "source",
-                "source required: socket path or tcp://host:port of remote nestgate",
-            )
-        })?;
+    let source = params["source"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field(
+            "source",
+            "source required: socket path or tcp://host:port of remote nestgate",
+        )
+    })?;
 
     let family_id = resolve_family_id(params, state)?;
 
@@ -556,9 +542,8 @@ mod tests {
     use serde_json::json;
 
     fn mock_state() -> StorageState {
-        StorageState::new().unwrap_or_else(|_| {
-            panic!("StorageState::new failed in test — check env")
-        })
+        StorageState::new()
+            .unwrap_or_else(|_| panic!("StorageState::new failed in test — check env"))
     }
 
     #[tokio::test]
@@ -620,7 +605,12 @@ mod tests {
             "family_id": "test"
         });
         let result = content_replicate(Some(&params), &state).await.unwrap();
-        assert!(result["replicated"][0]["error"].as_str().unwrap().contains("invalid CID"));
+        assert!(
+            result["replicated"][0]["error"]
+                .as_str()
+                .unwrap()
+                .contains("invalid CID")
+        );
     }
 
     #[tokio::test]
@@ -696,7 +686,12 @@ mod tests {
             "family_id": "test"
         });
         let result = content_replicate_pull(Some(&params), &state).await.unwrap();
-        assert!(result["pulled"][0]["error"].as_str().unwrap().contains("invalid CID"));
+        assert!(
+            result["pulled"][0]["error"]
+                .as_str()
+                .unwrap()
+                .contains("invalid CID")
+        );
     }
 
     #[tokio::test]
@@ -705,7 +700,9 @@ mod tests {
         let family_id = "test_pull_skip";
         let cid = "a".repeat(64);
         let blob_path = content_key_path(family_id, &cid);
-        tokio::fs::create_dir_all(blob_path.parent().unwrap()).await.unwrap();
+        tokio::fs::create_dir_all(blob_path.parent().unwrap())
+            .await
+            .unwrap();
         tokio::fs::write(&blob_path, b"test data").await.unwrap();
 
         let params = json!({

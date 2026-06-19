@@ -455,14 +455,8 @@ fn log_summary_covers_all_sources() {
 
 #[test]
 fn tier4_fallback_uses_system_temp_dir() {
-    let config = SocketConfig::resolve(
-        String::from("fam"),
-        String::from("nod"),
-        None,
-        None,
-        None,
-    )
-    .unwrap();
+    let config =
+        SocketConfig::resolve(String::from("fam"), String::from("nod"), None, None, None).unwrap();
 
     assert_eq!(config.source, SocketConfigSource::TempDirectory);
     assert!(
@@ -470,8 +464,10 @@ fn tier4_fallback_uses_system_temp_dir() {
         "tier 4 fallback {:?} should be under std::env::temp_dir()",
         config.socket_path
     );
-    assert!(config
-        .socket_path
-        .to_string_lossy()
-        .contains("nestgate-fam-nod.sock"));
+    assert!(
+        config
+            .socket_path
+            .to_string_lossy()
+            .contains("nestgate-fam-nod.sock")
+    );
 }

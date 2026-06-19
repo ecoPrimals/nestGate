@@ -229,9 +229,9 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
         .output();
 
     match result {
-        Ok(output) if output.status.success() => {
-            Some(String::from("Deduplication enabled to reduce storage usage"))
-        }
+        Ok(output) if output.status.success() => Some(String::from(
+            "Deduplication enabled to reduce storage usage",
+        )),
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
             Some(String::from("fixed"))

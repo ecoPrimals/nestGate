@@ -276,7 +276,9 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             return Err(Self::not_available_err());
         }
         Err(UniversalZfsError::InvalidInput {
-            message: String::from("Pool creation via this adapter is not implemented; use zpool directly or a higher-level orchestrator"),
+            message: String::from(
+                "Pool creation via this adapter is not implemented; use zpool directly or a higher-level orchestrator",
+            ),
         })
     }
 

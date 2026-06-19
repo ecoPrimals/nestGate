@@ -67,8 +67,10 @@ pub mod zero_cost_security_provider;
 mod lib_smoke_tests {
     use super::universal_adapter::PrimalAgnosticAdapter;
 
+    const TEST_ADAPTER_ENDPOINT: &str = "http://localhost:0/adapter";
+
     #[test]
     fn primal_agnostic_adapter_new_is_constructible() {
-        let _ = PrimalAgnosticAdapter::new(String::from("http://localhost:0/adapter"));
+        let _ = PrimalAgnosticAdapter::new(String::from(TEST_ADAPTER_ENDPOINT));
     }
 }

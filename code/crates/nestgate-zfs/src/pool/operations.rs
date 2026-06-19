@@ -18,7 +18,11 @@ fn zpool_create_argv(name: &str, devices: &[String]) -> Vec<String> {
 }
 
 fn zpool_destroy_argv(name: &str) -> [String; 3] {
-    [String::from("destroy"), String::from("-f"), name.to_string()]
+    [
+        String::from("destroy"),
+        String::from("-f"),
+        name.to_string(),
+    ]
 }
 
 fn zpool_scrub_argv(name: &str) -> [String; 2] {

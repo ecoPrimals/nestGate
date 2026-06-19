@@ -393,7 +393,10 @@ mod tests {
     fn test_cert_request() {
         let request = CertRequest {
             common_name: String::from("example.com"),
-            subject_alt_names: vec![String::from("www.example.com"), String::from("api.example.com")],
+            subject_alt_names: vec![
+                String::from("www.example.com"),
+                String::from("api.example.com"),
+            ],
             key_usage: vec![
                 String::from("digitalSignature"),
                 String::from("keyEncipherment"),
@@ -458,7 +461,10 @@ mod tests {
 
         assert!(!status.active);
         assert_eq!(status.validation_result, Some(false));
-        assert_eq!(status.error_message, Some(String::from("Connection timeout")));
+        assert_eq!(
+            status.error_message,
+            Some(String::from("Connection timeout"))
+        );
     }
 
     #[test]

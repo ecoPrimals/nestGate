@@ -70,10 +70,7 @@ fn capability_registry_register_and_find() {
 async fn capability_router_rejects_storage_to_ipc_transport() {
     let router = CapabilityRouter::default();
     let req = CapabilityRequest::new(CapabilityCategory::Storage, "create_dataset");
-    let err = router
-        .route_capability_request(req)
-        .await
-        .unwrap_err();
+    let err = router.route_capability_request(req).await.unwrap_err();
     assert!(err.to_string().contains("JSON-RPC transport"));
 }
 
@@ -123,10 +120,7 @@ fn all_capability_categories_map_to_primal() {
 async fn capability_router_rejects_list_datasets_to_ipc() {
     let router = CapabilityRouter::default();
     let req = CapabilityRequest::new(CapabilityCategory::Storage, "list_datasets");
-    let err = router
-        .route_capability_request(req)
-        .await
-        .unwrap_err();
+    let err = router.route_capability_request(req).await.unwrap_err();
     assert!(err.to_string().contains("JSON-RPC transport"));
 }
 

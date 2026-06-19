@@ -164,9 +164,13 @@ impl PerformanceAnalyzer {
             ));
         }
         if out.is_empty() {
-            out.push(String::from("System performance is within normal parameters"));
+            out.push(String::from(
+                "System performance is within normal parameters",
+            ));
         }
-        out.push(String::from("Consider enabling ZFS compression for better storage efficiency"));
+        out.push(String::from(
+            "Consider enabling ZFS compression for better storage efficiency",
+        ));
         out
     }
 }

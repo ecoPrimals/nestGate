@@ -385,7 +385,10 @@ impl SystemIntrospection {
 
         let mut summary = HashMap::new();
 
-        summary.insert(String::from("cpu_cores"), capabilities.cpu_cores.to_string());
+        summary.insert(
+            String::from("cpu_cores"),
+            capabilities.cpu_cores.to_string(),
+        );
         summary.insert(
             String::from("logical_cores"),
             capabilities.logical_cores.to_string(),

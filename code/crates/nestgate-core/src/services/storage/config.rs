@@ -277,11 +277,15 @@ impl StorageServiceConfig {
         }
 
         if self.quota_check_interval == 0 {
-            return Err(String::from("Quota check interval must be greater than zero"));
+            return Err(String::from(
+                "Quota check interval must be greater than zero",
+            ));
         }
 
         if self.monitoring_interval == 0 {
-            return Err(String::from("Monitoring interval must be greater than zero"));
+            return Err(String::from(
+                "Monitoring interval must be greater than zero",
+            ));
         }
 
         if self.operation_timeout == 0 {
@@ -289,7 +293,9 @@ impl StorageServiceConfig {
         }
 
         if self.max_concurrent_operations == 0 {
-            return Err(String::from("Max concurrent operations must be greater than zero"));
+            return Err(String::from(
+                "Max concurrent operations must be greater than zero",
+            ));
         }
 
         Ok(())

@@ -205,7 +205,7 @@ pub fn get_performance_analysis(
     Path(_analysis_type): Path<String>,
 ) -> Result<Json<ApiResponse<String>>> {
     // Basic analysis endpoint
-    Ok(Json(ApiResponse::success(
-        String::from("Analysis endpoint working"),
-    )))
+    Ok(Json(ApiResponse::success(String::from(
+        "Analysis endpoint working",
+    ))))
 }

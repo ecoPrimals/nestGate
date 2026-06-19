@@ -98,18 +98,33 @@ mod tests {
     #[test]
     fn semantic_methods_contains_core_domains() {
         let required = [
-            "storage.put", "storage.get", "content.put", "content.get",
-            "health.check", "health.liveness", "lifecycle.status",
-            "capabilities.list", "identity.get", "auth.check", "btsp.capabilities",
+            "storage.put",
+            "storage.get",
+            "content.put",
+            "content.get",
+            "health.check",
+            "health.liveness",
+            "lifecycle.status",
+            "capabilities.list",
+            "identity.get",
+            "auth.check",
+            "btsp.capabilities",
         ];
         for method in &required {
-            assert!(SEMANTIC_METHODS.contains(method), "missing method: {method}");
+            assert!(
+                SEMANTIC_METHODS.contains(method),
+                "missing method: {method}"
+            );
         }
     }
 
     #[test]
     fn semantic_methods_count_is_positive() {
-        assert!(SEMANTIC_METHODS.len() >= 50, "expected 50+ methods, got {}", SEMANTIC_METHODS.len());
+        assert!(
+            SEMANTIC_METHODS.len() >= 50,
+            "expected 50+ methods, got {}",
+            SEMANTIC_METHODS.len()
+        );
     }
 
     #[test]

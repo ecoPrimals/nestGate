@@ -578,10 +578,7 @@ mod tests {
         assert_eq!(exists_r["exists"], true);
 
         let list_r = h
-            .handle(
-                "content.list",
-                serde_json::json!({"family_id": &family_id}),
-            )
+            .handle("content.list", serde_json::json!({"family_id": &family_id}))
             .await
             .expect("content.list");
         assert!(list_r.get("items").is_some() || list_r.get("hashes").is_some());

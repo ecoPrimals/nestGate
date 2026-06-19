@@ -365,8 +365,8 @@ mod traits_coverage_tests {
 
     #[test]
     fn response_metadata_api_success_unified() {
-        let api: ApiResponse<()> = ApiResponse::error_with_code("e", "E")
-            .with_meta("x", serde_json::json!(true));
+        let api: ApiResponse<()> =
+            ApiResponse::error_with_code("e", "E").with_meta("x", serde_json::json!(true));
         let md = api.extract_metadata();
         assert!(md.contains_key("meta_x") || md.contains_key("error"));
         assert!(api.is_successful() == api.success);

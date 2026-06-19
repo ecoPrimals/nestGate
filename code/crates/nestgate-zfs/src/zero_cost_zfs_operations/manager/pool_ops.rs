@@ -257,7 +257,9 @@ mod tests {
     fn stub_ok_pool_flow() -> impl Fn(&[&str]) -> Result<String> + Send + Sync + 'static {
         |args: &[&str]| -> Result<String> {
             match args.first().copied() {
-                Some("get") => Ok(String::from("size\t4096\nallocated\t1024\nhealth\tONLINE\n")),
+                Some("get") => Ok(String::from(
+                    "size\t4096\nallocated\t1024\nhealth\tONLINE\n",
+                )),
                 Some("list") => Ok(String::from("stub-pool\t100\t10\t90\tONLINE\n")),
                 _ => Ok(String::new()),
             }

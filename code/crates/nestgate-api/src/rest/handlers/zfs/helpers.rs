@@ -79,27 +79,25 @@ const fn unknown_timestamp() -> chrono::DateTime<chrono::Utc> {
 }
 
 fn json_str(value: &serde_json::Value, key: &str) -> Option<String> {
-    value
-        .get(key)
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
+    value.get(key).and_then(|v| v.as_str()).map(str::to_string)
 }
 
 fn parse_compression_type(value: &serde_json::Value) -> Option<CompressionType> {
-    value.as_str().and_then(|raw| {
-        match raw.to_ascii_lowercase().as_str() {
+    value
+        .as_str()
+        .and_then(|raw| match raw.to_ascii_lowercase().as_str() {
             "lz4" => Some(CompressionType::Lz4),
             "gzip" | "gz" => Some(CompressionType::Gzip),
             "zstd" | "zstandard" => Some(CompressionType::Zstd),
             "off" | "none" => Some(CompressionType::None),
             _ => None,
-        }
-    })
+        })
 }
 
 fn parse_checksum_type(value: &serde_json::Value) -> Option<ChecksumType> {
-    value.as_str().and_then(|raw| {
-        match raw.to_ascii_lowercase().as_str() {
+    value
+        .as_str()
+        .and_then(|raw| match raw.to_ascii_lowercase().as_str() {
             "fletcher2" => Some(ChecksumType::Fletcher2),
             "fletcher4" => Some(ChecksumType::Fletcher4),
             "sha256" => Some(ChecksumType::Sha256),
@@ -107,38 +105,38 @@ fn parse_checksum_type(value: &serde_json::Value) -> Option<ChecksumType> {
             "skein" => Some(ChecksumType::Skein),
             "edonr" | "edon-r" => Some(ChecksumType::EdonR),
             _ => None,
-        }
-    })
+        })
 }
 
 fn parse_dataset_status(value: &serde_json::Value) -> Option<DatasetStatus> {
-    value.as_str().and_then(|raw| {
-        match raw.to_ascii_lowercase().as_str() {
+    value
+        .as_str()
+        .and_then(|raw| match raw.to_ascii_lowercase().as_str() {
             "online" => Some(DatasetStatus::Online),
             "offline" => Some(DatasetStatus::Offline),
             "degraded" => Some(DatasetStatus::Degraded),
             "maintenance" => Some(DatasetStatus::Maintenance),
             "error" => Some(DatasetStatus::Error),
             _ => None,
-        }
-    })
+        })
 }
 
 fn parse_dataset_type(value: &serde_json::Value) -> Option<DatasetType> {
-    value.as_str().and_then(|raw| {
-        match raw.to_ascii_lowercase().as_str() {
+    value
+        .as_str()
+        .and_then(|raw| match raw.to_ascii_lowercase().as_str() {
             "filesystem" => Some(DatasetType::Filesystem),
             "volume" => Some(DatasetType::Volume),
             "snapshot" => Some(DatasetType::Snapshot),
             "bookmark" => Some(DatasetType::Bookmark),
             _ => None,
-        }
-    })
+        })
 }
 
 fn parse_storage_backend(value: &serde_json::Value) -> Option<StorageBackendType> {
-    value.as_str().and_then(|raw| {
-        match raw.to_ascii_lowercase().as_str() {
+    value
+        .as_str()
+        .and_then(|raw| match raw.to_ascii_lowercase().as_str() {
             "filesystem" | "zfs" => Some(StorageBackendType::Filesystem),
             "memory" => Some(StorageBackendType::Memory),
             "local" => Some(StorageBackendType::Local),
@@ -148,8 +146,7 @@ fn parse_storage_backend(value: &serde_json::Value) -> Option<StorageBackendType
             "block" => Some(StorageBackendType::Block),
             "file" => Some(StorageBackendType::File),
             _ => None,
-        }
-    })
+        })
 }
 
 fn parse_datetime(value: &serde_json::Value) -> Option<chrono::DateTime<chrono::Utc>> {
@@ -176,20 +173,31 @@ fn mount_path_for_engine(name: &str, engine: Option<&serde_json::Value>) -> Opti
         })
 }
 
-fn dataset_properties_from_engine(name: &str, engine: Option<&serde_json::Value>) -> DatasetProperties {
-    let compression = engine.and_then(|v| json_bool(v, "compression")).unwrap_or(false);
+fn dataset_properties_from_engine(
+    name: &str,
+    engine: Option<&serde_json::Value>,
+) -> DatasetProperties {
+    let compression = engine
+        .and_then(|v| json_bool(v, "compression"))
+        .unwrap_or(false);
     let compression_type = engine
         .and_then(|v| v.get("compression_type"))
         .and_then(parse_compression_type);
-    let checksum = engine.and_then(|v| json_bool(v, "checksum")).unwrap_or(false);
+    let checksum = engine
+        .and_then(|v| json_bool(v, "checksum"))
+        .unwrap_or(false);
     let checksum_type = engine
         .and_then(|v| v.get("checksum_type"))
         .and_then(parse_checksum_type);
     let deduplication = engine
         .and_then(|v| json_bool(v, "deduplication"))
         .unwrap_or(false);
-    let encryption = engine.and_then(|v| json_bool(v, "encryption")).unwrap_or(false);
-    let readonly = engine.and_then(|v| json_bool(v, "readonly")).unwrap_or(false);
+    let encryption = engine
+        .and_then(|v| json_bool(v, "encryption"))
+        .unwrap_or(false);
+    let readonly = engine
+        .and_then(|v| json_bool(v, "readonly"))
+        .unwrap_or(false);
     let quota = engine.and_then(|v| json_u64(v, "quota"));
     let reservation = engine.and_then(|v| json_u64(v, "reservation"));
     let mountpoint = mount_path_for_engine(name, engine);
@@ -608,11 +616,7 @@ mod tests {
         assert!(!props.compression);
         assert!(!props.checksum);
         assert!(!props.deduplication);
-        assert!(
-            props
-                .custom
-                .contains_key("engine_metadata"),
-        );
+        assert!(props.custom.contains_key("engine_metadata"),);
     }
 
     #[test]

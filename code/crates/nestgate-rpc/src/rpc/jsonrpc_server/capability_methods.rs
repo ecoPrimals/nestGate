@@ -20,15 +20,10 @@ use super::map_jsonrpc_registration;
 
 /// Registered JSON-RPC method names for `capabilities.list` (static slice avoids per-request `Vec` allocation).
 const JSON_RPC_CAPABILITIES_METHODS: &[&str] = &[
-    "storage.dataset.create",
-    "storage.dataset.list",
-    "storage.dataset.get",
-    "storage.dataset.delete",
-    "storage.object.store",
-    "storage.object.retrieve",
-    "storage.object.metadata",
-    "storage.object.list",
-    "storage.object.delete",
+    "storage.store",
+    "storage.retrieve",
+    "storage.list",
+    "storage.delete",
     "storage.store_stream",
     "storage.store_stream_chunk",
     "storage.retrieve_stream",

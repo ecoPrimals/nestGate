@@ -122,7 +122,7 @@ impl NetworkDefaultsV2Config {
             ws_port: env_parsed(
                 env,
                 "NESTGATE_WS_PORT",
-                crate::constants::hardcoding::runtime_fallback_ports::WEBSOCKET,
+                crate::constants::hardcoding::runtime_fallback_ports::websocket(),
             ),
             ws_bind: env.get("NESTGATE_WS_BIND"),
             ws_url: env.get("NESTGATE_WS_URL"),
@@ -137,7 +137,7 @@ impl NetworkDefaultsV2Config {
             storage_port: env_parsed(
                 env,
                 "NESTGATE_STORAGE_PORT",
-                crate::constants::hardcoding::runtime_fallback_ports::STORAGE,
+                crate::constants::hardcoding::runtime_fallback_ports::storage(),
             ),
             storage_bind: env.get("NESTGATE_STORAGE_BIND"),
 

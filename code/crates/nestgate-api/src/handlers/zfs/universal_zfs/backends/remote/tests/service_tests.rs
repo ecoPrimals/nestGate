@@ -13,7 +13,7 @@ async fn test_service_name() {
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
 
     let config = RemoteConfig {
@@ -57,7 +57,7 @@ async fn test_service_with_different_timeouts() {
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
 
     let fast_config = RemoteConfig {
@@ -87,7 +87,7 @@ async fn test_service_version() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -123,7 +123,7 @@ async fn test_service_uptime() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -148,7 +148,7 @@ async fn test_connection_stats_initial_state() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -170,7 +170,7 @@ async fn test_record_success_updates_stats() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -194,7 +194,7 @@ async fn test_record_failure_updates_stats() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -220,7 +220,7 @@ async fn test_mixed_success_and_failure() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -249,7 +249,7 @@ async fn test_service_clone_independence() {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         ),
         timeout: Duration::from_secs(30),
         auth: None,

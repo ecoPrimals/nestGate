@@ -363,9 +363,9 @@ impl Environment {
         match self {
             // Standard IANA HTTPS port; not defined in `runtime_fallback_ports` (that module lists NestGate-style fallbacks).
             Self::Production => 443,
-            Self::Staging => runtime_fallback_ports::HTTPS,
-            Self::Development => runtime_fallback_ports::HTTP,
-            Self::Testing => runtime_fallback_ports::API,
+            Self::Staging => runtime_fallback_ports::defaults::HTTPS,
+            Self::Development => runtime_fallback_ports::defaults::HTTP,
+            Self::Testing => runtime_fallback_ports::defaults::API,
         }
     }
 
@@ -420,15 +420,15 @@ mod tests {
         assert_eq!(Environment::Production.default_port(), 443);
         assert_eq!(
             Environment::Development.default_port(),
-            runtime_fallback_ports::HTTP
+            runtime_fallback_ports::http()
         );
         assert_eq!(
             Environment::Staging.default_port(),
-            runtime_fallback_ports::HTTPS
+            runtime_fallback_ports::https()
         );
         assert_eq!(
             Environment::Testing.default_port(),
-            runtime_fallback_ports::API
+            runtime_fallback_ports::api()
         );
     }
 

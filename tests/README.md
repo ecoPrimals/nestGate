@@ -1,8 +1,8 @@
 # NestGate Testing Guide
 
-**Last Updated**: Jun 3, 2026  
-**Library tests (`cargo test --workspace --lib`)**: 9,083 passing, 0 ignored, 0 failures  
-**Coverage**: 84.12%+ line (workspace, all features)  
+**Last Updated**: Jun 19, 2026  
+**Full suite (`cargo test --workspace --all-features`)**: 12,941 passed, 427 ignored, 0 failures  
+**Coverage**: 84%+ line (workspace, all features)  
 **Goal**: Maintain high coverage with clean, maintainable tests  
 
 The repo root **`tests/`** tree also contains **integration test binaries**: each **`tests/*.rs`** file becomes its own Cargo test crate. Those are **not** executed by `cargo test --workspace --lib` (which runs only tests inside `[lib]` targets). Run the **full suite**—including those binaries—with:
@@ -18,9 +18,9 @@ cargo test --workspace
 ## Quick Stats
 
 ```
-Lib tests passing:       9,083
+Tests passing:           12,941
 Failures:                0
-Ignored (lib only):        0 (see tests/DISABLED_TESTS_REFERENCE.md)
+Ignored:                   427 (see tests/DISABLED_TESTS_REFERENCE.md)
 Crates with tests:       Workspace-wide (22 members)
 Clippy:                  cargo clippy --workspace --all-targets --all-features -- -D warnings PASS
 ```
@@ -202,5 +202,5 @@ cargo test --workspace --all-features -- --test-threads=1
 
 ---
 
-**Status**: Workspace library test suite green; ignored tests documented separately  
-**Coverage**: 84.12%+ workspace (all features); re-measure after large changes
+**Status**: Full workspace test suite green; ignored tests documented separately  
+**Coverage**: 84%+ workspace (all features); re-measure after large changes

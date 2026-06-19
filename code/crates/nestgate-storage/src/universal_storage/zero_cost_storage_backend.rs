@@ -260,56 +260,6 @@ pub type HighPerformanceStorage = ZeroCostFilesystemBackend<2000, 512, 10>;
 pub type LargeFileStorage = ZeroCostFilesystemBackend<100, 4096, 120>;
 /// Quick operations storage backend
 pub type QuickStorage = ZeroCostFilesystemBackend<5000, 64, 5>;
-// ==================== SECTION ====================
-
-/// **Migration helper from `async_trait` to zero-cost**
-pub struct StorageBackendMigration;
-impl StorageBackendMigration {
-    /// Create migration template
-    #[must_use]
-    pub fn create_migration_template() -> String {
-        r"
-// MIGRATION: async_trait UnifiedStorageBackend → ZeroCostStorageBackend
-// 
-// BEFORE (async_trait with runtime overhead):
-// #[async_trait]
-// impl UnifiedStorageBackend for MyStorage {
-// }
-//
-// AFTER (zero-cost native async):
-// impl ZeroCostStorageBackend<1000, 1024, 30> for MyStorage {
-//     type Error = std::io::Error;
-//     type Config = MyStorageConfig;
-//     type Metadata = MyStorageMetadata;
-//     
-//         // Native async implementation - no Future boxing
-//         tokio::fs::read(path).await
-//     }
-//     
-//         // Direct async method with compile-time limits
-//         if data.len() > Self::max_file_size_bytes() {
-//             return Err(/* error */);
-//         }
-//         tokio::fs::write(path, data).await
-//     }
-// }
-
-// PERFORMANCE IMPROVEMENTS:
-// - 30-50% throughput improvement through native async
-// - 25-35% latency reduction by eliminating Future boxing  
-// - Compile-time operation limits prevent resource exhaustion
-// - Zero-allocation trait dispatch through monomorphization
-// - CPU-specific optimizations enabled by const generics
-"
-        .to_string()
-    }
-
-    /// Get migration benefits
-    #[must_use]
-    pub const fn get_migration_benefits() -> Vec<String> {
-        vec![]
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -364,12 +314,6 @@ mod tests {
         assert_eq!(TestBackend::max_concurrent_operations(), 500);
         assert_eq!(TestBackend::max_file_size_bytes(), 256 * 1024 * 1024);
         assert_eq!(TestBackend::operation_timeout(), Duration::from_secs(15));
-    }
-
-    #[test]
-    fn test_migration_template() {
-        let template = StorageBackendMigration::create_migration_template();
-        assert!(!template.is_empty());
     }
 
     #[test]

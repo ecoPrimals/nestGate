@@ -460,12 +460,7 @@ mod tests {
         let mut m = ConfigMigrator::new(String::from("test"), dry_run_options());
         let _ = m.dry_run_migration();
         let report = m.get_migration_report();
-        assert!(
-            report
-                .completed_steps
-                .iter()
-                .any(|s| s.contains("Dry run"))
-        );
+        assert!(report.completed_steps.iter().any(|s| s.contains("Dry run")));
     }
 
     #[test]

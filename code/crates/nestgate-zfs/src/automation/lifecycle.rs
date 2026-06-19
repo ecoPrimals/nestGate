@@ -261,7 +261,8 @@ mod tests {
             lifecycle_stage: LifecycleStage::Active,
             automation_history: vec![],
         };
-        let result = evaluate_lifecycle_conditions("pool/ds", &lifecycle, &[String::from("always")]);
+        let result =
+            evaluate_lifecycle_conditions("pool/ds", &lifecycle, &[String::from("always")]);
         assert!(result.unwrap());
     }
 

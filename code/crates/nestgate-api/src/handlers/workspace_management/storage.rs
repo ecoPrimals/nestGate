@@ -247,7 +247,9 @@ pub async fn cleanup_workspace(
     if let Ok(output) = cache_output
         && output.status.success()
     {
-        cleanup_actions.push(String::from("Optimized cache settings for better performance"));
+        cleanup_actions.push(String::from(
+            "Optimized cache settings for better performance",
+        ));
     }
 
     // 3. Update dataset compression if not optimal
@@ -266,7 +268,9 @@ pub async fn cleanup_workspace(
                 .args(["set", "compression=lz4", &dataset_name])
                 .output()
                 .await;
-            cleanup_actions.push(String::from("Updated compression to lz4 for better efficiency"));
+            cleanup_actions.push(String::from(
+                "Updated compression to lz4 for better efficiency",
+            ));
         }
     }
 
@@ -322,11 +326,12 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
 
                 // If utilization is high, recommend scaling
                 if utilization > 80.0 {
-                    scale_actions
-                        .push(String::from("High utilization detected - consider expanding storage"));
-                    scale_actions.push(
-                        String::from("Monitoring compression ratio for optimization opportunities"),
-                    );
+                    scale_actions.push(String::from(
+                        "High utilization detected - consider expanding storage",
+                    ));
+                    scale_actions.push(String::from(
+                        "Monitoring compression ratio for optimization opportunities",
+                    ));
                 } else {
                     scale_actions.push(String::from("Storage utilization is healthy"));
                 }

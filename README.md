@@ -5,13 +5,13 @@
 **Verification (as of 2026-06-11, Session 103)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 3,863 total (2,325 lib, 867 RPC), 0 failures  
+- **Tests**: 12,941 passed, 0 failures, 427 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 3,863 total (2,325 lib, 867 RPC), 0 failures
+- **Tests (last recorded)**: 12,941 passed, 0 failures, 427 ignored
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -167,7 +167,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-02 (Se
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 749 RPC tests, 12,551 workspace — 0 failures |
+| Tests | 12,941 passed, 0 failures, 427 ignored |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |

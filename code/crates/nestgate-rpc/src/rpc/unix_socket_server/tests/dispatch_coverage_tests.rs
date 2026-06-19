@@ -160,9 +160,9 @@ async fn handle_request_route_register_defaults() {
 
 // ── Content pipeline dispatch coverage ──────────────────────────────
 
+use super::common::mock_state;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serial_test::serial;
-use super::common::mock_state;
 
 fn content_rpc(method: &str, params: serde_json::Value) -> JsonRpcRequest {
     JsonRpcRequest {
@@ -345,11 +345,7 @@ async fn dispatch_content_replicate_pull_skips_local() {
 #[tokio::test]
 async fn dispatch_unknown_method_returns_error() {
     let state = StorageState::new().unwrap();
-    let resp = handle_request(
-        content_rpc("nonexistent.method.xyz", json!({})),
-        &state,
-    )
-    .await;
+    let resp = handle_request(content_rpc("nonexistent.method.xyz", json!({})), &state).await;
     assert!(resp.error.is_some());
 }
 

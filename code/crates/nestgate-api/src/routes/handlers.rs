@@ -62,8 +62,7 @@ mod tests {
     #[tokio::test]
     async fn get_communication_stats_returns_zero_counters() {
         let state = AppState::new();
-        let axum::response::Json(body) =
-            get_communication_stats(axum::extract::State(state)).await;
+        let axum::response::Json(body) = get_communication_stats(axum::extract::State(state)).await;
         assert_eq!(body["websocket"]["active_connections"], 0);
         assert_eq!(body["total_active_connections"], 0);
         assert_eq!(body["total_messages_processed"], 0);
@@ -80,8 +79,7 @@ mod tests {
             .communication_counters
             .websocket_messages_total
             .store(42, Ordering::Relaxed);
-        let axum::response::Json(body) =
-            get_communication_stats(axum::extract::State(state)).await;
+        let axum::response::Json(body) = get_communication_stats(axum::extract::State(state)).await;
         assert_eq!(body["websocket"]["active_connections"], 3);
         assert_eq!(body["websocket"]["total_messages"], 42);
         assert_eq!(body["total_active_connections"], 3);

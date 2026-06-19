@@ -83,13 +83,29 @@ mod tests {
 
     #[test]
     fn delegation_error_includes_operation_name() {
-        let ops = ["encrypt", "decrypt", "generate_key", "generate_nonce", "hash", "verify_hash"];
+        let ops = [
+            "encrypt",
+            "decrypt",
+            "generate_key",
+            "generate_nonce",
+            "hash",
+            "verify_hash",
+        ];
         for op in &ops {
             let err = crypto_delegation_error(op);
             let msg = err.to_string();
-            assert!(msg.contains(&format!("crypto.{op}")), "missing operation in: {msg}");
-            assert!(msg.contains("discovery.query"), "missing discovery hint in: {msg}");
-            assert!(msg.contains("security"), "missing capability name in: {msg}");
+            assert!(
+                msg.contains(&format!("crypto.{op}")),
+                "missing operation in: {msg}"
+            );
+            assert!(
+                msg.contains("discovery.query"),
+                "missing discovery hint in: {msg}"
+            );
+            assert!(
+                msg.contains("security"),
+                "missing capability name in: {msg}"
+            );
         }
     }
 

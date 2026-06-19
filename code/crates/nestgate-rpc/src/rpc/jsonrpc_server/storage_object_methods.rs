@@ -19,7 +19,7 @@ use crate::rpc::tarpc_types::NestGateRpc;
 use super::JsonRpcState;
 use super::map_jsonrpc_registration;
 
-/// Register `storage.object.*` JSON-RPC methods
+/// Register canonical `storage.*` JSON-RPC methods (aligned with UDS dispatch).
 #[expect(
     clippy::too_many_lines,
     reason = "method table mirrors JSON-RPC surface; split would obscure routing"
@@ -28,7 +28,7 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
     module: &mut RpcModule<JsonRpcState<S>>,
 ) -> Result<(), NestGateError> {
     map_jsonrpc_registration(module.register_async_method(
-        "storage.object.store",
+        "storage.store",
         |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
@@ -71,7 +71,7 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
     ))?;
 
     map_jsonrpc_registration(module.register_async_method(
-        "storage.object.retrieve",
+        "storage.retrieve",
         |params, ctx, _ext| async move {
             const MAX_INLINE: usize = 64 * 1024 * 1024;
 
@@ -119,7 +119,7 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
     ))?;
 
     map_jsonrpc_registration(module.register_async_method(
-        "storage.object.metadata",
+        "storage.metadata",
         |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
@@ -153,7 +153,7 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
     ))?;
 
     map_jsonrpc_registration(module.register_async_method(
-        "storage.object.list",
+        "storage.list",
         |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
@@ -200,7 +200,7 @@ pub(super) fn register_object_methods<S: StorageBackend + 'static>(
     ))?;
 
     map_jsonrpc_registration(module.register_async_method(
-        "storage.object.delete",
+        "storage.delete",
         |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {

@@ -79,11 +79,7 @@ pub async fn serve_content_by_hash(
 
             (StatusCode::OK, headers, content.data).into_response()
         }
-        Ok(None) => (
-            StatusCode::NOT_FOUND,
-            format!("content not found: {hash}"),
-        )
-            .into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, format!("content not found: {hash}")).into_response(),
         Err(e) => {
             let msg = e.to_string();
             if msg.contains("invalid") || msg.contains("must be a 64-character") {
@@ -98,12 +94,7 @@ pub async fn serve_content_by_hash(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{
-        Router,
-        body::Body,
-        http::Request,
-        routing::get,
-    };
+    use axum::{Router, body::Body, http::Request, routing::get};
     use base64::{Engine as _, engine::general_purpose::STANDARD};
     use serde_json::json;
     use serial_test::serial;

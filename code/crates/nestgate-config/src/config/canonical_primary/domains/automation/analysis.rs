@@ -68,7 +68,11 @@ impl AnalysisConfig {
             scan_interval: Duration::from_secs(1800), // 30 minutes
             max_file_size: 10 * 1024 * 1024 * 1024,   // 10GB
             include_extensions: vec![String::from("*")],
-            exclude_extensions: vec![String::from(".tmp"), String::from(".log"), String::from(".cache")],
+            exclude_extensions: vec![
+                String::from(".tmp"),
+                String::from(".log"),
+                String::from(".cache"),
+            ],
             deep_analysis_enabled: true,
             parallel_workers: 8,
         }

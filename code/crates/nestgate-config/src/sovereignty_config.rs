@@ -113,9 +113,9 @@ impl SovereigntyConfig {
         let api_endpoint = Self::api_endpoint()?; // Propagate error instead of panic
 
         if api_endpoint.contains("localhost") && env::var("NESTGATE_API_ENDPOINT").is_err() {
-            return Err(
-                String::from("API endpoint using localhost without explicit user configuration"),
-            );
+            return Err(String::from(
+                "API endpoint using localhost without explicit user configuration",
+            ));
         }
 
         Ok(())
@@ -133,16 +133,25 @@ mod tests {
         temp_env::with_vars([("NESTGATE_API_ENDPOINT", None::<&str>)], || {
             assert!(SovereigntyConfig::api_endpoint().is_err());
             let err = SovereigntyConfig::api_endpoint().unwrap_err();
-            assert!(err.contains("sovereignty"), "error should mention sovereignty");
+            assert!(
+                err.contains("sovereignty"),
+                "error should mention sovereignty"
+            );
         });
     }
 
     #[test]
     #[serial]
     fn api_endpoint_returns_env_value() {
-        temp_env::with_vars([("NESTGATE_API_ENDPOINT", Some("http://10.0.0.5:8443"))], || {
-            assert_eq!(SovereigntyConfig::api_endpoint().unwrap(), "http://10.0.0.5:8443");
-        });
+        temp_env::with_vars(
+            [("NESTGATE_API_ENDPOINT", Some("http://10.0.0.5:8443"))],
+            || {
+                assert_eq!(
+                    SovereigntyConfig::api_endpoint().unwrap(),
+                    "http://10.0.0.5:8443"
+                );
+            },
+        );
     }
 
     #[test]
@@ -157,7 +166,10 @@ mod tests {
     #[serial]
     fn websocket_endpoint_returns_env_value() {
         temp_env::with_vars([("NESTGATE_WS_ENDPOINT", Some("ws://gate:9000"))], || {
-            assert_eq!(SovereigntyConfig::websocket_endpoint().unwrap(), "ws://gate:9000");
+            assert_eq!(
+                SovereigntyConfig::websocket_endpoint().unwrap(),
+                "ws://gate:9000"
+            );
         });
     }
 
@@ -177,9 +189,15 @@ mod tests {
     #[test]
     #[serial]
     fn discovery_endpoint_respects_env() {
-        temp_env::with_vars([("NESTGATE_DISCOVERY_ENDPOINT", Some("http://custom:7703/d"))], || {
-            assert_eq!(SovereigntyConfig::discovery_endpoint(), "http://custom:7703/d");
-        });
+        temp_env::with_vars(
+            [("NESTGATE_DISCOVERY_ENDPOINT", Some("http://custom:7703/d"))],
+            || {
+                assert_eq!(
+                    SovereigntyConfig::discovery_endpoint(),
+                    "http://custom:7703/d"
+                );
+            },
+        );
     }
 
     #[test]
@@ -204,7 +222,10 @@ mod tests {
         temp_env::with_vars(
             [("NESTGATE_DATABASE_URL", Some("postgresql://db:5433/custom"))],
             || {
-                assert_eq!(SovereigntyConfig::database_url(), "postgresql://db:5433/custom");
+                assert_eq!(
+                    SovereigntyConfig::database_url(),
+                    "postgresql://db:5433/custom"
+                );
             },
         );
     }

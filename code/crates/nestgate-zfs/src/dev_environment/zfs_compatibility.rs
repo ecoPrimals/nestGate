@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![cfg(any(test, feature = "dev-stubs"))]
 //
 // This module provides a ZFS-compatible API that works on systems without
 // dedicated ZFS storage hardware. It's designed for:
@@ -181,10 +182,6 @@ impl Default for DevEnvironmentZfsService {
         Self::new()
     }
 }
-
-// Implementation would delegate to actual ZFS service when available
-// For now, return mock response for development environment
-// This will be done in the next phase of implementation
 
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration

@@ -115,7 +115,7 @@ fn canonical_failover_config_timeouts_and_attempts() {
     assert_eq!(c.takeover_timeout_secs, 300);
     assert_eq!(
         c.node_failure_timeout_secs,
-        crate::constants::NODE_FAILURE_TIMEOUT_SECS
+        crate::constants::node_failure_timeout_secs()
     );
     assert_eq!(c.max_takeover_attempts, 3);
     assert_eq!(c.failback_delay_secs, 60);

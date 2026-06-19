@@ -193,7 +193,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
     }
 }
 
-/// Connect to a [`TransportEndpoint`] — the ecosystem-standard transport abstraction.
+/// Connect to a [`nestgate_types::TransportEndpoint`] — the ecosystem-standard transport abstraction.
 ///
 /// Routes UDS and TCP variants to their respective `tokio` stream connections.
 /// `MeshRelay` endpoints are not yet supported for direct connection; they require
@@ -207,9 +207,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
 ///
 /// Returns [`anyhow::Error`] when the connection fails or the transport variant
 /// is not supported for direct connection.
-pub async fn connect_transport(
-    endpoint: &nestgate_types::TransportEndpoint,
-) -> Result<IpcStream> {
+pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> Result<IpcStream> {
     use nestgate_types::TransportEndpoint;
 
     debug!("Connecting via transport endpoint: {endpoint}");
@@ -240,7 +238,7 @@ pub async fn connect_transport(
     }
 }
 
-/// Convert a [`TransportEndpoint`] to the legacy [`IpcEndpoint`] for backward-compatible
+/// Convert a [`nestgate_types::TransportEndpoint`] to the legacy [`IpcEndpoint`] for backward-compatible
 /// code paths that still accept `IpcEndpoint`.
 ///
 /// # Errors
@@ -254,9 +252,9 @@ pub fn transport_to_ipc_endpoint(
     match endpoint {
         TransportEndpoint::Uds { path } => Ok(IpcEndpoint::UnixSocket(path.clone())),
         TransportEndpoint::Tcp { host, port } => {
-            let addr: std::net::SocketAddr = format!("{host}:{port}").parse().map_err(|e| {
-                anyhow::anyhow!("Invalid TCP address {host}:{port}: {e}")
-            })?;
+            let addr: std::net::SocketAddr = format!("{host}:{port}")
+                .parse()
+                .map_err(|e| anyhow::anyhow!("Invalid TCP address {host}:{port}: {e}"))?;
             Ok(IpcEndpoint::TcpLocal(addr))
         }
         TransportEndpoint::MeshRelay { .. } => Err(anyhow::anyhow!(
@@ -358,7 +356,9 @@ mod tests {
     fn transport_to_ipc_uds() {
         let ep = nestgate_types::TransportEndpoint::uds("/tmp/test.sock");
         let ipc = transport_to_ipc_endpoint(&ep).unwrap();
-        assert!(matches!(ipc, IpcEndpoint::UnixSocket(ref p) if p.to_str().unwrap() == "/tmp/test.sock"));
+        assert!(
+            matches!(ipc, IpcEndpoint::UnixSocket(ref p) if p.to_str().unwrap() == "/tmp/test.sock")
+        );
     }
 
     #[test]

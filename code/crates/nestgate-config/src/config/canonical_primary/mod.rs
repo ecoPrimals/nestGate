@@ -340,10 +340,10 @@ impl<
                 // Stricter validation for production
                 {
                     use crate::constants::hardcoding::runtime_fallback_ports;
-                    if self.network.api.port == runtime_fallback_ports::HTTP {
+                    if self.network.api.port == runtime_fallback_ports::http() {
                         warnings.push(format!(
                             "Port {} not recommended for production",
-                            runtime_fallback_ports::HTTP
+                            runtime_fallback_ports::http()
                         ));
                     }
 
@@ -556,7 +556,7 @@ mod tests {
     fn validate_production_warns_on_default_http_port_and_firewall() {
         let mut c = StdCanonical::default();
         c.environment = Environment::Production;
-        c.network.api.port = runtime_fallback_ports::HTTP;
+        c.network.api.port = runtime_fallback_ports::http();
         c.network.security.firewall_enabled = false;
         let warnings = c.validate().expect("validate");
         let joined = warnings.join(" ");

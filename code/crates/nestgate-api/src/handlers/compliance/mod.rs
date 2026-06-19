@@ -89,7 +89,11 @@ mod tests {
 
         // User with sufficient permissions and clearance should be compliant
         assert!(manager.check_access_compliance(
-            &[String::from("read"), String::from("write"), String::from("admin")],
+            &[
+                String::from("read"),
+                String::from("write"),
+                String::from("admin")
+            ],
             5
         ));
 
@@ -97,7 +101,9 @@ mod tests {
         assert!(!manager.check_access_compliance(&[String::from("read")], 5));
 
         // User with insufficient clearance should be non-compliant
-        assert!(!manager.check_access_compliance(&[String::from("read"), String::from("write")], 2));
+        assert!(
+            !manager.check_access_compliance(&[String::from("read"), String::from("write")], 2)
+        );
     }
 
     #[test]

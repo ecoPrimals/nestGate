@@ -37,7 +37,9 @@ impl ProductionReadinessValidator {
         #[cfg(target_os = "linux")]
         {
             if !proc_cpuinfo_readable() {
-                mocks.push(String::from("/proc/cpuinfo unreadable (no CPU topology signal)"));
+                mocks.push(String::from(
+                    "/proc/cpuinfo unreadable (no CPU topology signal)",
+                ));
             }
             if !proc_meminfo_readable() {
                 mocks.push(String::from("/proc/meminfo unreadable (no memory signal)"));

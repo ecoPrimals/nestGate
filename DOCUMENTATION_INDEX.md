@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jun 14, 2026 (Session 103)  
+**Last Updated**: Jun 19, 2026  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of June 2026.
@@ -33,8 +33,7 @@ Paths linked below exist in this repository as of June 2026.
 - [docs/guides/ENVIRONMENT_VARIABLES.md](./docs/guides/ENVIRONMENT_VARIABLES.md) - All configuration options
 - [docs/guides/TROUBLESHOOTING.md](./docs/guides/TROUBLESHOOTING.md) - Common issues & solutions
 
-### Operations & Testing
-- [docs/operations/](./docs/operations/) - Operations runbook
+### Testing
 - [tests/](./tests/) - Integration tests, disabled tests reference
 
 ---
@@ -43,6 +42,9 @@ Paths linked below exist in this repository as of June 2026.
 
 Session archives, planning docs, stale examples, old specs, and historical reports are preserved in
 `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`. Git history retains the full record.
+
+Twenty-four historical guides and architecture docs (Jun 2026 cleanup) live in
+`ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026/`.
 
 ---
 
@@ -60,9 +62,10 @@ nestgate/
 │   ├── nestgate-zfs/               # ZFS integration (adaptive)
 │   └── ...                         # 14 additional crates
 ├── docs/                           # Documentation (api, architecture, guides)
-├── tests/                          # Integration tests
-└── benches/                        # Performance benchmarks (pointer to crate-level benches)
+└── tests/                          # Integration tests
 ```
+
+Crate-level benchmarks: `code/crates/nestgate-core/benches/`, `code/crates/nestgate-zfs/benches/`.
 
 ---
 
@@ -74,6 +77,6 @@ nestgate/
 
 ---
 
-**Status**: Documentation cleaned and updated Jun 14, 2026 (Session 103).  
+**Status**: Documentation cleaned and updated Jun 19, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: Jun 14, 2026 (Session 103)
+**Last Updated**: Jun 19, 2026

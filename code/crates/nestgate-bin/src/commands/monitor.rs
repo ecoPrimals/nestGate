@@ -64,9 +64,7 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
             Ok(config) => {
                 if config.socket_path.exists() {
                     let probe = nestgate_types::TransportEndpoint::uds(&config.socket_path);
-                    nestgate_core::rpc::connect_transport(&probe)
-                        .await
-                        .is_ok()
+                    nestgate_core::rpc::connect_transport(&probe).await.is_ok()
                 } else {
                     false
                 }

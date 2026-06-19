@@ -24,7 +24,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tracing::debug;
 
-use crate::rpc::protocol::normalize_method;
+use crate::rpc::protocol::{normalize_method, warn_legacy_method_alias};
 
 use super::tcp_fallback::RpcHandler;
 
@@ -197,6 +197,7 @@ impl UnixSocketRpcHandler {
         let id = request.id.clone();
         let state = self.state.as_ref();
         let method = normalize_method(&request.method);
+        warn_legacy_method_alias(method.as_ref());
         let result = match method.as_ref() {
             "storage.store" => storage_handlers::handle_storage_store(state, &request).await,
             "storage.retrieve" => storage_handlers::handle_storage_retrieve(state, &request).await,
@@ -291,15 +292,9 @@ impl UnixSocketRpcHandler {
             "content.fetch_heads" => {
                 unix_adapter_handlers::handle_content_fetch_heads(&request).await
             }
-            "content.push" => {
-                unix_adapter_handlers::handle_content_push(&request).await
-            }
-            "content.replicate" => {
-                unix_adapter_handlers::handle_content_replicate(&request).await
-            }
-            "content.sync" => {
-                unix_adapter_handlers::handle_content_sync(&request).await
-            }
+            "content.push" => unix_adapter_handlers::handle_content_push(&request).await,
+            "content.replicate" => unix_adapter_handlers::handle_content_replicate(&request).await,
+            "content.sync" => unix_adapter_handlers::handle_content_sync(&request).await,
 
             "beacon.store" => unix_adapter_handlers::handle_beacon_store(state, &request).await,
             "beacon.retrieve" => {

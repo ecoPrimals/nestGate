@@ -14,9 +14,8 @@ categories = ["filesystem"]
 workspace = true
 
 [features]
-default = ["dev-environment-fallbacks"]
+default = []
 orchestrator = []
-dev-environment-fallbacks = []
 dev-stubs = []
 hardware-detection = []
 container = []

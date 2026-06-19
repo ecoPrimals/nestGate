@@ -66,26 +66,22 @@ impl TransportConfig {
             .get("NESTGATE_FAMILY_ID")
             .unwrap_or_else(|| String::from("default"));
 
-        let socket_path = env
-            .get("NESTGATE_SOCKET_PATH")
-            .unwrap_or_else(|| {
-                std::env::temp_dir()
-                    .join(format!("nestgate-{family_id}.sock"))
-                    .to_string_lossy()
-                    .into_owned()
-            });
+        let socket_path = env.get("NESTGATE_SOCKET_PATH").unwrap_or_else(|| {
+            std::env::temp_dir()
+                .join(format!("nestgate-{family_id}.sock"))
+                .to_string_lossy()
+                .into_owned()
+        });
 
         let security_slug = env
             .get("NESTGATE_SECURITY_SLUG")
             .unwrap_or_else(|| String::from("security"));
-        let security_provider = env
-            .get("NESTGATE_SECURITY_PROVIDER")
-            .unwrap_or_else(|| {
-                std::env::temp_dir()
-                    .join(format!("{security_slug}-{family_id}-default.sock"))
-                    .to_string_lossy()
-                    .into_owned()
-            });
+        let security_provider = env.get("NESTGATE_SECURITY_PROVIDER").unwrap_or_else(|| {
+            std::env::temp_dir()
+                .join(format!("{security_slug}-{family_id}-default.sock"))
+                .to_string_lossy()
+                .into_owned()
+        });
 
         let http_port = env.get("NESTGATE_HTTP_PORT").and_then(|s| s.parse().ok());
 

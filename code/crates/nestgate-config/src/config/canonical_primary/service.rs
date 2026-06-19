@@ -107,7 +107,7 @@ impl Default for ServiceEndpointConfig {
         use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
         Self {
             bind_endpoint: addresses::LOCALHOST_IPV4.to_string(),
-            port: runtime_fallback_ports::HTTP,
+            port: runtime_fallback_ports::http(),
             tls_enabled: false,
             max_connections: 10000,
             keep_alive_timeout: Duration::from_secs(30),

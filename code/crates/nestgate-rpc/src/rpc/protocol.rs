@@ -34,7 +34,11 @@ pub const RIBOCIPHER_PREFIX: [u8; 2] = [0xEC, 0x01];
 /// clients that start with `{`.
 pub async fn strip_ribocipher_prefix<R: AsyncBufReadExt + Unpin>(reader: &mut R) {
     match reader.fill_buf().await {
-        Ok(buf) if buf.len() >= 2 && buf[0] == RIBOCIPHER_PREFIX[0] && buf[1] == RIBOCIPHER_PREFIX[1] => {
+        Ok(buf)
+            if buf.len() >= 2
+                && buf[0] == RIBOCIPHER_PREFIX[0]
+                && buf[1] == RIBOCIPHER_PREFIX[1] =>
+        {
             tracing::debug!("riboCipher signal [0xEC, 0x01] accepted, stripping prefix");
             reader.consume(2);
         }
@@ -50,8 +54,16 @@ pub async fn strip_ribocipher_prefix<R: AsyncBufReadExt + Unpin>(reader: &mut R)
 #[must_use]
 pub fn normalize_method(method: &str) -> Cow<'_, str> {
     let mut s = method;
+    let had_prefix = method.starts_with("nestgate.");
     while let Some(rest) = s.strip_prefix("nestgate.") {
         s = rest;
+    }
+    if had_prefix {
+        tracing::warn!(
+            method = %method,
+            normalized = %s,
+            "deprecated 'nestgate.' method prefix; migrate to canonical name without prefix"
+        );
     }
     if s.len() == method.len() {
         Cow::Borrowed(method)
@@ -60,9 +72,64 @@ pub fn normalize_method(method: &str) -> Cow<'_, str> {
     }
 }
 
+/// Emit a deprecation warning for legacy non-semantic JSON-RPC method aliases.
+///
+/// Call after [`normalize_method`] with the normalized method name. Legacy
+/// aliases continue to route but callers should migrate to canonical names.
+pub fn warn_legacy_method_alias(normalized: &str) {
+    match normalized {
+        "health" => tracing::warn!(
+            method = %normalized,
+            canonical = "health.check",
+            "deprecated JSON-RPC method alias; migrate to 'health.check'"
+        ),
+        "discover_capabilities" => tracing::warn!(
+            method = %normalized,
+            canonical = "discover.capabilities",
+            "deprecated JSON-RPC method alias; migrate to 'discover.capabilities' or 'capabilities.list'"
+        ),
+        "capability.list" => tracing::warn!(
+            method = %normalized,
+            canonical = "capabilities.list",
+            "deprecated JSON-RPC method alias; migrate to 'capabilities.list'"
+        ),
+        "nat.beacon" => tracing::warn!(
+            method = %normalized,
+            canonical = "beacon.list",
+            "deprecated JSON-RPC method alias; migrate to 'beacon.list'"
+        ),
+        "version" => tracing::warn!(
+            method = %normalized,
+            canonical = "health.info",
+            "deprecated JSON-RPC method alias; migrate to 'health.info'"
+        ),
+        "capabilities" => tracing::warn!(
+            method = %normalized,
+            canonical = "capabilities.list",
+            "deprecated JSON-RPC method alias; migrate to 'capabilities.list'"
+        ),
+        "list_pools" => tracing::warn!(
+            method = %normalized,
+            canonical = "zfs.pool.list",
+            "deprecated JSON-RPC method alias; migrate to 'zfs.pool.list'"
+        ),
+        "list_datasets" => tracing::warn!(
+            method = %normalized,
+            canonical = "zfs.dataset.list",
+            "deprecated JSON-RPC method alias; migrate to 'zfs.dataset.list'"
+        ),
+        "get_metrics" => tracing::warn!(
+            method = %normalized,
+            canonical = "health.metrics",
+            "deprecated JSON-RPC method alias; migrate to 'health.metrics'"
+        ),
+        _ => {}
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{normalize_method, strip_ribocipher_prefix, RIBOCIPHER_PREFIX};
+    use super::{RIBOCIPHER_PREFIX, normalize_method, strip_ribocipher_prefix};
     use std::borrow::Cow;
 
     #[test]
@@ -178,7 +245,11 @@ mod tests {
 
         use tokio::io::AsyncBufReadExt;
         let remaining = cursor.fill_buf().await.unwrap();
-        assert_eq!(remaining, &[0xEC], "single 0xEC byte should not be consumed");
+        assert_eq!(
+            remaining,
+            &[0xEC],
+            "single 0xEC byte should not be consumed"
+        );
     }
 
     #[tokio::test]
@@ -189,7 +260,10 @@ mod tests {
 
         use tokio::io::AsyncBufReadExt;
         let remaining = cursor.fill_buf().await.unwrap();
-        assert_eq!(remaining[0], 0xEC, "wrong second byte should not trigger strip");
+        assert_eq!(
+            remaining[0], 0xEC,
+            "wrong second byte should not trigger strip"
+        );
         assert_eq!(remaining.len(), 3);
     }
 

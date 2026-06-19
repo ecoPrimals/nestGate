@@ -40,7 +40,9 @@ impl ReplicationAnalytics {
 
         // Basic replication analysis
         if performance_data.transfer_rate < 10.0 {
-            recommendations.push(String::from("Consider async replication for better performance"));
+            recommendations.push(String::from(
+                "Consider async replication for better performance",
+            ));
         }
 
         if performance_data.transfer_rate < 1.0 {
@@ -48,7 +50,9 @@ impl ReplicationAnalytics {
         }
 
         if performance_data.compression_ratio < 1.2 {
-            recommendations.push(String::from("Consider enabling compression for better efficiency"));
+            recommendations.push(String::from(
+                "Consider enabling compression for better efficiency",
+            ));
         }
         Ok(Self {
             strategy: String::from("sync"),

@@ -396,13 +396,10 @@ fn resolve_cache_base_fallback_uses_system_temp_dir() {
 
 #[test]
 fn resolve_cache_base_prefers_env_var() {
-    temp_env::with_vars(
-        [("NESTGATE_CACHE_DIR", Some("/opt/cache"))],
-        || {
-            let base = super::resolve_cache_base();
-            assert_eq!(base, "/opt/cache");
-        },
-    );
+    temp_env::with_vars([("NESTGATE_CACHE_DIR", Some("/opt/cache"))], || {
+        let base = super::resolve_cache_base();
+        assert_eq!(base, "/opt/cache");
+    });
 }
 
 #[test]

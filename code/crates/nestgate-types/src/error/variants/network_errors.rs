@@ -90,8 +90,10 @@ mod tests {
 
     #[test]
     fn test_network_error_with_operation_strings() {
-        let error =
-            NetworkErrorDetails::with_operation(String::from("POST failed"), String::from("http_post"));
+        let error = NetworkErrorDetails::with_operation(
+            String::from("POST failed"),
+            String::from("http_post"),
+        );
 
         assert_eq!(error.message.as_ref(), "POST failed");
         assert_eq!(

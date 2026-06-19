@@ -430,11 +430,9 @@ pub(super) async fn zfs_snapshot_create(params: Option<&Value>) -> Result<Value>
 pub(super) async fn zfs_snapshot_destroy(params: Option<&Value>) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
-    let snapshot = params["snapshot"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field("snapshot", "string required (pool/dataset@name)")
-        })?;
+    let snapshot = params["snapshot"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("snapshot", "string required (pool/dataset@name)")
+    })?;
 
     if !snapshot.contains('@') {
         return Err(NestGateError::invalid_input_with_field(

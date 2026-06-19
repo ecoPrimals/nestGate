@@ -36,7 +36,8 @@ pub type SharedDefaultsV2Config = Arc<DefaultsV2Config>;
 
 impl DefaultsV2Config {
     /// Default API port (see [`crate::constants::hardcoding::get_api_port`].)
-    pub const DEFAULT_API_PORT: u16 = crate::constants::hardcoding::runtime_fallback_ports::HTTP;
+    pub const DEFAULT_API_PORT: u16 =
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::HTTP;
     /// Default bind address
     pub const DEFAULT_BIND_ADDRESS: &'static str =
         crate::constants::hardcoding::addresses::BIND_ALL_IPV4;
@@ -45,15 +46,16 @@ impl DefaultsV2Config {
         crate::constants::hardcoding::addresses::LOCALHOST_NAME;
     /// Default WebSocket port
     pub const DEFAULT_WS_PORT: u16 =
-        crate::constants::hardcoding::runtime_fallback_ports::WEBSOCKET;
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::WEBSOCKET;
     /// Default health port
     pub const DEFAULT_HEALTH_PORT: u16 =
-        crate::constants::hardcoding::runtime_fallback_ports::HEALTH;
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::HEALTH;
     /// Default database port
-    pub const DEFAULT_DB_PORT: u16 = crate::constants::hardcoding::runtime_fallback_ports::POSTGRES;
+    pub const DEFAULT_DB_PORT: u16 =
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::POSTGRES;
     /// Default metrics port
     pub const DEFAULT_METRICS_PORT: u16 =
-        crate::constants::hardcoding::runtime_fallback_ports::METRICS;
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::METRICS;
 
     /// Create a new configuration with default values (no env vars)
     #[must_use]
@@ -233,13 +235,13 @@ mod tests {
     fn test_config_defaults() {
         use crate::constants::hardcoding::runtime_fallback_ports;
         let config = DefaultsV2Config::new();
-        assert_eq!(config.api_port(), runtime_fallback_ports::HTTP);
+        assert_eq!(config.api_port(), runtime_fallback_ports::http());
         assert_eq!(config.bind_address(), "0.0.0.0");
         assert_eq!(config.hostname(), "localhost");
-        assert_eq!(config.ws_port(), runtime_fallback_ports::WEBSOCKET);
-        assert_eq!(config.health_port(), runtime_fallback_ports::HEALTH);
-        assert_eq!(config.db_port(), runtime_fallback_ports::POSTGRES);
-        assert_eq!(config.metrics_port(), runtime_fallback_ports::METRICS);
+        assert_eq!(config.ws_port(), runtime_fallback_ports::websocket());
+        assert_eq!(config.health_port(), runtime_fallback_ports::health());
+        assert_eq!(config.db_port(), runtime_fallback_ports::postgres());
+        assert_eq!(config.metrics_port(), runtime_fallback_ports::metrics());
     }
 
     #[test]
@@ -271,7 +273,7 @@ mod tests {
         let config = Arc::new(DefaultsV2Config::new());
         assert_eq!(
             config.api_port(),
-            crate::constants::hardcoding::runtime_fallback_ports::HTTP
+            crate::constants::hardcoding::runtime_fallback_ports::http()
         );
         assert_eq!(config.hostname(), "localhost");
     }

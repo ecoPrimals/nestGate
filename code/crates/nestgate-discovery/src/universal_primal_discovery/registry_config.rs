@@ -280,10 +280,12 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
     async fn test_concurrent_registry_config_access() {
         // Create two different configurations
-        let config1 =
-            Arc::new(RegistryConfig::new().with_registry_url(String::from("http://registry1:8080")));
-        let config2 =
-            Arc::new(RegistryConfig::new().with_registry_url(String::from("http://registry2:8080")));
+        let config1 = Arc::new(
+            RegistryConfig::new().with_registry_url(String::from("http://registry1:8080")),
+        );
+        let config2 = Arc::new(
+            RegistryConfig::new().with_registry_url(String::from("http://registry2:8080")),
+        );
 
         // Spawn concurrent tasks accessing different configs
         let handle1 = {

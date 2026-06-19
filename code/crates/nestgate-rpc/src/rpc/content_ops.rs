@@ -3,7 +3,7 @@
 
 //! Public stateless content-addressed storage API.
 //!
-//! Wraps [`crate::rpc::unix_socket_server::content_handlers`] behind a
+//! Wraps the `unix_socket_server::content_handlers` module behind a
 //! `StorageState`-free interface so that **any crate** (including `nestgate-api`)
 //! can call content operations without constructing internal RPC state.
 //!
@@ -397,9 +397,7 @@ mod tests {
         }))
         .await
         .unwrap();
-        assert!(
-            promo_r.get("alias").is_some() || promo_r.get("promoted").is_some(),
-        );
+        assert!(promo_r.get("alias").is_some() || promo_r.get("promoted").is_some(),);
     }
 
     #[tokio::test]

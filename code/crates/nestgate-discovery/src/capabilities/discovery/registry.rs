@@ -125,7 +125,7 @@ mod tests {
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
             endpoint: Endpoint {
                 host: String::from("localhost"),
-                port: nestgate_config::constants::hardcoding::runtime_fallback_ports::HTTPS,
+                port: nestgate_config::constants::hardcoding::runtime_fallback_ports::https(),
                 protocol: Protocol::HTTPS,
                 tls: true,
             },

@@ -253,7 +253,7 @@ mod tests {
         let config = AdapterDiscoveryConfig::new();
         // Runtime config uses 127.0.0.1 (IpAddr format) instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
-        let expected_port = runtime_fallback_ports::HTTP.to_string();
+        let expected_port = runtime_fallback_ports::http().to_string();
         assert_eq!(config.get_port(), &expected_port);
         assert!(config.get_adapter_endpoint().is_none());
         assert!(config.get_all_discovery_endpoints().is_empty());
@@ -263,11 +263,11 @@ mod tests {
     fn test_config_set_get_discovery_endpoint() {
         let mut config = AdapterDiscoveryConfig::new();
 
-        let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::HTTP);
+        let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::http());
         config.set_discovery_endpoint("orchestration", &orch_endpoint);
         config.set_discovery_endpoint(
             "compute",
-            format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS),
+            format!("http://compute:{}", runtime_fallback_ports::prometheus()),
         );
 
         assert_eq!(
@@ -276,7 +276,7 @@ mod tests {
         );
         assert_eq!(
             config.get_discovery_endpoint("compute"),
-            Some(format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS).as_str())
+            Some(format!("http://compute:{}", runtime_fallback_ports::prometheus()).as_str())
         );
         assert_eq!(config.get_discovery_endpoint("security"), None);
     }
@@ -286,13 +286,16 @@ mod tests {
         let mut config = AdapterDiscoveryConfig::new();
 
         // Runtime config uses 127.0.0.1 instead of "localhost"
-        let default_endpoint = format!("http://127.0.0.1:{}/adapter", runtime_fallback_ports::HTTP);
+        let default_endpoint = format!(
+            "http://127.0.0.1:{}/adapter",
+            runtime_fallback_ports::http()
+        );
         // Default endpoint
         assert_eq!(config.get_default_adapter_endpoint(), default_endpoint);
         assert_eq!(config.get_effective_adapter_endpoint(), default_endpoint);
 
         // Set override
-        let custom_endpoint = format!("http://custom:{}/adapter", runtime_fallback_ports::API);
+        let custom_endpoint = format!("http://custom:{}/adapter", runtime_fallback_ports::api());
         config.set_adapter_endpoint(&custom_endpoint);
         assert_eq!(
             config.get_adapter_endpoint(),
@@ -344,7 +347,10 @@ mod tests {
         let config = AdapterDiscoveryConfig::from_env();
         // Runtime config uses 127.0.0.1 instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
-        assert_eq!(config.get_port(), &runtime_fallback_ports::HTTP.to_string());
+        assert_eq!(
+            config.get_port(),
+            &runtime_fallback_ports::http().to_string()
+        );
         // discovery_endpoints might be empty if no env vars are set
     }
 
@@ -362,11 +368,11 @@ mod tests {
     fn test_config_all_discovery_endpoints() {
         let mut config = AdapterDiscoveryConfig::new();
 
-        let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::HTTP);
+        let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::http());
         config.set_discovery_endpoint("orchestration", &orch_endpoint);
         config.set_discovery_endpoint(
             "compute",
-            format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS),
+            format!("http://compute:{}", runtime_fallback_ports::prometheus()),
         );
         let sec_endpoint = String::from("http://sec:7070");
         config.set_discovery_endpoint("security", &sec_endpoint);
@@ -378,7 +384,7 @@ mod tests {
             endpoints.get("compute"),
             Some(&format!(
                 "http://compute:{}",
-                runtime_fallback_ports::PROMETHEUS
+                runtime_fallback_ports::prometheus()
             ))
         );
         assert_eq!(

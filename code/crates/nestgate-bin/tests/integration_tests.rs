@@ -61,18 +61,6 @@
 // - Controlled system states
 // - Reproducible test conditions
 // - Detailed logging and metrics collection
-//
-// ## Example Test Structure
-//
-// ```rust
-// #[test]
-// fn test_service_startup_with_valid_config() -> std::result::Result<(), Box<dyn std::error::Error>> {
-//     let config = create_test_config();
-//     let service = start_nestgate_service(config);
-//     assert!(service.is_healthy());
-//     assert_eq!(service.status(), ServiceStatus::Running);
-// }
-// ```
 
 use nestgate_types::{EnvSource, MapEnv};
 use std::process::Command;
@@ -290,12 +278,12 @@ mod integration_mode_tests {
         let expected_oe = format!(
             "http://{}:{}",
             nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-            nestgate_core::constants::hardcoding::runtime_fallback_ports::ORCHESTRATION
+            nestgate_core::constants::hardcoding::runtime_fallback_ports::orchestration()
         );
         let expected_se = format!(
             "http://{}:{}",
             nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-            nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
+            nestgate_core::constants::hardcoding::runtime_fallback_ports::http()
         );
         let env = MapEnv::from([
             ("ORCHESTRATION_ENDPOINT", expected_oe.as_str()),

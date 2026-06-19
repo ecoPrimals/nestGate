@@ -169,7 +169,9 @@ impl CertUtils {
         }
 
         if cert.not_before > cert.not_after {
-            errors.push(String::from("Certificate not_before time cannot be after not_after time"));
+            errors.push(String::from(
+                "Certificate not_before time cannot be after not_after time",
+            ));
         }
 
         errors

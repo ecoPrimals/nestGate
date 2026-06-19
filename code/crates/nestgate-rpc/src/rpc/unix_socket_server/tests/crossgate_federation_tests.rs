@@ -26,7 +26,8 @@ use crate::rpc::unix_socket_server::storage_paths::content_key_path;
 #[serial]
 async fn content_put_get_on_custom_storage_base() {
     let family = format!("test-zfs-putget-{}", uuid::Uuid::new_v4());
-    let custom_base = std::env::temp_dir().join(format!("nestgate-zfs-test-{}", uuid::Uuid::new_v4()));
+    let custom_base =
+        std::env::temp_dir().join(format!("nestgate-zfs-test-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&custom_base).expect("create custom base");
     let base_str = custom_base.to_str().unwrap().to_owned();
     let fam = family.clone();
@@ -52,7 +53,10 @@ async fn content_put_get_on_custom_storage_base() {
             assert_eq!(result["deduplicated"], false);
 
             let blob_path = content_key_path(&fam, &hash);
-            assert!(blob_path.exists(), "blob should exist on custom storage base");
+            assert!(
+                blob_path.exists(),
+                "blob should exist on custom storage base"
+            );
             assert!(
                 blob_path.starts_with(&base_str),
                 "blob should be under custom base, not default: {}",
@@ -66,7 +70,9 @@ async fn content_put_get_on_custom_storage_base() {
             .await
             .unwrap();
 
-            let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+            let retrieved = STANDARD
+                .decode(get_result["data"].as_str().unwrap())
+                .unwrap();
             assert_eq!(retrieved, payload);
         },
     )
@@ -81,7 +87,8 @@ async fn content_put_get_on_custom_storage_base() {
 #[serial]
 async fn content_dedup_on_custom_storage_base() {
     let family = format!("test-zfs-dedup-{}", uuid::Uuid::new_v4());
-    let custom_base = std::env::temp_dir().join(format!("nestgate-zfs-dedup-{}", uuid::Uuid::new_v4()));
+    let custom_base =
+        std::env::temp_dir().join(format!("nestgate-zfs-dedup-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&custom_base).expect("create custom base");
     let base_str = custom_base.to_str().unwrap().to_owned();
     let fam = family.clone();
@@ -146,7 +153,10 @@ async fn crossgate_put_then_pull_blake3_integrity() {
     assert!(east_blob_path.exists(), "blob must exist on east side");
 
     let west_blob_path = content_key_path(&west_family, cid);
-    assert!(!west_blob_path.exists(), "blob should NOT exist on west side yet");
+    assert!(
+        !west_blob_path.exists(),
+        "blob should NOT exist on west side yet"
+    );
 
     let east_raw = tokio::fs::read(&east_blob_path).await.unwrap();
     let verify_hash = blake3::hash(&east_raw).to_hex().to_string();
@@ -157,7 +167,10 @@ async fn crossgate_put_then_pull_blake3_integrity() {
         .unwrap();
     tokio::fs::write(&west_blob_path, &east_raw).await.unwrap();
 
-    assert!(west_blob_path.exists(), "blob should exist on west side after simulated pull");
+    assert!(
+        west_blob_path.exists(),
+        "blob should exist on west side after simulated pull"
+    );
     let west_raw = tokio::fs::read(&west_blob_path).await.unwrap();
     assert_eq!(
         blake3::hash(&west_raw).to_hex().to_string(),
@@ -181,34 +194,27 @@ async fn content_get_blake3_roundtrip_integrity() {
     let family = format!("test-b3rt-{}", uuid::Uuid::new_v4());
     let state = mock_state(Some(&family)).await;
 
-    let payloads: &[&[u8]] = &[
-        b"short",
-        b"",
-        &[0xDE, 0xAD, 0xBE, 0xEF],
-        &vec![0x42; 8192],
-    ];
+    let payloads: &[&[u8]] = &[b"short", b"", &[0xDE, 0xAD, 0xBE, 0xEF], &vec![0x42; 8192]];
 
     for payload in payloads {
         let b64 = STANDARD.encode(payload);
-        let put_result = content_handlers::content_put(
-            Some(&json!({"data": b64, "family_id": family})),
-            &state,
-        )
-        .await
-        .unwrap();
+        let put_result =
+            content_handlers::content_put(Some(&json!({"data": b64, "family_id": family})), &state)
+                .await
+                .unwrap();
 
         let cid = put_result["hash"].as_str().unwrap();
         let expected_hash = blake3::hash(payload).to_hex().to_string();
         assert_eq!(cid, expected_hash, "put CID must match BLAKE3 of input");
 
-        let get_result = content_handlers::content_get(
-            Some(&json!({"hash": cid, "family_id": family})),
-            &state,
-        )
-        .await
-        .unwrap();
+        let get_result =
+            content_handlers::content_get(Some(&json!({"hash": cid, "family_id": family})), &state)
+                .await
+                .unwrap();
 
-        let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+        let retrieved = STANDARD
+            .decode(get_result["data"].as_str().unwrap())
+            .unwrap();
         let retrieved_hash = blake3::hash(&retrieved).to_hex().to_string();
         assert_eq!(
             retrieved_hash, cid,
@@ -231,27 +237,27 @@ async fn corrupted_blob_detected_by_blake3_mismatch() {
 
     let payload = b"pristine content for corruption test";
     let b64 = STANDARD.encode(payload);
-    let put_result = content_handlers::content_put(
-        Some(&json!({"data": b64, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let put_result =
+        content_handlers::content_put(Some(&json!({"data": b64, "family_id": family})), &state)
+            .await
+            .unwrap();
 
     let cid = put_result["hash"].as_str().unwrap().to_owned();
     let blob_path = content_key_path(&family, &cid);
     assert!(blob_path.exists());
 
-    tokio::fs::write(&blob_path, b"TAMPERED CONTENT").await.unwrap();
+    tokio::fs::write(&blob_path, b"TAMPERED CONTENT")
+        .await
+        .unwrap();
 
-    let get_result = content_handlers::content_get(
-        Some(&json!({"hash": cid, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let get_result =
+        content_handlers::content_get(Some(&json!({"hash": cid, "family_id": family})), &state)
+            .await
+            .unwrap();
 
-    let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+    let retrieved = STANDARD
+        .decode(get_result["data"].as_str().unwrap())
+        .unwrap();
     let actual_hash = blake3::hash(&retrieved).to_hex().to_string();
     assert_ne!(
         actual_hash, cid,
@@ -270,12 +276,10 @@ async fn replicate_pull_skips_when_already_local() {
 
     let payload = b"already here";
     let b64 = STANDARD.encode(payload);
-    let put_result = content_handlers::content_put(
-        Some(&json!({"data": b64, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let put_result =
+        content_handlers::content_put(Some(&json!({"data": b64, "family_id": family})), &state)
+            .await
+            .unwrap();
     let cid = put_result["hash"].as_str().unwrap();
 
     let pull_params = json!({
@@ -283,12 +287,9 @@ async fn replicate_pull_skips_when_already_local() {
         "source": "/nonexistent/socket.sock",
         "family_id": family
     });
-    let result = content_federation_handlers::content_replicate_pull(
-        Some(&pull_params),
-        &state,
-    )
-    .await
-    .unwrap();
+    let result = content_federation_handlers::content_replicate_pull(Some(&pull_params), &state)
+        .await
+        .unwrap();
 
     assert_eq!(result["skipped_count"], 1);
     assert_eq!(result["transferred_count"], 0);
@@ -322,12 +323,10 @@ async fn content_provenance_roundtrip() {
 
     let hash = put_result["hash"].as_str().unwrap();
 
-    let get_result = content_handlers::content_get(
-        Some(&json!({"hash": hash, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let get_result =
+        content_handlers::content_get(Some(&json!({"hash": hash, "family_id": family})), &state)
+            .await
+            .unwrap();
 
     assert_eq!(get_result["content_type"], "text/plain");
     assert_eq!(get_result["source"], "eastGate");
@@ -354,20 +353,16 @@ async fn content_exists_accuracy() {
     assert_eq!(missing["exists"], false);
 
     let b64 = STANDARD.encode(b"exists test");
-    let put_result = content_handlers::content_put(
-        Some(&json!({"data": b64, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let put_result =
+        content_handlers::content_put(Some(&json!({"data": b64, "family_id": family})), &state)
+            .await
+            .unwrap();
 
     let hash = put_result["hash"].as_str().unwrap();
-    let found = content_handlers::content_exists(
-        Some(&json!({"hash": hash, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let found =
+        content_handlers::content_exists(Some(&json!({"hash": hash, "family_id": family})), &state)
+            .await
+            .unwrap();
     assert_eq!(found["exists"], true);
     assert!(found["size"].as_u64().unwrap() > 0);
 
@@ -384,25 +379,18 @@ async fn content_list_returns_stored_hashes() {
     let b64_a = STANDARD.encode(b"list test alpha");
     let b64_b = STANDARD.encode(b"list test beta");
 
-    let put_a = content_handlers::content_put(
-        Some(&json!({"data": b64_a, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
-    let put_b = content_handlers::content_put(
-        Some(&json!({"data": b64_b, "family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let put_a =
+        content_handlers::content_put(Some(&json!({"data": b64_a, "family_id": family})), &state)
+            .await
+            .unwrap();
+    let put_b =
+        content_handlers::content_put(Some(&json!({"data": b64_b, "family_id": family})), &state)
+            .await
+            .unwrap();
 
-    let list_result = content_handlers::content_list(
-        Some(&json!({"family_id": family})),
-        &state,
-    )
-    .await
-    .unwrap();
+    let list_result = content_handlers::content_list(Some(&json!({"family_id": family})), &state)
+        .await
+        .unwrap();
 
     let hashes: Vec<&str> = list_result["hashes"]
         .as_array()
@@ -447,7 +435,9 @@ async fn http_surface_put_get_roundtrip() {
     .await
     .expect("content_ops::get via HTTP surface");
 
-    let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+    let retrieved = STANDARD
+        .decode(get_result["data"].as_str().unwrap())
+        .unwrap();
     assert_eq!(retrieved, payload);
 
     let verify_hash = blake3::hash(&retrieved).to_hex().to_string();
@@ -520,7 +510,9 @@ async fn http_surface_streaming_roundtrip_blake3() {
     .await
     .expect("get after stream finalization");
 
-    let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+    let retrieved = STANDARD
+        .decode(get_result["data"].as_str().unwrap())
+        .unwrap();
     assert_eq!(retrieved, payload, "byte-identical after streaming");
 
     cleanup_family(&family).await;
@@ -570,7 +562,9 @@ async fn http_surface_multi_blob_federation() {
         }))
         .await
         .unwrap();
-        let retrieved = STANDARD.decode(get_result["data"].as_str().unwrap()).unwrap();
+        let retrieved = STANDARD
+            .decode(get_result["data"].as_str().unwrap())
+            .unwrap();
         assert_eq!(
             blake3::hash(&retrieved).to_hex().to_string(),
             *cid,

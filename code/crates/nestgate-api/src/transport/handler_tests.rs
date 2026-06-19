@@ -325,15 +325,21 @@ async fn transport_content_put_get_roundtrip() {
     let fam = format!("t-content-rt-{}", uuid::Uuid::new_v4());
     let data = STANDARD.encode(b"transport content test");
 
-    let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
-        .await
-        .expect("content.put");
+    let put = content_dispatch(
+        "content.put",
+        serde_json::json!({"data": data, "family_id": &fam}),
+    )
+    .await
+    .expect("content.put");
     let hash = put["hash"].as_str().unwrap().to_owned();
     assert!(put["stored"].as_bool().unwrap());
 
-    let get = content_dispatch("content.get", serde_json::json!({"hash": &hash, "family_id": &fam}))
-        .await
-        .expect("content.get");
+    let get = content_dispatch(
+        "content.get",
+        serde_json::json!({"hash": &hash, "family_id": &fam}),
+    )
+    .await
+    .expect("content.get");
     assert_eq!(get["hash"], hash);
 
     cleanup_test_family(&fam).await;
@@ -345,14 +351,20 @@ async fn transport_content_exists_dispatch() {
     let fam = format!("t-content-ex-{}", uuid::Uuid::new_v4());
     let data = STANDARD.encode(b"exists via transport");
 
-    let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
-        .await
-        .unwrap();
+    let put = content_dispatch(
+        "content.put",
+        serde_json::json!({"data": data, "family_id": &fam}),
+    )
+    .await
+    .unwrap();
     let hash = put["hash"].as_str().unwrap();
 
-    let exists = content_dispatch("content.exists", serde_json::json!({"hash": hash, "family_id": &fam}))
-        .await
-        .unwrap();
+    let exists = content_dispatch(
+        "content.exists",
+        serde_json::json!({"hash": hash, "family_id": &fam}),
+    )
+    .await
+    .unwrap();
     assert_eq!(exists["exists"], true);
 
     cleanup_test_family(&fam).await;
@@ -374,9 +386,12 @@ async fn transport_content_list_dispatch() {
 #[serial]
 async fn transport_content_collections_dispatch() {
     let fam = format!("t-content-col-{}", uuid::Uuid::new_v4());
-    let v = content_dispatch("content.collections", serde_json::json!({"family_id": &fam}))
-        .await
-        .unwrap();
+    let v = content_dispatch(
+        "content.collections",
+        serde_json::json!({"family_id": &fam}),
+    )
+    .await
+    .unwrap();
     assert!(v["collections"].is_array());
 
     cleanup_test_family(&fam).await;
@@ -388,9 +403,12 @@ async fn transport_content_publish_resolve_dispatch() {
     let fam = format!("t-content-pub-{}", uuid::Uuid::new_v4());
     let data = STANDARD.encode(b"publish via transport");
 
-    let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
-        .await
-        .unwrap();
+    let put = content_dispatch(
+        "content.put",
+        serde_json::json!({"data": data, "family_id": &fam}),
+    )
+    .await
+    .unwrap();
     let hash = put["hash"].as_str().unwrap().to_owned();
 
     let pub_res = content_dispatch(
@@ -433,9 +451,12 @@ async fn transport_content_replicate_pull_dispatch() {
     let fam = format!("t-content-rp-{}", uuid::Uuid::new_v4());
     let data = STANDARD.encode(b"replicate pull via transport");
 
-    let put = content_dispatch("content.put", serde_json::json!({"data": data, "family_id": &fam}))
-        .await
-        .unwrap();
+    let put = content_dispatch(
+        "content.put",
+        serde_json::json!({"data": data, "family_id": &fam}),
+    )
+    .await
+    .unwrap();
     let cid = put["hash"].as_str().unwrap();
 
     let pull = content_dispatch(

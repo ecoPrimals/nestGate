@@ -255,20 +255,23 @@ impl ServiceRegistryClient {
 
         // Check for basic configuration
         if self.base_url.is_none() {
-            warnings.push(String::from("No registry URL configured - using fallback discovery"));
+            warnings.push(String::from(
+                "No registry URL configured - using fallback discovery",
+            ));
         }
 
         // Check for service mesh configuration (from config)
         if !self.config.has_service_mesh() {
-            warnings.push(
-                String::from("No service mesh configuration detected - using localhost fallback"),
-            );
+            warnings.push(String::from(
+                "No service mesh configuration detected - using localhost fallback",
+            ));
         }
 
         // Check timeout configuration
         if self.timeout > Duration::from_secs(30) {
-            warnings
-                .push(String::from("Registry timeout is very high - may impact startup performance"));
+            warnings.push(String::from(
+                "Registry timeout is very high - may impact startup performance",
+            ));
         }
 
         Ok(warnings)

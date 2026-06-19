@@ -518,9 +518,7 @@ async fn encrypted_content_put_and_get_roundtrip() {
 
     let get_p = json!({"hash": &expected_hash, "family_id": &family_id});
     let get_r = content_get(Some(&get_p), &state).await.unwrap();
-    let decoded = STANDARD
-        .decode(get_r["data"].as_str().unwrap())
-        .unwrap();
+    let decoded = STANDARD.decode(get_r["data"].as_str().unwrap()).unwrap();
     assert_eq!(decoded, raw);
 
     cleanup_family(&family_id).await;
@@ -564,10 +562,11 @@ async fn encrypted_state_reads_plaintext_content() {
     let enc_state = encrypted_state(&family_id);
     let get_p = json!({"hash": hash, "family_id": &family_id});
     let get_r = content_get(Some(&get_p), &enc_state).await.unwrap();
-    let decoded = STANDARD
-        .decode(get_r["data"].as_str().unwrap())
-        .unwrap();
-    assert_eq!(decoded, raw, "encrypted state should read plaintext transparently");
+    let decoded = STANDARD.decode(get_r["data"].as_str().unwrap()).unwrap();
+    assert_eq!(
+        decoded, raw,
+        "encrypted state should read plaintext transparently"
+    );
 
     cleanup_family(&family_id).await;
 }

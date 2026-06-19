@@ -144,7 +144,10 @@ impl AuthManager {
     }
 
     /// Registers or replaces a user entry.
-    #[expect(dead_code, reason = "forward-looking API for IdP-backed user provisioning")]
+    #[expect(
+        dead_code,
+        reason = "forward-looking API for IdP-backed user provisioning"
+    )]
     pub fn add_user(
         &mut self,
         user_id: String,

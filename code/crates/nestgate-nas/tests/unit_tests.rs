@@ -52,19 +52,6 @@
 // - User authentication systems
 // - System monitoring and logging
 // - Configuration management
-//
-// ## Example Test Structure
-//
-// ```rust
-// #[test]
-// fn test_smb_share_creation() {
-//     let nas_service = create_test_nas();
-//     let share_config = ShareConfig::new("test_share", "/data/test");
-//     let result = nas_service.create_smb_share(share_config);
-//     assert!(result.is_ok());
-//     assert!(nas_service.share_exists("test_share"));
-// }
-// ```
 
 //! Unit Tests module
 

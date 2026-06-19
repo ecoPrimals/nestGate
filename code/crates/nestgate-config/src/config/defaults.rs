@@ -33,31 +33,31 @@ impl NetworkPortDefaults {
     /// Default streaming RPC port - configurable via `NESTGATE_STREAMING_RPC_PORT`
     #[must_use]
     pub const fn streaming_rpc_port() -> u16 {
-        crate::constants::hardcoding::runtime_fallback_ports::API_ALT
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::API_ALT
     }
 
     /// Default NAS HTTP port - configurable via `NESTGATE_NAS_HTTP_PORT`
     #[must_use]
     pub const fn nas_http_port() -> u16 {
-        crate::constants::hardcoding::runtime_fallback_ports::HTTP
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::HTTP
     }
 
     /// Default development server port - configurable via `NESTGATE_DEV_SERVER_PORT`
     #[must_use]
     pub const fn dev_server_port() -> u16 {
-        crate::constants::hardcoding::runtime_fallback_ports::API
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::API
     }
 
     /// Port range for auto-discovery - start
     #[must_use]
     pub const fn discovery_port_start() -> u16 {
-        crate::constants::hardcoding::runtime_fallback_ports::HTTP
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::HTTP
     }
 
     /// Port range for auto-discovery - end
     #[must_use]
     pub const fn discovery_port_end() -> u16 {
-        crate::constants::hardcoding::runtime_fallback_ports::ADMIN
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::ADMIN
     }
 
     /// Common service discovery ports
@@ -65,16 +65,16 @@ impl NetworkPortDefaults {
     pub fn common_ports() -> Vec<u16> {
         use crate::constants::hardcoding::runtime_fallback_ports as p;
         vec![
-            p::HTTP,
-            p::HEALTH,
-            p::WEBSOCKET,
-            p::METRICS,
-            p::API,
-            p::API_ALT,
-            p::EXTENDED_SERVICES,
-            p::DISCOVERY_SERVICE,
-            p::ADMIN,
-            p::METRICS_ALT,
+            p::http(),
+            p::health(),
+            p::websocket(),
+            p::metrics(),
+            p::api(),
+            p::api_alt(),
+            p::extended_services(),
+            p::discovery_service(),
+            p::admin(),
+            p::metrics_alt(),
         ]
     }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![cfg(any(test, feature = "dev-stubs"))]
 //
 // This module provides filesystem-based storage operations that simulate
 // ZFS functionality for development environments without dedicated hardware.

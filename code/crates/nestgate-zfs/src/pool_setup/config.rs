@@ -146,8 +146,16 @@ impl Default for DeviceDetectionConfig {
             include_removable: false,
             min_device_size: 1024 * 1024 * 1024, // 1GB minimum
             max_device_size: 0,                  // 0 means no maximum
-            skip_mountpoints: vec![String::from("/"), String::from("/boot"), String::from("/home")],
-            skip_fstypes: vec![String::from("ext4"), String::from("xfs"), String::from("btrfs")],
+            skip_mountpoints: vec![
+                String::from("/"),
+                String::from("/boot"),
+                String::from("/home"),
+            ],
+            skip_fstypes: vec![
+                String::from("ext4"),
+                String::from("xfs"),
+                String::from("btrfs"),
+            ],
             include_loop_devices: false,
         }
     }

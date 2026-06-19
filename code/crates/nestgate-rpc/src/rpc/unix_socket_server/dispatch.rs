@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use crate::rpc::method_gate;
 use crate::rpc::model_cache_handlers;
-use crate::rpc::protocol::normalize_method;
+use crate::rpc::protocol::{normalize_method, warn_legacy_method_alias};
 
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
@@ -48,6 +48,7 @@ pub(super) async fn handle_request(
     }
 
     let method = normalize_method(&request.method);
+    warn_legacy_method_alias(method.as_ref());
 
     // JH-0: auth.* introspection methods (handled before dispatch table
     // because they need gate + caller context).
@@ -291,9 +292,7 @@ pub(super) async fn handle_request(
         "zfs.dataset.get" => zfs_handlers::zfs_dataset_get(request.params.as_ref()).await,
         "zfs.snapshot.list" => zfs_handlers::zfs_snapshot_list(request.params.as_ref()).await,
         "zfs.snapshot.create" => zfs_handlers::zfs_snapshot_create(request.params.as_ref()).await,
-        "zfs.snapshot.destroy" => {
-            zfs_handlers::zfs_snapshot_destroy(request.params.as_ref()).await
-        }
+        "zfs.snapshot.destroy" => zfs_handlers::zfs_snapshot_destroy(request.params.as_ref()).await,
         "zfs.health" => zfs_handlers::zfs_health(request.params.as_ref()).await,
         "btsp.capabilities" => Ok(json!({
             "protocol": "btsp-v1",
@@ -397,7 +396,12 @@ pub(super) fn route_register(
         .and_then(|p| p.get("gate_id"))
         .and_then(Value::as_str)
         .map_or_else(
-            || payload["gate_id"].as_str().unwrap_or("standalone").to_owned(),
+            || {
+                payload["gate_id"]
+                    .as_str()
+                    .unwrap_or("standalone")
+                    .to_owned()
+            },
             str::to_owned,
         );
 

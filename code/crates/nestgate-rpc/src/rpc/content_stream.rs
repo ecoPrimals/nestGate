@@ -299,7 +299,6 @@ pub async fn content_retrieve_stream_begin(
     }))
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -350,11 +349,7 @@ mod tests {
                 assert_eq!(result["stored"], true);
                 let hash = result["hash"].as_str().unwrap();
                 assert_eq!(hash.len(), 64);
-                assert_eq!(
-                    content_hash_hex(&payload),
-                    hash,
-                    "BLAKE3 mismatch"
-                );
+                assert_eq!(content_hash_hex(&payload), hash, "BLAKE3 mismatch");
 
                 let r_begin = content_retrieve_stream_begin(
                     json!({
@@ -373,12 +368,10 @@ mod tests {
                 let mut ro = 0_u64;
                 let mut out = Vec::new();
                 loop {
-                    let part = super::super::storage_stream::storage_retrieve_stream_chunk(
-                        json!({
-                            "stream_id": rsid,
-                            "offset": ro
-                        }),
-                    )
+                    let part = super::super::storage_stream::storage_retrieve_stream_chunk(json!({
+                        "stream_id": rsid,
+                        "offset": ro
+                    }))
                     .await
                     .expect("content retrieve chunk");
                     let bytes = STANDARD.decode(part["data"].as_str().unwrap()).unwrap();
@@ -482,12 +475,9 @@ mod tests {
     #[tokio::test]
     async fn chunk_rejects_bad_offset() {
         let fam = format!("cs-offset-{}", Uuid::new_v4());
-        let begin = content_store_stream_begin(
-            json!({"family_id": fam, "total_size": 100}),
-            None,
-        )
-        .await
-        .unwrap();
+        let begin = content_store_stream_begin(json!({"family_id": fam, "total_size": 100}), None)
+            .await
+            .unwrap();
         let sid = begin["stream_id"].as_str().unwrap();
 
         let err = content_store_stream_chunk(json!({
@@ -506,12 +496,9 @@ mod tests {
     #[tokio::test]
     async fn chunk_rejects_exceeding_total_size() {
         let fam = format!("cs-exceed-{}", Uuid::new_v4());
-        let begin = content_store_stream_begin(
-            json!({"family_id": fam, "total_size": 4}),
-            None,
-        )
-        .await
-        .unwrap();
+        let begin = content_store_stream_begin(json!({"family_id": fam, "total_size": 4}), None)
+            .await
+            .unwrap();
         let sid = begin["stream_id"].as_str().unwrap();
 
         let err = content_store_stream_chunk(json!({
@@ -530,12 +517,9 @@ mod tests {
     #[tokio::test]
     async fn chunk_rejects_invalid_base64() {
         let fam = format!("cs-b64-{}", Uuid::new_v4());
-        let begin = content_store_stream_begin(
-            json!({"family_id": fam, "total_size": 100}),
-            None,
-        )
-        .await
-        .unwrap();
+        let begin = content_store_stream_begin(json!({"family_id": fam, "total_size": 100}), None)
+            .await
+            .unwrap();
         let sid = begin["stream_id"].as_str().unwrap();
 
         let err = content_store_stream_chunk(json!({
@@ -553,11 +537,7 @@ mod tests {
 
     #[tokio::test]
     async fn begin_missing_family_id_errors() {
-        let err = content_store_stream_begin(
-            json!({"total_size": 10}),
-            None,
-        )
-        .await;
+        let err = content_store_stream_begin(json!({"total_size": 10}), None).await;
         assert!(err.is_err());
         let msg = format!("{}", err.unwrap_err());
         assert!(msg.contains("family_id") || msg.contains("family"));
@@ -566,11 +546,9 @@ mod tests {
     #[tokio::test]
     async fn retrieve_begin_invalid_hash_format() {
         let fam = format!("cs-badhash-{}", Uuid::new_v4());
-        let err = content_retrieve_stream_begin(
-            json!({"family_id": fam, "hash": "tooshort"}),
-            None,
-        )
-        .await;
+        let err =
+            content_retrieve_stream_begin(json!({"family_id": fam, "hash": "tooshort"}), None)
+                .await;
         assert!(err.is_err());
         cleanup_family(&fam).await;
     }
@@ -578,11 +556,7 @@ mod tests {
     #[tokio::test]
     async fn begin_uses_family_fallback() {
         let fam = format!("cs-fallback-{}", Uuid::new_v4());
-        let result = content_store_stream_begin(
-            json!({"total_size": 16}),
-            Some(&fam),
-        )
-        .await;
+        let result = content_store_stream_begin(json!({"total_size": 16}), Some(&fam)).await;
         assert!(result.is_ok(), "should succeed with fallback family");
         cleanup_family(&fam).await;
     }
@@ -607,7 +581,10 @@ mod tests {
         let cas_path = content_cas_path(&fam, &expected_hash);
         assert!(cas_path.exists(), "CAS file should exist for empty content");
         let data = tokio::fs::read(&cas_path).await.unwrap();
-        assert!(data.is_empty(), "empty content should be zero bytes on disk");
+        assert!(
+            data.is_empty(),
+            "empty content should be zero bytes on disk"
+        );
 
         cleanup_family(&fam).await;
     }
@@ -632,12 +609,10 @@ mod tests {
     async fn chunk_rejects_oversized_decoded_data() {
         let fam = format!("cs-chunkmax-{}", Uuid::new_v4());
         let total = MAX_STREAM_CHUNK + 1024;
-        let begin = content_store_stream_begin(
-            json!({"family_id": &fam, "total_size": total}),
-            None,
-        )
-        .await
-        .unwrap();
+        let begin =
+            content_store_stream_begin(json!({"family_id": &fam, "total_size": total}), None)
+                .await
+                .unwrap();
         let sid = begin["stream_id"].as_str().unwrap();
 
         let oversized = vec![0xCC_u8; (MAX_STREAM_CHUNK + 1) as usize];
@@ -678,12 +653,9 @@ mod tests {
         .unwrap();
         let hash = fin["hash"].as_str().unwrap();
 
-        let r = content_retrieve_stream_begin(
-            json!({"family_id": &fam, "hash": hash}),
-            None,
-        )
-        .await
-        .expect("should open retrieve stream");
+        let r = content_retrieve_stream_begin(json!({"family_id": &fam, "hash": hash}), None)
+            .await
+            .expect("should open retrieve stream");
         assert!(r.get("stream_id").is_some());
         assert_eq!(r["total_size"].as_u64().unwrap(), payload.len() as u64);
 
@@ -704,12 +676,9 @@ mod tests {
     #[tokio::test]
     async fn chunk_missing_offset_param_errors() {
         let fam = format!("cs-no-offset-{}", Uuid::new_v4());
-        let begin = content_store_stream_begin(
-            json!({"family_id": &fam, "total_size": 100}),
-            None,
-        )
-        .await
-        .unwrap();
+        let begin = content_store_stream_begin(json!({"family_id": &fam, "total_size": 100}), None)
+            .await
+            .unwrap();
         let sid = begin["stream_id"].as_str().unwrap();
 
         let err = content_store_stream_chunk(json!({
@@ -725,12 +694,9 @@ mod tests {
     #[tokio::test]
     async fn chunk_missing_data_param_errors() {
         let fam = format!("cs-no-data-{}", Uuid::new_v4());
-        let begin = content_store_stream_begin(
-            json!({"family_id": &fam, "total_size": 100}),
-            None,
-        )
-        .await
-        .unwrap();
+        let begin = content_store_stream_begin(json!({"family_id": &fam, "total_size": 100}), None)
+            .await
+            .unwrap();
         let sid = begin["stream_id"].as_str().unwrap();
 
         let err = content_store_stream_chunk(json!({

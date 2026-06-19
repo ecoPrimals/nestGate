@@ -232,9 +232,9 @@ impl UnifiedRpcManager {
     pub fn init_json_rpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         info!("Initializing JSON-RPC service connection to: {}", endpoint);
         if endpoint.is_empty() {
-            return Err(RpcError::InvalidConfiguration(
-                String::from("JSON-RPC address cannot be empty"),
-            ));
+            return Err(RpcError::InvalidConfiguration(String::from(
+                "JSON-RPC address cannot be empty",
+            )));
         }
         if endpoint.starts_with("http") {
             match url::Url::parse(endpoint) {

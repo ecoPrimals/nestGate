@@ -203,10 +203,7 @@ mod tests {
     #[test]
     fn content_key_path_delegates_to_cas_path() {
         let hash = "ff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
-        assert_eq!(
-            content_key_path("fam", hash),
-            content_cas_path("fam", hash),
-        );
+        assert_eq!(content_key_path("fam", hash), content_cas_path("fam", hash),);
     }
 
     #[test]

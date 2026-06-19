@@ -207,7 +207,8 @@ mod tests {
 
     #[test]
     fn test_get_migration_report() {
-        let migrator = ConfigMigrator::new(String::from("test_source"), MigrationOptions::default());
+        let migrator =
+            ConfigMigrator::new(String::from("test_source"), MigrationOptions::default());
         let report = migrator.get_migration_report();
         assert_eq!(report.source_type, "test_source");
         assert_eq!(report.progress_percentage, 0);

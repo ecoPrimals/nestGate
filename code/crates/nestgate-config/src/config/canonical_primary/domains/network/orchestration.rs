@@ -32,7 +32,7 @@ impl NetworkOrchestrationConfig {
             coordinator_address: format!(
                 "{}:{}",
                 addresses::LOCALHOST_IPV4,
-                runtime_fallback_ports::METRICS
+                runtime_fallback_ports::metrics()
             ),
             heartbeat_interval_secs: 30,
         }
@@ -48,7 +48,7 @@ impl NetworkOrchestrationConfig {
             enabled: true,
             coordinator_address: format!(
                 "coordinator.nestgate.local:{}",
-                runtime_fallback_ports::METRICS
+                runtime_fallback_ports::metrics()
             ),
             heartbeat_interval_secs: 10,
         }

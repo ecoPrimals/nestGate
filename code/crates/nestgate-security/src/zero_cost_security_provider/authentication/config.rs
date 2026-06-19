@@ -92,7 +92,10 @@ mod tests {
     }
 
     fn env_with(pairs: &[(&str, &str)]) -> MapEnv {
-        let map = pairs.iter().map(|(k, v)| ((*k).to_string(), (*v).to_string())).collect();
+        let map = pairs
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+            .collect();
         MapEnv(map)
     }
 
@@ -114,7 +117,10 @@ mod tests {
         ]);
         let cfg = AuthenticationConfig::default_from_env_source(&env);
         assert!(cfg.use_external_auth);
-        assert_eq!(cfg.external_auth_endpoint.as_deref(), Some("http://cap:7777"));
+        assert_eq!(
+            cfg.external_auth_endpoint.as_deref(),
+            Some("http://cap:7777")
+        );
     }
 
     #[test]
@@ -122,7 +128,10 @@ mod tests {
         let env = env_with(&[("NESTGATE_SECURITY_AUTH_ENDPOINT", "http://sec:8888")]);
         let cfg = AuthenticationConfig::default_from_env_source(&env);
         assert!(cfg.use_external_auth);
-        assert_eq!(cfg.external_auth_endpoint.as_deref(), Some("http://sec:8888"));
+        assert_eq!(
+            cfg.external_auth_endpoint.as_deref(),
+            Some("http://sec:8888")
+        );
     }
 
     #[test]
@@ -130,7 +139,10 @@ mod tests {
         let env = env_with(&[("AUTH_PROVIDER_ENDPOINT", "http://legacy:9999")]);
         let cfg = AuthenticationConfig::default_from_env_source(&env);
         assert!(cfg.use_external_auth);
-        assert_eq!(cfg.external_auth_endpoint.as_deref(), Some("http://legacy:9999"));
+        assert_eq!(
+            cfg.external_auth_endpoint.as_deref(),
+            Some("http://legacy:9999")
+        );
     }
 
     #[test]

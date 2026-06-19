@@ -203,67 +203,8 @@ where
 
 // ==================== SECTION ====================
 
-/// **Migration helper for storage traits**
-pub struct StorageTraitMigration;
-impl StorageTraitMigration {
-    /// Create migration template
-    #[must_use]
-    pub fn create_migration_template() -> String {
-        r"
-// MIGRATION: UnifiedStorageBackend → ZeroCostStorageBackend
-// 
-// BEFORE (async_trait):
-// #[async_trait]
-// impl UnifiedStorageBackend for MyStorage {
-// }
-//
-// AFTER (zero-cost):
-// impl ZeroCostStorageBackend for MyStorage {
-//     type Error = std::io::Error;
-//     type Config = MyStorageConfig;
-//     
-//         // Native async implementation - no boxing overhead
-//         tokio::fs::read(path).await
-//     }
-// }
-
-// Performance improvements expected:
-// - 30-50% throughput improvement
-// - 25-35% latency reduction  
-// - Compile-time operation limits
-// - Zero-allocation trait dispatch
-"
-        .to_string()
-    }
-
-    /// Get migration benefits
-    #[must_use]
-    pub fn get_migration_benefits() -> Vec<String> {
-        vec![
-            String::from("30-50% throughput improvement through native async"),
-            String::from("25-35% latency reduction by eliminating Future boxing"),
-            String::from("Compile-time operation limits prevent resource exhaustion"),
-            String::from("Zero-allocation trait dispatch"),
-            String::from("Monomorphization enables CPU-specific optimizations"),
-        ]
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
-    fn test_migration_template() {
-        let template = StorageTraitMigration::create_migration_template();
-        assert!(template.contains("ZeroCostStorageBackend"));
-        assert!(template.contains("Native async"));
-    }
-
-    #[test]
-    fn test_migration_benefits() {
-        let benefits = StorageTraitMigration::get_migration_benefits();
-        assert_eq!(benefits.len(), 5);
-        assert!(benefits[0].contains("30-50%"));
-    }
+    fn zero_cost_storage_traits_module_compiles() {}
 }

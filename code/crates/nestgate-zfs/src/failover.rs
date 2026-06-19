@@ -141,13 +141,11 @@ pub struct CanonicalFailoverConfig {
 impl Default for CanonicalFailoverConfig {
     /// Returns the default instance
     fn default() -> Self {
-        use crate::constants::NODE_FAILURE_TIMEOUT_SECS;
-
         Self {
             auto_takeover_enabled: true,
             health_check_interval_secs: 30,
             takeover_timeout_secs: 300, // 5 minutes
-            node_failure_timeout_secs: NODE_FAILURE_TIMEOUT_SECS,
+            node_failure_timeout_secs: crate::constants::node_failure_timeout_secs(),
             max_takeover_attempts: 3,
             failback_enabled: true,
             failback_delay_secs: 60,

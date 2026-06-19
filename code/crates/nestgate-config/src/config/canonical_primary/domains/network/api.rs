@@ -260,7 +260,7 @@ impl ApiConfig {
             bind_address: addresses::BIND_ALL_IPV4
                 .parse()
                 .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED)),
-            port: runtime_fallback_ports::HTTPS,
+            port: runtime_fallback_ports::https(),
             max_connections: 1000,
             request_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(30),
@@ -339,8 +339,7 @@ impl ApiConfig {
 
 impl Default for TlsConfig {
     fn default() -> Self {
-        let ssl_dir = crate::config::storage_paths::get_config_dir()
-            .join("ssl");
+        let ssl_dir = crate::config::storage_paths::get_config_dir().join("ssl");
         Self {
             cert_path: ssl_dir.join("nestgate.pem").to_string_lossy().into_owned(),
             key_path: ssl_dir.join("nestgate.key").to_string_lossy().into_owned(),
@@ -357,11 +356,16 @@ impl TlsConfig {
     /// enables client verification for secure production deployments.
     #[must_use]
     pub fn production() -> Self {
-        let ssl_dir = crate::config::storage_paths::get_config_dir()
-            .join("ssl");
+        let ssl_dir = crate::config::storage_paths::get_config_dir().join("ssl");
         Self {
-            cert_path: ssl_dir.join("nestgate-prod.pem").to_string_lossy().into_owned(),
-            key_path: ssl_dir.join("nestgate-prod.key").to_string_lossy().into_owned(),
+            cert_path: ssl_dir
+                .join("nestgate-prod.pem")
+                .to_string_lossy()
+                .into_owned(),
+            key_path: ssl_dir
+                .join("nestgate-prod.key")
+                .to_string_lossy()
+                .into_owned(),
             ca_path: Some(ssl_dir.join("ca-bundle.pem").to_string_lossy().into_owned()),
             verify_client: true,
         }

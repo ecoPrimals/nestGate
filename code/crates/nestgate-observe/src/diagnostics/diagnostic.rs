@@ -33,7 +33,11 @@ pub struct Diagnostic {
 impl Diagnostic {
     /// Create a new diagnostic using standardized builder
     #[must_use]
-    pub fn new(level: DiagnosticLevel, component: ComponentType, message: impl Into<String>) -> Self {
+    pub fn new(
+        level: DiagnosticLevel,
+        component: ComponentType,
+        message: impl Into<String>,
+    ) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             level,

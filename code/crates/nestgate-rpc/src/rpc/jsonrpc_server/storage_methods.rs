@@ -69,11 +69,11 @@ mod tests {
         let module = build_module_via_storage_stack();
         let names: Vec<_> = module.method_names().collect();
         for expected in [
-            "storage.object.store",
-            "storage.object.retrieve",
-            "storage.object.metadata",
-            "storage.object.list",
-            "storage.object.delete",
+            "storage.store",
+            "storage.retrieve",
+            "storage.metadata",
+            "storage.list",
+            "storage.delete",
         ] {
             assert!(names.contains(&expected), "missing object route {expected}");
         }

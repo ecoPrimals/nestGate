@@ -145,30 +145,35 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let config = NetworkEnvConfig::new()
-            .with_host(String::from("NESTGATE_API"), String::from("api.example.com"))
-            .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::HTTP)
+            .with_host(
+                String::from("NESTGATE_API"),
+                String::from("api.example.com"),
+            )
+            .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::http())
             .with_endpoint(
                 String::from("NESTGATE_DB"),
                 Some(String::from("db.example.com")),
-                Some(runtime_fallback_ports::POSTGRES),
+                Some(runtime_fallback_ports::postgres()),
             );
 
         assert_eq!(config.get_host("NESTGATE_API"), Some("api.example.com"));
         assert_eq!(
             config.get_port("NESTGATE_API"),
-            Some(runtime_fallback_ports::HTTP)
+            Some(runtime_fallback_ports::http())
         );
         assert_eq!(config.get_host("NESTGATE_DB"), Some("db.example.com"));
         assert_eq!(
             config.get_port("NESTGATE_DB"),
-            Some(runtime_fallback_ports::POSTGRES)
+            Some(runtime_fallback_ports::postgres())
         );
     }
 
     #[test]
     fn test_has_methods() {
-        let config = NetworkEnvConfig::new()
-            .with_host(String::from("NESTGATE_API"), String::from("api.example.com"));
+        let config = NetworkEnvConfig::new().with_host(
+            String::from("NESTGATE_API"),
+            String::from("api.example.com"),
+        );
 
         assert!(config.has_host("NESTGATE_API"));
         assert!(!config.has_port("NESTGATE_API"));
@@ -177,14 +182,16 @@ mod tests {
 
     #[test]
     fn test_partial_config() {
-        let config = NetworkEnvConfig::new()
-            .with_port(String::from("NESTGATE_REDIS"), runtime_fallback_ports::REDIS);
+        let config = NetworkEnvConfig::new().with_port(
+            String::from("NESTGATE_REDIS"),
+            runtime_fallback_ports::redis(),
+        );
 
         assert!(config.has_port("NESTGATE_REDIS"));
         assert!(!config.has_host("NESTGATE_REDIS"));
         assert_eq!(
             config.get_port("NESTGATE_REDIS"),
-            Some(runtime_fallback_ports::REDIS)
+            Some(runtime_fallback_ports::redis())
         );
     }
 
@@ -192,10 +199,16 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             NetworkEnvConfig::new()
-                .with_host(String::from("NESTGATE_API"), String::from("api.example.com"))
-                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::HTTP)
+                .with_host(
+                    String::from("NESTGATE_API"),
+                    String::from("api.example.com"),
+                )
+                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::http())
                 .with_host(String::from("NESTGATE_DB"), String::from("db.example.com"))
-                .with_port(String::from("NESTGATE_DB"), runtime_fallback_ports::POSTGRES),
+                .with_port(
+                    String::from("NESTGATE_DB"),
+                    runtime_fallback_ports::postgres(),
+                ),
         );
 
         let handles: Vec<_> = (0..100)
@@ -220,13 +233,22 @@ mod tests {
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             NetworkEnvConfig::new()
-                .with_host(String::from("NESTGATE_API"), String::from("api1.example.com"))
-                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::HTTP),
+                .with_host(
+                    String::from("NESTGATE_API"),
+                    String::from("api1.example.com"),
+                )
+                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::http()),
         );
         let config2 = Arc::new(
             NetworkEnvConfig::new()
-                .with_host(String::from("NESTGATE_API"), String::from("api2.example.com"))
-                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::METRICS),
+                .with_host(
+                    String::from("NESTGATE_API"),
+                    String::from("api2.example.com"),
+                )
+                .with_port(
+                    String::from("NESTGATE_API"),
+                    runtime_fallback_ports::metrics(),
+                ),
         );
 
         let handle1 = tokio::spawn({
@@ -254,8 +276,8 @@ mod tests {
             .expect("Second task should complete successfully");
 
         assert_eq!(host1, Some(String::from("api1.example.com")));
-        assert_eq!(port1, Some(runtime_fallback_ports::HTTP));
+        assert_eq!(port1, Some(runtime_fallback_ports::http()));
         assert_eq!(host2, Some(String::from("api2.example.com")));
-        assert_eq!(port2, Some(runtime_fallback_ports::METRICS));
+        assert_eq!(port2, Some(runtime_fallback_ports::metrics()));
     }
 }

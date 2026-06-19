@@ -112,7 +112,10 @@ impl KeyManagementConfig {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            key_storage_path: nestgate_config_dir().join("zfs").join("keys").join("production"),
+            key_storage_path: nestgate_config_dir()
+                .join("zfs")
+                .join("keys")
+                .join("production"),
             rotation_interval_days: 30,
             backup_locations: vec![
                 PathBuf::from("/backup/nestgate/keys"),

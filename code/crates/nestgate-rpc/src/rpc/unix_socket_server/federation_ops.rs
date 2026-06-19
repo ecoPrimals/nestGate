@@ -20,17 +20,18 @@ use tracing::debug;
 use super::storage_paths::ensure_parent_dirs;
 
 /// Run `git ls-remote` and compare with the local HEAD.
-pub(super) async fn fetch_head_refs(
-    repo_path: &str,
-    remote: &str,
-    branch: &str,
-) -> Result<Value> {
+pub(super) async fn fetch_head_refs(repo_path: &str, remote: &str, branch: &str) -> Result<Value> {
     verify_git_available().await?;
 
     let local_head = git_rev_parse(repo_path, branch).await?;
 
     let remote_output = Command::new("git")
-        .args(["ls-remote", "--heads", remote, &format!("refs/heads/{branch}")])
+        .args([
+            "ls-remote",
+            "--heads",
+            remote,
+            &format!("refs/heads/{branch}"),
+        ])
         .current_dir(repo_path)
         .output()
         .await
@@ -50,11 +51,7 @@ pub(super) async fn fetch_head_refs(
     }
 
     let stdout = String::from_utf8_lossy(&remote_output.stdout);
-    let remote_head = stdout
-        .split_whitespace()
-        .next()
-        .unwrap_or("")
-        .to_owned();
+    let remote_head = stdout.split_whitespace().next().unwrap_or("").to_owned();
 
     let drift = if remote_head.is_empty() {
         "no_remote_ref"
@@ -83,11 +80,7 @@ pub(super) async fn fetch_head_refs(
 }
 
 /// Run `git push` to the specified remote.
-pub(super) async fn push_to_remote(
-    repo_path: &str,
-    remote: &str,
-    branch: &str,
-) -> Result<Value> {
+pub(super) async fn push_to_remote(repo_path: &str, remote: &str, branch: &str) -> Result<Value> {
     verify_git_available().await?;
 
     debug!(path = repo_path, remote, branch, "content.push: pushing");
@@ -289,9 +282,7 @@ async fn verify_git_available() -> Result<()> {
         .output()
         .await
         .map_err(|_| {
-            NestGateError::internal(
-                "git not found — content federation requires system git",
-            )
+            NestGateError::internal("git not found — content federation requires system git")
         })?;
 
     CHECKED.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -311,7 +302,12 @@ async fn git_rev_parse(repo_path: &str, refspec: &str) -> Result<String> {
 
 async fn count_divergence(repo_path: &str, local: &str, remote: &str) -> (u64, u64) {
     let output = Command::new("git")
-        .args(["rev-list", "--left-right", "--count", &format!("{local}...{remote}")])
+        .args([
+            "rev-list",
+            "--left-right",
+            "--count",
+            &format!("{local}...{remote}"),
+        ])
         .current_dir(repo_path)
         .output()
         .await;
@@ -340,9 +336,10 @@ async fn count_commits(repo_path: &str, from: &str, to: &str) -> u64 {
         .await;
 
     match output {
-        Ok(o) if o.status.success() => {
-            String::from_utf8_lossy(&o.stdout).trim().parse().unwrap_or(0)
-        }
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout)
+            .trim()
+            .parse()
+            .unwrap_or(0),
         _ => 0,
     }
 }
@@ -382,21 +379,22 @@ async fn send_jsonrpc_uds(socket_path: &str, payload: &str) -> Result<Value> {
             ))
         })?;
     if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(payload.as_bytes()).await.map_err(|e| {
-            NestGateError::internal(format!("write to socat: {e}"))
-        })?;
+        stdin
+            .write_all(payload.as_bytes())
+            .await
+            .map_err(|e| NestGateError::internal(format!("write to socat: {e}")))?;
         stdin.write_all(b"\n").await.ok();
         drop(stdin);
     }
 
-    let out = child.wait_with_output().await.map_err(|e| {
-        NestGateError::internal(format!("socat wait: {e}"))
-    })?;
+    let out = child
+        .wait_with_output()
+        .await
+        .map_err(|e| NestGateError::internal(format!("socat wait: {e}")))?;
 
     let response_text = String::from_utf8_lossy(&out.stdout);
-    serde_json::from_str(response_text.trim()).map_err(|e| {
-        NestGateError::internal(format!("parse remote response: {e}"))
-    })
+    serde_json::from_str(response_text.trim())
+        .map_err(|e| NestGateError::internal(format!("parse remote response: {e}")))
 }
 
 async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
@@ -407,26 +405,27 @@ async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
         .strip_prefix("tcp://")
         .ok_or_else(|| NestGateError::internal("invalid tcp:// target"))?;
 
-    let stream = TcpStream::connect(addr).await.map_err(|e| {
-        NestGateError::internal(format!("tcp connect to {addr}: {e}"))
-    })?;
+    let stream = TcpStream::connect(addr)
+        .await
+        .map_err(|e| NestGateError::internal(format!("tcp connect to {addr}: {e}")))?;
 
     let (reader, mut writer) = stream.into_split();
-    writer.write_all(payload.as_bytes()).await.map_err(|e| {
-        NestGateError::internal(format!("tcp write: {e}"))
-    })?;
+    writer
+        .write_all(payload.as_bytes())
+        .await
+        .map_err(|e| NestGateError::internal(format!("tcp write: {e}")))?;
     writer.write_all(b"\n").await.ok();
     writer.shutdown().await.ok();
 
     let mut buf_reader = BufReader::new(reader);
     let mut line = String::new();
-    buf_reader.read_line(&mut line).await.map_err(|e| {
-        NestGateError::internal(format!("tcp read response: {e}"))
-    })?;
+    buf_reader
+        .read_line(&mut line)
+        .await
+        .map_err(|e| NestGateError::internal(format!("tcp read response: {e}")))?;
 
-    serde_json::from_str(line.trim()).map_err(|e| {
-        NestGateError::internal(format!("parse tcp response: {e}"))
-    })
+    serde_json::from_str(line.trim())
+        .map_err(|e| NestGateError::internal(format!("parse tcp response: {e}")))
 }
 
 #[cfg(test)]
@@ -482,7 +481,9 @@ mod tests {
 
     #[tokio::test]
     async fn verify_git_available_succeeds() {
-        verify_git_available().await.expect("git should be available");
+        verify_git_available()
+            .await
+            .expect("git should be available");
     }
 
     #[tokio::test]
@@ -528,18 +529,30 @@ mod tests {
 
     #[tokio::test]
     async fn sync_repo_nonexistent_no_clone_returns_error() {
-        let result = sync_repo("/tmp/nonexistent-repo-xyz-abc", "origin", "main", None, false)
-            .await
-            .expect("should return json");
+        let result = sync_repo(
+            "/tmp/nonexistent-repo-xyz-abc",
+            "origin",
+            "main",
+            None,
+            false,
+        )
+        .await
+        .expect("should return json");
         assert_eq!(result["synced"].as_bool(), Some(false));
         assert!(result["error"].as_str().unwrap().contains("not found"));
     }
 
     #[tokio::test]
     async fn sync_repo_nonexistent_clone_missing_no_url_returns_error() {
-        let result = sync_repo("/tmp/nonexistent-repo-xyz-abc", "origin", "main", None, true)
-            .await
-            .expect("should return json");
+        let result = sync_repo(
+            "/tmp/nonexistent-repo-xyz-abc",
+            "origin",
+            "main",
+            None,
+            true,
+        )
+        .await
+        .expect("should return json");
         assert_eq!(result["synced"].as_bool(), Some(false));
         assert!(result["error"].as_str().unwrap().contains("no clone_url"));
     }

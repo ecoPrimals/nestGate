@@ -291,7 +291,10 @@ impl DiscoveryCache {
         let mut stats = HashMap::new();
 
         stats.insert(String::from("port_cache_size"), self.port_cache.len());
-        stats.insert(String::from("endpoint_cache_size"), self.endpoint_cache.len());
+        stats.insert(
+            String::from("endpoint_cache_size"),
+            self.endpoint_cache.len(),
+        );
         stats.insert(String::from("timeout_cache_size"), self.timeout_cache.len());
         stats.insert(String::from("general_cache_size"), self.general_cache.len());
         stats.insert(

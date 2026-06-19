@@ -381,4 +381,3 @@ pub trait StorageBackend: Send + Sync {
         prefix: &Option<String>,
     ) -> impl Future<Output = Result<Vec<String>>> + Send + '_;
 }
-

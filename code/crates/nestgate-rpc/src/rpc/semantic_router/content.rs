@@ -4,8 +4,8 @@
 //! Content domain semantic methods (`content.*`)
 //!
 //! Delegates to the canonical content-addressed storage handlers in
-//! [`crate::rpc::unix_socket_server::content_handlers`] through a shared
-//! [`crate::rpc::unix_socket_server::StorageState`].
+//! `unix_socket_server::content_handlers` through a shared
+//! `StorageState`.
 
 use super::{MetadataBackend, SemanticRouter};
 use crate::rpc::unix_socket_server::StorageState;

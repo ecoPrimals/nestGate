@@ -25,7 +25,7 @@ impl AuthTokenManager {
     ///
     /// Generates a UUID-based payload and appends an HMAC-SHA256 signature
     /// using the manager's signing key. The resulting token format is
-    /// `token_{user}_{uuid}.{hmac_hex}`, verifiable via [`validate_token_signature`].
+    /// `token_{user}_{uuid}.{hmac_hex}`, verifiable via [`Self::validate_token_signature`].
     #[must_use]
     pub fn create_token(
         &self,
@@ -91,7 +91,11 @@ mod tests {
     #[test]
     fn create_token_populates_user_and_permissions() {
         let mgr = manager();
-        let token = mgr.create_token("alice", vec!["read".into(), "write".into()], Duration::from_secs(3600));
+        let token = mgr.create_token(
+            "alice",
+            vec!["read".into(), "write".into()],
+            Duration::from_secs(3600),
+        );
         assert_eq!(token.user_id, "alice");
         assert_eq!(token.permissions, vec!["read", "write"]);
         assert!(token.token.starts_with("token_alice_"));

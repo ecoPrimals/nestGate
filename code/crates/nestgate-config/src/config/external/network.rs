@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn test_default_dev_network() {
         let config = NetworkConfig::default_dev();
-        assert_eq!(config.api_port(), runtime_fallback_ports::HTTP);
+        assert_eq!(config.api_port(), runtime_fallback_ports::http());
         assert_eq!(config.api_host(), "0.0.0.0");
     }
 
@@ -291,7 +291,7 @@ mod tests {
             url,
             format!(
                 "postgresql://localhost:{}/nestgate",
-                runtime_fallback_ports::POSTGRES
+                runtime_fallback_ports::postgres()
             )
         );
     }
@@ -301,7 +301,7 @@ mod tests {
         let config = NetworkConfig::default_dev();
         assert_eq!(
             config.redis_url(),
-            format!("redis://localhost:{}", runtime_fallback_ports::REDIS)
+            format!("redis://localhost:{}", runtime_fallback_ports::redis())
         );
     }
 
@@ -310,7 +310,7 @@ mod tests {
         let config = NetworkConfig::default_dev();
         assert_eq!(
             config.metrics_endpoint(),
-            format!("0.0.0.0:{}", runtime_fallback_ports::METRICS)
+            format!("0.0.0.0:{}", runtime_fallback_ports::metrics())
         );
     }
 
@@ -318,11 +318,11 @@ mod tests {
     fn test_endpoint_url() {
         let endpoint = EndpointConfig {
             host: String::from("example.com"),
-            port: runtime_fallback_ports::HTTP,
+            port: runtime_fallback_ports::http(),
         };
         assert_eq!(
             endpoint.url("https"),
-            format!("https://example.com:{}", runtime_fallback_ports::HTTP)
+            format!("https://example.com:{}", runtime_fallback_ports::http())
         );
     }
 
@@ -330,9 +330,9 @@ mod tests {
     fn test_from_env_with_defaults() {
         // Should use defaults when env vars not set
         let endpoint =
-            EndpointConfig::from_env("NONEXISTENT", "localhost", runtime_fallback_ports::HTTP)
+            EndpointConfig::from_env("NONEXISTENT", "localhost", runtime_fallback_ports::http())
                 .expect("Should create endpoint with defaults");
         assert_eq!(endpoint.host, "localhost");
-        assert_eq!(endpoint.port, runtime_fallback_ports::HTTP);
+        assert_eq!(endpoint.port, runtime_fallback_ports::http());
     }
 }

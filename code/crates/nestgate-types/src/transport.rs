@@ -62,7 +62,9 @@ impl TransportEndpoint {
     /// # Errors
     ///
     /// Returns an error when the env var is missing or contains invalid JSON.
-    pub fn from_env_with(env: &(impl crate::EnvSource + ?Sized)) -> Result<Self, TransportEndpointError> {
+    pub fn from_env_with(
+        env: &(impl crate::EnvSource + ?Sized),
+    ) -> Result<Self, TransportEndpointError> {
         let raw = env
             .get("TRANSPORT_ENDPOINT")
             .ok_or(TransportEndpointError::NotSet)?;
@@ -98,9 +100,7 @@ impl TransportEndpoint {
     pub fn is_local(&self) -> bool {
         match self {
             Self::Uds { .. } => true,
-            Self::Tcp { host, .. } => {
-                host == "127.0.0.1" || host == "::1" || host == "localhost"
-            }
+            Self::Tcp { host, .. } => host == "127.0.0.1" || host == "::1" || host == "localhost",
             Self::MeshRelay { .. } => false,
         }
     }
@@ -167,21 +167,27 @@ mod tests {
     fn wire_format_compatibility_uds() {
         let json = r#"{"transport":"uds","path":"/run/user/1000/biomeos/beardog.sock"}"#;
         let ep: TransportEndpoint = serde_json::from_str(json).unwrap();
-        assert!(matches!(ep, TransportEndpoint::Uds { ref path } if path.to_str().unwrap().ends_with("beardog.sock")));
+        assert!(
+            matches!(ep, TransportEndpoint::Uds { ref path } if path.to_str().unwrap().ends_with("beardog.sock"))
+        );
     }
 
     #[test]
     fn wire_format_compatibility_tcp() {
         let json = r#"{"transport":"tcp","host":"127.0.0.1","port":9100}"#;
         let ep: TransportEndpoint = serde_json::from_str(json).unwrap();
-        assert!(matches!(ep, TransportEndpoint::Tcp { ref host, port } if host == "127.0.0.1" && port == 9100));
+        assert!(
+            matches!(ep, TransportEndpoint::Tcp { ref host, port } if host == "127.0.0.1" && port == 9100)
+        );
     }
 
     #[test]
     fn wire_format_compatibility_mesh_relay() {
         let json = r#"{"transport":"mesh_relay","peer_id":"strandgate","capability":"security"}"#;
         let ep: TransportEndpoint = serde_json::from_str(json).unwrap();
-        assert!(matches!(ep, TransportEndpoint::MeshRelay { ref peer_id, ref capability } if peer_id == "strandgate" && capability == "security"));
+        assert!(
+            matches!(ep, TransportEndpoint::MeshRelay { ref peer_id, ref capability } if peer_id == "strandgate" && capability == "security")
+        );
     }
 
     #[test]
@@ -205,10 +211,7 @@ mod tests {
             r#"{"transport":"uds","path":"/run/membrane/nestgate.sock"}"#,
         )]);
         let ep = TransportEndpoint::from_env_with(&env).unwrap();
-        assert_eq!(
-            ep,
-            TransportEndpoint::uds("/run/membrane/nestgate.sock")
-        );
+        assert_eq!(ep, TransportEndpoint::uds("/run/membrane/nestgate.sock"));
     }
 
     #[test]

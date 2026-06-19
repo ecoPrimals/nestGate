@@ -191,7 +191,10 @@ impl UniversalPrimalDiscovery {
         status.insert(String::from("network_discovery"), String::from("active"));
 
         // Performance discovery status
-        status.insert(String::from("performance_discovery"), String::from("active"));
+        status.insert(
+            String::from("performance_discovery"),
+            String::from("active"),
+        );
 
         // Registry client status
         status.insert(String::from("registry_client"), String::from("active"));

@@ -36,7 +36,7 @@ impl Default for DetectionConfig {
             enable_caching: true,
             minimum_storage_size: 100_000_000, // 100MB minimum
             detection_timeout_secs: 30,
-            enable_cloud_detection: true,
+            enable_cloud_detection: false,
             enable_network_detection: true,
             enable_deep_analysis: false,
         }
@@ -103,11 +103,15 @@ impl DetectionConfig {
         }
 
         if self.detection_timeout_secs == 0 {
-            return Err(String::from("detection_timeout_secs must be greater than 0"));
+            return Err(String::from(
+                "detection_timeout_secs must be greater than 0",
+            ));
         }
 
         if self.detection_timeout_secs > 300 {
-            return Err(String::from("detection_timeout_secs should not exceed 300 seconds"));
+            return Err(String::from(
+                "detection_timeout_secs should not exceed 300 seconds",
+            ));
         }
 
         Ok(())

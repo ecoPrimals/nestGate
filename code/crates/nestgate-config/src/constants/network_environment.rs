@@ -226,7 +226,7 @@ pub fn https_port() -> u16 {
     env::var("NESTGATE_HTTPS_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(fallback_ports::HTTPS)
+        .unwrap_or_else(fallback_ports::https)
 }
 
 // ==================== ADDRESS CONFIGURATION ====================

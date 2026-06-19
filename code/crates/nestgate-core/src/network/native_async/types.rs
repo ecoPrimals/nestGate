@@ -290,8 +290,14 @@ mod tests {
     #[test]
     fn test_network_request_with_headers() {
         let mut headers = HashMap::new();
-        headers.insert(String::from("Content-Type"), String::from("application/json"));
-        headers.insert(String::from("Authorization"), String::from("Bearer token123"));
+        headers.insert(
+            String::from("Content-Type"),
+            String::from("application/json"),
+        );
+        headers.insert(
+            String::from("Authorization"),
+            String::from("Bearer token123"),
+        );
 
         let request = NetworkRequest {
             request_id: String::from("req-789"),

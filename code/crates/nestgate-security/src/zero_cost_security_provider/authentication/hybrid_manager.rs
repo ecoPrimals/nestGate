@@ -314,12 +314,10 @@ impl HybridAuthenticationManager {
                     ))
                 }
             }
-            AuthMethod::Token => {
-                Err(NestGateError::security_error(
-                    "Token authentication requires external security provider — \
+            AuthMethod::Token => Err(NestGateError::security_error(
+                "Token authentication requires external security provider — \
                      token issuance and validation must not be self-minted",
-                ))
-            }
+            )),
             AuthMethod::Certificate => Err(NestGateError::security_error(
                 "Certificate auth requires external security provider",
             )),
@@ -496,7 +494,10 @@ mod hybrid_manager_direct_tests {
         };
         let mgr = HybridAuthenticationManager::new(config);
         let creds = ZeroCostCredentials::new_token("u".into(), "secret".into());
-        let err = mgr.authenticate(&creds).await.expect_err("token auth must reject");
+        let err = mgr
+            .authenticate(&creds)
+            .await
+            .expect_err("token auth must reject");
         assert!(
             err.to_string().contains("external security provider"),
             "should require external provider: {err}"

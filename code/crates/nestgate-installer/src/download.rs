@@ -306,9 +306,9 @@ impl DownloadManager {
                     break;
                 }
                 Ok(_output) => {
-                    return Err(NestGateError::validation(
-                        String::from("Binary execution failed: test_failed"),
-                    ));
+                    return Err(NestGateError::validation(String::from(
+                        "Binary execution failed: test_failed",
+                    )));
                 }
                 Err(e) if e.raw_os_error() == Some(26) => {
                     last_err = Some(e);

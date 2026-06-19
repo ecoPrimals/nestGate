@@ -9,9 +9,7 @@
 //! Note: Uses deprecated traits for backward compatibility.
 //! Migration to canonical traits is tracked but not yet scheduled.
 
-use super::constants::{
-    ZERO_COST_LATENCY_NOT_TRACKED, ZERO_COST_REQUESTS_NOT_TRACKED,
-};
+use super::constants::{ZERO_COST_LATENCY_NOT_TRACKED, ZERO_COST_REQUESTS_NOT_TRACKED};
 use super::traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 use super::types::{ZeroCostError, ZeroCostMetrics, ZeroCostRequest, ZeroCostResponse};
 use std::marker::PhantomData;
@@ -249,8 +247,14 @@ mod tests {
         );
 
         let metrics = system.metrics();
-        assert_eq!(metrics.requests_processed, 0, "const-fn stack cannot track runtime state");
-        assert_eq!(metrics.average_latency_ns, 0, "const-fn stack cannot measure latency");
+        assert_eq!(
+            metrics.requests_processed, 0,
+            "const-fn stack cannot track runtime state"
+        );
+        assert_eq!(
+            metrics.average_latency_ns, 0,
+            "const-fn stack cannot measure latency"
+        );
     }
 
     #[test]

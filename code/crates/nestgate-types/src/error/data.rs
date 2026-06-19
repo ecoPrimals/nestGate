@@ -515,7 +515,8 @@ mod tests {
     #[test]
     fn test_storage_error_context_usage() {
         let mut data = StorageErrorData::default();
-        data.context.insert(String::from("pool"), String::from("tank"));
+        data.context
+            .insert(String::from("pool"), String::from("tank"));
         data.context
             .insert(String::from("operation"), String::from("snapshot"));
 

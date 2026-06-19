@@ -139,9 +139,7 @@ impl RealZfsOperations {
                                 .unwrap_or("unknown"),
                         ),
                         size: String::from(
-                            pool.get("size")
-                                .and_then(|s| s.as_str())
-                                .unwrap_or("0"),
+                            pool.get("size").and_then(|s| s.as_str()).unwrap_or("0"),
                         ),
                         allocated: String::from(
                             pool.get("allocated")
@@ -149,9 +147,7 @@ impl RealZfsOperations {
                                 .unwrap_or("0"),
                         ),
                         free: String::from(
-                            pool.get("free")
-                                .and_then(|s| s.as_str())
-                                .unwrap_or("0"),
+                            pool.get("free").and_then(|s| s.as_str()).unwrap_or("0"),
                         ),
                         devices: Vec::new(), // Simplified for now
                     });

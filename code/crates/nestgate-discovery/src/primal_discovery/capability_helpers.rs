@@ -69,15 +69,15 @@ fn fallback_host_for_capability_from_env(
 }
 
 fn default_port_compute_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {
-    env_parsed(env, "NESTGATE_COMPUTE_PORT", fallback_ports::COMPUTE)
+    env_parsed(env, "NESTGATE_COMPUTE_PORT", fallback_ports::compute())
 }
 
 fn default_port_ai_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {
-    env_parsed(env, "NESTGATE_AI_PORT", fallback_ports::ADMIN)
+    env_parsed(env, "NESTGATE_AI_PORT", fallback_ports::admin())
 }
 
 fn default_port_ecosystem_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {
-    env_parsed(env, "NESTGATE_ECOSYSTEM_PORT", fallback_ports::ECOSYSTEM)
+    env_parsed(env, "NESTGATE_ECOSYSTEM_PORT", fallback_ports::ecosystem())
 }
 
 /// Discovered service information

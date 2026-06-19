@@ -517,8 +517,7 @@ fn handshake_fails_without_family_seed() {
         [
             ("FAMILY_SEED", None::<&str>),
             ("SECURITY_FAMILY_SEED", None),
-            ("BEARDOG_FAMILY_SEED", None),
-            ("BIOMEOS_FAMILY_SEED", None),
+            ("SECURITY_FAMILY_SEED", None),
             ("SECURITY_SOCKET", Some("/nonexistent/btsp.sock")),
         ],
         || {
@@ -680,9 +679,9 @@ async fn handshake_accepts_session_id_instead_of_session_token() {
 }
 
 #[tokio::test]
-async fn handshake_uses_beardog_family_seed_fallback() {
+async fn handshake_uses_security_family_seed_fallback() {
     let dir = tempfile::tempdir().expect("tempdir");
-    let sock = dir.path().join("sec-bdseed.sock");
+    let sock = dir.path().join("sec-sfseed.sock");
     let sock_clone = sock.clone();
     let server = tokio::spawn(async move {
         run_mock_security_server(sock_clone, MockSecurityScenario::Success).await;
@@ -697,8 +696,7 @@ async fn handshake_uses_beardog_family_seed_fallback() {
         [
             ("SECURITY_SOCKET", Some(sock.to_str().expect("utf8"))),
             ("FAMILY_SEED", None),
-            ("BEARDOG_FAMILY_SEED", Some("YmVhcmRvZy1mYWxsYmFjaw==")),
-            ("BIOMEOS_FAMILY_SEED", None),
+            ("SECURITY_FAMILY_SEED", Some("c2VjdXJpdHktZmFsbGJhY2s=")),
         ],
         async {
             tokio::task::yield_now().await;
@@ -706,7 +704,7 @@ async fn handshake_uses_beardog_family_seed_fallback() {
             let mut writer = Vec::new();
             let session = perform_handshake(&mut reader, &mut writer, "fam")
                 .await
-                .expect("BEARDOG_FAMILY_SEED fallback should work");
+                .expect("SECURITY_FAMILY_SEED fallback should work");
             assert_eq!(session.session_id, "sid-mock");
         },
     )

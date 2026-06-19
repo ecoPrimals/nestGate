@@ -62,7 +62,9 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
             // explicit PRIMAL_BIND_MODE=fallback (grapheneGate deploy)
             ErrorKind::PermissionDenied => {
                 if is_bind_mode_fallback() {
-                    debug!("Permission denied + PRIMAL_BIND_MODE=fallback — treating as platform constraint");
+                    debug!(
+                        "Permission denied + PRIMAL_BIND_MODE=fallback — treating as platform constraint"
+                    );
                     return true;
                 }
                 let is_selinux = is_selinux_enforcing();
@@ -222,8 +224,7 @@ mod tests {
     #[test]
     fn context_wrapped_io_error_detected() {
         let io_err = IoError::new(ErrorKind::Unsupported, "sockets not supported");
-        let err: anyhow::Error =
-            anyhow::Error::new(io_err).context("Failed to bind Unix socket");
+        let err: anyhow::Error = anyhow::Error::new(io_err).context("Failed to bind Unix socket");
         assert!(
             is_platform_constraint(&err),
             "chain-walking should find io::Error through .context()"
@@ -258,8 +259,7 @@ mod tests {
     #[test]
     fn find_io_error_returns_correct_kind() {
         let io_err = IoError::new(ErrorKind::PermissionDenied, "denied");
-        let err: anyhow::Error =
-            anyhow::Error::new(io_err).context("bind failed");
+        let err: anyhow::Error = anyhow::Error::new(io_err).context("bind failed");
         let found = find_io_error(&err).expect("should find io::Error");
         assert_eq!(found.kind(), ErrorKind::PermissionDenied);
     }
@@ -267,32 +267,24 @@ mod tests {
     #[test]
     fn bind_mode_fallback_triggers_on_permission_denied() {
         let io_err = IoError::new(ErrorKind::PermissionDenied, "denied");
-        let err: anyhow::Error =
-            anyhow::Error::new(io_err).context("Failed to bind Unix socket");
-        temp_env::with_vars(
-            [("PRIMAL_BIND_MODE", Some("fallback"))],
-            || {
-                assert!(
-                    is_platform_constraint(&err),
-                    "fallback mode should treat PermissionDenied as constraint"
-                );
-            },
-        );
+        let err: anyhow::Error = anyhow::Error::new(io_err).context("Failed to bind Unix socket");
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("fallback"))], || {
+            assert!(
+                is_platform_constraint(&err),
+                "fallback mode should treat PermissionDenied as constraint"
+            );
+        });
     }
 
     #[test]
     fn tcp_only_mode_triggers_on_permission_denied() {
         let io_err = IoError::new(ErrorKind::PermissionDenied, "denied");
-        let err: anyhow::Error =
-            anyhow::Error::new(io_err).context("bind failed");
-        temp_env::with_vars(
-            [("PRIMAL_BIND_MODE", Some("tcp_only"))],
-            || {
-                assert!(
-                    is_platform_constraint(&err),
-                    "tcp_only mode should treat PermissionDenied as constraint"
-                );
-            },
-        );
+        let err: anyhow::Error = anyhow::Error::new(io_err).context("bind failed");
+        temp_env::with_vars([("PRIMAL_BIND_MODE", Some("tcp_only"))], || {
+            assert!(
+                is_platform_constraint(&err),
+                "tcp_only mode should treat PermissionDenied as constraint"
+            );
+        });
     }
 }

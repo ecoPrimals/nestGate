@@ -102,7 +102,7 @@ impl StorageDetector {
         // Use the detection module for parallel detection
         let detection_engine = detection::DetectionEngine::new(&self.config);
 
-        // Run I/O-heavy discovery in parallel; cloud/network/memory paths are synchronous stubs today.
+        // Run I/O-heavy discovery in parallel; cloud detection is not implemented here.
         let (local_fs, block_devices) = tokio::join!(
             detection_engine.detect_local_filesystems(),
             detection_engine.detect_block_devices(),

@@ -108,7 +108,7 @@ fn test_tuning_service_registration() {
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
 
     let registration = TuningServiceRegistration {

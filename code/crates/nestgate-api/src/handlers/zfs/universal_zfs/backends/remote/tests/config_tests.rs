@@ -12,7 +12,7 @@ fn test_remote_config_creation() {
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
 
     let config = RemoteConfig {
@@ -49,7 +49,7 @@ fn test_remote_config_timeout_values() {
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
 
     let short_timeout = RemoteConfig {
@@ -97,7 +97,7 @@ fn test_endpoint_validation() {
     let valid_http = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
     let valid_https = "https://remote.example.com:443";
 

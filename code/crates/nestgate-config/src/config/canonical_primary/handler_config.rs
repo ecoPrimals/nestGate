@@ -597,9 +597,15 @@ impl Default for HandlerSecurityConfig {
             enable_signing: false,
             security_headers: {
                 let mut headers = HashMap::new();
-                headers.insert(String::from("X-Content-Type-Options"), String::from("nosniff"));
+                headers.insert(
+                    String::from("X-Content-Type-Options"),
+                    String::from("nosniff"),
+                );
                 headers.insert(String::from("X-Frame-Options"), String::from("DENY"));
-                headers.insert(String::from("X-XSS-Protection"), String::from("1; mode=block"));
+                headers.insert(
+                    String::from("X-XSS-Protection"),
+                    String::from("1; mode=block"),
+                );
                 headers
             },
         }

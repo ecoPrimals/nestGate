@@ -398,27 +398,29 @@ pub fn get_nestgate_tcp_discovery_path_from_env_source(
 ///
 /// Outbound IPC call sites should migrate from raw `UnixStream::connect` /
 /// `TcpStream::connect` to this function followed by
-/// [`connect_transport`](super::streams::connect_transport) or
-/// [`connect_endpoint`](super::streams::connect_endpoint).
+/// [`super::streams::connect_transport`] or
+/// [`connect_endpoint`].
 ///
 /// # Errors
 ///
 /// Returns an error when both transport-injection and legacy discovery fail.
-pub fn resolve_outbound_endpoint(
-    service_name: &str,
-) -> Result<OutboundEndpoint> {
+pub fn resolve_outbound_endpoint(service_name: &str) -> Result<OutboundEndpoint> {
     match nestgate_types::TransportEndpoint::from_env() {
         Ok(ep) => {
             info!("Outbound IPC for '{service_name}': using TRANSPORT_ENDPOINT ({ep})");
             Ok(OutboundEndpoint::Transport(ep))
         }
         Err(nestgate_types::TransportEndpointError::NotSet) => {
-            debug!("TRANSPORT_ENDPOINT not set — falling back to legacy discovery for '{service_name}'");
+            debug!(
+                "TRANSPORT_ENDPOINT not set — falling back to legacy discovery for '{service_name}'"
+            );
             let ipc = discover_ipc_endpoint(service_name)?;
             Ok(OutboundEndpoint::Legacy(ipc))
         }
         Err(e) => {
-            tracing::warn!("TRANSPORT_ENDPOINT parse error ({e}) — falling back to legacy discovery for '{service_name}'");
+            tracing::warn!(
+                "TRANSPORT_ENDPOINT parse error ({e}) — falling back to legacy discovery for '{service_name}'"
+            );
             let ipc = discover_ipc_endpoint(service_name)?;
             Ok(OutboundEndpoint::Legacy(ipc))
         }
@@ -442,16 +444,12 @@ impl OutboundEndpoint {
     /// Returns an error if the connection fails.
     pub async fn connect(&self) -> Result<IpcStream> {
         match self {
-            Self::Transport(ep) => {
-                super::streams::connect_transport(ep)
-                    .await
-                    .context("connect via TRANSPORT_ENDPOINT")
-            }
-            Self::Legacy(ep) => {
-                connect_endpoint(ep)
-                    .await
-                    .context("connect via legacy discovery")
-            }
+            Self::Transport(ep) => super::streams::connect_transport(ep)
+                .await
+                .context("connect via TRANSPORT_ENDPOINT"),
+            Self::Legacy(ep) => connect_endpoint(ep)
+                .await
+                .context("connect via legacy discovery"),
         }
     }
 }
@@ -530,35 +528,29 @@ mod tests {
 
     #[test]
     fn resolve_outbound_falls_back_to_legacy_when_not_set() {
-        temp_env::with_vars(
-            [("TRANSPORT_ENDPOINT", None::<&str>)],
-            || {
-                let result = resolve_outbound_endpoint("nonexistent_service_xyz");
-                match result {
-                    Err(_) => {}
-                    Ok(OutboundEndpoint::Legacy(_)) => {}
-                    Ok(OutboundEndpoint::Transport(_)) => {
-                        panic!("should not resolve transport when env not set");
-                    }
+        temp_env::with_vars([("TRANSPORT_ENDPOINT", None::<&str>)], || {
+            let result = resolve_outbound_endpoint("nonexistent_service_xyz");
+            match result {
+                Err(_) => {}
+                Ok(OutboundEndpoint::Legacy(_)) => {}
+                Ok(OutboundEndpoint::Transport(_)) => {
+                    panic!("should not resolve transport when env not set");
                 }
-            },
-        );
+            }
+        });
     }
 
     #[test]
     fn resolve_outbound_falls_back_on_invalid_json() {
-        temp_env::with_vars(
-            [("TRANSPORT_ENDPOINT", Some("not-json"))],
-            || {
-                let result = resolve_outbound_endpoint("nonexistent_service_xyz");
-                match result {
-                    Err(_) => {}
-                    Ok(OutboundEndpoint::Legacy(_)) => {}
-                    Ok(OutboundEndpoint::Transport(_)) => {
-                        panic!("should not resolve transport when JSON invalid");
-                    }
+        temp_env::with_vars([("TRANSPORT_ENDPOINT", Some("not-json"))], || {
+            let result = resolve_outbound_endpoint("nonexistent_service_xyz");
+            match result {
+                Err(_) => {}
+                Ok(OutboundEndpoint::Legacy(_)) => {}
+                Ok(OutboundEndpoint::Transport(_)) => {
+                    panic!("should not resolve transport when JSON invalid");
                 }
-            },
-        );
+            }
+        });
     }
 }

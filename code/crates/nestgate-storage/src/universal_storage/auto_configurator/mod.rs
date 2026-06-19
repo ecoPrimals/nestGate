@@ -239,7 +239,9 @@ mod tests {
     fn create_optimal_config_succeeds_with_empty_storage() {
         let cfg = AutoConfigurator::new(vec![]);
         let reqs = empty_requirements();
-        let result = cfg.create_optimal_config(&reqs).expect("should produce config");
+        let result = cfg
+            .create_optimal_config(&reqs)
+            .expect("should produce config");
         assert!(result.confidence_score > 0.0);
         assert!(result.confidence_score <= 1.0);
     }

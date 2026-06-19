@@ -45,7 +45,10 @@ impl<'a> Request<'a> {
     pub fn post_json(path: &'a str, json: &'a str) -> Self {
         let mut headers = HeaderMap::new();
         // Use lowercase header names per HTTP/2 spec (RFC 7540)
-        headers.insert(String::from("content-type"), String::from("application/json"));
+        headers.insert(
+            String::from("content-type"),
+            String::from("application/json"),
+        );
 
         Self {
             method: Method::Post,

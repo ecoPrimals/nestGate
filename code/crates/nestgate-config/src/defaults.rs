@@ -14,7 +14,7 @@ pub mod network {
     use super::{addresses, runtime_fallback_ports};
 
     /// Default API port - can be overridden with `NESTGATE_API_PORT`
-    pub const DEFAULT_API_PORT: u16 = runtime_fallback_ports::HTTP;
+    pub const DEFAULT_API_PORT: u16 = runtime_fallback_ports::defaults::HTTP;
 
     /// Default bind address - can be overridden with `NESTGATE_BIND_ADDRESS`  
     pub const DEFAULT_BIND_ADDRESS: &str = addresses::BIND_ALL_IPV4;
@@ -23,10 +23,10 @@ pub mod network {
     pub const DEFAULT_HOSTNAME: &str = addresses::LOCALHOST_NAME;
 
     /// Default WebSocket port - can be overridden with `NESTGATE_WS_PORT`
-    pub const DEFAULT_WS_PORT: u16 = runtime_fallback_ports::WEBSOCKET;
+    pub const DEFAULT_WS_PORT: u16 = runtime_fallback_ports::defaults::WEBSOCKET;
 
     /// Default health check port - can be overridden with `NESTGATE_HEALTH_PORT`
-    pub const DEFAULT_HEALTH_PORT: u16 = runtime_fallback_ports::HEALTH;
+    pub const DEFAULT_HEALTH_PORT: u16 = runtime_fallback_ports::defaults::HEALTH;
 }
 
 /// **DATABASE DEFAULTS**
@@ -34,16 +34,16 @@ pub mod database {
     use super::{addresses, runtime_fallback_ports};
 
     /// Default `PostgreSQL` port - can be overridden with `NESTGATE_DB_PORT`
-    pub const DEFAULT_POSTGRES_PORT: u16 = runtime_fallback_ports::POSTGRES;
+    pub const DEFAULT_POSTGRES_PORT: u16 = runtime_fallback_ports::defaults::POSTGRES;
 
     /// Default Redis port - can be overridden with `NESTGATE_REDIS_PORT`
-    pub const DEFAULT_REDIS_PORT: u16 = runtime_fallback_ports::REDIS;
+    pub const DEFAULT_REDIS_PORT: u16 = runtime_fallback_ports::defaults::REDIS;
 
     /// Default `MongoDB` port - can be overridden with `NESTGATE_MONGODB_PORT`
-    pub const DEFAULT_MONGODB_PORT: u16 = runtime_fallback_ports::MONGODB;
+    pub const DEFAULT_MONGODB_PORT: u16 = runtime_fallback_ports::defaults::MONGODB;
 
     /// Default `MySQL` port - can be overridden with `NESTGATE_MYSQL_PORT`
-    pub const DEFAULT_MYSQL_PORT: u16 = runtime_fallback_ports::MYSQL;
+    pub const DEFAULT_MYSQL_PORT: u16 = runtime_fallback_ports::defaults::MYSQL;
 
     /// Default database host - can be overridden with `NESTGATE_DB_HOST`
     pub const DEFAULT_DB_HOST: &str = addresses::LOCALHOST_NAME;
@@ -54,10 +54,10 @@ pub mod monitoring {
     use super::runtime_fallback_ports;
 
     /// Default Prometheus port - can be overridden with `NESTGATE_METRICS_PORT`
-    pub const DEFAULT_METRICS_PORT: u16 = runtime_fallback_ports::METRICS;
+    pub const DEFAULT_METRICS_PORT: u16 = runtime_fallback_ports::defaults::METRICS;
 
     /// Default Grafana port - can be overridden with `NESTGATE_GRAFANA_PORT`
-    pub const DEFAULT_GRAFANA_PORT: u16 = runtime_fallback_ports::API;
+    pub const DEFAULT_GRAFANA_PORT: u16 = runtime_fallback_ports::defaults::API;
 }
 
 /// **TIMEOUT DEFAULTS**
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn test_default_constants() {
-        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::HTTP);
+        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::http());
         assert_eq!(network::DEFAULT_BIND_ADDRESS, addresses::BIND_ALL_IPV4);
         assert_eq!(database::DEFAULT_POSTGRES_PORT, 5432);
     }
@@ -134,16 +134,22 @@ mod tests {
 
         let env_default = MapEnv::new();
         let cfg = EnvironmentConfig::from_env_source(&env_default).expect("config");
-        assert_eq!(cfg.network.port.get(), runtime_fallback_ports::HTTP);
+        assert_eq!(cfg.network.port.get(), runtime_fallback_ports::http());
     }
 
     #[test]
     fn test_network_defaults() {
-        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::HTTP);
+        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::http());
         assert_eq!(network::DEFAULT_BIND_ADDRESS, addresses::BIND_ALL_IPV4);
         assert_eq!(network::DEFAULT_HOSTNAME, addresses::LOCALHOST_NAME);
-        assert_eq!(network::DEFAULT_WS_PORT, runtime_fallback_ports::WEBSOCKET);
-        assert_eq!(network::DEFAULT_HEALTH_PORT, runtime_fallback_ports::HEALTH);
+        assert_eq!(
+            network::DEFAULT_WS_PORT,
+            runtime_fallback_ports::websocket()
+        );
+        assert_eq!(
+            network::DEFAULT_HEALTH_PORT,
+            runtime_fallback_ports::health()
+        );
     }
 
     #[test]
@@ -227,33 +233,45 @@ mod tests {
     fn test_database_port_references() {
         assert_eq!(
             database::DEFAULT_POSTGRES_PORT,
-            runtime_fallback_ports::POSTGRES
+            runtime_fallback_ports::postgres()
         );
-        assert_eq!(database::DEFAULT_REDIS_PORT, runtime_fallback_ports::REDIS);
+        assert_eq!(
+            database::DEFAULT_REDIS_PORT,
+            runtime_fallback_ports::redis()
+        );
         assert_eq!(
             database::DEFAULT_MONGODB_PORT,
-            runtime_fallback_ports::MONGODB
+            runtime_fallback_ports::mongodb()
         );
-        assert_eq!(database::DEFAULT_MYSQL_PORT, runtime_fallback_ports::MYSQL);
+        assert_eq!(
+            database::DEFAULT_MYSQL_PORT,
+            runtime_fallback_ports::mysql()
+        );
     }
 
     #[test]
     fn test_monitoring_port_references() {
         assert_eq!(
             monitoring::DEFAULT_METRICS_PORT,
-            runtime_fallback_ports::METRICS
+            runtime_fallback_ports::metrics()
         );
         assert_eq!(
             monitoring::DEFAULT_GRAFANA_PORT,
-            runtime_fallback_ports::API
+            runtime_fallback_ports::api()
         );
     }
 
     #[test]
     fn test_network_port_references() {
-        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::HTTP);
-        assert_eq!(network::DEFAULT_WS_PORT, runtime_fallback_ports::WEBSOCKET);
-        assert_eq!(network::DEFAULT_HEALTH_PORT, runtime_fallback_ports::HEALTH);
+        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::http());
+        assert_eq!(
+            network::DEFAULT_WS_PORT,
+            runtime_fallback_ports::websocket()
+        );
+        assert_eq!(
+            network::DEFAULT_HEALTH_PORT,
+            runtime_fallback_ports::health()
+        );
     }
 
     #[test]

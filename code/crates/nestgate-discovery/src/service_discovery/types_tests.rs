@@ -103,7 +103,7 @@ fn discovered_service_default_has_localhost_and_http_port() {
 
     let d = DiscoveredService::default();
     assert_eq!(d.endpoint, addresses::LOCALHOST_NAME);
-    assert_eq!(d.port, runtime_fallback_ports::HTTP);
+    assert_eq!(d.port, runtime_fallback_ports::http());
     assert!(d.capabilities.is_empty());
 }
 

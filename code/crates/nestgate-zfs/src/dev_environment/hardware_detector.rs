@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![cfg(any(test, feature = "dev-stubs"))]
+
 //
 // Determines what storage capabilities are available in the current environment
 // and selects the appropriate backend (native ZFS, remote ZFS, or development abstraction).

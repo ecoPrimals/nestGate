@@ -69,14 +69,18 @@ impl NetworkDiscoveryConfig {
         let end_port = env_parsed(
             env,
             "NESTGATE_DISCOVERY_PORT_END",
-            nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS,
+            nestgate_config::constants::hardcoding::runtime_fallback_ports::metrics(),
         );
 
         Self {
             scan_timeout: Duration::from_secs(5),
             preferred_interfaces: vec![String::from("eth0"), String::from("wlan0")],
             port_scan_range: (start_port, end_port),
-            interface_priority: vec![String::from("lo"), String::from("eth0"), String::from("wlan0")],
+            interface_priority: vec![
+                String::from("lo"),
+                String::from("eth0"),
+                String::from("wlan0"),
+            ],
         }
     }
 }
@@ -352,7 +356,7 @@ impl NetworkDiscovery {
         let base_port: u16 = env_parsed(
             env,
             "NESTGATE_CAPABILITY_BASE_PORT",
-            nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS,
+            nestgate_config::constants::hardcoding::runtime_fallback_ports::metrics(),
         );
         let offset = u16::try_from(capability.len().rem_euclid(100)).unwrap_or(0);
         let capability_port = base_port.saturating_add(offset);

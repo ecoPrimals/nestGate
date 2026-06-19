@@ -110,20 +110,14 @@ mod tests {
     #[test]
     fn tcp_jsonrpc_truthy_values() {
         for val in ["1", "true", "yes", "on", "TRUE", "Yes", " ON "] {
-            assert!(
-                jsonrpc_tcp_truthy(val),
-                "{val:?} should be truthy"
-            );
+            assert!(jsonrpc_tcp_truthy(val), "{val:?} should be truthy");
         }
     }
 
     #[test]
     fn tcp_jsonrpc_falsy_values() {
         for val in ["0", "false", "no", "off", "", "maybe"] {
-            assert!(
-                !jsonrpc_tcp_truthy(val),
-                "{val:?} should be falsy"
-            );
+            assert!(!jsonrpc_tcp_truthy(val), "{val:?} should be falsy");
         }
     }
 

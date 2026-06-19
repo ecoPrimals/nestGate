@@ -74,31 +74,39 @@ impl NetworkConstants {
             admin_host: env_or_from_source(env, "NESTGATE_ADMIN_HOST", addresses::LOCALHOST_IPV4),
 
             // Ports (defaults: development last resort; see module docs; override via `NESTGATE_*_PORT`)
-            api_port: env_or_parse_from_source(env, "NESTGATE_API_PORT", fallback_ports::HTTP),
-            http_port: env_or_parse_from_source(env, "NESTGATE_HTTP_PORT", fallback_ports::HTTP),
-            https_port: env_or_parse_from_source(env, "NESTGATE_HTTPS_PORT", fallback_ports::HTTPS),
+            api_port: env_or_parse_from_source(env, "NESTGATE_API_PORT", fallback_ports::http()),
+            http_port: env_or_parse_from_source(env, "NESTGATE_HTTP_PORT", fallback_ports::http()),
+            https_port: env_or_parse_from_source(
+                env,
+                "NESTGATE_HTTPS_PORT",
+                fallback_ports::https(),
+            ),
             websocket_port: env_or_parse_from_source(
                 env,
                 "NESTGATE_WS_PORT",
-                fallback_ports::WEBSOCKET,
+                fallback_ports::websocket(),
             ),
-            grpc_port: env_or_parse_from_source(env, "NESTGATE_GRPC_PORT", fallback_ports::GRPC),
+            grpc_port: env_or_parse_from_source(env, "NESTGATE_GRPC_PORT", fallback_ports::grpc()),
             metrics_port: env_or_parse_from_source(
                 env,
                 "NESTGATE_METRICS_PORT",
-                fallback_ports::METRICS,
+                fallback_ports::metrics(),
             ),
             prometheus_port: env_or_parse_from_source(
                 env,
                 "NESTGATE_PROMETHEUS_PORT",
-                fallback_ports::PROMETHEUS,
+                fallback_ports::prometheus(),
             ),
             health_port: env_or_parse_from_source(
                 env,
                 "NESTGATE_HEALTH_PORT",
-                fallback_ports::HEALTH,
+                fallback_ports::health(),
             ),
-            admin_port: env_or_parse_from_source(env, "NESTGATE_ADMIN_PORT", fallback_ports::ADMIN),
+            admin_port: env_or_parse_from_source(
+                env,
+                "NESTGATE_ADMIN_PORT",
+                fallback_ports::admin(),
+            ),
 
             // Addresses (bind to loopback by default; expose publicly via env/config)
             bind_address: env_or_from_source(

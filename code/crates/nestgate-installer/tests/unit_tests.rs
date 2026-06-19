@@ -44,16 +44,6 @@
 // - macOS (Intel and Apple Silicon)
 // - Linux (multiple distributions)
 // - Different hardware configurations
-//
-// ## Example Test Pattern
-//
-// ```rust
-// fn test_dependency_resolution() -> std::result::Result<(), Box<dyn std::error::Error>> {
-//     let dependencies = resolve_dependencies(&test_config());
-//     assert!(dependencies.contains(&Dependency::ZFS));
-//     assert_eq!(dependencies.len(), expected_count());
-// }
-// ```
 
 // Basic installer tests
 #[test]

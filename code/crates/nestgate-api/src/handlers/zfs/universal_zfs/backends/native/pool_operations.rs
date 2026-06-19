@@ -221,9 +221,9 @@ pub fn destroy_pool(_service: &NativeZfsService, name: &str) -> UniversalZfsResu
     cmd.arg(name);
 
     // Execute the command
-    let output = cmd
-        .output()
-        .map_err(|_e| UniversalZfsError::internal(String::from("Failed to execute zpool command")))?;
+    let output = cmd.output().map_err(|_e| {
+        UniversalZfsError::internal(String::from("Failed to execute zpool command"))
+    })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);

@@ -481,7 +481,9 @@ fn log_transport_endpoint() {
             info!("TRANSPORT_ENDPOINT: not set (using legacy discovery)");
         }
         Err(e) => {
-            tracing::warn!("TRANSPORT_ENDPOINT parse error: {e} (falling back to legacy discovery)");
+            tracing::warn!(
+                "TRANSPORT_ENDPOINT parse error: {e} (falling back to legacy discovery)"
+            );
         }
     }
 }

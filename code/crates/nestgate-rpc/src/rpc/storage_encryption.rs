@@ -247,23 +247,12 @@ impl StorageEncryption {
 
 /// Resolve the security provider socket path from environment.
 ///
-/// Precedence: `SECURITY_PROVIDER_SOCKET` → `SECURITY_SOCKET` →
-/// `BEARDOG_SOCKET` (deprecated legacy alias, lowest priority) → 6-tier capability discovery.
+/// Precedence: `SECURITY_PROVIDER_SOCKET` → `SECURITY_SOCKET` → 6-tier capability discovery.
 fn resolve_security_provider_socket() -> Option<String> {
-    for (var, deprecated) in [
-        ("SECURITY_PROVIDER_SOCKET", false),
-        ("SECURITY_SOCKET", false),
-        ("BEARDOG_SOCKET", true),
-    ] {
+    for var in ["SECURITY_PROVIDER_SOCKET", "SECURITY_SOCKET"] {
         if let Ok(p) = std::env::var(var)
             && !p.is_empty()
         {
-            if deprecated {
-                warn!(
-                    "Resolved security socket from deprecated {var} — \
-                     migrate to SECURITY_PROVIDER_SOCKET or SECURITY_SOCKET"
-                );
-            }
             return Some(p);
         }
     }

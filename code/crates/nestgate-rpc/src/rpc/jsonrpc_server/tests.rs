@@ -193,7 +193,7 @@ async fn test_handler_storage_object_store_retrieve() {
     store_params.insert("key", "mykey").expect("insert");
     store_params.insert("data", &data_b64).expect("insert");
     let stored: serde_json::Value = module
-        .call("storage.object.store", store_params)
+        .call("storage.store", store_params)
         .await
         .expect("store");
     assert_eq!(stored["key"], "mykey");
@@ -202,7 +202,7 @@ async fn test_handler_storage_object_store_retrieve() {
     retrieve_params.insert("dataset", "obj_ds").expect("insert");
     retrieve_params.insert("key", "mykey").expect("insert");
     let retrieved: serde_json::Value = module
-        .call("storage.object.retrieve", retrieve_params)
+        .call("storage.retrieve", retrieve_params)
         .await
         .expect("retrieve");
     let raw = base64::engine::general_purpose::STANDARD
@@ -227,7 +227,7 @@ async fn test_handler_storage_object_store_invalid_base64() {
         .insert("data", "!!!invalid!!!")
         .expect("insert");
     let err = module
-        .call::<_, serde_json::Value>("storage.object.store", store_params)
+        .call::<_, serde_json::Value>("storage.store", store_params)
         .await;
     assert!(err.is_err());
 }
@@ -247,21 +247,21 @@ async fn test_handler_storage_object_metadata_list_delete() {
     store_params.insert("key", "obj1").expect("insert");
     store_params.insert("data", &data_b64).expect("insert");
     let _ = module
-        .call::<_, serde_json::Value>("storage.object.store", store_params)
+        .call::<_, serde_json::Value>("storage.store", store_params)
         .await
         .expect("store");
     let mut meta_params = ObjectParams::new();
     meta_params.insert("dataset", "meta_ds").expect("insert");
     meta_params.insert("key", "obj1").expect("insert");
     let meta: serde_json::Value = module
-        .call("storage.object.metadata", meta_params)
+        .call("storage.metadata", meta_params)
         .await
         .expect("metadata");
     assert_eq!(meta["key"], "obj1");
     let mut list_params = ObjectParams::new();
     list_params.insert("dataset", "meta_ds").expect("insert");
     let list: Vec<serde_json::Value> = module
-        .call("storage.object.list", list_params)
+        .call("storage.list", list_params)
         .await
         .expect("list");
     assert!(!list.is_empty());
@@ -269,7 +269,7 @@ async fn test_handler_storage_object_metadata_list_delete() {
     del_params.insert("dataset", "meta_ds").expect("insert");
     del_params.insert("key", "obj1").expect("insert");
     let del: serde_json::Value = module
-        .call("storage.object.delete", del_params)
+        .call("storage.delete", del_params)
         .await
         .expect("delete");
     assert!(del["success"].as_bool().unwrap_or(false));
@@ -445,7 +445,7 @@ async fn test_storage_object_retrieve_missing_keys_fails() {
     let module = build_test_module().await;
     let params = ObjectParams::new();
     let err = module
-        .call::<_, serde_json::Value>("storage.object.retrieve", params)
+        .call::<_, serde_json::Value>("storage.retrieve", params)
         .await;
     assert!(err.is_err());
 }
@@ -455,7 +455,7 @@ async fn test_storage_object_delete_missing_keys_fails() {
     let module = build_test_module().await;
     let params = ObjectParams::new();
     let err = module
-        .call::<_, serde_json::Value>("storage.object.delete", params)
+        .call::<_, serde_json::Value>("storage.delete", params)
         .await;
     assert!(err.is_err());
 }
@@ -465,7 +465,7 @@ async fn test_storage_object_list_missing_dataset_fails() {
     let module = build_test_module().await;
     let params = ObjectParams::new();
     let err = module
-        .call::<_, serde_json::Value>("storage.object.list", params)
+        .call::<_, serde_json::Value>("storage.list", params)
         .await;
     assert!(err.is_err());
 }
@@ -475,7 +475,7 @@ async fn test_storage_object_metadata_missing_keys_fails() {
     let module = build_test_module().await;
     let params = ObjectParams::new();
     let err = module
-        .call::<_, serde_json::Value>("storage.object.metadata", params)
+        .call::<_, serde_json::Value>("storage.metadata", params)
         .await;
     assert!(err.is_err());
 }
@@ -486,7 +486,7 @@ async fn test_storage_object_store_missing_fields_fails() {
     let mut params = ObjectParams::new();
     params.insert("dataset", "d").expect("insert");
     let err = module
-        .call::<_, serde_json::Value>("storage.object.store", params)
+        .call::<_, serde_json::Value>("storage.store", params)
         .await;
     assert!(err.is_err());
 }

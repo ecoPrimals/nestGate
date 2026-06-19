@@ -1,6 +1,6 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: Jun 3, 2026  
+**Last Updated**: Jun 19, 2026  
 **Status**: Active
 
 ---
@@ -36,7 +36,7 @@ Narrow by name or test binary as usual, e.g. filters on scenario or module path.
 
 Use the layout under `tests/`:
 
-- **`tests/chaos/`** — chaos harnesses and scenarios (`chaos_testing_framework.rs`, `enhanced_chaos_framework.rs`, …).
+- **`tests/chaos/`** — chaos harnesses and scenarios (`comprehensive_chaos_tests.rs`, `advanced_resilience_tests.rs`, `network_failure_scenarios.rs`, …).
 - **`tests/integration_test_suite/`** — comprehensive integration modules and helpers (see also `integration_test_suite_main.rs`).
 - **Top-level `tests/*.rs`** — Cargo integration test crates (e2e scenarios, fault-injection suites, performance batteries, …).
 
@@ -48,10 +48,10 @@ See [README.md](README.md) for organization and **`cargo test --workspace`** (fu
 
 | Metric | Value |
 |--------|--------|
-| Passing (lib only) | 9,083 |
+| Passing | 12,941 |
 | Failed | 0 |
-| Ignored (lib only) | 60 |
-| Workspace coverage (line) | 84.12%+ |
+| Ignored | 427 |
+| Workspace coverage (line) | 84%+ |
 
 Re-run `cargo test --workspace` and `cargo llvm-cov` after large changes; numbers drift with the tree.
 

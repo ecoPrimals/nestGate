@@ -162,9 +162,7 @@ impl JsonRpcClient {
     /// # Errors
     ///
     /// Returns error if the connection fails or the transport variant is unsupported.
-    pub async fn connect_transport(
-        endpoint: &nestgate_types::TransportEndpoint,
-    ) -> Result<Self> {
+    pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> Result<Self> {
         debug!("JSON-RPC client connecting via transport: {endpoint}");
 
         let ipc_stream = super::isomorphic_ipc::streams::connect_transport(endpoint)

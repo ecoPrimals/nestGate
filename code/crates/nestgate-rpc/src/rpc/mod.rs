@@ -67,6 +67,7 @@ pub mod btsp_client;
 pub mod btsp_phase3;
 pub mod btsp_server_handshake;
 pub mod content_ops;
+pub(crate) mod content_stream;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod metadata_backend;
@@ -80,7 +81,6 @@ pub mod socket_config;
 pub mod storage_backend;
 pub mod storage_encryption;
 pub(crate) mod storage_stream;
-pub(crate) mod content_stream;
 // Legacy primal-specific registration removed in v2.3.0; use capability-based IPC
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
 pub(crate) mod model_cache_handlers;

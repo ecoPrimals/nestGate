@@ -146,9 +146,9 @@ impl UnifiedRpcService for JsonRpcService {
             // This part of the trait implementation would require a connected state,
             // which is not directly managed by the JsonRpcService struct.
             // For now, we'll return an error as if it were disconnected.
-            Err(RpcError::ConnectionFailed(
-                String::from("Service not connected to orchestration"),
-            ))
+            Err(RpcError::ConnectionFailed(String::from(
+                "Service not connected to orchestration",
+            )))
         } else {
             Err(RpcError::ServiceUnavailable(format!(
                 "Unknown method: {}",
@@ -175,9 +175,9 @@ impl UnifiedRpcService for JsonRpcService {
         // This part of the trait implementation would require a connected state,
         // which is not directly managed by the JsonRpcService struct.
         // For now, we'll return an error as if it were disconnected.
-        Err(RpcError::ConnectionFailed(
-            String::from("Service not connected to orchestration"),
-        ))
+        Err(RpcError::ConnectionFailed(String::from(
+            "Service not connected to orchestration",
+        )))
     }
 
     /// Connection Type

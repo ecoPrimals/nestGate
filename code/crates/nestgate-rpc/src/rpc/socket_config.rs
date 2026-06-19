@@ -324,8 +324,7 @@ impl SocketConfig {
         }
 
         // Tier 4: Fallback to system temp dir (least secure, but always available)
-        let socket_path = std::env::temp_dir()
-            .join(format!("nestgate-{family_id}-{node_id}.sock"));
+        let socket_path = std::env::temp_dir().join(format!("nestgate-{family_id}-{node_id}.sock"));
 
         warn!(
             "XDG runtime directory unavailable, falling back to temp dir: {}",

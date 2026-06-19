@@ -44,8 +44,10 @@ impl UnifiedRpcRouter {
             .insert(String::from("generate_key"), RpcConnectionType::Tarpc);
         self.method_rules
             .insert(String::from("authenticate_user"), RpcConnectionType::Tarpc);
-        self.method_rules
-            .insert(String::from("get_security_status"), RpcConnectionType::Tarpc);
+        self.method_rules.insert(
+            String::from("get_security_status"),
+            RpcConnectionType::Tarpc,
+        );
         self.method_rules.insert(
             String::from("stream_security_events"),
             RpcConnectionType::Tarpc,
@@ -60,14 +62,18 @@ impl UnifiedRpcRouter {
         // Orchestration-related methods route to orchestration via JSON RPC
         self.method_rules
             .insert(String::from("register_service"), RpcConnectionType::JsonRpc);
-        self.method_rules
-            .insert(String::from("discover_services"), RpcConnectionType::JsonRpc);
+        self.method_rules.insert(
+            String::from("discover_services"),
+            RpcConnectionType::JsonRpc,
+        );
         self.method_rules.insert(
             String::from("coordinate_workflow"),
             RpcConnectionType::JsonRpc,
         );
-        self.method_rules
-            .insert(String::from("get_service_status"), RpcConnectionType::JsonRpc);
+        self.method_rules.insert(
+            String::from("get_service_status"),
+            RpcConnectionType::JsonRpc,
+        );
         self.method_rules
             .insert(String::from("allocate_port"), RpcConnectionType::JsonRpc);
         self.method_rules.insert(
@@ -114,8 +120,10 @@ impl UnifiedRpcRouter {
         );
 
         // Capability-based service routing (sovereignty compliant)
-        self.target_rules
-            .insert(String::from("security-encryption"), RpcConnectionType::Tarpc);
+        self.target_rules.insert(
+            String::from("security-encryption"),
+            RpcConnectionType::Tarpc,
+        );
         self.target_rules.insert(
             String::from("orchestration-discovery"),
             RpcConnectionType::JsonRpc,
@@ -124,8 +132,10 @@ impl UnifiedRpcRouter {
             String::from("storage-management"),
             RpcConnectionType::WebSocket,
         );
-        self.target_rules
-            .insert(String::from("ai-text-generation"), RpcConnectionType::JsonRpc);
+        self.target_rules.insert(
+            String::from("ai-text-generation"),
+            RpcConnectionType::JsonRpc,
+        );
         self.target_rules
             .insert(String::from("ai-embedding"), RpcConnectionType::JsonRpc);
         self.target_rules.insert(
@@ -292,7 +302,9 @@ impl UnifiedRpcRouter {
         if method_pattern.contains("encrypt") || method_pattern.contains("security") {
             recommendations.push((
                 RpcConnectionType::Tarpc,
-                String::from("High-performance binary protocol recommended for security operations"),
+                String::from(
+                    "High-performance binary protocol recommended for security operations",
+                ),
             ));
         }
 

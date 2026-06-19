@@ -245,7 +245,9 @@ async fn set_mode(
                 Json(SetModeResponse {
                     success: false,
                     mode: "standalone",
-                    message: String::from("No security capability endpoint configured (set AUTH_CAPABILITY_ENDPOINT, NESTGATE_SECURITY_AUTH_ENDPOINT, or AUTH_PROVIDER_ENDPOINT)"),
+                    message: String::from(
+                        "No security capability endpoint configured (set AUTH_CAPABILITY_ENDPOINT, NESTGATE_SECURITY_AUTH_ENDPOINT, or AUTH_PROVIDER_ENDPOINT)",
+                    ),
                 })
             }
         }

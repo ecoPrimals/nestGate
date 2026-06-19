@@ -161,7 +161,7 @@ pub mod config;
 ///
 /// This module provides development-time helpers and configurations for working
 /// with ZFS in development environments where actual ZFS may not be available.
-#[cfg(feature = "dev-stubs")]
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod dev_environment;
 
 // Performance engine

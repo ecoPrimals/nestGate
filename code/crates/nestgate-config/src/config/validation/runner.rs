@@ -84,11 +84,11 @@ impl ConfigValidator {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::types::{
         ValidationError, ValidationErrorType, ValidationResult, ValidationSchema,
         ValidationSuggestion, ValidationWarning, WarningSeverity,
     };
+    use super::*;
 
     fn empty_schema() -> ValidationSchema {
         ValidationSchema {

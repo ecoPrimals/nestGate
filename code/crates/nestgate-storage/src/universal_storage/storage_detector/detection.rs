@@ -11,7 +11,7 @@
 use super::config::DetectionConfig;
 use super::filesystem_detection::UniversalFilesystemDetector;
 use super::types::DetectedStorage;
-use nestgate_types::error::Result;
+use nestgate_types::error::{NestGateError, Result};
 use nestgate_types::unified_enums::storage_types::UnifiedStorageType;
 
 /// Detection engine for various storage types
@@ -113,18 +113,7 @@ impl<'a> DetectionEngine<'a> {
             return Ok(Vec::new());
         }
 
-        let mut cloud_storage = Vec::new();
-
-        // Detect AWS S3 buckets
-        cloud_storage.extend(self.detect_aws_s3()?);
-
-        // Detect Azure Blob Storage
-        cloud_storage.extend(self.detect_azure_blob()?);
-
-        // Detect Google Cloud Storage
-        cloud_storage.extend(self.detect_gcs()?);
-
-        Ok(cloud_storage)
+        Err(NestGateError::not_implemented("cloud storage backend"))
     }
 
     /// Detect network shares
@@ -237,31 +226,6 @@ impl<'a> DetectionEngine<'a> {
         memory_storage.extend(self.detect_ramdisk()?);
 
         Ok(memory_storage)
-    }
-
-    /// Cloud storage (S3, Azure, GCS) is not `NestGate`'s responsibility — it is delegated
-    /// to orchestration providers via capability discovery.
-    fn detect_aws_s3(&self) -> Result<Vec<DetectedStorage>> {
-        tracing::debug!(
-            "Cloud S3 detection delegated to orchestration provider via capability discovery"
-        );
-        Ok(Vec::new())
-    }
-
-    /// Cloud storage detection delegated to orchestration.
-    fn detect_azure_blob(&self) -> Result<Vec<DetectedStorage>> {
-        tracing::debug!(
-            "Cloud Azure Blob detection delegated to orchestration provider via capability discovery"
-        );
-        Ok(Vec::new())
-    }
-
-    /// Cloud storage detection delegated to orchestration.
-    fn detect_gcs(&self) -> Result<Vec<DetectedStorage>> {
-        tracing::debug!(
-            "Cloud GCS detection delegated to orchestration provider via capability discovery"
-        );
-        Ok(Vec::new())
     }
 
     /// Detect SMB/CIFS shares by parsing `/proc/mounts` for `cifs` filesystem type.
@@ -407,16 +371,18 @@ mod detection_tests {
         );
     }
 
-    /// Cloud detection (S3, Azure, GCS) is delegated to orchestration — always returns empty.
+    /// Cloud detection returns `not_implemented` when enabled; network and memory use mount parsing.
     #[test]
-    fn cloud_detection_delegated_to_orchestration() {
+    fn cloud_detection_returns_not_implemented_when_enabled() {
         let mut config = DetectionConfig::default();
         config.enable_cloud_detection = true;
         let engine = DetectionEngine::new(&config);
-        let v = engine.detect_cloud_storage().expect("detect_cloud_storage");
+        let err = engine
+            .detect_cloud_storage()
+            .expect_err("cloud detection should return not_implemented");
         assert!(
-            v.is_empty(),
-            "cloud detection is delegated — should always return empty"
+            err.to_string().contains("cloud storage backend"),
+            "unexpected error: {err}"
         );
     }
 

@@ -57,10 +57,10 @@ impl ServiceDetector {
         let scan_ports = env.get("NESTGATE_DISCOVERY_SCAN_PORTS").map_or_else(
             || {
                 vec![
-                    fp::API,
-                    fp::API_ALT,
-                    fp::EXTENDED_SERVICES,
-                    fp::DISCOVERY_SERVICE,
+                    fp::api(),
+                    fp::api_alt(),
+                    fp::extended_services(),
+                    fp::discovery_service(),
                 ]
             },
             |s| s.split(',').filter_map(|p| p.trim().parse().ok()).collect(),

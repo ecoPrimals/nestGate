@@ -234,7 +234,7 @@ pub fn discover_tarpc_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> R
     }
 
     // 2. Safe default
-    Ok(super::hardcoding::runtime_fallback_ports::TARPC)
+    Ok(super::hardcoding::runtime_fallback_ports::tarpc())
 }
 
 // ==================== HELPER FUNCTIONS ====================
@@ -361,7 +361,7 @@ pub fn discover_tarpc_port_sync() -> u16 {
 #[must_use]
 pub fn discover_tarpc_port_sync_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     parse_positive_port(env, "NESTGATE_TARPC_PORT")
-        .unwrap_or(super::hardcoding::runtime_fallback_ports::TARPC)
+        .unwrap_or_else(super::hardcoding::runtime_fallback_ports::tarpc)
 }
 
 // ==================== RUNTIME PORT RESOLVER ====================

@@ -50,7 +50,7 @@ impl SafeConfigMigration {
     /// Serializes `from` as backup, then returns the target config
     /// unchanged. Real field-level migration transforms are not yet
     /// implemented — callers should validate the result via
-    /// [`validate_migration`] before persisting.
+    /// [`Self::validate_migration`] before persisting.
     pub fn migrate_with_backup<T, U>(&mut self, from: T, to: U) -> Result<U>
     where
         T: Serialize,
@@ -177,7 +177,8 @@ mod tests {
     fn rollback_with_backup_succeeds() {
         let mut m = SafeConfigMigration::new();
         let target: StandardConfig = StandardConfig::default();
-        m.migrate_with_backup(serde_json::json!({}), target).unwrap();
+        m.migrate_with_backup(serde_json::json!({}), target)
+            .unwrap();
         assert!(m.rollback().is_ok());
     }
 
@@ -200,11 +201,7 @@ mod tests {
         config.storage.default_backend = String::new();
         let err = SafeConfigMigration::validate_required_fields(&config);
         assert!(err.is_err());
-        assert!(
-            err.unwrap_err()
-                .to_string()
-                .contains("default_backend"),
-        );
+        assert!(err.unwrap_err().to_string().contains("default_backend"),);
     }
 
     #[test]

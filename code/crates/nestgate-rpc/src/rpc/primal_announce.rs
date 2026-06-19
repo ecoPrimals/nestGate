@@ -330,10 +330,14 @@ mod tests {
 
     #[test]
     fn zfs_backend_from_env() {
-        temp_env::with_var("NESTGATE_ZFS_CAS_DATASET", Some("tank/nestgate-cas"), || {
-            let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
-            assert_eq!(payload["storage_backend"]["type"], "zfs");
-            assert_eq!(payload["storage_backend"]["dataset"], "tank/nestgate-cas");
-        });
+        temp_env::with_var(
+            "NESTGATE_ZFS_CAS_DATASET",
+            Some("tank/nestgate-cas"),
+            || {
+                let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
+                assert_eq!(payload["storage_backend"]["type"], "zfs");
+                assert_eq!(payload["storage_backend"]["dataset"], "tank/nestgate-cas");
+            },
+        );
     }
 }

@@ -259,8 +259,7 @@ impl IsomorphicIpcServer {
                 }
             };
 
-        let listener = UnixListener::bind(&socket_path)
-            .context("Failed to bind Unix socket")?;
+        let listener = UnixListener::bind(&socket_path).context("Failed to bind Unix socket")?;
 
         info!("Unix socket bound: {}", socket_path.display());
 

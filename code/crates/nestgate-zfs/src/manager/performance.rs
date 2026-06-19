@@ -152,7 +152,9 @@ impl ZfsManager {
             }
         }
 
-        recommendations.push(String::from("Storage optimization completed using heuristic analysis"));
+        recommendations.push(String::from(
+            "Storage optimization completed using heuristic analysis",
+        ));
         Ok(recommendations)
     }
 
@@ -174,8 +176,9 @@ impl ZfsManager {
             if perf_data.current_metrics.avg_read_latency_ms > 100.0
                 || perf_data.current_metrics.avg_write_latency_ms > 100.0
             {
-                recommendations
-                    .push(String::from("Tier showing high latency - consider optimization"));
+                recommendations.push(String::from(
+                    "Tier showing high latency - consider optimization",
+                ));
             }
         }
 

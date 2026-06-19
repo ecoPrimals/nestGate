@@ -599,7 +599,11 @@ pub struct RawContent {
 /// # Errors
 ///
 /// Returns error on invalid hash format, I/O failure, or decryption failure.
-pub async fn content_get_raw(hash: &str, family_id: &str, state: &StorageState) -> Result<Option<RawContent>> {
+pub async fn content_get_raw(
+    hash: &str,
+    family_id: &str,
+    state: &StorageState,
+) -> Result<Option<RawContent>> {
     validate_blake3_hex(hash)?;
 
     let object_path = content_key_path(family_id, hash);

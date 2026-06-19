@@ -206,7 +206,7 @@ mod tests {
         let net = CanonicalNetworkConfig::production_hardened();
         assert_eq!(
             net.api.port,
-            crate::constants::hardcoding::runtime_fallback_ports::HTTPS
+            crate::constants::hardcoding::runtime_fallback_ports::https()
         );
     }
 

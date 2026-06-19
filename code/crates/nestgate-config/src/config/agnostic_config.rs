@@ -255,7 +255,7 @@ impl ConfigBuilder {
             "metrics" => DEFAULT_METRICS_PORT,
             "health" => DEFAULT_HEALTH_PORT,
             "websocket" => Self::DEFAULT_WEBSOCKET_PORT,
-            "storage" => runtime_fallback_ports::STORAGE,
+            "storage" => runtime_fallback_ports::storage(),
             _ => Self::DEFAULT_FALLBACK_PORT,
         }
     }

@@ -139,7 +139,8 @@ impl ZfsHealthMonitor {
                                 component_name: pool.name.clone(),
                                 status: health_status,
                                 last_check: SystemTime::now(),
-                                details: String::from("Dataset health assessment completed").clone(),
+                                details: String::from("Dataset health assessment completed")
+                                    .clone(),
                             },
                         );
                     }

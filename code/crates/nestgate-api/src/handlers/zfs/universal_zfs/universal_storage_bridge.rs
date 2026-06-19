@@ -352,8 +352,9 @@ impl UniversalStorageBridge {
         );
         let path = std::path::Path::new(&config.name);
 
-        std::fs::create_dir_all(path)
-            .map_err(|_e| UniversalZfsError::internal(String::from("Failed to create directory")))?;
+        std::fs::create_dir_all(path).map_err(|_e| {
+            UniversalZfsError::internal(String::from("Failed to create directory"))
+        })?;
 
         info!("Created filesystem dataset at: {:?}", path);
 

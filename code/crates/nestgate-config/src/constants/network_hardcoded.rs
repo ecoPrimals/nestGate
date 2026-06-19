@@ -47,27 +47,27 @@ pub mod ports {
     use super::super::hardcoding::runtime_fallback_ports as fp;
 
     /// Default HTTP port for development.
-    pub const HTTP_DEFAULT: u16 = fp::HTTP;
+    pub const HTTP_DEFAULT: u16 = fp::defaults::HTTP;
     /// Default HTTPS port.
-    pub const HTTPS_DEFAULT: u16 = fp::HTTPS;
+    pub const HTTPS_DEFAULT: u16 = fp::defaults::HTTPS;
     /// Default API server port.
-    pub const API_DEFAULT: u16 = fp::API;
+    pub const API_DEFAULT: u16 = fp::defaults::API;
     /// Alternative API port.
-    pub const API_ALT: u16 = fp::API_ALT;
+    pub const API_ALT: u16 = fp::defaults::API_ALT;
     /// Default port for metrics endpoint (Prometheus-compatible).
-    pub const METRICS_DEFAULT: u16 = fp::METRICS;
+    pub const METRICS_DEFAULT: u16 = fp::defaults::METRICS;
     /// Default port for health check endpoint.
-    pub const HEALTH_CHECK_DEFAULT: u16 = fp::HEALTH;
+    pub const HEALTH_CHECK_DEFAULT: u16 = fp::defaults::HEALTH;
     /// Alternate health check port.
-    pub const HEALTH_CHECK: u16 = fp::WEBSOCKET;
+    pub const HEALTH_CHECK: u16 = fp::defaults::WEBSOCKET;
     /// Development server port / Storage metrics port.
-    pub const DEV_SERVER: u16 = fp::STORAGE;
+    pub const DEV_SERVER: u16 = fp::defaults::STORAGE;
     /// Storage metrics port (alias for `DEV_SERVER`).
-    pub const STORAGE_DEFAULT: u16 = fp::STORAGE;
+    pub const STORAGE_DEFAULT: u16 = fp::defaults::STORAGE;
     /// WebSocket port.
-    pub const WEBSOCKET_DEFAULT: u16 = fp::WEBSOCKET;
+    pub const WEBSOCKET_DEFAULT: u16 = fp::defaults::WEBSOCKET;
     /// Admin interface port.
-    pub const ADMIN_DEFAULT: u16 = fp::ADMIN;
+    pub const ADMIN_DEFAULT: u16 = fp::defaults::ADMIN;
 }
 
 /// Default timeout values in milliseconds

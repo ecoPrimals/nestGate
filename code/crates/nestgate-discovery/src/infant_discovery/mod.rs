@@ -331,7 +331,9 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
             DignityRule {
                 id: String::from("user_consent"),
                 description: String::from("Capability must respect user consent"),
-                validator: |cap| cap.metadata.get("consent_required") != Some(&String::from("false")),
+                validator: |cap| {
+                    cap.metadata.get("consent_required") != Some(&String::from("false"))
+                },
             },
             DignityRule {
                 id: String::from("data_sovereignty"),

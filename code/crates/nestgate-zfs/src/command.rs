@@ -226,15 +226,9 @@ impl CommandResult {
             }
 
             if let Some((key, value)) = line.split_once('\t') {
-                properties.insert(
-                    String::from(key.trim()),
-                    String::from(value.trim()),
-                );
+                properties.insert(String::from(key.trim()), String::from(value.trim()));
             } else if let Some((key, value)) = line.split_once(' ') {
-                properties.insert(
-                    String::from(key.trim()),
-                    String::from(value.trim()),
-                );
+                properties.insert(String::from(key.trim()), String::from(value.trim()));
             }
         }
 

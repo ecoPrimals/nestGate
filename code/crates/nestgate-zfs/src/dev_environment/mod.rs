@@ -1,56 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//
-// This module provides production-ready fallbacks for development environments
-// that don't have dedicated ZFS storage hardware available.
-//
-// ## When This Module Is Used
-// - Development laptops without ZFS pools
-// - Container environments (Docker, Podman)
-// - CI/CD systems without storage hardware
-// - Testing environments that need storage API compatibility
-//
-// ## Important: This is NOT Test Code
-// These implementations are production-ready abstractions that allow
-// the full NestGate system to run in environments without dedicated
-// storage hardware. They provide real functionality through alternative
-// means (filesystem operations, system calls, etc.).
+//! Development-environment ZFS fallbacks (`dev-stubs` / tests only).
+//!
+//! Provides filesystem-based storage abstractions for laptops, containers, and CI
+//! where native ZFS pools are unavailable. **Never enabled in release production builds.**
 
-#[cfg(feature = "dev-environment-fallbacks")]
+#![cfg(any(test, feature = "dev-stubs"))]
+
 /// Hardware detection for development environments
 pub mod hardware_detector;
-#[cfg(feature = "dev-environment-fallbacks")]
 pub mod storage_abstraction;
-#[cfg(feature = "dev-environment-fallbacks")]
 pub mod zfs_compatibility;
 
-#[cfg(feature = "dev-environment-fallbacks")]
 pub use hardware_detector::{HardwareCapabilities, HardwareEnvironmentDetector};
-#[cfg(feature = "dev-environment-fallbacks")]
 pub use storage_abstraction::DevEnvironmentStorageService;
-#[cfg(feature = "dev-environment-fallbacks")]
 pub use zfs_compatibility::DevEnvironmentZfsService;
 
+use nestgate_core::error::NestGateError;
+
 /// Check if we're running in a development environment without storage hardware
-#[cfg(feature = "dev-environment-fallbacks")]
 #[must_use]
 pub fn is_dev_environment() -> bool {
     HardwareEnvironmentDetector::is_development_environment()
 }
+
 /// Get the appropriate storage service for the current environment
-#[cfg(feature = "dev-environment-fallbacks")]
 pub async fn create_storage_service()
 -> nestgate_core::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
     match HardwareEnvironmentDetector::detect_capabilities().await {
         HardwareCapabilities::NativeZfs => {
             tracing::info!("Native ZFS hardware detected");
-            // Native ZFS service would be implemented here when ZFS is available
-            // For development, return mock service
-            tracing::warn!(
-                "Native ZFS service not yet implemented, falling back to dev environment"
-            );
-            Ok(std::sync::Arc::new(DevEnvironmentStorageService::new()))
+            Err(NestGateError::not_implemented(
+                "native ZFS storage service (use real ZFS manager, not dev-stubs fallback)",
+            ))
         }
         HardwareCapabilities::DevelopmentEnvironment => {
             tracing::info!("Development environment - using storage abstraction");
@@ -62,36 +45,23 @@ pub async fn create_storage_service()
         }
     }
 }
-/// Compile-time check for development environment support
-#[cfg(not(feature = "dev-environment-fallbacks"))]
-compile_error!(
-    "
- Development environment fallbacks are disabled.
-To enable development environment support, add to your Cargo.toml:
-[features]
-default = [\"dev-environment-fallbacks\"]
-
-Or run with:
-cargo build --features dev-environment-fallbacks
-"
-);
 
 /// Runtime information about feature availability
 #[must_use]
 pub const fn feature_info() -> FeatureInfo {
     FeatureInfo {
-        dev_environment_fallbacks: cfg!(feature = "dev-environment-fallbacks"),
+        dev_stubs: cfg!(any(test, feature = "dev-stubs")),
         hardware_detection: cfg!(feature = "hardware-detection"),
         container_support: cfg!(feature = "container"),
         dev_verbose_logging: cfg!(feature = "dev-verbose-logging"),
     }
 }
+
 /// Information about enabled features
 #[derive(Debug, Clone)]
-/// Featureinfo
 pub struct FeatureInfo {
-    /// Dev Environment Fallbacks
-    pub dev_environment_fallbacks: bool,
+    /// Whether dev-stubs fallbacks are compiled in
+    pub dev_stubs: bool,
     /// Hardware Detection
     pub hardware_detection: bool,
     /// Container Support
@@ -107,7 +77,7 @@ mod tests {
     #[test]
     fn feature_info_reflects_compile_time_flags() {
         let fi = feature_info();
-        assert!(fi.dev_environment_fallbacks);
+        assert!(fi.dev_stubs);
     }
 
     #[test]

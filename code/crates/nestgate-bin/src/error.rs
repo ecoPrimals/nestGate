@@ -367,8 +367,10 @@ mod tests {
 
     #[test]
     fn test_runtime_error() {
-        let error =
-            NestGateBinError::runtime_error("panic occurred", Some(String::from("data_processing")));
+        let error = NestGateBinError::runtime_error(
+            "panic occurred",
+            Some(String::from("data_processing")),
+        );
         assert!(error.to_string().contains("Runtime error"));
         assert!(error.to_string().contains("panic occurred"));
     }
@@ -463,7 +465,8 @@ mod tests {
 
     #[test]
     fn test_conversion_to_nestgate_error_command() {
-        let bin_error = NestGateBinError::command_failed("test", Some(String::from("cmd")), Some(1));
+        let bin_error =
+            NestGateBinError::command_failed("test", Some(String::from("cmd")), Some(1));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Command"));
     }

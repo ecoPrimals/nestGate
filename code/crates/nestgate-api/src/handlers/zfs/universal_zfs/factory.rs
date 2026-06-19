@@ -53,9 +53,9 @@ impl ZfsServiceFactory {
                 let _ = (endpoint, timeout);
                 error!("Remote ZFS backend removed - use native backend");
                 Box::pin(async {
-                    Err(UniversalZfsError::configuration(
-                        String::from("Remote backends removed - use native ZFS"),
-                    ))
+                    Err(UniversalZfsError::configuration(String::from(
+                        "Remote backends removed - use native ZFS",
+                    )))
                 })
             }
         }
@@ -208,9 +208,9 @@ impl ZfsServiceFactory {
                 // HTTP removed per Concentrated Gap Architecture
                 let _ = (endpoint, timeout);
                 error!("Remote ZFS fallback removed - use native backend");
-                Err(UniversalZfsError::configuration(
-                    String::from("Remote backends removed - use native ZFS"),
-                ))
+                Err(UniversalZfsError::configuration(String::from(
+                    "Remote backends removed - use native ZFS",
+                )))
             }
         }
     }

@@ -13,7 +13,7 @@ fn test_endpoint_validation() {
     let valid_http = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        runtime_fallback_ports::HTTP
+        runtime_fallback_ports::http()
     );
     let valid_https = "https://remote.example.com:443";
 

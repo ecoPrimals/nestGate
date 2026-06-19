@@ -13,7 +13,7 @@ use std::time::Duration;
 #[test]
 fn test_connection_new() {
     use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
-    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::http()).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     let connection = Connection::new(endpoint);
@@ -24,7 +24,7 @@ fn test_connection_new() {
 #[test]
 fn test_connection_initially_not_idle() {
     use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
-    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::http()).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     let connection = Connection::new(endpoint);
@@ -35,7 +35,7 @@ fn test_connection_initially_not_idle() {
 #[test]
 fn test_connection_stats_initial_state() {
     use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
-    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::http()).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     let connection = Connection::new(endpoint);
@@ -63,7 +63,7 @@ fn test_connection_stats_after_creation() {
 async fn test_connection_becomes_stale_eventually() {
     // While we can't wait 5 minutes in a test, we can verify the logic exists
     use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
-    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::http()).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     let connection = Connection::new(endpoint);

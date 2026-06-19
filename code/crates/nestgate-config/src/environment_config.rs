@@ -52,7 +52,8 @@ impl EnvironmentConfig {
     pub const DEFAULT_BIND_ORCHESTRATION: &'static str = "0.0.0.0";
     /// Default port (matches `crate::constants::hardcoding::RuntimeDefaults::api_port` fallback
     /// when `NESTGATE_API_PORT` is unset; see also [`crate::constants::hardcoding::get_api_port`].)
-    pub const DEFAULT_PORT: u16 = crate::constants::hardcoding::runtime_fallback_ports::HTTP;
+    pub const DEFAULT_PORT: u16 =
+        crate::constants::hardcoding::runtime_fallback_ports::defaults::HTTP;
     /// Default service name
     pub const DEFAULT_SERVICE_NAME: &'static str = "nestgate";
     /// Default environment
@@ -353,7 +354,7 @@ mod tests {
         assert_eq!(config.bind_interface_orchestration(), "0.0.0.0");
         assert_eq!(
             config.port(),
-            crate::constants::hardcoding::runtime_fallback_ports::HTTP
+            crate::constants::hardcoding::runtime_fallback_ports::http()
         );
         assert!(!config.discovery_enabled_standalone());
         assert!(config.discovery_enabled_orchestration());
@@ -374,11 +375,11 @@ mod tests {
         let config = EnvironmentConfig::new()
             .with_orchestration_url(Some(format!(
                 "http://orch:{}",
-                runtime_fallback_ports::HTTP
+                runtime_fallback_ports::http()
             )))
             .with_security_url(Some(format!(
                 "http://sec:{}",
-                runtime_fallback_ports::HEALTH
+                runtime_fallback_ports::health()
             )));
 
         assert!(config.is_orchestration_mode());
@@ -389,11 +390,11 @@ mod tests {
         assert_eq!(services.len(), 2);
         assert_eq!(
             services.get("orchestration").unwrap(),
-            &format!("http://orch:{}", runtime_fallback_ports::HTTP)
+            &format!("http://orch:{}", runtime_fallback_ports::http())
         );
         assert_eq!(
             services.get("security").unwrap(),
-            &format!("http://sec:{}", runtime_fallback_ports::HEALTH)
+            &format!("http://sec:{}", runtime_fallback_ports::health())
         );
     }
 
@@ -407,7 +408,7 @@ mod tests {
             .with_discovery_standalone(true)
             .with_ai_url(Some(format!(
                 "http://ai:{}",
-                runtime_fallback_ports::WEBSOCKET
+                runtime_fallback_ports::websocket()
             )));
 
         assert_eq!(config.environment(), "production");
@@ -416,7 +417,7 @@ mod tests {
         assert!(config.discovery_enabled_standalone());
         assert_eq!(
             config.ai_url().unwrap(),
-            format!("http://ai:{}", runtime_fallback_ports::WEBSOCKET)
+            format!("http://ai:{}", runtime_fallback_ports::websocket())
         );
     }
 
@@ -426,7 +427,7 @@ mod tests {
         assert_eq!(config.environment(), "development");
         assert_eq!(
             config.port(),
-            crate::constants::hardcoding::runtime_fallback_ports::HTTP
+            crate::constants::hardcoding::runtime_fallback_ports::http()
         );
     }
 

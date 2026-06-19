@@ -356,9 +356,9 @@ impl RuntimeDiscovery {
     /// 4. Response time history (prefer faster primals)
     fn select_best_primal(capabilities: &[CapabilityDescriptor]) -> Result<PrimalConnection> {
         if capabilities.is_empty() {
-            return Err(NestGateError::internal(
-                String::from("No primals discovered for connection"),
-            ));
+            return Err(NestGateError::internal(String::from(
+                "No primals discovered for connection",
+            )));
         }
 
         // Filter to sovereignty-compliant primals only (non-negotiable)
