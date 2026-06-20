@@ -208,6 +208,7 @@ pub struct MethodGateRejection {
 
 /// Handle `auth.*` introspection methods. Returns `Some(json)` for
 /// `auth.check`, `auth.mode`, `auth.peer_info`; `None` for other methods.
+#[must_use]
 pub fn auth_introspection(
     method: &str,
     gate: &MethodGate,

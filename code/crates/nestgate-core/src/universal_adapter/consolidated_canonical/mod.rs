@@ -284,20 +284,21 @@ impl ConsolidatedCanonicalAdapter {
         result
     }
 
-    /// Process a capability request (deferred capability).
+    /// Process a capability request.
     ///
-    /// Returns a fixed success response. Full routing to downstream capability
-    /// providers will be implemented when the adapter is wired into the
-    /// isomorphic IPC capability dispatch path. The adapter compiles and
-    /// passes its contract tests in the meantime.
+    /// Returns a `NotImplemented` status until the adapter is wired into the
+    /// isomorphic IPC capability dispatch path.  Callers see an honest
+    /// "pending" signal rather than a fake success.
     fn process_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         Ok(CapabilityResponse {
             request_id: request.id.clone(),
-            status: ResponseStatus::Success,
-            data: Some(serde_json::json!({"result": "processed"})),
-            error: None,
+            status: ResponseStatus::NotImplemented,
+            data: None,
+            error: Some(String::from(
+                "capability routing not yet wired — request acknowledged but not dispatched",
+            )),
             metadata: HashMap::new(),
-            execution_time: Duration::from_millis(10),
+            execution_time: Duration::ZERO,
             provider: DEFAULT_SERVICE_NAME.to_string(),
         })
     }

@@ -73,6 +73,20 @@ pub struct AnalysisReport {
     // ... existing fields
 }
 impl ZfsPerformanceMonitor {
+    /// Derive a 0..100 score from current pool/system metrics.
+    ///
+    /// Penalizes high latency, high utilization, and high fragmentation.
+    fn compute_score(m: &CurrentPerformanceMetrics) -> f64 {
+        let pool = &m.pool_metrics;
+
+        let latency_penalty = (pool.avg_latency_ms / 100.0).min(1.0) * 30.0;
+        let util_penalty = (pool.utilization_percent / 100.0).min(1.0) * 30.0;
+        let frag_penalty = (pool.fragmentation_percent / 100.0).min(1.0) * 20.0;
+
+        let raw = 100.0_f64 - latency_penalty - util_penalty - frag_penalty;
+        raw.clamp(0.0, 100.0)
+    }
+
     /// Start analysis task
     pub(super) fn start_analysis_task(&mut self) -> CoreResult<()> {
         let metrics_history = Arc::clone(&self.metrics_history);
@@ -105,10 +119,11 @@ impl ZfsPerformanceMonitor {
 
         let snapshot = {
             let current = current_metrics.read().await;
+            let score = Self::compute_score(&current);
             PerformanceSnapshot {
                 timestamp: SystemTime::now(),
                 metrics: current.clone(),
-                performance_score: 85.0, // Calculate based on metrics
+                performance_score: score,
             }
         };
 

@@ -66,7 +66,8 @@ async fn adapter_initialize_and_request_capability_updates_stats() {
         .request_capability("nestgate_storage", "ping", HashMap::new())
         .await
         .expect("request_capability");
-    assert_eq!(resp.status, ResponseStatus::Success);
+    assert_eq!(resp.status, ResponseStatus::NotImplemented);
+    assert!(resp.error.is_some(), "should carry a guidance message");
     let stats = adapter.get_stats().await;
     assert_eq!(stats.total_requests, 1);
     assert_eq!(stats.successful_requests, 1);

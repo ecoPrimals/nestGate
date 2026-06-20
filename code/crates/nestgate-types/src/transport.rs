@@ -38,7 +38,7 @@ pub enum TransportEndpoint {
         /// Port number.
         port: u16,
     },
-    /// Mesh relay via songBird (cross-gate federation).
+    /// Mesh relay via relay capability (cross-gate federation).
     MeshRelay {
         /// Remote peer identifier.
         peer_id: String,

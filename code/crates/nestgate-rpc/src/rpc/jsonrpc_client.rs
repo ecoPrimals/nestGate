@@ -157,7 +157,7 @@ impl JsonRpcClient {
     /// Connect via an ecosystem-standard [`TransportEndpoint`](nestgate_types::TransportEndpoint).
     ///
     /// Routes UDS and TCP endpoints through the transport abstraction layer.
-    /// `MeshRelay` endpoints are not yet supported (requires songBird negotiation).
+    /// `MeshRelay` endpoints are not yet supported (requires relay capability negotiation).
     ///
     /// # Errors
     ///

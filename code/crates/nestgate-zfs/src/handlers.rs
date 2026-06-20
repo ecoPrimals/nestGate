@@ -21,7 +21,6 @@ use nestgate_core::error::Result;
 use nestgate_types::{EnvSource, ProcessEnv, env_parsed, env_var_or_default};
 
 use crate::config::ZfsConfig;
-use tracing::warn;
 
 /// ZFS service health information
 ///
@@ -326,22 +325,14 @@ impl ZfsRequestHandler {
         // Use configured pool name or provided name
         let pool_name = name.unwrap_or_else(|| self.get_default_pool_name());
 
-        // Check if ZFS is available for real operations
         if crate::real_zfs_operations::RealZfsOperations::is_available().await {
             let real_ops = crate::real_zfs_operations::RealZfsOperations::default();
             real_ops.get_pool_status(Some(pool_name)).await
         } else {
-            // Fallback to development environment simulation
-            warn!("ZFS not available, using development environment simulation");
-            let pools = vec![PoolInfo {
-                name: pool_name.clone(),
-                state: String::from("ONLINE"),
-                size: String::from("1TB"),
-                allocated: String::from("500GB"),
-                free: String::from("500GB"),
-                devices: vec![String::from("sda"), String::from("sdb")],
-            }];
-            Ok(ZfsResponse::PoolStatus { pools })
+            Err(anyhow::anyhow!(
+                "ZFS runtime unavailable — cannot query pool status for `{pool_name}`"
+            )
+            .into())
         }
     }
 
@@ -350,53 +341,49 @@ impl ZfsRequestHandler {
         // Use configured pool name or provided pool
         let pool_name = pool.unwrap_or_else(|| self.get_default_pool_name());
 
-        // Check if ZFS is available for real operations
         if crate::real_zfs_operations::RealZfsOperations::is_available().await {
             let real_ops = crate::real_zfs_operations::RealZfsOperations::default();
             real_ops.get_dataset_list(Some(pool_name)).await
         } else {
-            // Fallback to development environment simulation
-            warn!("ZFS not available, using development environment simulation");
-            let datasets = vec![DatasetInfo {
-                name: String::from("tank/data"),
-                used: String::from("100GB"),
-                available: String::from("400GB"),
-                referenced: String::from("100GB"),
-                mountpoint: String::from("/tank/data"),
-            }];
-            Ok(ZfsResponse::DatasetList { datasets })
+            Err(
+                anyhow::anyhow!("ZFS runtime unavailable — cannot list datasets for `{pool_name}`")
+                    .into(),
+            )
         }
     }
 
     /// Handles  Snapshot List
     async fn handle_snapshot_list(&self, dataset: Option<String>) -> Result<ZfsResponse> {
-        // Check if ZFS is available for real operations
         if crate::real_zfs_operations::RealZfsOperations::is_available().await {
             let real_ops = crate::real_zfs_operations::RealZfsOperations::default();
             real_ops.get_snapshot_list(dataset).await
         } else {
-            // Fallback to development environment simulation
-            warn!("ZFS not available, using development environment simulation");
-            let snapshots = vec![SnapshotInfo {
-                name: String::from("tank/data@snapshot1"),
-                used: String::from("1GB"),
-                referenced: String::from("100GB"),
-                creation: String::from("2025-01-30T12:00:00Z"),
-            }];
-
-            Ok(ZfsResponse::SnapshotList { snapshots })
+            Err(anyhow::anyhow!("ZFS runtime unavailable — cannot list snapshots").into())
         }
     }
 
-    /// Handles  Health Check
+    /// Reports whether the ZFS subsystem is reachable.
+    ///
+    /// Returns `zfs_available: true/false` rather than hardcoded counts,
+    /// so consumers get an honest signal without simulated data.
     fn handle_health_check(&self) -> Result<ZfsResponse> {
+        let zfs_bin = &self.config.zfs_binary;
+        let available = std::path::Path::new(zfs_bin).exists()
+            || std::process::Command::new(zfs_bin)
+                .arg("version")
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .is_ok();
+
+        let status = if available { "healthy" } else { "degraded" };
+
         let mut details = HashMap::new();
-        details.insert(String::from("pools"), String::from("1"));
-        details.insert(String::from("datasets"), String::from("1"));
-        details.insert(String::from("snapshots"), String::from("1"));
+        details.insert(String::from("zfs_available"), available.to_string());
+        details.insert(String::from("zfs_binary"), zfs_bin.clone());
 
         Ok(ZfsResponse::Health {
-            status: String::from("healthy"),
+            status: String::from(status),
             details,
         })
     }
@@ -449,8 +436,12 @@ mod tests {
             .expect("health response");
         match out {
             ZfsResponse::Health { status, details } => {
-                assert_eq!(status, "healthy");
-                assert_eq!(details.get("pools"), Some(&String::from("1")));
+                assert!(
+                    status == "healthy" || status == "degraded",
+                    "unexpected status: {status}"
+                );
+                assert!(details.contains_key("zfs_available"));
+                assert!(details.contains_key("zfs_binary"));
             }
             other => panic!("unexpected response: {other:?}"),
         }

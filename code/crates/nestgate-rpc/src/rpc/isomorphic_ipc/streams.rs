@@ -197,7 +197,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
 ///
 /// Routes UDS and TCP variants to their respective `tokio` stream connections.
 /// `MeshRelay` endpoints are not yet supported for direct connection; they require
-/// songBird relay negotiation (returns an error with guidance).
+/// relay capability negotiation (returns an error with guidance).
 ///
 /// This is the primary replacement for raw `UnixStream::connect` / `TcpStream::connect`
 /// in production IPC paths. The launcher provides the endpoint via `TRANSPORT_ENDPOINT`
@@ -232,7 +232,7 @@ pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> 
             peer_id,
             capability,
         } => Err(anyhow::anyhow!(
-            "MeshRelay transport ({peer_id}/{capability}) requires songBird relay negotiation — \
+            "MeshRelay transport ({peer_id}/{capability}) requires relay capability negotiation — \
              not yet wired for direct connect_transport()"
         )),
     }
@@ -349,7 +349,7 @@ mod tests {
         let result = connect_transport(&ep).await;
         let err_msg = result.unwrap_err().to_string();
         assert!(err_msg.contains("MeshRelay"));
-        assert!(err_msg.contains("songBird"));
+        assert!(err_msg.contains("relay capability"));
     }
 
     #[test]

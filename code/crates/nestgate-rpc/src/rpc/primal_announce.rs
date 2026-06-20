@@ -128,7 +128,8 @@ fn discover_coordinator_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBu
 
     if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
         let sock_name = format!("{eco}.sock");
-        for name in &[sock_name.as_str(), "neural-api.sock"] {
+        let coordinator_sock = format!("{eco}-coordinator.sock");
+        for name in &[sock_name.as_str(), coordinator_sock.as_str()] {
             let p = PathBuf::from(&xdg).join(&eco).join(name);
             if p.exists() {
                 return Some(p);

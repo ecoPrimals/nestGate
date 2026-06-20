@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jun 19, 2026 (Debt Sweep)  
+**Last Updated**: Jun 20, 2026 (Wave 120 — deep debt, mock elimination, idiomatic evolution)  
 **Version**: 0.5.0
 
 ---
@@ -12,9 +12,9 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings in nestgate crates)
 Format:             CLEAN (cargo fmt --all -- --check passes)
 Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features (zero errors/warnings)
-Tests:              13,004 passed, 0 failures, 427 ignored — cargo test --workspace --all-features
+Tests:              12,888 passed, 0 failures, 418 ignored — cargo test --workspace --all-features
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
-Files > 800 lines:  ZERO in production src/ (largest: 434 lines after refactoring)
+Files > 800 lines:  ZERO in production src/ (largest: 515 lines — storage_stream.rs after test extraction)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (zero exceptions)
@@ -22,7 +22,7 @@ println! in lib:    ZERO in core libs; installer retains stdout for interactive 
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
 Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
-Mocks in prod:      ZERO — dev_environment gated behind `dev-stubs` feature; mock-free release builds
+Mocks in prod:      ZERO — ZFS simulation fallbacks removed (Wave 120); dev_environment gated behind `dev-stubs` feature
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305

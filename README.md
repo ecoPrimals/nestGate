@@ -2,16 +2,16 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-11, Session 103)**  
+**Verification (as of 2026-06-20, Wave 120)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 13,004 passed, 0 failures, 427 ignored  
+- **Tests**: 12,888 passed, 0 failures, 418 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 13,004 passed, 0 failures, 427 ignored
+- **Tests (last recorded)**: 12,888 passed, 0 failures, 418 ignored
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -160,14 +160,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-02 (Session 92).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-20 (Wave 120).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 13,004 passed, 0 failures, 427 ignored |
+| Tests | 12,888 passed, 0 failures, 418 ignored |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -315,4 +315,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: May 2026 (Session 92)
+**Latest**: June 2026 (Wave 120)

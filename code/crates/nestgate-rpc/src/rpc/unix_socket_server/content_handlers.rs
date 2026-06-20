@@ -82,14 +82,14 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
         }));
     }
 
-    let write_data = if let Some(ref enc) = state.encryption {
-        enc.encrypt(&raw)?
+    let write_data: std::borrow::Cow<'_, [u8]> = if let Some(ref enc) = state.encryption {
+        std::borrow::Cow::Owned(enc.encrypt(&raw)?)
     } else {
-        raw.clone()
+        std::borrow::Cow::Borrowed(&raw)
     };
 
     ensure_parent_dirs(&object_path).await?;
-    tokio::fs::write(&object_path, &write_data)
+    tokio::fs::write(&object_path, write_data.as_ref())
         .await
         .map_err(|e| {
             NestGateError::io_error(format!("Failed to write content {blake3_hex}: {e}"))

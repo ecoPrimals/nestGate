@@ -21,8 +21,8 @@ use super::{
 };
 
 /// Extract owned params from a request, defaulting to `{}`.
-fn take_params(request: &JsonRpcRequest) -> Value {
-    request.params.clone().unwrap_or_else(|| json!({}))
+fn take_params(request: &mut JsonRpcRequest) -> Value {
+    request.params.take().unwrap_or_else(|| json!({}))
 }
 
 /// Handle JSON-RPC request
@@ -31,7 +31,7 @@ fn take_params(request: &JsonRpcRequest) -> Value {
     reason = "Large method dispatch table mirrors supported JSON-RPC surface."
 )]
 pub(super) async fn handle_request(
-    request: JsonRpcRequest,
+    mut request: JsonRpcRequest,
     state: &StorageState,
 ) -> JsonRpcResponse {
     if request.jsonrpc.as_ref() != "2.0" {
@@ -143,7 +143,7 @@ pub(super) async fn handle_request(
             blob_handlers::storage_blob_exists(request.params.as_ref(), state).await
         }
         "storage.store_stream" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::storage_stream::storage_store_stream_begin(
                 params,
                 state.family_id.as_deref(),
@@ -151,11 +151,11 @@ pub(super) async fn handle_request(
             .await
         }
         "storage.store_stream_chunk" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::storage_stream::storage_store_stream_chunk(params).await
         }
         "storage.retrieve_stream" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::storage_stream::storage_retrieve_stream_begin(
                 params,
                 state.family_id.as_deref(),
@@ -163,7 +163,7 @@ pub(super) async fn handle_request(
             .await
         }
         "storage.retrieve_stream_chunk" | "content.retrieve_stream_chunk" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
         }
         "storage.object.size" => {
@@ -195,7 +195,7 @@ pub(super) async fn handle_request(
         }
         // Content streaming (Wave 74 — chunked CAS for large blobs)
         "content.store_stream" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::content_stream::content_store_stream_begin(
                 params,
                 state.family_id.as_deref(),
@@ -203,11 +203,11 @@ pub(super) async fn handle_request(
             .await
         }
         "content.store_stream_chunk" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::content_stream::content_store_stream_chunk(params).await
         }
         "content.retrieve_stream" => {
-            let params = take_params(&request);
+            let params = take_params(&mut request);
             crate::rpc::content_stream::content_retrieve_stream_begin(
                 params,
                 state.family_id.as_deref(),

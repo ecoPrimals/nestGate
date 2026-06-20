@@ -9,10 +9,8 @@ use axum::{Json, extract::Path, http::StatusCode};
 use serde_json::{Value, json};
 use tracing::info;
 
-// User-facing copy: "BiomeOS" is a branding default for optional management UI; future versions may
-// surface this from deployment config.
 const SHARE_MSG: &str = "Workspace sharing requires an authenticated identity service, ACL/role \
-    storage, and optional UI (BiomeOS). NestGate storage does not expose shareable links or NFS/SMB \
+    storage, and optional management UI. NestGate storage does not expose shareable links or NFS/SMB \
     exports from this API route; integrate security capability (authorization.workspace) when available.";
 
 const UNSHARE_MSG: &str = "Revoking workspace shares requires the same identity and authorization \

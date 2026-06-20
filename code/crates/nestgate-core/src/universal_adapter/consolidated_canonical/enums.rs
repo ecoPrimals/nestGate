@@ -131,4 +131,6 @@ pub enum ResponseStatus {
     Timeout,
     /// Resource not found
     NotFound,
+    /// Capability not yet implemented — request acknowledged but not dispatched
+    NotImplemented,
 }

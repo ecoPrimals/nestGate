@@ -317,11 +317,14 @@ async fn test_analyze_trends_snapshot_structure() {
     let hist = history.read().await;
     let snapshot = hist.back().unwrap();
 
-    // Verify snapshot captured current metrics
     assert_eq!(snapshot.metrics.pool_metrics.total_iops, 1000.0);
     assert_eq!(snapshot.metrics.pool_metrics.total_throughput_mbs, 500.0);
     assert_eq!(snapshot.metrics.pool_metrics.avg_latency_ms, 5.0);
-    assert_eq!(snapshot.performance_score, 85.0);
+    assert!(
+        (snapshot.performance_score - 74.5).abs() < f64::EPSILON,
+        "score should be derived from pool metrics, got {}",
+        snapshot.performance_score
+    );
 }
 
 #[tokio::test]
@@ -389,8 +392,11 @@ async fn test_analyze_trends_performance_score_calculation() {
     let hist = history.read().await;
     let snapshot = hist.back().unwrap();
 
-    // Performance score should be calculated (currently hardcoded to 85.0)
-    assert_eq!(snapshot.performance_score, 85.0);
+    assert!(
+        (snapshot.performance_score - 75.25).abs() < f64::EPSILON,
+        "default metrics should yield 75.25, got {}",
+        snapshot.performance_score
+    );
     assert!(snapshot.performance_score >= 0.0);
     assert!(snapshot.performance_score <= 100.0);
 }
