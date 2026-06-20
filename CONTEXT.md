@@ -22,7 +22,7 @@ than by importing this crate graph.
 | **Version** | 0.5.0 |
 | **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
-| **Tests** | 12,941 passed, 0 failures, 427 ignored |
+| **Tests** | 13,004 passed, 0 failures, 427 ignored |
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
 | **Architecture** | 22 workspace packages: 20 `code/crates/*` + fuzz + root |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |

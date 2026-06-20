@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings in nestgate crates)
 Format:             CLEAN (cargo fmt --all -- --check passes)
 Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features (zero errors/warnings)
-Tests:              12,941 passed, 0 failures, 427 ignored — cargo test --workspace --all-features
+Tests:              13,004 passed, 0 failures, 427 ignored — cargo test --workspace --all-features
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
 Files > 800 lines:  ZERO in production src/ (largest: 434 lines after refactoring)
 Unwrap/Expect:      ZERO in production library code
