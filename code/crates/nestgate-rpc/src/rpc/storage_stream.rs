@@ -635,6 +635,305 @@ mod tests {
         cleanup_family(&family_id).await;
     }
 
+    #[test]
+    fn validate_segment_rejects_empty() {
+        assert!(validate_segment("", "f").is_err());
+    }
+
+    #[test]
+    fn validate_segment_rejects_path_separators() {
+        assert!(validate_segment("a/b", "f").is_err());
+        assert!(validate_segment("a\\b", "f").is_err());
+    }
+
+    #[test]
+    fn validate_segment_rejects_dot_dot() {
+        assert!(validate_segment("..", "f").is_err());
+        assert!(validate_segment("a..b", "f").is_err());
+    }
+
+    #[test]
+    fn validate_segment_rejects_leading_dot() {
+        assert!(validate_segment(".hidden", "f").is_err());
+    }
+
+    #[test]
+    fn validate_segment_accepts_normal_names() {
+        assert!(validate_segment("my-dataset", "f").is_ok());
+        assert!(validate_segment("key_123", "f").is_ok());
+    }
+
+    #[test]
+    fn resolve_family_id_from_params() {
+        let params = json!({"family_id": "abc"});
+        assert_eq!(resolve_family_id(&params, None).unwrap(), "abc");
+    }
+
+    #[test]
+    fn resolve_family_id_uses_fallback() {
+        let params = json!({});
+        assert_eq!(resolve_family_id(&params, Some("fb")).unwrap(), "fb");
+    }
+
+    #[test]
+    fn resolve_family_id_requires_at_least_fallback() {
+        let params = json!({});
+        assert!(resolve_family_id(&params, None).is_err());
+    }
+
+    #[test]
+    fn extract_dataset_defaults_to_shared() {
+        let params = json!({});
+        assert_eq!(extract_dataset(&params), "shared");
+    }
+
+    #[test]
+    fn extract_dataset_prefers_dataset_over_namespace() {
+        let params = json!({"dataset": "ds1", "namespace": "ns2"});
+        assert_eq!(extract_dataset(&params), "ds1");
+    }
+
+    #[test]
+    fn extract_dataset_uses_namespace_alias() {
+        let params = json!({"namespace": "ns"});
+        assert_eq!(extract_dataset(&params), "ns");
+    }
+
+    #[test]
+    fn ttl_expired_returns_false_for_now() {
+        assert!(!ttl_expired(Instant::now()));
+    }
+
+    #[tokio::test]
+    async fn store_stream_zero_byte_upload() {
+        let family_id = format!("stream-zero-{}", Uuid::new_v4());
+        let result = storage_store_stream_begin(
+            json!({
+                "family_id": family_id,
+                "dataset": "d",
+                "key": "empty.bin",
+                "total_size": 0
+            }),
+            Some("default"),
+        )
+        .await
+        .expect("zero-byte upload");
+        assert_eq!(result["status"], "stored");
+        assert_eq!(result["size"], 0);
+        cleanup_family(&family_id).await;
+    }
+
+    #[tokio::test]
+    async fn store_stream_rejects_oversized_total() {
+        let err = storage_store_stream_begin(
+            json!({
+                "family_id": "oversized-test",
+                "dataset": "d",
+                "key": "k",
+                "total_size": MAX_STREAM_TOTAL + 1
+            }),
+            Some("default"),
+        )
+        .await
+        .expect_err("should reject");
+        assert!(err.to_string().contains("exceeds maximum"));
+    }
+
+    #[tokio::test]
+    async fn store_stream_chunk_rejects_unknown_stream() {
+        let err = storage_store_stream_chunk(json!({
+            "stream_id": "nonexistent-id",
+            "offset": 0,
+            "data": STANDARD.encode([1_u8; 1]),
+            "is_last": true
+        }))
+        .await
+        .expect_err("unknown stream");
+        assert!(err.to_string().contains("unknown or expired"));
+    }
+
+    #[tokio::test]
+    async fn store_stream_chunk_rejects_size_overflow() {
+        let family_id = format!("stream-overflow-{}", Uuid::new_v4());
+        let begin = storage_store_stream_begin(
+            json!({
+                "family_id": family_id,
+                "dataset": "d",
+                "key": "k",
+                "total_size": 2
+            }),
+            Some("default"),
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+        let err = storage_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": STANDARD.encode([0_u8; 10]),
+            "is_last": true
+        }))
+        .await
+        .expect_err("overflow");
+        assert!(err.to_string().contains("exceed total_size"));
+        cleanup_family(&family_id).await;
+    }
+
+    #[tokio::test]
+    async fn store_stream_chunk_rejects_size_mismatch_on_last() {
+        let family_id = format!("stream-mismatch-{}", Uuid::new_v4());
+        let begin = storage_store_stream_begin(
+            json!({
+                "family_id": family_id,
+                "dataset": "d",
+                "key": "k",
+                "total_size": 10
+            }),
+            Some("default"),
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+        let err = storage_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": STANDARD.encode([0_u8; 5]),
+            "is_last": true
+        }))
+        .await
+        .expect_err("mismatch");
+        assert!(err.to_string().contains("do not match"));
+        cleanup_family(&family_id).await;
+    }
+
+    #[tokio::test]
+    async fn store_stream_chunk_rejects_invalid_base64() {
+        let family_id = format!("stream-b64-{}", Uuid::new_v4());
+        let begin = storage_store_stream_begin(
+            json!({
+                "family_id": family_id,
+                "dataset": "d",
+                "key": "k",
+                "total_size": 10
+            }),
+            Some("default"),
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+        let err = storage_store_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0,
+            "data": "!!!not-base64!!!",
+            "is_last": false
+        }))
+        .await
+        .expect_err("bad base64");
+        assert!(err.to_string().contains("base64") || err.to_string().contains("Invalid"));
+
+        let mut guard = maps().lock().await;
+        let _ = guard.uploads.remove(sid);
+        drop(guard);
+        cleanup_family(&family_id).await;
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_not_found() {
+        let err = storage_retrieve_stream_begin(
+            json!({
+                "family_id": "nonexistent-fam",
+                "dataset": "d",
+                "key": "k"
+            }),
+            None,
+        )
+        .await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_chunk_unknown_stream() {
+        let err = storage_retrieve_stream_chunk(json!({
+            "stream_id": "bogus",
+            "offset": 0
+        }))
+        .await
+        .expect_err("unknown");
+        assert!(err.to_string().contains("unknown or expired"));
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_chunk_offset_past_end() {
+        let family_id = format!("stream-past-{}", Uuid::new_v4());
+        let key = "small.bin";
+        let payload = vec![1_u8; 4];
+
+        let ns = namespaced_blob_path(&family_id, "d", key);
+        if let Some(p) = ns.parent() {
+            tokio::fs::create_dir_all(p).await.unwrap();
+        }
+        tokio::fs::write(&ns, &payload).await.unwrap();
+
+        let begin = storage_retrieve_stream_begin(
+            json!({"family_id": family_id, "dataset": "d", "key": key}),
+            None,
+        )
+        .await
+        .unwrap();
+        let sid = begin["stream_id"].as_str().unwrap();
+
+        let err = storage_retrieve_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 999
+        }))
+        .await
+        .expect_err("past end");
+        assert!(err.to_string().contains("past end"));
+
+        let mut guard = maps().lock().await;
+        let _ = guard.retrieves.remove(sid);
+        drop(guard);
+        cleanup_family(&family_id).await;
+    }
+
+    #[tokio::test]
+    async fn retrieve_stream_chunk_size_zero_normalized() {
+        let family_id = format!("stream-csz-{}", Uuid::new_v4());
+        let key = "tiny.bin";
+        let payload = vec![42_u8; 16];
+
+        let ns = namespaced_blob_path(&family_id, "d", key);
+        if let Some(p) = ns.parent() {
+            tokio::fs::create_dir_all(p).await.unwrap();
+        }
+        tokio::fs::write(&ns, &payload).await.unwrap();
+
+        let begin = storage_retrieve_stream_begin(
+            json!({
+                "family_id": family_id,
+                "dataset": "d",
+                "key": key,
+                "chunk_size": 0
+            }),
+            None,
+        )
+        .await
+        .unwrap();
+        assert_eq!(begin["chunk_size"], MAX_STREAM_CHUNK);
+
+        let sid = begin["stream_id"].as_str().unwrap();
+        let chunk = storage_retrieve_stream_chunk(json!({
+            "stream_id": sid,
+            "offset": 0
+        }))
+        .await
+        .unwrap();
+        assert_eq!(chunk["is_last"], true);
+        assert_eq!(chunk["length"], 16);
+
+        cleanup_family(&family_id).await;
+    }
+
     #[tokio::test]
     async fn retrieve_stream_falls_back_to_flat_blob_path() {
         let family_id = format!("stream-flat-{}", Uuid::new_v4());

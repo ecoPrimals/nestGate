@@ -417,6 +417,133 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn object_size_returns_correct_size_for_json_object() {
+        let family_id = format!("test-obj-sz-{}", uuid::Uuid::new_v4());
+        let state = mock_state(Some(&family_id)).await;
+        let key = "data-obj";
+
+        let obj_path = dataset_key_path(&family_id, None, key);
+        ensure_parent_dirs(&obj_path).await.unwrap();
+        let content = serde_json::to_vec(&json!({"msg": "hello"})).unwrap();
+        tokio::fs::write(&obj_path, &content).await.unwrap();
+
+        let params = json!({"family_id": &family_id, "key": key});
+        let result = storage_object_size(Some(&params), &state).await.unwrap();
+        assert_eq!(result["exists"], true);
+        assert_eq!(result["storage_type"], "object");
+        assert_eq!(result["size"], content.len());
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn object_size_with_namespace() {
+        let family_id = format!("test-ns-sz-{}", uuid::Uuid::new_v4());
+        let state = mock_state(Some(&family_id)).await;
+        let key = "ns-blob";
+        let ns = "my-ns";
+
+        let blob_path = blob_key_path(&family_id, Some(ns), key);
+        ensure_parent_dirs(&blob_path).await.unwrap();
+        tokio::fs::write(&blob_path, &[0xAB; 64]).await.unwrap();
+
+        let params = json!({"family_id": &family_id, "key": key, "namespace": ns});
+        let result = storage_object_size(Some(&params), &state).await.unwrap();
+        assert_eq!(result["exists"], true);
+        assert_eq!(result["namespace"], ns);
+        assert_eq!(result["size"], 64);
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn object_size_falls_back_to_flat_when_ns_missing() {
+        let family_id = format!("test-flat-sz-{}", uuid::Uuid::new_v4());
+        let state = mock_state(Some(&family_id)).await;
+        let key = "flat-item";
+
+        let flat = blob_key_path(&family_id, None, key);
+        ensure_parent_dirs(&flat).await.unwrap();
+        tokio::fs::write(&flat, &[0; 32]).await.unwrap();
+
+        let params = json!({"family_id": &family_id, "key": key, "namespace": "missing-ns"});
+        let result = storage_object_size(Some(&params), &state).await.unwrap();
+        assert_eq!(result["exists"], true);
+        assert_eq!(result["storage_type"], "blob");
+        assert_eq!(result["size"], 32);
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn try_cached_external_misses_when_only_meta_exists() {
+        let family_id = format!("test-partial-{}", uuid::Uuid::new_v4());
+        let meta_path = external_meta_path(&family_id, "partial");
+        ensure_parent_dirs(&meta_path).await.unwrap();
+        tokio::fs::write(&meta_path, b"{}").await.unwrap();
+
+        let result = try_cached_external("https://example.com", "partial", &family_id)
+            .await
+            .unwrap();
+        assert!(result.is_none());
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn try_cached_external_misses_when_only_payload_exists() {
+        let family_id = format!("test-partial2-{}", uuid::Uuid::new_v4());
+        let cache_path = external_cache_path(&family_id, "partial2");
+        ensure_parent_dirs(&cache_path).await.unwrap();
+        tokio::fs::write(&cache_path, b"data").await.unwrap();
+
+        let result = try_cached_external("https://example.com", "partial2", &family_id)
+            .await
+            .unwrap();
+        assert!(result.is_none());
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn try_cached_external_returns_string_for_non_json() {
+        let family_id = format!("test-nonjson-{}", uuid::Uuid::new_v4());
+        let cache_path = external_cache_path(&family_id, "txt");
+        let meta_path = external_meta_path(&family_id, "txt");
+        ensure_parent_dirs(&cache_path).await.unwrap();
+        tokio::fs::write(&cache_path, b"plain text content")
+            .await
+            .unwrap();
+        tokio::fs::write(&meta_path, b"{}").await.unwrap();
+
+        let result = try_cached_external("https://example.com", "txt", &family_id)
+            .await
+            .unwrap()
+            .expect("should have cache hit");
+        assert_eq!(result["cached"], true);
+        assert_eq!(result["value"], "plain text content");
+
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn validate_fetch_url_accepts_https() {
+        assert!(validate_fetch_url("https://example.com/path", false).is_ok());
+    }
+
+    #[tokio::test]
     async fn object_size_returns_correct_size_for_blob() {
         let state = mock_state(Some("test-size")).await;
         let family_id = format!("test-size-{}", uuid::Uuid::new_v4());

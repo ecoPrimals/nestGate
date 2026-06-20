@@ -490,4 +490,91 @@ mod tests {
         assert!(timeout > 1, "Health check timeout should be > 1 second");
         assert!(timeout < 30, "Health check timeout should be < 30 seconds");
     }
+
+    #[test]
+    fn get_api_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_api_port() > 0);
+    }
+
+    #[test]
+    fn get_websocket_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_websocket_port() > 0);
+    }
+
+    #[test]
+    fn get_http_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_http_port() > 0);
+    }
+
+    #[test]
+    fn get_nas_http_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_nas_http_port() > 0);
+    }
+
+    #[test]
+    fn get_dev_server_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_dev_server_port() > 0);
+    }
+
+    #[test]
+    fn get_metrics_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_metrics_port() > 0);
+    }
+
+    #[test]
+    fn get_health_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_health_port() > 0);
+    }
+
+    #[test]
+    fn get_orchestrator_port_returns_nonzero() {
+        assert!(NetworkPortDefaults::get_orchestrator_port() > 0);
+    }
+
+    #[test]
+    fn get_websocket_base_url_contains_ws() {
+        let url = NetworkPortDefaults::get_websocket_base_url();
+        assert!(url.starts_with("ws://"), "expected ws:// prefix, got {url}");
+    }
+
+    #[test]
+    fn get_api_base_url_contains_http() {
+        let url = NetworkPortDefaults::get_api_base_url();
+        assert!(
+            url.starts_with("http://"),
+            "expected http:// prefix, got {url}"
+        );
+    }
+
+    #[test]
+    fn get_bind_address_returns_ip() {
+        let addr = NetworkAddressDefaults::get_bind_address();
+        assert!(!addr.is_empty());
+    }
+
+    #[test]
+    fn get_development_bind_address_returns_ip() {
+        let addr = NetworkAddressDefaults::get_development_bind_address();
+        assert!(!addr.is_empty());
+    }
+
+    #[test]
+    fn get_hostname_returns_nonempty() {
+        assert!(!NetworkAddressDefaults::get_hostname().is_empty());
+    }
+
+    #[test]
+    fn get_external_hostname_returns_nonempty() {
+        assert!(!NetworkAddressDefaults::get_external_hostname().is_empty());
+    }
+
+    #[test]
+    fn get_connection_timeout_ms_returns_nonzero() {
+        assert!(TimeoutDefaults::get_connection_timeout_ms() > 0);
+    }
+
+    #[test]
+    fn get_request_timeout_ms_returns_nonzero() {
+        assert!(TimeoutDefaults::get_request_timeout_ms() > 0);
+    }
 }

@@ -688,3 +688,92 @@ fn validate_collection_name(name: &str) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn validate_blake3_hex_accepts_valid() {
+        let valid = "a".repeat(64);
+        assert!(validate_blake3_hex(&valid).is_ok());
+    }
+
+    #[test]
+    fn validate_blake3_hex_rejects_short() {
+        assert!(validate_blake3_hex("abcdef").is_err());
+    }
+
+    #[test]
+    fn validate_blake3_hex_rejects_non_hex() {
+        let bad = "g".repeat(64);
+        assert!(validate_blake3_hex(&bad).is_err());
+    }
+
+    #[test]
+    fn validate_blake3_hex_rejects_empty() {
+        assert!(validate_blake3_hex("").is_err());
+    }
+
+    #[test]
+    fn validate_collection_name_accepts_normal() {
+        assert!(validate_collection_name("my-collection").is_ok());
+        assert!(validate_collection_name("v1").is_ok());
+    }
+
+    #[test]
+    fn validate_collection_name_rejects_empty() {
+        assert!(validate_collection_name("").is_err());
+    }
+
+    #[test]
+    fn validate_collection_name_rejects_slash() {
+        assert!(validate_collection_name("a/b").is_err());
+        assert!(validate_collection_name("a\\b").is_err());
+    }
+
+    #[test]
+    fn validate_collection_name_rejects_dot_dot() {
+        assert!(validate_collection_name("..").is_err());
+        assert!(validate_collection_name("a..b").is_err());
+    }
+
+    #[test]
+    fn validate_collection_name_rejects_leading_dot() {
+        assert!(validate_collection_name(".hidden").is_err());
+    }
+
+    #[test]
+    fn merge_sidecar_fields_copies_known_keys() {
+        let mut resp = json!({"hash": "abc"});
+        let sidecar = json!({
+            "content_type": "text/plain",
+            "stored_at": "2026-06-20T00:00:00Z",
+            "source": "pipeline-x",
+            "pipeline": "ci",
+            "stored_by": "agent"
+        });
+        merge_sidecar_fields(&mut resp, &sidecar);
+        assert_eq!(resp["content_type"], "text/plain");
+        assert_eq!(resp["source"], "pipeline-x");
+        assert_eq!(resp["stored_by"], "agent");
+    }
+
+    #[test]
+    fn merge_sidecar_fields_skips_null() {
+        let mut resp = json!({"hash": "abc"});
+        let sidecar = json!({"content_type": null, "source": "src"});
+        merge_sidecar_fields(&mut resp, &sidecar);
+        assert!(resp.get("content_type").is_none());
+        assert_eq!(resp["source"], "src");
+    }
+
+    #[test]
+    fn merge_sidecar_fields_ignores_unknown_keys() {
+        let mut resp = json!({});
+        let sidecar = json!({"unknown_key": "value"});
+        merge_sidecar_fields(&mut resp, &sidecar);
+        assert!(resp.get("unknown_key").is_none());
+    }
+}

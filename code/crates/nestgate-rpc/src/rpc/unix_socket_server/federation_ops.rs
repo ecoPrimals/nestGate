@@ -586,4 +586,132 @@ mod tests {
         let result = send_jsonrpc("tcp://127.0.0.1:1", &json!({"test": true})).await;
         assert!(result.is_err());
     }
+
+    async fn init_temp_git_repo_with_bare_remote() -> (TempDir, String, TempDir, String) {
+        let bare_dir = TempDir::new().expect("bare dir");
+        let bare_path = bare_dir.path().to_str().unwrap().to_owned();
+        Command::new("git")
+            .args(["init", "--bare", "--initial-branch=main"])
+            .current_dir(&bare_path)
+            .output()
+            .await
+            .expect("git init --bare");
+
+        let (work_dir, work_path) = init_temp_git_repo().await;
+
+        Command::new("git")
+            .args(["branch", "-M", "main"])
+            .current_dir(&work_path)
+            .output()
+            .await
+            .expect("git branch -M main");
+
+        Command::new("git")
+            .args(["remote", "add", "origin", &bare_path])
+            .current_dir(&work_path)
+            .output()
+            .await
+            .expect("git remote add");
+
+        Command::new("git")
+            .args(["push", "-u", "origin", "main"])
+            .current_dir(&work_path)
+            .output()
+            .await
+            .expect("git push");
+
+        (work_dir, work_path, bare_dir, bare_path)
+    }
+
+    #[tokio::test]
+    async fn count_divergence_detects_ahead() {
+        let (_work_dir, work_path, _bare_dir, _) = init_temp_git_repo_with_bare_remote().await;
+
+        let base = git_rev_parse(&work_path, "HEAD").await.unwrap();
+
+        tokio::fs::write(std::path::Path::new(&work_path).join("new.txt"), "content")
+            .await
+            .unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(&work_path)
+            .output()
+            .await
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "second"])
+            .current_dir(&work_path)
+            .output()
+            .await
+            .unwrap();
+
+        let head = git_rev_parse(&work_path, "HEAD").await.unwrap();
+        let (behind, ahead) = count_divergence(&work_path, &head, &base).await;
+        assert_eq!(behind, 0);
+        assert_eq!(ahead, 1);
+    }
+
+    #[tokio::test]
+    async fn count_commits_reports_one() {
+        let (_dir, path) = init_temp_git_repo().await;
+        let head = git_rev_parse(&path, "HEAD").await.unwrap();
+        let count = count_commits(&path, &head, &head).await;
+        assert_eq!(count, 0);
+
+        tokio::fs::write(std::path::Path::new(&path).join("a.txt"), "a")
+            .await
+            .unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(&path)
+            .output()
+            .await
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "second"])
+            .current_dir(&path)
+            .output()
+            .await
+            .unwrap();
+
+        let head2 = git_rev_parse(&path, "HEAD").await.unwrap();
+        let count = count_commits(&path, &head, &head2).await;
+        assert_eq!(count, 1);
+    }
+
+    #[tokio::test]
+    async fn resolve_best_remote_prefers_forgejo() {
+        let (_dir, path) = init_temp_git_repo().await;
+        Command::new("git")
+            .args(["remote", "add", "forgejo", "https://example.com/repo.git"])
+            .current_dir(&path)
+            .output()
+            .await
+            .unwrap();
+        let remote = resolve_best_remote(&path).await;
+        assert_eq!(remote, "forgejo");
+    }
+
+    #[tokio::test]
+    async fn fetch_head_refs_with_remote_shows_in_sync() {
+        let (_work_dir, work_path, _bare_dir, _) = init_temp_git_repo_with_bare_remote().await;
+        let result = fetch_head_refs(&work_path, "origin", "main").await.unwrap();
+        assert_eq!(result["drift"].as_str(), Some("in_sync"));
+    }
+
+    #[tokio::test]
+    async fn push_to_remote_succeeds_when_up_to_date() {
+        let (_work_dir, work_path, _bare_dir, _) = init_temp_git_repo_with_bare_remote().await;
+        let result = push_to_remote(&work_path, "origin", "main").await.unwrap();
+        assert_eq!(result["pushed"].as_bool(), Some(true));
+    }
+
+    #[tokio::test]
+    async fn sync_repo_succeeds_on_clean_repo() {
+        let (_work_dir, work_path, _bare_dir, _) = init_temp_git_repo_with_bare_remote().await;
+        let result = sync_repo(&work_path, "origin", "main", None, false)
+            .await
+            .unwrap();
+        assert_eq!(result["synced"].as_bool(), Some(true));
+    }
 }
