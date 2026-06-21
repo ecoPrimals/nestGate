@@ -50,94 +50,46 @@ mod tests {
     #[tokio::test]
     async fn test_get_storage_pools() {
         let result = get_storage_pools().await;
-
-        assert!(result.is_ok(), "get_storage_pools should succeed");
-
-        let pools = result.expect("Storage operation failed");
-
-        // Verify we get pools back
-        assert_eq!(pools.0.len(), 2, "Should return 2 mock pools");
-
-        // Verify first pool
-        let main_pool = &pools.0[0];
-        assert_eq!(main_pool.name, "main-pool");
-        assert_eq!(main_pool.total_capacity_gb, 1000);
-        assert_eq!(main_pool.used_capacity_gb, 400);
-        assert_eq!(main_pool.available_capacity_gb, 600);
-        assert_eq!(main_pool.health_status, "healthy");
-
-        // Verify second pool
-        let backup_pool = &pools.0[1];
-        assert_eq!(backup_pool.name, "backup-pool");
-        assert_eq!(backup_pool.total_capacity_gb, 500);
+        if nestgate_zfs::native::is_zpool_available().await {
+            assert!(result.is_ok());
+        } else {
+            let (status, body) = result.unwrap_err();
+            assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+            assert_eq!(body.0["error"], "zfs_unavailable");
+        }
     }
 
     #[tokio::test]
     async fn test_get_storage_datasets() {
         let result = get_storage_datasets().await;
-
-        assert!(result.is_ok(), "get_storage_datasets should succeed");
-
-        let datasets = result.expect("Storage operation failed");
-
-        // Verify we get datasets back
-        assert_eq!(datasets.0.len(), 2, "Should return 2 mock datasets");
-
-        // Verify first dataset
-        let data_dataset = &datasets.0[0];
-        assert_eq!(data_dataset.name, "main-pool/data");
-        assert_eq!(data_dataset.pool_name, "main-pool");
-        assert_eq!(data_dataset.used_space_gb, 200);
-        assert_eq!(data_dataset.compression_ratio, 1.5);
-        assert_eq!(data_dataset.dedup_ratio, 1.2);
-
-        // Verify second dataset
-        let logs_dataset = &datasets.0[1];
-        assert_eq!(logs_dataset.name, "main-pool/logs");
-        assert_eq!(logs_dataset.used_space_gb, 50);
+        if nestgate_zfs::native::is_zfs_available().await {
+            assert!(result.is_ok());
+        } else {
+            let (status, _) = result.unwrap_err();
+            assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+        }
     }
 
     #[tokio::test]
     async fn test_get_storage_snapshots() {
         let result = get_storage_snapshots().await;
-
-        assert!(result.is_ok(), "get_storage_snapshots should succeed");
-
-        let snapshots = result.expect("Storage operation failed");
-
-        // Verify we get snapshots back
-        assert_eq!(snapshots.0.len(), 2, "Should return 2 mock snapshots");
-
-        // Verify first snapshot
-        let backup_snapshot = &snapshots.0[0];
-        assert_eq!(backup_snapshot.name, "main-pool/data@backup-2024-01-15");
-        assert_eq!(backup_snapshot.dataset_name, "main-pool/data");
-        assert_eq!(backup_snapshot.size_gb, 180);
-
-        // Verify second snapshot
-        let daily_snapshot = &snapshots.0[1];
-        assert_eq!(daily_snapshot.name, "main-pool/logs@daily-2024-01-15");
-        assert_eq!(daily_snapshot.size_gb, 45);
+        if nestgate_zfs::native::is_zfs_available().await {
+            assert!(result.is_ok());
+        } else {
+            let (status, _) = result.unwrap_err();
+            assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+        }
     }
 
     #[tokio::test]
     async fn test_get_storage_metrics() {
         let result = get_storage_metrics().await;
-
-        assert!(result.is_ok(), "get_storage_metrics should succeed");
-
-        let metrics = result.expect("Storage operation failed");
-
-        // Verify all metric fields
-        assert_eq!(metrics.0.total_pools, 2);
-        assert_eq!(metrics.0.total_datasets, 5);
-        assert_eq!(metrics.0.total_snapshots, 12);
-        assert_eq!(metrics.0.total_storage, 1_500_000_000_000);
-        assert_eq!(metrics.0.used_storage, 550_000_000_000);
-        assert_eq!(metrics.0.available_storage, 950_000_000_000);
-        assert_eq!(metrics.0.iops, 1250.0);
-        assert_eq!(metrics.0.bandwidth_mbps, 450.5);
-        assert_eq!(metrics.0.health_status, "healthy");
+        if nestgate_zfs::native::is_zpool_available().await {
+            assert!(result.is_ok());
+        } else {
+            let (status, _) = result.unwrap_err();
+            assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+        }
     }
 
     #[test]
@@ -337,36 +289,26 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_multiple_pool_requests() {
-        // Call handler multiple times to verify consistency
-        for _ in 0..5 {
+    async fn test_multiple_pool_requests_consistent() {
+        for _ in 0..3 {
             let result = get_storage_pools().await;
-            assert!(result.is_ok(), "Each request should succeed");
-
-            let pools = result.expect("Storage operation failed");
-
-            assert_eq!(pools.0.len(), 2, "Should always return 2 pools");
+            if nestgate_zfs::native::is_zpool_available().await {
+                assert!(result.is_ok());
+            } else {
+                assert!(result.is_err());
+            }
         }
     }
 
     #[tokio::test]
-    async fn test_storage_metrics_calculations() {
+    async fn test_storage_metrics_without_zfs() {
         let result = get_storage_metrics().await;
-        let metrics = result.expect("Storage operation failed");
-
-        // Verify storage calculations
-        assert_eq!(
-            metrics.0.used_storage + metrics.0.available_storage,
-            metrics.0.total_storage,
-            "Used + Available should equal Total"
-        );
-
-        // Verify metrics are reasonable
-        assert!(metrics.0.iops > 0.0, "IOPS should be positive");
-        assert!(
-            metrics.0.bandwidth_mbps > 0.0,
-            "Bandwidth should be positive"
-        );
+        if nestgate_zfs::native::is_zpool_available().await {
+            assert!(result.is_ok());
+        } else {
+            let (status, _) = result.unwrap_err();
+            assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+        }
     }
 
     #[test]

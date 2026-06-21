@@ -280,37 +280,13 @@ impl ZeroCostZfsOperations for GcsBackend {
     type Properties = GcsProperties;
     type Error = NestGateError;
 
-    /// Create GCS pool (bucket)
+    /// Create GCS pool (bucket).
+    ///
+    /// GCS JSON API integration is not yet wired — returns an error.
     async fn create_pool(&self, name: &str, _devices: &[&str]) -> Result<Self::Pool> {
-        let bucket_name = self.bucket_name(name);
-
-        info!("Creating GCS pool (bucket): {}", bucket_name);
-
-        // Protocol-first: Create GCS bucket via JSON API (no SDK)
-        // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/insert
-        // For now, use marker-based approach consistent with current architecture
-        // Future: Full JSON API integration when using UniversalObjectStorage
-        debug!(
-            "Creating bucket: {} in location: {} (marker-based for now)",
-            bucket_name, self.location
-        );
-
-        let pool = GcsPool {
-            name: name.to_string(),
-            bucket: bucket_name.clone(),
-            location: self.location.clone(),
-            created_at: std::time::SystemTime::now(),
-            metadata: HashMap::new(),
-        };
-
-        // Register pool
-        self.pools
-            .write()
-            .await
-            .insert(name.to_string(), pool.clone());
-
-        info!("GCS pool created: {}", name);
-        Ok(pool)
+        Err(NestGateError::not_implemented(format!(
+            "GCS pool creation for '{name}' requires JSON API integration — not yet wired"
+        )))
     }
 
     /// Create GCS dataset (object prefix with storage class)
@@ -436,8 +412,9 @@ impl ZeroCostZfsOperations for GcsBackend {
         // Query: GET /b/{bucket}/o?delimiter=/&prefix={pool_prefix}/
         // The delimiter param returns only "directories" (common prefixes)
         // Future: Implement when using UniversalObjectStorage
-        warn!("Dataset listing requires JSON API integration (pending)");
-        Ok(Vec::new())
+        Err(NestGateError::not_implemented(
+            "GCS dataset listing requires JSON API integration — not yet wired",
+        ))
     }
 
     /// List GCS snapshots (object generations)
@@ -449,8 +426,9 @@ impl ZeroCostZfsOperations for GcsBackend {
         // Query: GET /b/{bucket}/o?prefix={dataset_prefix}&versions=true
         // Returns all object generations (GCS automatic versioning)
         // Future: Implement when using UniversalObjectStorage with versioning support
-        warn!("Snapshot listing requires versioning API integration (pending)");
-        Ok(Vec::new())
+        Err(NestGateError::not_implemented(
+            "GCS snapshot listing requires versioning API integration — not yet wired",
+        ))
     }
 }
 

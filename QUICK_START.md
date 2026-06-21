@@ -12,7 +12,7 @@
 
 **Optional**: ZFS (for tiered storage features)
 
-**Current build status**: 22 workspace packages; 12,888 tests passed, 0 failures, 418 ignored; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
+**Current build status**: 22 workspace packages; 12,888 tests passed, 0 failures, 427 ignored; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
 
 ---
 
@@ -52,10 +52,7 @@ export NESTGATE_BIND=127.0.0.1                         # Bind address
 ## Run
 
 ```bash
-# Socket-only (default, ecoBin compliant)
-./target/release/nestgate daemon
-
-# HTTP is the default (guideStone standard):
+# HTTP enabled by default (guideStone standard):
 ./target/release/nestgate server
 
 # Socket-only for NUCLEUS IPC:

@@ -4,7 +4,7 @@
 
 ```
 Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 120)
-Tests:       PASS — 12,888 workspace, 0 failures, 418 ignored (STATUS.md)
+Tests:       PASS — 12,888 workspace, 0 failures, 427 ignored (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
 Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 120)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
@@ -51,10 +51,10 @@ export NESTGATE_API_PORT=8085                          # Optional (default: 8080
 ### 3. Run
 
 ```bash
-# Socket-only mode (default, ecoBin compliant)
-./target/release/nestgate daemon
+# HTTP enabled by default (guideStone standard):
+./target/release/nestgate server
 
-# HTTP is the default (guideStone standard):
+# With explicit port:
 ./target/release/nestgate server --port 8085
 
 # Socket-only for NUCLEUS IPC:

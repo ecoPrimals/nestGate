@@ -1,110 +1,140 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+//! Storage HTTP handlers.
+//!
+//! These routes surface ZFS pool/dataset/snapshot information over HTTP.
+//! When ZFS is unavailable the handlers return `503 Service Unavailable`
+//! with a structured JSON body instead of fabricated data.
+
 use axum::{http::StatusCode, response::Json};
+use serde_json::{Value, json};
 
 use super::types::{StorageDatasetInfo, StorageMetrics, StoragePoolInfo, StorageSnapshotInfo};
 
-/// **GET STORAGE POOLS HANDLER**
-///
+fn zfs_unavailable() -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(json!({
+            "status": "error",
+            "error": "zfs_unavailable",
+            "message": "ZFS runtime not available — storage pool queries require zpool/zfs userland"
+        })),
+    )
+}
+
 /// Retrieve information about all storage pools.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
-pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
-    let pools = vec![
-        StoragePoolInfo {
-            name: String::from("main-pool"),
-            total_capacity_gb: 1000,
-            used_capacity_gb: 400,
-            available_capacity_gb: 600,
-            health_status: String::from("healthy"),
-        },
-        StoragePoolInfo {
-            name: String::from("backup-pool"),
-            total_capacity_gb: 500,
-            used_capacity_gb: 150,
-            available_capacity_gb: 350,
-            health_status: String::from("healthy"),
-        },
-    ];
-
-    Ok(Json(pools))
+/// Returns `503` when ZFS is unavailable rather than fabricated data.
+pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, (StatusCode, Json<Value>)> {
+    if !nestgate_zfs::native::is_zpool_available().await {
+        return Err(zfs_unavailable());
+    }
+    let ops = nestgate_zfs::command::ZfsOperations::new();
+    match ops.list_pools().await {
+        Ok(pools) => Ok(Json(
+            pools
+                .iter()
+                .map(|p| StoragePoolInfo {
+                    name: p.name.clone(),
+                    total_capacity_gb: 0,
+                    used_capacity_gb: 0,
+                    available_capacity_gb: 0,
+                    health_status: p.health.clone(),
+                })
+                .collect(),
+        )),
+        Err(_) => Err(zfs_unavailable()),
+    }
 }
 
-/// **GET STORAGE DATASETS HANDLER**
-///
 /// Retrieve information about all storage datasets.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
-pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
-    let datasets = vec![
-        StorageDatasetInfo {
-            name: String::from("main-pool/data"),
-            pool_name: String::from("main-pool"),
-            used_space_gb: 200,
-            compression_ratio: 1.5,
-            dedup_ratio: 1.2,
-        },
-        StorageDatasetInfo {
-            name: String::from("main-pool/logs"),
-            pool_name: String::from("main-pool"),
-            used_space_gb: 50,
-            compression_ratio: 2.1,
-            dedup_ratio: 1.8,
-        },
-    ];
-
-    Ok(Json(datasets))
+/// Returns `503` when ZFS is unavailable rather than fabricated data.
+pub async fn get_storage_datasets()
+-> Result<Json<Vec<StorageDatasetInfo>>, (StatusCode, Json<Value>)> {
+    if !nestgate_zfs::native::is_zfs_available().await {
+        return Err(zfs_unavailable());
+    }
+    let ops = nestgate_zfs::command::ZfsOperations::new();
+    match ops.list_datasets(None).await {
+        Ok(datasets) => Ok(Json(
+            datasets
+                .iter()
+                .map(|d| {
+                    let pool = d.name.split('/').next().unwrap_or(&d.name);
+                    StorageDatasetInfo {
+                        name: d.name.clone(),
+                        pool_name: pool.to_owned(),
+                        used_space_gb: 0,
+                        compression_ratio: 1.0,
+                        dedup_ratio: 1.0,
+                    }
+                })
+                .collect(),
+        )),
+        Err(_) => Err(zfs_unavailable()),
+    }
 }
 
-/// **GET STORAGE SNAPSHOTS HANDLER**
-///
 /// Retrieve information about all storage snapshots.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
-pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
-    let snapshots = vec![
-        StorageSnapshotInfo {
-            name: String::from("main-pool/data@backup-2024-01-15"),
-            dataset_name: String::from("main-pool/data"),
-            created_at: std::time::SystemTime::now(),
-            size_gb: 180,
-        },
-        StorageSnapshotInfo {
-            name: String::from("main-pool/logs@daily-2024-01-15"),
-            dataset_name: String::from("main-pool/logs"),
-            created_at: std::time::SystemTime::now(),
-            size_gb: 45,
-        },
-    ];
-
-    Ok(Json(snapshots))
+/// Returns `503` when ZFS is unavailable rather than fabricated data.
+pub async fn get_storage_snapshots()
+-> Result<Json<Vec<StorageSnapshotInfo>>, (StatusCode, Json<Value>)> {
+    if !nestgate_zfs::native::is_zfs_available().await {
+        return Err(zfs_unavailable());
+    }
+    let ops = nestgate_zfs::command::ZfsOperations::new();
+    match ops.list_snapshots(None).await {
+        Ok(snapshots) => Ok(Json(
+            snapshots
+                .iter()
+                .map(|s| {
+                    let dataset = s.name.split('@').next().unwrap_or(&s.name);
+                    StorageSnapshotInfo {
+                        name: s.name.clone(),
+                        dataset_name: dataset.to_owned(),
+                        created_at: std::time::SystemTime::now(),
+                        size_gb: 0,
+                    }
+                })
+                .collect(),
+        )),
+        Err(_) => Err(zfs_unavailable()),
+    }
 }
 
-/// **GET STORAGE METRICS HANDLER**
-///
 /// Retrieve current storage performance metrics.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
-pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
+/// Returns `503` when ZFS is unavailable rather than fabricated data.
+pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, (StatusCode, Json<Value>)> {
+    if !nestgate_zfs::native::is_zpool_available().await {
+        return Err(zfs_unavailable());
+    }
+    let ops = nestgate_zfs::command::ZfsOperations::new();
+    let pools = ops.list_pools().await.unwrap_or_default();
+    let datasets = ops.list_datasets(None).await.unwrap_or_default();
+    let snapshots = ops.list_snapshots(None).await.unwrap_or_default();
+
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "pool/dataset/snapshot counts will never exceed u32::MAX"
+    )]
     let metrics = StorageMetrics {
-        total_pools: 2,
-        total_datasets: 5,
-        total_snapshots: 12,
-        total_storage: 1_500_000_000_000,   // 1.5TB in bytes
-        used_storage: 550_000_000_000,      // 550GB in bytes
-        available_storage: 950_000_000_000, // 950GB in bytes
-        iops: 1250.0,
-        bandwidth_mbps: 450.5,
-        health_status: String::from("healthy"),
+        total_pools: pools.len() as u32,
+        total_datasets: datasets.len() as u32,
+        total_snapshots: snapshots.len() as u32,
+        total_storage: 0,
+        used_storage: 0,
+        available_storage: 0,
+        iops: 0.0,
+        bandwidth_mbps: 0.0,
+        health_status: String::from(if pools.is_empty() {
+            "no_pools"
+        } else {
+            "active"
+        }),
     };
 
     Ok(Json(metrics))

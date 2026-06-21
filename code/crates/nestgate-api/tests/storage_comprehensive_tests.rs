@@ -644,44 +644,43 @@ fn test_storage_manager_clone() {
 #[tokio::test]
 async fn test_get_storage_pools_returns_data() {
     let result = get_storage_pools().await;
-    assert!(result.is_ok(), "get_storage_pools should return Ok");
-
-    let pools = result.expect("Failed to get pools").0;
-    assert!(!pools.is_empty(), "Should return at least one pool");
-    assert_eq!(pools[0].name, "main-pool");
-    assert_eq!(pools[0].health_status, "healthy");
+    if nestgate_zfs::native::is_zpool_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_datasets_returns_data() {
     let result = get_storage_datasets().await;
-    assert!(result.is_ok(), "get_storage_datasets should return Ok");
-
-    let datasets = result.expect("Failed to get datasets").0;
-    assert!(!datasets.is_empty(), "Should return at least one dataset");
-    assert!(datasets[0].name.contains("main-pool"));
+    if nestgate_zfs::native::is_zfs_available().await {
+        assert!(result.is_ok());
+    } else {
+        assert!(result.is_err());
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_snapshots_returns_data() {
     let result = get_storage_snapshots().await;
-    assert!(result.is_ok(), "get_storage_snapshots should return Ok");
-
-    let snapshots = result.expect("Failed to get snapshots").0;
-    assert!(!snapshots.is_empty(), "Should return at least one snapshot");
-    assert!(snapshots[0].name.contains('@'));
+    if nestgate_zfs::native::is_zfs_available().await {
+        assert!(result.is_ok());
+    } else {
+        assert!(result.is_err());
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_metrics_returns_valid_data() {
     let result = get_storage_metrics().await;
-    assert!(result.is_ok(), "get_storage_metrics should return Ok");
-
-    let metrics = result.expect("Failed to get metrics").0;
-    assert_eq!(metrics.total_pools, 2);
-    assert_eq!(metrics.health_status, "healthy");
-    assert!(metrics.iops > 0.0);
-    assert!(metrics.bandwidth_mbps > 0.0);
+    if nestgate_zfs::native::is_zpool_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 // =====================================================

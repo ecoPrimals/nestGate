@@ -214,4 +214,3 @@ mod error_handling_comprehensive_tests {
         assert!(error.to_string().contains("request") || error.to_string().contains("API"));
     }
 }
-

@@ -334,7 +334,10 @@ impl std::fmt::Display for Scheme {
 
 impl PartialEq<str> for Scheme {
     fn eq(&self, other: &str) -> bool {
-        self.to_string().as_str() == other
+        match self {
+            Self::Http => other.eq_ignore_ascii_case("http"),
+            Self::Https => other.eq_ignore_ascii_case("https"),
+        }
     }
 }
 

@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+//! Performance analytics HTTP handlers.
+//!
+//! When a real observability capability is discovered at runtime, these
+//! handlers will delegate to it. Until wired, they return `501 Not Implemented`
+//! with a structured body so callers can distinguish "not wired" from "no data."
+
 use axum::{http::StatusCode, response::Json};
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
-/// **PERFORMANCE ANALYZER STATE**
-///
 /// State management for performance analysis operations.
 #[derive(Debug, Clone, Default)]
-/// Performanceanalyzerstate
 pub struct PerformanceAnalyzerState {
     /// Current analysis configuration
     pub config: AnalysisConfig,
@@ -17,25 +21,8 @@ pub struct PerformanceAnalyzerState {
     pub last_analysis: Option<std::time::SystemTime>,
 }
 
-/// **ANALYSIS CONFIG**
-///
-/// Configuration for performance analysis operations.
+/// Configuration for performance analysis.
 #[derive(Debug, Clone, Default)]
-/// DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::AnalysisConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::AnalysisConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-/// Configuration for Analysis
 pub struct AnalysisConfig {
     /// Analysis interval in seconds
     pub interval_seconds: u64,
@@ -43,11 +30,8 @@ pub struct AnalysisConfig {
     pub predictive_enabled: bool,
 }
 
-/// **PERFORMANCE METRICS RESPONSE**
-///
 /// Response structure for performance metrics data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for `PerformanceMetrics` operation
 pub struct PerformanceMetricsResponse {
     /// Current system metrics
     pub metrics: HashMap<String, f64>,
@@ -55,11 +39,8 @@ pub struct PerformanceMetricsResponse {
     pub timestamp: std::time::SystemTime,
 }
 
-/// **PERFORMANCE ALERT**
-///
 /// Performance alert information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Performancealert
 pub struct PerformanceAlert {
     /// Alert identifier
     pub id: String,
@@ -71,11 +52,8 @@ pub struct PerformanceAlert {
     pub timestamp: std::time::SystemTime,
 }
 
-/// **PERFORMANCE RECOMMENDATION**
-///
 /// Performance optimization recommendation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Performancerecommendation
 pub struct PerformanceRecommendation {
     /// Recommendation identifier
     pub id: String,
@@ -89,222 +67,119 @@ pub struct PerformanceRecommendation {
     pub priority: u32,
 }
 
-/// **GET PERFORMANCE METRICS HANDLER**
-///
+fn not_implemented(feature: &str) -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(json!({
+            "status": "not_implemented",
+            "message": format!(
+                "{feature} requires an observability capability provider — not yet wired"
+            )
+        })),
+    )
+}
+
 /// Retrieve current system performance metrics.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
-pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, StatusCode> {
-    let mut metrics = HashMap::new();
-    metrics.insert(String::from("cpu_usage"), 45.2);
-    metrics.insert(String::from("memory_usage"), 67.8);
-    metrics.insert(String::from("disk_io"), 120.5);
-    metrics.insert(String::from("network_io"), 85.3);
-
-    let response = PerformanceMetricsResponse {
-        metrics,
-        timestamp: std::time::SystemTime::now(),
-    };
-
-    Ok(Json(response))
+/// Returns `501` until an observability capability provider is wired.
+pub async fn get_performance_metrics()
+-> Result<Json<PerformanceMetricsResponse>, (StatusCode, Json<Value>)> {
+    Err(not_implemented("performance metrics collection"))
 }
 
-/// **GET PERFORMANCE ALERTS HANDLER**
-///
 /// Retrieve active performance alerts.
 ///
-/// # Errors
-///
-/// This function currently always returns `Ok`, but returns `Result` for future error handling.
-pub async fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCode> {
-    let alerts = vec![
-        PerformanceAlert {
-            id: String::from("alert_001"),
-            message: String::from("High CPU usage detected"),
-            severity: String::from("warning"),
-            timestamp: std::time::SystemTime::now(),
-        },
-        PerformanceAlert {
-            id: String::from("alert_002"),
-            message: String::from("Memory usage approaching threshold"),
-            severity: String::from("info"),
-            timestamp: std::time::SystemTime::now(),
-        },
-    ];
-
-    Ok(Json(alerts))
+/// Returns `501` until an observability capability provider is wired.
+pub async fn get_performance_alerts()
+-> Result<Json<Vec<PerformanceAlert>>, (StatusCode, Json<Value>)> {
+    Err(not_implemented("performance alerts"))
 }
 
-/// **GET PERFORMANCE RECOMMENDATIONS HANDLER**
-///
 /// Retrieve performance optimization recommendations.
+///
+/// Returns `501` until an observability capability provider is wired.
 pub async fn get_performance_recommendations()
--> Result<Json<Vec<PerformanceRecommendation>>, StatusCode> {
-    let recommendations = vec![
-        PerformanceRecommendation {
-            id: String::from("rec_001"),
-            title: String::from("Optimize CPU scheduling"),
-            description: String::from("Adjust CPU governor settings for better performance"),
-            impact: String::from("5-10% performance improvement"),
-            priority: 2,
-        },
-        PerformanceRecommendation {
-            id: String::from("rec_002"),
-            title: String::from("Increase buffer cache"),
-            description: String::from("Allocate more memory for disk buffer cache"),
-            impact: String::from("15-20% I/O performance improvement"),
-            priority: 1,
-        },
-    ];
-
-    Ok(Json(recommendations))
+-> Result<Json<Vec<PerformanceRecommendation>>, (StatusCode, Json<Value>)> {
+    Err(not_implemented("performance recommendations"))
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Analysisconfigcanonical
+/// Type alias to canonical network configuration.
 pub type AnalysisConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using AnalysisConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_get_performance_metrics() {
+    async fn get_performance_metrics_returns_not_implemented() {
         let result = get_performance_metrics().await;
-        assert!(result.is_ok());
-
-        let response = result
-            .expect("Test: get_performance_metrics should return Ok")
-            .0;
-        assert_eq!(response.metrics.len(), 4);
-        assert!(response.metrics.contains_key("cpu_usage"));
-        assert!(response.metrics.contains_key("memory_usage"));
-        assert!(response.metrics.contains_key("disk_io"));
-        assert!(response.metrics.contains_key("network_io"));
-
-        // Verify values
-        assert_eq!(response.metrics.get("cpu_usage"), Some(&45.2));
-        assert_eq!(response.metrics.get("memory_usage"), Some(&67.8));
-        assert_eq!(response.metrics.get("disk_io"), Some(&120.5));
-        assert_eq!(response.metrics.get("network_io"), Some(&85.3));
+        assert!(result.is_err());
+        let (status, body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(body.0["status"], "not_implemented");
     }
 
     #[tokio::test]
-    async fn test_get_performance_alerts() {
+    async fn get_performance_alerts_returns_not_implemented() {
         let result = get_performance_alerts().await;
-        assert!(result.is_ok());
-
-        let alerts = result
-            .expect("Test: get_performance_alerts should return Ok")
-            .0;
-        assert_eq!(alerts.len(), 2);
-
-        // Verify first alert
-        assert_eq!(alerts[0].id, "alert_001");
-        assert_eq!(alerts[0].message, "High CPU usage detected");
-        assert_eq!(alerts[0].severity, "warning");
-
-        // Verify second alert
-        assert_eq!(alerts[1].id, "alert_002");
-        assert_eq!(alerts[1].message, "Memory usage approaching threshold");
-        assert_eq!(alerts[1].severity, "info");
+        assert!(result.is_err());
+        let (status, _body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
-    async fn test_get_performance_recommendations() {
+    async fn get_performance_recommendations_returns_not_implemented() {
         let result = get_performance_recommendations().await;
-        assert!(result.is_ok());
-
-        let recommendations = result
-            .expect("Test: get_performance_recommendations should return Ok")
-            .0;
-        assert_eq!(recommendations.len(), 2);
-
-        // Verify first recommendation
-        assert_eq!(recommendations[0].id, "rec_001");
-        assert_eq!(recommendations[0].title, "Optimize CPU scheduling");
-        assert_eq!(recommendations[0].priority, 2);
-        assert_eq!(recommendations[0].impact, "5-10% performance improvement");
-
-        // Verify second recommendation
-        assert_eq!(recommendations[1].id, "rec_002");
-        assert_eq!(recommendations[1].title, "Increase buffer cache");
-        assert_eq!(recommendations[1].priority, 1);
-        assert_eq!(
-            recommendations[1].impact,
-            "15-20% I/O performance improvement"
-        );
+        assert!(result.is_err());
+        let (status, _body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
     }
 
     #[test]
-    fn test_performance_analyzer_state_default() {
+    fn performance_analyzer_state_default() {
         let state = PerformanceAnalyzerState::default();
         assert!(state.last_analysis.is_none());
     }
 
     #[test]
-    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
-    fn test_analysis_config_default() {
+    fn analysis_config_default() {
         let config = AnalysisConfig::default();
         assert_eq!(config.interval_seconds, 0);
         assert!(!config.predictive_enabled);
     }
 
     #[test]
-    fn test_performance_metrics_response_serialization() {
+    fn performance_metrics_response_serialization() {
         let mut metrics = HashMap::new();
         metrics.insert(String::from("test_metric"), 42.0);
-
         let response = PerformanceMetricsResponse {
             metrics,
             timestamp: std::time::SystemTime::now(),
         };
-
-        // Verify serialization works
-        let json = serde_json::to_string(&response);
-        assert!(json.is_ok());
+        assert!(serde_json::to_string(&response).is_ok());
     }
 
     #[test]
-    fn test_performance_alert_serialization() {
+    fn performance_alert_serialization() {
         let alert = PerformanceAlert {
             id: String::from("test_alert"),
             message: String::from("Test message"),
             severity: String::from("critical"),
             timestamp: std::time::SystemTime::now(),
         };
-
-        // Verify serialization works
-        let json = serde_json::to_string(&alert);
-        assert!(json.is_ok());
+        assert!(serde_json::to_string(&alert).is_ok());
     }
 
     #[test]
-    fn test_performance_recommendation_serialization() {
-        let recommendation = PerformanceRecommendation {
+    fn performance_recommendation_serialization() {
+        let rec = PerformanceRecommendation {
             id: String::from("test_rec"),
-            title: String::from("Test Recommendation"),
-            description: String::from("Test description"),
+            title: String::from("Test"),
+            description: String::from("Test desc"),
             impact: String::from("Test impact"),
             priority: 3,
         };
-
-        // Verify serialization works
-        let json = serde_json::to_string(&recommendation);
-        assert!(json.is_ok());
+        assert!(serde_json::to_string(&rec).is_ok());
     }
 }

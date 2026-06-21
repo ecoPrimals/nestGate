@@ -255,38 +255,46 @@ mod storage_handler_tests {
     }
 
     // ==================== API HANDLER TESTS ====================
+    // Handlers return real ZFS data or 503 when ZFS is unavailable.
 
     #[tokio::test]
     async fn test_get_storage_pools_endpoint() {
         let result = get_storage_pools().await;
-        // Should return Ok with pools
-        assert!(result.is_ok());
-        if let Ok(pools) = result {
-            assert!(!pools.0.is_empty());
+        if nestgate_zfs::native::is_zpool_available().await {
+            assert!(result.is_ok());
+        } else {
+            let (status, _) = result.unwrap_err();
+            assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
         }
     }
 
     #[tokio::test]
     async fn test_get_storage_datasets_endpoint() {
         let result = get_storage_datasets().await;
-        // Should return Ok with datasets
-        assert!(result.is_ok());
+        if nestgate_zfs::native::is_zfs_available().await {
+            assert!(result.is_ok());
+        } else {
+            assert!(result.is_err());
+        }
     }
 
     #[tokio::test]
     async fn test_get_storage_snapshots_endpoint() {
         let result = get_storage_snapshots().await;
-        // Should return Ok with snapshots
-        assert!(result.is_ok());
+        if nestgate_zfs::native::is_zfs_available().await {
+            assert!(result.is_ok());
+        } else {
+            assert!(result.is_err());
+        }
     }
 
     #[tokio::test]
     async fn test_get_storage_metrics_endpoint() {
         let result = get_storage_metrics().await;
-        // Should return Ok with metrics
-        assert!(result.is_ok());
-        if let Ok(metrics) = result {
-            assert!(metrics.0.total_pools > 0);
+        if nestgate_zfs::native::is_zpool_available().await {
+            assert!(result.is_ok());
+        } else {
+            assert!(result.is_err());
         }
     }
 
@@ -323,21 +331,22 @@ mod storage_handler_tests {
 
     #[tokio::test]
     async fn test_full_storage_workflow() {
-        // Get pools
+        let zfs = nestgate_zfs::native::is_zpool_available().await;
         let pools = get_storage_pools().await;
-        assert!(pools.is_ok());
-
-        // Get datasets
         let datasets = get_storage_datasets().await;
-        assert!(datasets.is_ok());
-
-        // Get snapshots
         let snapshots = get_storage_snapshots().await;
-        assert!(snapshots.is_ok());
-
-        // Get metrics
         let metrics = get_storage_metrics().await;
-        assert!(metrics.is_ok());
+        if zfs {
+            assert!(pools.is_ok());
+            assert!(datasets.is_ok());
+            assert!(snapshots.is_ok());
+            assert!(metrics.is_ok());
+        } else {
+            assert!(pools.is_err());
+            assert!(datasets.is_err());
+            assert!(snapshots.is_err());
+            assert!(metrics.is_err());
+        }
     }
 
     #[tokio::test]

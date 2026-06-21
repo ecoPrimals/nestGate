@@ -93,7 +93,7 @@ struct StoragePattern {
 /// Analyze Storage Patterns
 fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
     // Get file statistics using zfs and system commands
-    let mut file_types = std::collections::HashMap::new();
+    let file_types = std::collections::HashMap::new();
     let mut duplicate_ratio = 0.0;
 
     // Get compression ratio as a proxy for duplicate content
@@ -108,18 +108,12 @@ fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
         }
     }
 
-    // Analyze file types (simplified - in production would scan actual files)
-    file_types.insert(String::from("text"), 0.3);
-    file_types.insert(String::from("binary"), 0.4);
-    file_types.insert(String::from("compressed"), 0.2);
-    file_types.insert(String::from("other"), 0.1);
-
     StoragePattern {
-        file_size_distribution: String::from("mixed"),
+        file_size_distribution: String::from("unknown"),
         file_type_distribution: file_types,
         duplicate_ratio,
-        sequential_vs_random: 0.7, // 70% sequential access
-        read_write_ratio: 3.0,     // 3:1 read to write ratio
+        sequential_vs_random: 0.5,
+        read_write_ratio: 1.0,
     }
 }
 
@@ -148,10 +142,10 @@ fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<
             "Compression set to {optimal_compression} for optimal performance"
         )),
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(String::from("fixed"))
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            Some(format!("zfs set compression failed: {error_msg}"))
         }
-        Err(_e) => Some(String::from("Compression command failed")),
+        Err(e) => Some(format!("Compression command failed: {e}")),
     }
 }
 
@@ -180,10 +174,10 @@ fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<S
             "Recordsize optimized to {optimal_recordsize} based on access patterns"
         )),
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(String::from("fixed"))
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            Some(format!("zfs set recordsize failed: {error_msg}"))
         }
-        Err(_e) => Some(String::from("Recordsize command failed")),
+        Err(e) => Some(format!("Recordsize command failed: {e}")),
     }
 }
 
@@ -233,10 +227,10 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
             "Deduplication enabled to reduce storage usage",
         )),
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(String::from("fixed"))
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            Some(format!("zfs set dedup failed: {error_msg}"))
         }
-        Err(_e) => Some(String::from("Deduplication command failed")),
+        Err(e) => Some(format!("Deduplication command failed: {e}")),
     }
 }
 

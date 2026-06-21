@@ -109,14 +109,22 @@ impl<S: StorageBackend> NestGateRpcService<S> {
 }
 
 impl NestGateRpcService {
-    /// Create new RPC service with the default in-memory backend (tests / standalone).
+    /// Create RPC service with the in-memory backend.
+    ///
+    /// **Note:** data does not persist across restarts. This constructor is
+    /// suitable for tests and ephemeral standalone mode. Production callers
+    /// should use [`Self::with_backend`] with a filesystem-backed backend
+    /// once one is available for the tarpc transport surface.
     ///
     /// # Errors
     ///
     /// Returns [`NestGateError`] when the service cannot be constructed; the current
     /// implementation always succeeds and reserves this for future initialization.
     pub fn new() -> Result<Self> {
-        info!("Creating NestGate RPC service (in-memory backend for standalone/test)");
+        warn!(
+            "tarpc service using in-memory backend — data will not persist; \
+             wire a filesystem-backed StorageBackend for production use"
+        );
         Ok(Self::with_backend(
             crate::rpc::storage_backend::InMemoryStorageBackend::new(),
         ))

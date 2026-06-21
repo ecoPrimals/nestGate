@@ -72,9 +72,7 @@ impl ZfsHealthMonitor {
         info!("Starting ZFS health monitoring...");
 
         // Initialize monitoring tasks
-        let _config = self.config.clone();
         let pool_manager = self.pool_manager.clone();
-        let _dataset_manager = self.dataset_manager.clone();
         let health_data = self.health_data.clone();
 
         // Start pool health monitoring task

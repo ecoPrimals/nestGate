@@ -325,36 +325,14 @@ impl ZeroCostZfsOperations for AzureBackend {
     type Properties = AzureProperties;
     type Error = NestGateError;
 
-    /// Create Azure pool (container)
+    /// Create Azure pool (container).
+    ///
+    /// Azure REST API integration is not yet wired — returns an error.
     async fn create_pool(&self, name: &str, _devices: &[&str]) -> Result<Self::Pool> {
-        let container_name = self.container_name(name);
-
-        info!("Creating Azure pool (container): {}", container_name);
-
-        // Protocol-first: Create Azure container via REST API (no SDK)
-        // Spec: https://docs.microsoft.com/en-us/rest/api/storageservices/create-container
-        // PUT /{container}?restype=container
-        // Future: Implement when using UniversalObjectStorage
-        debug!(
-            "Creating container: {} (marker-based for now)",
-            container_name
-        );
-
-        let pool = AzurePool {
-            name: name.to_string(),
-            container: container_name.clone(),
-            created_at: std::time::SystemTime::now(),
-            metadata: HashMap::new(),
-        };
-
-        // Register pool
-        self.pools
-            .write()
-            .await
-            .insert(name.to_string(), pool.clone());
-
-        info!("Azure pool created: {}", name);
-        Ok(pool)
+        Err(NestGateError::not_implemented(format!(
+            "Azure pool creation for '{name}' requires REST API integration \
+             (PUT /{{container}}?restype=container) — not yet wired"
+        )))
     }
 
     /// Create Azure dataset (blob prefix)
@@ -475,8 +453,9 @@ impl ZeroCostZfsOperations for AzureBackend {
         // GET /{container}?restype=container&comp=list&delimiter=/&prefix={prefix}
         // The delimiter param returns "virtual directories" (BlobPrefix elements)
         // Future: Implement when using UniversalObjectStorage
-        warn!("Dataset listing requires REST API integration (pending)");
-        Ok(Vec::new())
+        Err(NestGateError::not_implemented(
+            "Azure dataset listing requires REST API integration — not yet wired",
+        ))
     }
 
     /// List Azure snapshots
@@ -488,8 +467,9 @@ impl ZeroCostZfsOperations for AzureBackend {
         // GET /{container}?restype=container&comp=list&include=snapshots&prefix={prefix}
         // Returns all blob versions including snapshots with DateTime identifiers
         // Future: Implement when using UniversalObjectStorage
-        warn!("Snapshot listing requires REST API integration (pending)");
-        Ok(Vec::new())
+        Err(NestGateError::not_implemented(
+            "Azure snapshot listing requires REST API integration — not yet wired",
+        ))
     }
 }
 

@@ -536,10 +536,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn update_configuration_non_object_uses_empty_map() {
+    async fn update_configuration_returns_not_implemented() {
         use crate::handlers::zfs::universal_zfs::UniversalZfsService;
         let s = NativeZfsService::new();
         let r = s.update_configuration(serde_json::json!("scalar")).await;
-        assert!(r.is_ok());
+        assert!(r.is_err(), "update_configuration should fail until wired");
     }
 }

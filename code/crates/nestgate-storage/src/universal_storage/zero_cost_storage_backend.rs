@@ -193,10 +193,9 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
             fs::create_dir_all(parent).await?;
         }
 
-        fs::write(full_path.clone(), data).await?;
+        fs::write(&full_path, data).await?;
 
         if self.config.sync_writes {
-            // Force sync to disk
             let file = fs::OpenOptions::new().write(true).open(&full_path).await?;
             file.sync_all().await?;
         }
@@ -219,8 +218,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
 
     /// List
     async fn list(&self) -> std::result::Result<Vec<String>, Self::Error> {
-        let full_path = self.config.base_path.clone();
-        let mut entries = fs::read_dir(full_path).await?;
+        let mut entries = fs::read_dir(&self.config.base_path).await?;
         let mut result = Vec::new();
 
         while let Some(entry) = entries.next_entry().await? {

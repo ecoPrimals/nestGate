@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jun 19, 2026  
+**Last Updated**: Jun 21, 2026  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of June 2026.
@@ -23,10 +23,8 @@ Paths linked below exist in this repository as of June 2026.
 ## By Topic
 
 ### Architecture & API
-- [docs/api/](./docs/api/) - Complete API reference
-- [docs/architecture/](./docs/architecture/) - System design & patterns
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) - Primal capability mappings
-- Protocol specifications archived to git history (pre-evolution design docs)
+- Historical API/architecture docs moved to `ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026/`
 
 ### Guides
 - [docs/guides/](./docs/guides/) - How-to guides and tutorials
@@ -77,6 +75,6 @@ Crate-level benchmarks: `code/crates/nestgate-core/benches/`, `code/crates/nestg
 
 ---
 
-**Status**: Documentation cleaned and updated Jun 19, 2026.  
+**Status**: Documentation cleaned and updated Jun 21, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: Jun 19, 2026
+**Last Updated**: Jun 21, 2026

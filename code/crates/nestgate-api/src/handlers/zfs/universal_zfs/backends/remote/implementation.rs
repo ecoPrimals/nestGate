@@ -98,26 +98,19 @@ impl UniversalZfsService for RemoteZfsService {
     async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         debug!("Listing pools via remote service");
 
-        match self.client().get("/api/v1/pools").await {
-            Ok(response) => {
-                // Parse response into Vec<PoolInfo>
-                if let Some(pools_array) = response.get("pools") {
-                    match serde_json::from_value(pools_array.clone()) {
-                        Ok(pools) => Ok(pools),
-                        Err(e) => {
-                            debug!("Failed to parse pools response: {}", e);
-                            Ok(vec![]) // Return empty list if parsing fails
-                        }
-                    }
-                } else {
-                    Ok(vec![]) // Return empty list if no pools key
-                }
+        let response = self.client().get("/api/v1/pools").await?;
+        let pools_array = response.get("pools").ok_or_else(|| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: String::from("response missing 'pools' key"),
             }
-            Err(e) => {
-                debug!("Failed to list pools from remote service: {}", e);
-                Err(e) // Propagate the error
+        })?;
+        serde_json::from_value(pools_array.clone()).map_err(|e| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: format!("failed to parse pools response: {e}"),
             }
-        }
+        })
     }
 
     /// Gets Pool
@@ -241,26 +234,19 @@ impl UniversalZfsService for RemoteZfsService {
     async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
         debug!("Listing datasets via remote service");
 
-        match self.client().get("/api/v1/datasets").await {
-            Ok(response) => {
-                // Parse response into Vec<DatasetInfo>
-                if let Some(datasets_array) = response.get("datasets") {
-                    match serde_json::from_value(datasets_array.clone()) {
-                        Ok(datasets) => Ok(datasets),
-                        Err(e) => {
-                            debug!("Failed to parse datasets response: {}", e);
-                            Ok(vec![]) // Return empty list if parsing fails
-                        }
-                    }
-                } else {
-                    Ok(vec![]) // Return empty list if no datasets key
-                }
+        let response = self.client().get("/api/v1/datasets").await?;
+        let datasets_array = response.get("datasets").ok_or_else(|| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: String::from("response missing 'datasets' key"),
             }
-            Err(e) => {
-                debug!("Failed to list datasets from remote service: {}", e);
-                Err(e) // Propagate the error
+        })?;
+        serde_json::from_value(datasets_array.clone()).map_err(|e| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: format!("failed to parse datasets response: {e}"),
             }
-        }
+        })
     }
 
     /// Gets Dataset
@@ -409,26 +395,19 @@ impl UniversalZfsService for RemoteZfsService {
     async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         debug!("Listing snapshots via remote service");
 
-        match self.client().get("/api/v1/snapshots").await {
-            Ok(response) => {
-                // Parse response into Vec<SnapshotInfo>
-                if let Some(snapshots_array) = response.get("snapshots") {
-                    match serde_json::from_value(snapshots_array.clone()) {
-                        Ok(snapshots) => Ok(snapshots),
-                        Err(e) => {
-                            debug!("Failed to parse snapshots response: {}", e);
-                            Ok(vec![]) // Return empty list if parsing fails
-                        }
-                    }
-                } else {
-                    Ok(vec![]) // Return empty list if no snapshots key
-                }
+        let response = self.client().get("/api/v1/snapshots").await?;
+        let snapshots_array = response.get("snapshots").ok_or_else(|| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: String::from("response missing 'snapshots' key"),
             }
-            Err(e) => {
-                debug!("Failed to list snapshots from remote service: {}", e);
-                Err(e) // Propagate the error
+        })?;
+        serde_json::from_value(snapshots_array.clone()).map_err(|e| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: format!("failed to parse snapshots response: {e}"),
             }
-        }
+        })
     }
 
     /// List Dataset Snapshots
@@ -442,30 +421,19 @@ impl UniversalZfsService for RemoteZfsService {
         );
 
         let endpoint = format!("/api/v1/datasets/{dataset}/snapshots");
-        match self.client().get(&endpoint).await {
-            Ok(response) => {
-                // Parse response into Vec<SnapshotInfo>
-                if let Some(snapshots_array) = response.get("snapshots") {
-                    match serde_json::from_value(snapshots_array.clone()) {
-                        Ok(snapshots) => Ok(snapshots),
-                        Err(e) => {
-                            debug!("Failed to parse dataset snapshots response: {}", e);
-                            Ok(vec![]) // Return empty list if parsing fails
-                        }
-                    }
-                } else {
-                    debug!("No snapshots field in response for dataset '{}'", dataset);
-                    Ok(vec![]) // Return empty list if no snapshots key
-                }
+        let response = self.client().get(&endpoint).await?;
+        let snapshots_array = response.get("snapshots").ok_or_else(|| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: format!("response missing 'snapshots' key for dataset '{dataset}'"),
             }
-            Err(e) => {
-                debug!(
-                    "Failed to list dataset snapshots from remote service: {}",
-                    e
-                );
-                Err(e) // Propagate the error
+        })?;
+        serde_json::from_value(snapshots_array.clone()).map_err(|e| {
+            UniversalZfsError::Backend {
+                backend: String::from("remote"),
+                message: format!("failed to parse dataset snapshots response: {e}"),
             }
-        }
+        })
     }
 
     /// Creates  Snapshot

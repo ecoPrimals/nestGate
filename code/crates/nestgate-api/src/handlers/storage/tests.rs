@@ -108,37 +108,48 @@ fn test_storage_dataset_info_serialization() {
 }
 
 #[tokio::test]
-async fn test_get_storage_pools() {
+async fn test_get_storage_pools_without_zfs() {
     let result = get_storage_pools().await;
-    assert!(result.is_ok());
-    let Json(pools) = result.unwrap();
-    assert_eq!(pools.len(), 2);
-    assert_eq!(pools[0].name, "main-pool");
+    if nestgate_zfs::native::is_zpool_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, body) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(body.0["error"], "zfs_unavailable");
+    }
 }
 
 #[tokio::test]
-async fn test_get_storage_datasets() {
+async fn test_get_storage_datasets_without_zfs() {
     let result = get_storage_datasets().await;
-    assert!(result.is_ok());
-    let Json(datasets) = result.unwrap();
-    assert_eq!(datasets.len(), 2);
+    if nestgate_zfs::native::is_zfs_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _body) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 #[tokio::test]
-async fn test_get_storage_snapshots() {
+async fn test_get_storage_snapshots_without_zfs() {
     let result = get_storage_snapshots().await;
-    assert!(result.is_ok());
-    let Json(snapshots) = result.unwrap();
-    assert_eq!(snapshots.len(), 2);
+    if nestgate_zfs::native::is_zfs_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _body) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 #[tokio::test]
-async fn test_get_storage_metrics() {
+async fn test_get_storage_metrics_without_zfs() {
     let result = get_storage_metrics().await;
-    assert!(result.is_ok());
-    let Json(metrics) = result.unwrap();
-    assert_eq!(metrics.total_pools, 2);
-    assert_eq!(metrics.health_status, "healthy");
+    if nestgate_zfs::native::is_zpool_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _body) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 #[test]

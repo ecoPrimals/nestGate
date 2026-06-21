@@ -298,91 +298,80 @@ fn test_storage_snapshot_info_serialization() {
 }
 
 // ==================== ASYNC HANDLER TESTS ====================
+// Handlers now use real ZFS or return 503.
 
 #[tokio::test]
 async fn test_get_storage_pools_handler() {
     let result = get_storage_pools().await;
-    assert!(result.is_ok());
-
-    let pools = result.unwrap();
-    assert_eq!(pools.0.len(), 2);
-    assert_eq!(pools.0[0].name, "main-pool");
-    assert_eq!(pools.0[1].name, "backup-pool");
+    if nestgate_zfs::native::is_zpool_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_pools_capacity() {
     let result = get_storage_pools().await;
-    assert!(result.is_ok());
-
-    let pools = result.unwrap();
-    for pool in pools.0 {
-        assert_eq!(
-            pool.used_capacity_gb + pool.available_capacity_gb,
-            pool.total_capacity_gb
-        );
-        assert_eq!(pool.health_status, "healthy");
+    if let Ok(pools) = result {
+        for pool in &pools.0 {
+            assert!(!pool.name.is_empty());
+        }
     }
 }
 
 #[tokio::test]
 async fn test_get_storage_datasets_handler() {
     let result = get_storage_datasets().await;
-    assert!(result.is_ok());
-
-    let datasets = result.unwrap();
-    assert_eq!(datasets.0.len(), 2);
-    assert_eq!(datasets.0[0].name, "main-pool/data");
-    assert_eq!(datasets.0[1].name, "main-pool/logs");
+    if nestgate_zfs::native::is_zfs_available().await {
+        assert!(result.is_ok());
+    } else {
+        assert!(result.is_err());
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_datasets_compression() {
     let result = get_storage_datasets().await;
-    assert!(result.is_ok());
-
-    let datasets = result.unwrap();
-    for dataset in datasets.0 {
-        assert!(dataset.compression_ratio >= 1.0);
-        assert!(dataset.dedup_ratio >= 1.0);
+    if let Ok(datasets) = result {
+        for dataset in &datasets.0 {
+            assert!(dataset.compression_ratio >= 1.0);
+            assert!(dataset.dedup_ratio >= 1.0);
+        }
     }
 }
 
 #[tokio::test]
 async fn test_get_storage_snapshots_handler() {
     let result = get_storage_snapshots().await;
-    assert!(result.is_ok());
-
-    let snapshots = result.unwrap();
-    assert_eq!(snapshots.0.len(), 2);
-    assert!(snapshots.0[0].name.contains("@backup-2024-01-15"));
-    assert!(snapshots.0[1].name.contains("@daily-2024-01-15"));
+    if nestgate_zfs::native::is_zfs_available().await {
+        assert!(result.is_ok());
+    } else {
+        assert!(result.is_err());
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_metrics_handler() {
     let result = get_storage_metrics().await;
-    assert!(result.is_ok());
-
-    let metrics = result.unwrap();
-    assert_eq!(metrics.0.total_pools, 2);
-    assert_eq!(metrics.0.total_datasets, 5);
-    assert_eq!(metrics.0.total_snapshots, 12);
-    assert_eq!(metrics.0.health_status, "healthy");
+    if nestgate_zfs::native::is_zpool_available().await {
+        assert!(result.is_ok());
+    } else {
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::SERVICE_UNAVAILABLE);
+    }
 }
 
 #[tokio::test]
 async fn test_get_storage_metrics_capacity() {
     let result = get_storage_metrics().await;
-    assert!(result.is_ok());
-
-    let metrics = result.unwrap();
-    assert_eq!(
-        metrics.0.used_storage + metrics.0.available_storage,
-        metrics.0.total_storage
-    );
-    assert!(metrics.0.iops > 0.0);
-    assert!(metrics.0.bandwidth_mbps > 0.0);
+    if let Ok(metrics) = result {
+        assert_eq!(
+            metrics.0.used_storage + metrics.0.available_storage,
+            metrics.0.total_storage
+        );
+    }
 }
 
 // ==================== STORAGE MANAGER TESTS ====================
@@ -411,25 +400,22 @@ fn test_storage_manager_clone() {
 
 #[tokio::test]
 async fn test_complete_storage_flow() {
-    // Get pools
+    let zfs = nestgate_zfs::native::is_zpool_available().await;
     let pools = get_storage_pools().await;
-    assert!(pools.is_ok());
-
-    // Get datasets
     let datasets = get_storage_datasets().await;
-    assert!(datasets.is_ok());
-
-    // Get snapshots
     let snapshots = get_storage_snapshots().await;
-    assert!(snapshots.is_ok());
-
-    // Get metrics
     let metrics = get_storage_metrics().await;
-    assert!(metrics.is_ok());
-
-    // Verify consistency
-    let metrics_data = metrics.unwrap();
-    assert!(metrics_data.0.total_pools >= pools.unwrap().0.len() as u32);
+    if zfs {
+        assert!(pools.is_ok());
+        assert!(datasets.is_ok());
+        assert!(snapshots.is_ok());
+        assert!(metrics.is_ok());
+    } else {
+        assert!(pools.is_err());
+        assert!(datasets.is_err());
+        assert!(snapshots.is_err());
+        assert!(metrics.is_err());
+    }
 }
 
 // COMPREHENSIVE TEST COVERAGE COMPLETE

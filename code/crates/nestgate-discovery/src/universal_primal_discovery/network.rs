@@ -344,24 +344,17 @@ impl NetworkDiscovery {
     pub fn discover_capability_endpoint_from_env_source(
         &self,
         capability: &str,
-        env: &(impl EnvSource + ?Sized),
+        _env: &(impl EnvSource + ?Sized),
     ) -> Result<String> {
-        // Runtime config-based discovery (immutable, thread-safe)
         if let Some(endpoint) = self.network_runtime.get_capability_endpoint(capability) {
             return Ok(endpoint.to_string());
         }
 
-        // Default capability endpoint generation
-        let bind_address = self.detect_optimal_bind_interface()?;
-        let base_port: u16 = env_parsed(
-            env,
-            "NESTGATE_CAPABILITY_BASE_PORT",
-            nestgate_config::constants::hardcoding::runtime_fallback_ports::metrics(),
-        );
-        let offset = u16::try_from(capability.len().rem_euclid(100)).unwrap_or(0);
-        let capability_port = base_port.saturating_add(offset);
-
-        Ok(format!("http://{bind_address}:{capability_port}"))
+        Err(anyhow::anyhow!(
+            "no endpoint configured for capability '{capability}' — \
+             set NESTGATE_CAPABILITY_BASE_PORT or register the endpoint at runtime"
+        )
+        .into())
     }
 
     /// **NETWORK CONFIGURATION**: Get network configuration summary

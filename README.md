@@ -2,16 +2,16 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-20, Wave 120)**  
+**Verification (as of 2026-06-21, Wave 120 sweep x6)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 12,888 passed, 0 failures, 418 ignored  
+- **Tests**: 12,885 passed, 0 failures, 420 ignored  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 12,888 passed, 0 failures, 418 ignored
+- **Tests (last recorded)**: 12,885 passed, 0 failures, 420 ignored
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -30,7 +30,7 @@
 - **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners; transport hardened (decrypt/read errors propagate as Err, not silent Ok)
 - **JWT NUCLEUS bypass**: BTSP composition auto-detected via `is_btsp_required()` — skips `NESTGATE_JWT_SECRET` validation when FAMILY_ID signals a NUCLEUS stack
 - **`is_btsp_required` unified**: client delegates to canonical server version (eliminates env-var and `"standalone"` divergence)  
-- **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code)  
+- **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code); Azure/GCS/ObjectStorage backends return `not_implemented` until REST API wired; native ZFS config stubs return `ServiceUnavailable` instead of fake data  
 - **Primal sovereignty**: zero hardcoded other-primal names in production; capability-based socket discovery (`security.sock`, `crypto.sock`); `DEFAULT_SERVICE_NAME` for self-references  
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jun 14, 2026
+**Last Updated**: Jun 21, 2026
 
 ---
 
@@ -160,14 +160,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-20 (Wave 120).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-21 (Wave 120 sweep x6).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 12,888 passed, 0 failures, 418 ignored |
+| Tests | 12,885 passed, 0 failures, 420 ignored |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |

@@ -259,7 +259,7 @@ impl PrimalSelfKnowledge {
         }
 
         // 2. Try each discovery mechanism
-        for mechanism in &self.discovery_mechanisms.clone() {
+        for mechanism in &self.discovery_mechanisms {
             match self.discover_via_mechanism(primal_type, mechanism).await {
                 Ok(Some(primal)) => {
                     info!("Discovered {} via {:?}", primal_type, mechanism);

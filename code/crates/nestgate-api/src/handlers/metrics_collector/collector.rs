@@ -7,7 +7,7 @@ use std::time::SystemTime;
 
 use nestgate_core::Result;
 use tokio::sync::broadcast;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::handlers::dashboard_types::{DashboardEvent, DashboardTimeRange};
 
@@ -26,11 +26,15 @@ impl RealTimeMetricsCollector {
         Self {}
     }
 
-    /// Start real-time metrics collection with event broadcasting
+    /// Start real-time metrics collection with event broadcasting.
+    ///
+    /// Background collection is not yet wired — this logs the intent and
+    /// returns immediately. Callers should use [`Self::get_current_metrics`]
+    /// for point-in-time snapshots.
     pub fn start_collection(&self, _broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
-        // Implementation for starting real-time metrics collection
-        info!("Starting real-time metrics collection");
-        // This would spawn background tasks to continuously collect metrics
+        warn!(
+            "start_collection: background metrics collection not yet wired — point-in-time snapshots available via get_current_metrics()"
+        );
     }
 
     /// Get current system and storage metrics with real data collection

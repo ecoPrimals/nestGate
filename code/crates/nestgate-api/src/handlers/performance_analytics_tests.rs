@@ -346,75 +346,53 @@ mod tests {
     }
 
     // ==================== HANDLER TESTS ====================
+    // Handlers return 501 until an observability capability is wired.
 
     #[tokio::test]
     async fn test_get_performance_metrics_handler() {
         let result = get_performance_metrics().await;
-
-        assert!(result.is_ok());
-        let response = result.expect("Test setup failed");
-
-        assert!(response.0.metrics.contains_key("cpu_usage"));
-        assert!(response.0.metrics.contains_key("memory_usage"));
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
     async fn test_get_performance_alerts_handler() {
         let result = get_performance_alerts().await;
-
-        assert!(result.is_ok());
-        let alerts = result.expect("Test setup failed");
-
-        assert_eq!(alerts.0.len(), 2);
-        assert_eq!(alerts.0[0].id, "alert_001");
-        assert_eq!(alerts.0[1].id, "alert_002");
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
     async fn test_get_performance_recommendations_handler() {
         let result = get_performance_recommendations().await;
-
-        assert!(result.is_ok());
-        let recommendations = result.expect("Test setup failed");
-
-        assert_eq!(recommendations.0.len(), 2);
-        assert_eq!(recommendations.0[0].id, "rec_001");
-        assert_eq!(recommendations.0[1].id, "rec_002");
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
     async fn test_metrics_handler_consistency() {
-        // Call handler multiple times
-        for _ in 0..5 {
+        for _ in 0..3 {
             let result = get_performance_metrics().await;
-            assert!(result.is_ok());
-
-            let response = result.expect("Test setup failed");
-            assert_eq!(response.0.metrics.len(), 4); // Always returns 4 metrics
+            assert!(result.is_err());
         }
     }
 
     #[tokio::test]
     async fn test_alerts_handler_consistency() {
-        // Call handler multiple times
-        for _ in 0..5 {
+        for _ in 0..3 {
             let result = get_performance_alerts().await;
-            assert!(result.is_ok());
-
-            let alerts = result.expect("Test setup failed");
-            assert_eq!(alerts.0.len(), 2); // Always returns 2 alerts
+            assert!(result.is_err());
         }
     }
 
     #[tokio::test]
     async fn test_recommendations_handler_consistency() {
-        // Call handler multiple times
-        for _ in 0..5 {
+        for _ in 0..3 {
             let result = get_performance_recommendations().await;
-            assert!(result.is_ok());
-
-            let recommendations = result.expect("Test setup failed");
-            assert_eq!(recommendations.0.len(), 2); // Always returns 2 recommendations
+            assert!(result.is_err());
         }
     }
 
@@ -422,22 +400,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_full_performance_workflow() {
-        // Get metrics
-        let metrics_result = get_performance_metrics().await;
-        assert!(metrics_result.is_ok());
-
-        // Get alerts
-        let alerts_result = get_performance_alerts().await;
-        assert!(alerts_result.is_ok());
-
-        // Get recommendations
-        let recs_result = get_performance_recommendations().await;
-        assert!(recs_result.is_ok());
-
-        // Verify all succeeded - results are already validated by is_ok() above
-        let _metrics = metrics_result.expect("Test setup failed");
-        let _alerts = alerts_result.expect("Test setup failed");
-        let _recs = recs_result.expect("Test setup failed");
+        let metrics = get_performance_metrics().await;
+        let alerts = get_performance_alerts().await;
+        let recs = get_performance_recommendations().await;
+        assert!(metrics.is_err());
+        assert!(alerts.is_err());
+        assert!(recs.is_err());
     }
 
     // ==================== EDGE CASE TESTS ====================

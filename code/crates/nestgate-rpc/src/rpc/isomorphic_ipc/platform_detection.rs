@@ -177,7 +177,6 @@ fn is_selinux_enforcing() -> bool {
 mod tests {
 
     use super::*;
-    use anyhow::Context;
     use std::io::Error as IoError;
 
     #[test]

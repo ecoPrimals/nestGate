@@ -11,9 +11,7 @@ use std::time::Duration;
 use tokio::task::JoinHandle;
 
 use super::registry::CapabilityRegistry;
-use super::service_descriptor::{
-    Endpoint, Protocol, ServiceDescriptor, ServiceHealth, ServiceMetadata,
-};
+use super::service_descriptor::ServiceDescriptor;
 use super::{CapabilityError, CapabilityResult};
 use nestgate_types::EnvSource;
 use nestgate_types::ProcessEnv;
@@ -110,40 +108,28 @@ impl ServiceDetector {
         Ok(())
     }
 
-    /// Probe a single port for service capabilities
+    /// Probe a single port for service capabilities.
+    ///
+    /// Currently verifies TCP reachability but does not yet perform HTTP
+    /// capability discovery (`.well-known/capabilities`). Returns an error
+    /// describing the gap rather than a synthetic descriptor.
     async fn probe_port(port: u16) -> CapabilityResult<ServiceDescriptor> {
         use nestgate_config::constants::hardcoding::addresses::{LOCALHOST_IPV4, LOCALHOST_NAME};
-        use uuid::Uuid;
+        use tracing::debug;
 
-        // Try HTTP/HTTPS first
-        let hosts = vec![LOCALHOST_NAME, LOCALHOST_IPV4];
-
-        for host in hosts {
-            // Try HTTP well-known endpoint for capability discovery
-            let well_known_http = format!("http://{host}:{port}/.well-known/capabilities");
-            let well_known_https = format!("https://{host}:{port}/.well-known/capabilities");
-
-            // Try HTTPS first (more secure)
-            for (_url, tls) in [(well_known_https, true), (well_known_http, false)] {
-                // Attempt basic TCP connection first
-                if let Ok(_stream) = tokio::net::TcpStream::connect(format!("{host}:{port}")).await
-                {
-                    // Port is open, create a basic descriptor
-                    // In production, this would make an HTTP request to discover capabilities
-                    return Ok(ServiceDescriptor {
-                        id: Uuid::new_v4(),
-                        name: format!("discovered-service-{port}"),
-                        capabilities: vec![], // Would be populated from .well-known/capabilities
-                        endpoint: Endpoint {
-                            host: host.to_string(),
-                            port,
-                            protocol: if tls { Protocol::HTTPS } else { Protocol::HTTP },
-                            tls,
-                        },
-                        metadata: ServiceMetadata::default(),
-                        health: ServiceHealth::Unknown, // Would be checked via health endpoint
-                    });
-                }
+        for host in [LOCALHOST_NAME, LOCALHOST_IPV4] {
+            if tokio::net::TcpStream::connect(format!("{host}:{port}"))
+                .await
+                .is_ok()
+            {
+                debug!(
+                    "Port {port} reachable on {host} — \
+                     capability fetch (.well-known/capabilities) not yet wired"
+                );
+                return Err(CapabilityError::DetectionFailed(format!(
+                    "Port {port} reachable on {host} but HTTP capability \
+                     discovery (.well-known/capabilities) is not yet wired"
+                )));
             }
         }
 

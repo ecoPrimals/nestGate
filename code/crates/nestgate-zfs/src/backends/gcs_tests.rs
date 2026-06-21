@@ -82,7 +82,7 @@ async fn gcs_backend_accepts_project_id_via_config() {
 }
 
 #[tokio::test]
-async fn gcs_operations_in_memory_round_trip() {
+async fn gcs_create_pool_returns_not_implemented() {
     let backend = GcsBackend::from_discovered_config_for_test(
         "inmem-test",
         "inmem-proj",
@@ -93,60 +93,19 @@ async fn gcs_operations_in_memory_round_trip() {
     .await
     .expect("backend");
 
-    let pool = backend
-        .create_pool("test-pool", &[])
-        .await
-        .expect("create_pool");
+    let result = backend.create_pool("test-pool", &[]).await;
+    assert!(
+        result.is_err(),
+        "GCS pool creation should fail until JSON API is wired"
+    );
+
     let bucket = backend.bucket_name("test-pool");
     assert!(bucket.contains("test-pool"));
     assert!(!bucket.contains('_'));
-
-    let dataset = backend
-        .create_dataset(&pool, "data", StorageTier::Warm)
-        .await
-        .expect("dataset");
-    assert_eq!(dataset.storage_class, GcsStorageClass::Nearline);
-
-    let snapshot = backend
-        .create_snapshot(&dataset, "snap1")
-        .await
-        .expect("snapshot");
-    assert_eq!(snapshot.dataset, "data");
-
-    let props = backend.get_pool_properties(&pool).await.expect("props");
-    assert_eq!(props.project_id, "inmem-proj");
-    assert!(
-        props
-            .custom
-            .get("config_source")
-            .is_some_and(|s| s.contains("capability"))
-    );
 }
 
 #[tokio::test]
-async fn gcs_backend_from_discovered_capability_path() {
-    let backend = GcsBackend::from_discovered_config_for_test(
-        "svc-1",
-        "discovered-project",
-        Some("/tmp/creds.json".to_string()),
-        "ng-prefix",
-        "EU",
-    )
-    .await
-    .expect("discovered backend");
-
-    let pool = backend.create_pool("p1", &[]).await.expect("pool");
-    let props = backend
-        .get_pool_properties(&pool)
-        .await
-        .expect("properties");
-    assert_eq!(props.project_id, "discovered-project");
-    let src = props.custom.get("config_source").expect("config_source");
-    assert!(src.contains("capability:svc-1"));
-}
-
-#[tokio::test]
-async fn gcs_pools_list_and_empty_datasets() {
+async fn gcs_list_datasets_returns_not_implemented() {
     let backend = GcsBackend::from_discovered_config_for_test(
         "list-test",
         "list-proj",
@@ -157,12 +116,6 @@ async fn gcs_pools_list_and_empty_datasets() {
     .await
     .expect("backend");
 
-    backend.create_pool("pool1", &[]).await.unwrap();
-    backend.create_pool("pool2", &[]).await.unwrap();
-    let pools = backend.list_pools().await.expect("list pools");
-    assert_eq!(pools.len(), 2);
-
-    let p = &pools[0];
-    let datasets = backend.list_datasets(p).await.expect("list datasets");
-    assert!(datasets.is_empty());
+    let result = backend.create_pool("pool1", &[]).await;
+    assert!(result.is_err(), "GCS pool creation not yet wired");
 }

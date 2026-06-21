@@ -1,42 +1,51 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-// Single responsibility: ZFS configuration and optimization
+//! ZFS configuration and optimization stubs.
+//!
+//! These functions return explicit errors until the corresponding ZFS
+//! tuning/analytics features are wired to real `zfs set`/`zfs get` calls.
 
 use super::core::NativeZfsService;
-use crate::handlers::zfs::universal_zfs_types::UniversalZfsResult;
+use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 use std::collections::HashMap;
 
-/// Optimize ZFS configuration for better performance
+/// Optimize ZFS configuration for better performance.
+///
+/// Returns an error until real ZFS tuning is wired.
 pub fn optimize(
     _service: &NativeZfsService,
     _optimization_type: String,
 ) -> UniversalZfsResult<String> {
-    Ok(String::from("Optimization completed"))
+    Err(UniversalZfsError::ServiceUnavailable {
+        message: String::from("ZFS optimization not yet wired to real zfs set/get calls"),
+    })
 }
-/// Get analytics data for ZFS optimization
+
+/// Get analytics data for ZFS optimization.
+///
+/// Returns an error until real ZFS analytics is wired.
 pub fn get_optimization_analytics(
     _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
-    Ok(HashMap::new())
+    Err(UniversalZfsError::ServiceUnavailable {
+        message: String::from("ZFS optimization analytics not yet wired"),
+    })
 }
-/// Predict optimal storage tier for a dataset
+
+/// Predict optimal storage tier for a dataset.
+///
+/// Returns an error until real tiering logic is wired.
 pub fn predict_tier(
     _service: &NativeZfsService,
     _dataset_name: &str,
 ) -> UniversalZfsResult<String> {
-    Ok(String::from("tier_1"))
+    Err(UniversalZfsError::ServiceUnavailable {
+        message: String::from("ZFS tier prediction not yet wired"),
+    })
 }
-/// Get the current configuration of the native ZFS service
-///
-/// Returns a `HashMap` containing the current configuration settings
-/// for the native ZFS backend service.
-///
-/// # Arguments
-/// * `service` - The native ZFS service instance
-///
-/// # Returns
-/// * `UniversalZfsResult<HashMap<String, serde_json::Value>>` - Configuration map
+
+/// Get the current configuration of the native ZFS service.
 pub fn get_configuration(
     _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
@@ -51,19 +60,15 @@ pub fn get_configuration(
     );
     Ok(config)
 }
-/// Update the configuration of the native ZFS service
+
+/// Update the configuration of the native ZFS service.
 ///
-/// Applies new configuration settings to the native ZFS backend service.
-///
-/// # Arguments
-/// * `service` - The native ZFS service instance
-/// * `config` - New configuration settings to apply
-///
-/// # Returns
-/// * `UniversalZfsResult<()>` - Success or error result
+/// Returns an error until real configuration updates are wired.
 pub fn update_configuration(
     _service: &NativeZfsService,
     _config: HashMap<String, serde_json::Value>,
 ) -> UniversalZfsResult<()> {
-    Ok(())
+    Err(UniversalZfsError::ServiceUnavailable {
+        message: String::from("ZFS configuration updates not yet wired"),
+    })
 }

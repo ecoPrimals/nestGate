@@ -15,14 +15,9 @@ mod performance_analytics_tests {
     #[tokio::test]
     async fn test_get_performance_metrics_endpoint() {
         let result = get_performance_metrics().await;
-        assert!(result.is_ok());
-
-        if let Ok(response) = result {
-            let metrics = response.0;
-            assert!(!metrics.metrics.is_empty());
-            assert!(metrics.metrics.contains_key("cpu_usage"));
-            assert!(metrics.metrics.contains_key("memory_usage"));
-        }
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
     }
 
     #[test]
@@ -71,13 +66,9 @@ mod performance_analytics_tests {
     #[tokio::test]
     async fn test_get_performance_alerts_endpoint() {
         let result = get_performance_alerts().await;
-        assert!(result.is_ok());
-
-        if let Ok(response) = result {
-            let alerts = response.0;
-            // Should return at least one alert
-            assert!(!alerts.is_empty());
-        }
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
     }
 
     #[test]
@@ -129,12 +120,9 @@ mod performance_analytics_tests {
     #[tokio::test]
     async fn test_get_performance_recommendations_endpoint() {
         let result = get_performance_recommendations().await;
-        assert!(result.is_ok());
-
-        if let Ok(response) = result {
-            let recommendations = response.0;
-            assert!(!recommendations.is_empty());
-        }
+        assert!(result.is_err());
+        let (status, _) = result.unwrap_err();
+        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
     }
 
     #[test]
@@ -187,7 +175,6 @@ mod performance_analytics_tests {
     // ==================== ANALYSIS CONFIG TESTS ====================
 
     #[test]
-    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_analysis_config_creation() {
         let config = AnalysisConfig {
             interval_seconds: 60,
@@ -199,7 +186,6 @@ mod performance_analytics_tests {
     }
 
     #[test]
-    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_analysis_config_default() {
         let config = AnalysisConfig::default();
         assert!(!std::ptr::addr_of!(config).is_null());
@@ -208,7 +194,6 @@ mod performance_analytics_tests {
     // ==================== ANALYZER STATE TESTS ====================
 
     #[test]
-    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_performance_analyzer_state_creation() {
         let state = PerformanceAnalyzerState {
             config: AnalysisConfig::default(),
@@ -225,7 +210,6 @@ mod performance_analytics_tests {
     }
 
     #[test]
-    #[expect(deprecated, reason = "testing backward-compatible deprecated API")]
     fn test_performance_analyzer_state_clone() {
         let state1 = PerformanceAnalyzerState {
             config: AnalysisConfig::default(),
@@ -240,17 +224,12 @@ mod performance_analytics_tests {
 
     #[tokio::test]
     async fn test_full_performance_analytics_workflow() {
-        // Get metrics
-        let metrics_result = get_performance_metrics().await;
-        assert!(metrics_result.is_ok());
-
-        // Get alerts
-        let alerts_result = get_performance_alerts().await;
-        assert!(alerts_result.is_ok());
-
-        // Get recommendations
-        let recommendations_result = get_performance_recommendations().await;
-        assert!(recommendations_result.is_ok());
+        let metrics = get_performance_metrics().await;
+        let alerts = get_performance_alerts().await;
+        let recs = get_performance_recommendations().await;
+        assert!(metrics.is_err());
+        assert!(alerts.is_err());
+        assert!(recs.is_err());
     }
 
     #[tokio::test]
