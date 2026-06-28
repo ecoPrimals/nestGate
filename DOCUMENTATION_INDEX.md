@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jun 21, 2026  
+**Last Updated**: Jun 28, 2026  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of June 2026.
@@ -27,9 +27,9 @@ Paths linked below exist in this repository as of June 2026.
 - Historical API/architecture docs moved to `ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026/`
 
 ### Guides
-- [docs/guides/](./docs/guides/) - How-to guides and tutorials
+- [docs/guides/](./docs/guides/) - Environment variables, documentation quick guide
 - [docs/guides/ENVIRONMENT_VARIABLES.md](./docs/guides/ENVIRONMENT_VARIABLES.md) - All configuration options
-- [docs/guides/TROUBLESHOOTING.md](./docs/guides/TROUBLESHOOTING.md) - Common issues & solutions
+- [docs/guides/DOCS_QUICK_GUIDE.md](./docs/guides/DOCS_QUICK_GUIDE.md) - Doc navigation helper
 
 ### Testing
 - [tests/](./tests/) - Integration tests, disabled tests reference
@@ -41,8 +41,9 @@ Paths linked below exist in this repository as of June 2026.
 Session archives, planning docs, stale examples, old specs, and historical reports are preserved in
 `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`. Git history retains the full record.
 
-Twenty-four historical guides and architecture docs (Jun 2026 cleanup) live in
-`ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026/`.
+Historical guides and architecture docs live in:
+- `ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026/` (Jun 21 cleanup)
+- `ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026-wave128b/` (Jun 28: COMMON_TASKS, TROUBLESHOOTING, ZERO_COPY_OPTIMIZATIONS, DEVELOPER_ONBOARDING)
 
 ---
 

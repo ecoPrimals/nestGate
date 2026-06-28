@@ -4,7 +4,7 @@
 
 ```
 Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 120)
-Tests:       PASS — 12,888 workspace, 0 failures, 427 ignored (STATUS.md)
+Tests:       PASS — 12,885 workspace, 0 failures, 420 ignored (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
 Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 120)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs

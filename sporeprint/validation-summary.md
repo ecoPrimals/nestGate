@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,885 tests (881 RPC), 22 crates, 16 capability domains, 4 transport surfaces, TRANSPORT_ENDPOINT Phase 2, STARTUP-NG-01 (HTTP default in server mode, guideStone Stream 1), riboCipher [0xEC,0x01] signal acceptance (Wave 113), deep debt sweep x6 (P0 production mocks eliminated, Azure/GCS/native-ZFS stubs → explicit errors, clone cleanup, workspace optimization honesty), chunked CAS streaming, cross-gate federation with HTTP parity, direct content serving, BTSP auth, native UDS compliance"
-date = 2026-06-21
+description = "Content-addressed storage primal v0.5.0 — 12,885 tests (881 RPC), 22 crates, 16 capability domains, 4 transport surfaces, Wave 128b (dead dep purge, Arc cache clones, content_handlers split, fabricated metrics eliminated, provenance depth wiring), STARTUP-NG-01 (HTTP default), riboCipher [0xEC,0x01], BTSP auth, native UDS compliance"
+date = 2026-06-28
 
 [taxonomies]
 primals = ["nestgate"]

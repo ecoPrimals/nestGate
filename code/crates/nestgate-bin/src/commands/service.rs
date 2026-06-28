@@ -204,11 +204,9 @@ impl ServiceManager {
         Ok(())
     }
 
-    /// Start HTTP mode — **Tier 5 fallback** (standalone/development only).
+    /// Start HTTP mode — **default** per STARTUP-NG-01 (guideStone Stream 1).
     ///
-    /// Production deployments use socket-only mode with transport injection via
-    /// `TRANSPORT_ENDPOINT`. This path self-binds TCP and is retained for
-    /// `--enable-http` debug/standalone scenarios per ecosystem standard.
+    /// Binds the HTTP/REST + JSON-RPC surface. Use `--socket-only` to opt out.
     async fn start_http_mode(
         &self,
         port: Option<u16>,
@@ -428,8 +426,8 @@ impl Default for ServiceManager {
 /// Run `NestGate` in daemon mode (`UniBin` pattern)
 ///
 /// This is the main server mode for `NestGate`, supporting:
-/// - Socket-only mode (TRUE ecoBin default - zero external dependencies)
-/// - HTTP mode (optional - requires --enable-http flag)
+/// - HTTP mode (default per STARTUP-NG-01)
+/// - Socket-only mode (opt-in via `--socket-only`)
 /// - Multi-family support (--family-id flag or `NESTGATE_FAMILY_ID` env var)
 /// - Transport injection via `TRANSPORT_ENDPOINT` env var (ecosystem standard)
 pub async fn run_daemon(
@@ -458,7 +456,7 @@ pub async fn run_daemon(
             .start_service(Some(resolved_port), Some(bind), listen, None)
             .await
     } else {
-        info!("Starting NestGate in socket-only mode (TRUE ecoBin - default)");
+        info!("Starting NestGate in socket-only mode (NUCLEUS integration)");
         let tcp_addr =
             resolve_socket_only_tcp_listen_port(port, listen, bind, &nestgate_types::ProcessEnv)?;
         run_socket_only_daemon(tcp_addr).await
@@ -488,7 +486,7 @@ fn log_transport_endpoint() {
     }
 }
 
-/// Run `NestGate` in socket-only mode (TRUE ecoBin default - no HTTP REST).
+/// Run `NestGate` in socket-only mode (opt-in via `--socket-only`, no HTTP REST).
 ///
 /// Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler
 /// (same surface as the legacy Unix server; optional fixed-port TCP via [`nestgate_core::rpc::TcpFallbackServer::start_bound`]).

@@ -1,7 +1,7 @@
 # NestGate - Quick Reference
 
 **Version**: 0.5.0  
-**Tests**: 12,888 workspace, 0 failures, 427 ignored (see STATUS.md)  
+**Tests**: 12,885 workspace, 0 failures, 420 ignored (see STATUS.md)  
 **Coverage**: 84%+ line (llvm-cov); target 90%  
 **Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Wave 120)  
 **Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  

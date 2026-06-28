@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-21, Wave 120 sweep x6)**  
+**Verification (as of 2026-06-28, Wave 128b)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
 - **Tests**: 12,885 passed, 0 failures, 420 ignored  
@@ -18,12 +18,12 @@
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
 - **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
-- **External deps**: Zero unused workspace deps (3 removed Session 61: `toml`, `async-stream`, `sha2`; `fastrand` → dev-dep); zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
+- **External deps**: Zero unused workspace deps (`lru`/`getrandom` removed Wave 128b; `fastrand` consolidated → `rand`); zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`
 - **Vendored crates** (`vendor/`): `rustls-rustcrypto` and `rustls-webpki` are vendored via `[patch.crates-io]` in the workspace `Cargo.toml`. Rationale: upstream `rustls-rustcrypto` optionally depends on `ring`; vendoring lets us build with pure-Rust crypto only, eliminating `ring` from the lockfile entirely. `rustls-webpki` is pinned at 0.103.12+ for RUSTSEC-2023-0071 mitigation. Both are consistent with `deny.toml` banning `ring`, `openssl`, `aws-lc-sys`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-- **File size**: All `.rs` files under 800 lines (largest files refactored Sessions 43–43p, 58)  
+- **File size**: All `.rs` files under 800 lines (`content_handlers.rs` split → 4-file directory module Wave 128b)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate); JSON-line + length-prefixed dual framing; 6-tier security socket discovery; security provider wire contract aligned (`family_seed`, `session_token`, `btsp.session.verify` params); mode-aware error frames; `SECURITY_FAMILY_SEED` canonical env var (Session 45c)  
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jun 21, 2026
+**Last Updated**: Jun 28, 2026
 
 ---
 

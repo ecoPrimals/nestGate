@@ -1,7 +1,8 @@
 # Environment Variables Reference
 
-**Last Updated**: January 30, 2026  
-**Status**: Comprehensive reference for all NestGate environment variables
+**Last Updated**: June 28, 2026  
+**Status**: Comprehensive reference for all NestGate environment variables  
+**Default mode**: HTTP (`nestgate server`); use `--socket-only` for UDS-only operation
 
 ---
 
@@ -36,14 +37,14 @@
 | `XDG_DATA_HOME` | `~/.local/share` | XDG data directory (if set) |
 | `NESTGATE_STORAGE_BACKEND` | `filesystem` | Storage backend type |
 
-### **Database Configuration** (External dependencies)
+### **Database Configuration** (Optional external — not required for core operation)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `NESTGATE_DB_HOST` | `localhost` | PostgreSQL host |
-| `NESTGATE_DB_PORT` | `5432` | PostgreSQL port |
-| `NESTGATE_REDIS_HOST` | `localhost` | Redis host |
-| `NESTGATE_REDIS_PORT` | `6379` | Redis port |
+| `NESTGATE_DB_HOST` | `localhost` | PostgreSQL host (optional) |
+| `NESTGATE_DB_PORT` | `5432` | PostgreSQL port (optional) |
+| `NESTGATE_REDIS_HOST` | `localhost` | Redis host (optional) |
+| `NESTGATE_REDIS_PORT` | `6379` | Redis port (optional) |
 
 ### **Security Configuration**
 
@@ -65,36 +66,32 @@ External backends (mDNS, Consul) were removed in the April 2026 sovereignty clea
 ### **Basic Configuration**
 
 ```bash
-# Development environment
+# Development environment (HTTP default)
 export NESTGATE_API_PORT=3000
 export NESTGATE_BIND_ADDRESS=0.0.0.0
-export NESTGATE_DEV=true
 
-nestgate daemon
+nestgate server
 ```
 
 ### **Socket-Only Mode** (NUCLEUS Integration)
 
 ```bash
-# biomeOS standard
+# biomeOS standard — UDS only, no HTTP listener
 export BIOMEOS_SOCKET_DIR=/run/user/$(id -u)/biomeos
 export NESTGATE_FAMILY_ID=nat0
 
-nestgate daemon --socket-only
+nestgate server --socket-only
 ```
 
 ### **Production Configuration**
 
 ```bash
-# Production with all services
+# Production with HTTP + UDS
 export NESTGATE_API_PORT=8080
 export NESTGATE_BIND_ADDRESS=0.0.0.0
-export NESTGATE_JWT_SECRET="$(openssl rand -base64 48)"
-export NESTGATE_DB_HOST=postgres.production.svc
-export NESTGATE_REDIS_HOST=redis.production.svc
 export NESTGATE_STORAGE_PATH=/var/lib/nestgate
 
-nestgate daemon
+nestgate server
 ```
 
 ### **Container Configuration**
@@ -290,14 +287,11 @@ export NESTGATE_STORAGE_PATH=$GITHUB_WORKSPACE/data
 
 ## Related Documentation
 
-- [Socket-Only Mode](../integration/biomeos/SOCKET_ONLY_MODE_JAN_30_2026.md)
-- [Socket Standardization](../integration/biomeos/SOCKET_STANDARDIZATION_JAN_30_2026.md)
-- [Deployment Guide](../DEPLOYMENT_GUIDE.md)
+- [STATUS.md](../../STATUS.md) — current build and feature status
+- [QUICK_START.md](../../QUICK_START.md) — getting started guide
+
+Historical socket-mode and deployment docs have been fossilized to `ecoPrimals/infra/fossilRecord/nestgate/`.
 
 ---
-
-**Status**: Comprehensive reference  
-**Coverage**: All NESTGATE_* variables documented  
-**Examples**: Development, production, container, multi-instance
 
 **Environment-Driven · Configurable · Production Ready**

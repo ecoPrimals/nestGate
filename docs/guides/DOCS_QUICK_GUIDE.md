@@ -1,6 +1,6 @@
 # Documentation Quick Guide
 
-**Last Updated**: Jun 3, 2026 (Session 92)
+**Last Updated**: Jun 28, 2026 (Wave 128b)
 
 ---
 
@@ -22,9 +22,8 @@
 - [QUICK_REFERENCE.md](../../QUICK_REFERENCE.md) — Command reference
 - [DOCUMENTATION_INDEX.md](../../DOCUMENTATION_INDEX.md) — Full doc index
 
-### Integrate with the Ecosystem
-- [docs/integration/biomeos/QUICK_START_BIOMEOS.md](../integration/biomeos/QUICK_START_BIOMEOS.md) — biomeOS integration
-- [docs/api/JSONRPC_API_DOCUMENTATION.md](../api/JSONRPC_API_DOCUMENTATION.md) — JSON-RPC API reference
+### Environment Variables
+- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) — All `NESTGATE_*` env vars
 
 ---
 
@@ -36,14 +35,9 @@ nestgate/
 ├── CAPABILITY_MAPPINGS.md                 Wire standard compliance
 ├── capability_registry.toml               Machine-readable self-knowledge
 ├── code/crates/                           20 crates (22 workspace members total incl. root, fuzz)
-├── capability_registry.toml              Capability and method registry
 ├── tests/                                 Integration, chaos, e2e tests
 ├── docs/
-│   ├── api/                               JSON-RPC API documentation
-│   ├── architecture/                      System design
-│   ├── guides/                            Development guides
-│   ├── integration/                       Ecosystem integration
-│   └── operations/                        Deployment and ops
+│   └── guides/                            Environment variables, this guide
 └── vendor/                                Vendored rustls-rustcrypto
 ```
 
@@ -51,12 +45,12 @@ nestgate/
 
 ## Archived Documentation
 
-Historical session reports and handoffs are preserved as fossil record in:
-- `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`
+Historical session reports, stale guides, and handoffs are preserved as fossil record in:
+- `ecoPrimals/infra/fossilRecord/nestgate/`
 - `ecoPrimals/infra/wateringHole/handoffs/`
 
 These are not in the nestgate repository — they live in the shared infra tree.
 
 ---
 
-**Last Updated**: Jun 3, 2026 (Session 92)
+**Last Updated**: Jun 28, 2026 (Wave 128b)
