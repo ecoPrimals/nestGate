@@ -196,19 +196,20 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     /// client is wired into the backend. Works with any S3-compatible provider.
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         debug!("Listing datasets for pool: {}", pool.name);
-        info!("Dataset listing deferred — S3 client integration pending");
-        Ok(Vec::new())
+        Err(NestGateError::not_implemented(
+            "S3-compatible dataset listing requires client integration — not yet wired",
+        ))
     }
 
     /// List snapshots — marker-based snapshot discovery (deferred capability).
     ///
-    /// Returns an empty list. Full implementation will discover snapshots by
-    /// finding marker objects with a snapshot prefix, or via the S3 versioning
-    /// API for providers that support native version history.
+    /// Returns an error until snapshot discovery via S3 marker objects or
+    /// versioning API is wired.
     async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
         debug!("Listing snapshots for dataset: {}", dataset.name);
-        info!("Snapshot listing deferred — S3 client integration pending");
-        Ok(Vec::new())
+        Err(NestGateError::not_implemented(
+            "S3-compatible snapshot listing requires client integration — not yet wired",
+        ))
     }
 }
 

@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 use nestgate_core::Result;
+use nestgate_types::error::NestGateError;
 use tokio::sync::broadcast;
 use tracing::{debug, info, warn};
 
@@ -118,11 +119,10 @@ impl RealTimeMetricsCollector {
         pool_name: &str,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<PoolMetrics>> {
-        debug!(
-            pool = pool_name,
-            "Historical pool metrics require a time-series store — returning empty"
-        );
-        Ok(vec![])
+        debug!(pool = pool_name, "Historical pool metrics requested");
+        Err(NestGateError::not_implemented(
+            "Historical pool metrics require a time-series capability provider",
+        ))
     }
 
     /// Get system resource snapshot from /proc, with safe fallbacks.
@@ -193,8 +193,9 @@ impl RealTimeMetricsCollector {
     ///
     /// Returns an error if metric retrieval fails.
     pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
-        debug!("Per-pool metric map requires ZFS pool enumeration — returning empty");
-        Ok(HashMap::new())
+        Err(NestGateError::not_implemented(
+            "Per-pool metric map requires ZFS pool enumeration capability",
+        ))
     }
 
     /// I/O performance over time.
@@ -209,8 +210,9 @@ impl RealTimeMetricsCollector {
         &self,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<super::types::IOMetricsPoint>> {
-        debug!("I/O historical data requires a time-series store — returning empty");
-        Ok(vec![])
+        Err(NestGateError::not_implemented(
+            "I/O historical data requires a time-series capability provider",
+        ))
     }
 
     /// ZFS ARC / L2ARC cache performance over time.
@@ -222,8 +224,9 @@ impl RealTimeMetricsCollector {
     ///
     /// Returns an error if metric retrieval fails.
     pub fn get_cache_metrics(&self) -> Result<Vec<super::types::CacheMetricsPoint>> {
-        debug!("Cache historical metrics require a time-series store — returning empty");
-        Ok(vec![])
+        Err(NestGateError::not_implemented(
+            "Cache historical metrics require a time-series capability provider",
+        ))
     }
 
     /// Comprehensive combined metrics over time.
@@ -236,8 +239,9 @@ impl RealTimeMetricsCollector {
     pub fn get_comprehensive_historical_data(
         &self,
     ) -> Result<Vec<super::types::ComprehensiveMetricsPoint>> {
-        debug!("Comprehensive historical data requires a time-series store — returning empty");
-        Ok(vec![])
+        Err(NestGateError::not_implemented(
+            "Comprehensive historical data requires a time-series capability provider",
+        ))
     }
 
     /// Storage capacity trends over time.
@@ -251,8 +255,9 @@ impl RealTimeMetricsCollector {
         &self,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<super::types::CapacityMetricsPoint>> {
-        debug!("Capacity historical data requires a time-series store — returning empty");
-        Ok(vec![])
+        Err(NestGateError::not_implemented(
+            "Capacity historical data requires a time-series capability provider",
+        ))
     }
 }
 

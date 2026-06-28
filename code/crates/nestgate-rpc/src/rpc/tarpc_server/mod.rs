@@ -367,8 +367,10 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
         ) {
             Ok(se) => se,
             Err(e) => {
-                warn!("discover_capability: {}", e);
-                return Ok(Vec::new());
+                warn!("discover_capability failed for '{}': {}", capability, e);
+                return Err(NestGateRpcError::InternalError {
+                    message: format!("capability '{capability}' discovery failed: {e}"),
+                });
             }
         };
         if se.source == DiscoverySource::Default {

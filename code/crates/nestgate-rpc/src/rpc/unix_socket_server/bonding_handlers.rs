@@ -58,7 +58,22 @@ pub(super) async fn bonding_ledger_store(
     let record_path = bonding_record_path(family_id, contract_id, record_type);
     ensure_parent_dirs(&record_path).await?;
 
-    let bytes = serde_json::to_vec_pretty(data)
+    let depth_path = bonding_record_path(family_id, contract_id, "__depth");
+    let current_depth: u64 = tokio::fs::read_to_string(&depth_path)
+        .await
+        .map_or(0, |s| s.trim().parse().unwrap_or(0));
+    let new_depth = current_depth + 1;
+
+    let mut enriched = data.clone();
+    if let Some(obj) = enriched.as_object_mut() {
+        obj.insert(String::from("ledger_depth"), json!(new_depth));
+        obj.insert(
+            String::from("ledger_timestamp"),
+            json!(chrono::Utc::now().to_rfc3339()),
+        );
+    }
+
+    let bytes = serde_json::to_vec_pretty(&enriched)
         .map_err(|e| NestGateError::io_error(format!("Failed to serialize bond record: {e}")))?;
 
     tokio::fs::write(&record_path, &bytes).await.map_err(|e| {
@@ -67,12 +82,21 @@ pub(super) async fn bonding_ledger_store(
         ))
     })?;
 
+    tokio::fs::write(&depth_path, new_depth.to_string())
+        .await
+        .map_err(|e| {
+            NestGateError::io_error(format!(
+                "Failed to update ledger depth for {family_id}/{contract_id}: {e}"
+            ))
+        })?;
+
     Ok(json!({
         "status": "stored",
         "contract_id": contract_id,
         "record_type": record_type,
         "family_id": family_id,
-        "size": bytes.len()
+        "size": bytes.len(),
+        "ledger_depth": new_depth
     }))
 }
 
@@ -109,11 +133,17 @@ pub(super) async fn bonding_ledger_retrieve(
     let data: Value = serde_json::from_slice(&bytes)
         .map_err(|e| NestGateError::io_error(format!("Corrupt bond record: {e}")))?;
 
+    let depth_path = bonding_record_path(family_id, contract_id, "__depth");
+    let ledger_depth: u64 = tokio::fs::read_to_string(&depth_path)
+        .await
+        .map_or(0, |s| s.trim().parse().unwrap_or(0));
+
     Ok(json!({
         "data": data,
         "contract_id": contract_id,
         "record_type": record_type,
-        "family_id": family_id
+        "family_id": family_id,
+        "ledger_depth": ledger_depth
     }))
 }
 
@@ -149,7 +179,9 @@ pub(super) async fn bonding_ledger_list(
                     while let Ok(Some(sub)) = sub_entries.next_entry().await {
                         let name = sub.file_name().to_string_lossy().into_owned();
                         if let Some(rt) = name.strip_suffix(".json") {
-                            record_types.push(rt.to_owned());
+                            if !rt.starts_with("__") {
+                                record_types.push(rt.to_owned());
+                            }
                         }
                     }
                 }
@@ -235,7 +267,9 @@ mod tests {
         });
         let store_result = bonding_ledger_store(Some(&store_p), &state).await;
         assert!(store_result.is_ok(), "bond store: {store_result:?}");
-        assert_eq!(store_result.unwrap()["status"], "stored");
+        let stored = store_result.unwrap();
+        assert_eq!(stored["status"], "stored");
+        assert_eq!(stored["ledger_depth"], 1);
 
         let retrieve_p = json!({
             "family_id": &family_id,
@@ -244,9 +278,11 @@ mod tests {
         });
         let retrieve_result = bonding_ledger_retrieve(Some(&retrieve_p), &state).await;
         assert!(retrieve_result.is_ok());
-        let data = &retrieve_result.unwrap()["data"];
-        assert_eq!(data["proposer_family"], family_id.as_str());
-        assert_eq!(data["trust_model"], "Contractual");
+        let retrieved = retrieve_result.unwrap();
+        assert_eq!(retrieved["data"]["proposer_family"], family_id.as_str());
+        assert_eq!(retrieved["data"]["trust_model"], "Contractual");
+        assert_eq!(retrieved["data"]["ledger_depth"], 1);
+        assert_eq!(retrieved["ledger_depth"], 1);
 
         let list_p = json!({"family_id": &family_id});
         let list_result = bonding_ledger_list(Some(&list_p), &state).await;
@@ -268,19 +304,22 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn bonding_ledger_multiple_record_types() {
+    async fn bonding_ledger_multiple_record_types_with_depth() {
         let state = mock_state(Some("test-bond-multi")).await;
         let family_id = format!("test-bond-multi-{}", uuid::Uuid::new_v4());
         let contract_id = "bond-multi";
 
         let proposal = json!({"family_id": &family_id, "contract_id": contract_id, "record_type": "proposal", "data": {"phase": "propose"}});
-        assert!(bonding_ledger_store(Some(&proposal), &state).await.is_ok());
+        let r1 = bonding_ledger_store(Some(&proposal), &state).await.unwrap();
+        assert_eq!(r1["ledger_depth"], 1);
 
         let active = json!({"family_id": &family_id, "contract_id": contract_id, "record_type": "active", "data": {"phase": "active", "accepted_at": "2026-04-11"}});
-        assert!(bonding_ledger_store(Some(&active), &state).await.is_ok());
+        let r2 = bonding_ledger_store(Some(&active), &state).await.unwrap();
+        assert_eq!(r2["ledger_depth"], 2);
 
         let seal = json!({"family_id": &family_id, "contract_id": contract_id, "record_type": "seal", "data": {"phase": "sealed", "merkle_root": "abc123"}});
-        assert!(bonding_ledger_store(Some(&seal), &state).await.is_ok());
+        let r3 = bonding_ledger_store(Some(&seal), &state).await.unwrap();
+        assert_eq!(r3["ledger_depth"], 3);
 
         let list_p = json!({"family_id": &family_id});
         let list_result = bonding_ledger_list(Some(&list_p), &state).await.unwrap();

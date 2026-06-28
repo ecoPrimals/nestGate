@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jun 21, 2026 (Wave 120 sweep x6 — P0 mock elimination complete, Azure/GCS/native-ZFS stubs → explicit errors, clone cleanup, workspace optimization honesty, all 4 audit dimensions clean)  
+**Last Updated**: Jun 28, 2026 (Wave 128 — P0 silent stub elimination, provenance depth wiring, discovery honesty, metrics collector → not_implemented, tarpc discover_capability error propagation)  
 **Version**: 0.5.0
 
 ---
@@ -22,7 +22,7 @@ println! in lib:    ZERO in core libs; installer retains stdout for interactive 
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
 Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
-Mocks in prod:      ZERO — ZFS simulation fallbacks removed (Wave 120); Azure/GCS/native-ZFS config stubs → explicit errors (sweep x6); dev_environment gated behind `dev-stubs` feature
+Mocks in prod:      ZERO — ZFS simulation fallbacks removed (Wave 120); Azure/GCS/native-ZFS/S3 stubs → explicit errors (sweep x6 + Wave 128); metrics_collector historicals → not_implemented; dev_environment gated behind `dev-stubs` feature
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305

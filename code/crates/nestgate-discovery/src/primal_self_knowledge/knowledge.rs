@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-
 use super::types::{Capability, DiscoveredPrimal, DiscoveryMechanism, Endpoint, PrimalIdentity};
 use anyhow::{Context, Result};
 use dashmap::DashMap;
@@ -213,33 +208,31 @@ impl PrimalSelfKnowledge {
     /// Announce via specific mechanism
     fn announce_via_mechanism(mechanism: &DiscoveryMechanism) -> Result<()> {
         match mechanism {
-            DiscoveryMechanism::Environment => {
-                // Environment doesn't support active announcement
-                debug!("Environment mechanism doesn't require announcement");
-                Ok(())
-            }
-            DiscoveryMechanism::MDns => {
-                // Future: Implement mDNS announcement
-                // This would broadcast our capabilities via multicast DNS
-                debug!("mDNS announcement not yet implemented");
-                Ok(())
-            }
-            DiscoveryMechanism::DnsSd => {
-                debug!("DNS-SD announcement not yet implemented");
-                Ok(())
-            }
-            DiscoveryMechanism::Consul => {
-                debug!("Consul registration not yet implemented");
+            DiscoveryMechanism::Environment | DiscoveryMechanism::FileConfig => {
+                debug!(
+                    ?mechanism,
+                    "Passive mechanism — no active announcement required"
+                );
                 Ok(())
             }
             DiscoveryMechanism::Kubernetes => {
-                // K8s services are automatically discoverable
-                debug!("Kubernetes services auto-registered");
+                debug!("Kubernetes services auto-registered via service objects");
                 Ok(())
             }
-            DiscoveryMechanism::FileConfig => {
-                debug!("File config doesn't require announcement");
-                Ok(())
+            DiscoveryMechanism::MDns => {
+                anyhow::bail!(
+                    "mDNS announcement not yet wired — configure environment or capability IPC instead"
+                )
+            }
+            DiscoveryMechanism::DnsSd => {
+                anyhow::bail!(
+                    "DNS-SD announcement not yet wired — configure environment or capability IPC instead"
+                )
+            }
+            DiscoveryMechanism::Consul => {
+                anyhow::bail!(
+                    "Consul registration not yet wired — configure environment or capability IPC instead"
+                )
             }
         }
     }

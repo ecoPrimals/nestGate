@@ -21,15 +21,15 @@ fn metrics_collector_state_default_interval() {
 }
 
 #[test]
-fn realtime_metrics_collector_new_and_helpers() {
+fn realtime_metrics_collector_historicals_return_not_implemented() {
     let c = RealTimeMetricsCollector::new();
     let range = DashboardTimeRange::last_hours(1);
-    assert!(c.get_historical_data("pool-a", &range).unwrap().is_empty());
-    assert!(c.get_all_pool_metrics().unwrap().is_empty());
-    assert!(c.get_io_historical_data(&range).unwrap().is_empty());
-    assert!(c.get_cache_metrics().unwrap().is_empty());
-    assert!(c.get_comprehensive_historical_data().unwrap().is_empty());
-    assert!(c.get_capacity_historical_data(&range).unwrap().is_empty());
+    assert!(c.get_historical_data("pool-a", &range).is_err());
+    assert!(c.get_all_pool_metrics().is_err());
+    assert!(c.get_io_historical_data(&range).is_err());
+    assert!(c.get_cache_metrics().is_err());
+    assert!(c.get_comprehensive_historical_data().is_err());
+    assert!(c.get_capacity_historical_data(&range).is_err());
 }
 
 #[test]

@@ -58,6 +58,12 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     let stored_by = params["stored_by"]
         .as_str()
         .or_else(|| meta_obj.and_then(|m| m["stored_by"].as_str()));
+    let parent_hash = params["parent_hash"]
+        .as_str()
+        .or_else(|| meta_obj.and_then(|m| m["parent_hash"].as_str()));
+    let derivation_depth: Option<u64> = params["derivation_depth"]
+        .as_u64()
+        .or_else(|| meta_obj.and_then(|m| m["derivation_depth"].as_u64()));
     let family_id = resolve_family_id(params, state)?;
 
     let raw = STANDARD.decode(data_b64).map_err(|e| {
@@ -110,6 +116,11 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     if let Some(by) = stored_by {
         meta["stored_by"] = json!(by);
     }
+    if let Some(ph) = parent_hash {
+        meta["parent_hash"] = json!(ph);
+    }
+    let depth = derivation_depth.unwrap_or_else(|| u64::from(parent_hash.is_some()));
+    meta["derivation_depth"] = json!(depth);
     let meta_path = object_path.with_extension("meta.json");
     tokio::fs::write(
         &meta_path,
@@ -645,12 +656,17 @@ pub async fn content_get_raw(
 }
 
 /// Provenance fields carried in `.meta.json` sidecars.
+///
+/// Includes lineage fields (`parent_hash`, `derivation_depth`) for provenance
+/// chain support (Nest provenance depth 5+).
 const SIDECAR_PROVENANCE_KEYS: &[&str] = &[
     "content_type",
     "stored_at",
     "source",
     "pipeline",
     "stored_by",
+    "parent_hash",
+    "derivation_depth",
 ];
 
 /// Merge non-null provenance fields from a sidecar JSON object into `resp`.
