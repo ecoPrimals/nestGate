@@ -56,7 +56,6 @@ futures-util = { workspace = true }
 # Concurrency
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
-lru = { workspace = true }
 
 # Zero-copy
 bytes = { workspace = true }
@@ -71,7 +70,6 @@ sha2 = { workspace = true }
 
 # System utilities
 tempfile = { workspace = true }
-fastrand = { workspace = true }
 
 # RPC
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }

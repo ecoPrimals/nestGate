@@ -332,7 +332,7 @@ impl PerformanceStressBattery {
         ];
 
         // Weighted random selection
-        let random_value = fastrand::f64();
+        let random_value = rand::random::<f64>();
         let mut cumulative = 0.0;
         let mut selected_operation = "compute";
 
@@ -347,7 +347,7 @@ impl PerformanceStressBattery {
         match selected_operation {
             "compute" => {
                 // CPU-intensive computation
-                let iterations = fastrand::usize(100..500);
+                let iterations = rand::random_range(100..500);
                 let mut result = thread_id;
                 for i in 0..iterations {
                     result = result.wrapping_add((i * i) as u64);
@@ -358,8 +358,8 @@ impl PerformanceStressBattery {
             }
             "memory" => {
                 // Memory allocation and manipulation
-                let size = fastrand::usize(10..100);
-                let _memory: Vec<u8> = (0..size * 1024).map(|_| fastrand::u8(..)).collect();
+                let size = rand::random_range(10..100);
+                let _memory: Vec<u8> = (0..size * 1024).map(|_| rand::random::<u8>()).collect();
                 // Yield after memory operation
                 tokio::task::yield_now().await;
             }
@@ -381,7 +381,7 @@ impl PerformanceStressBattery {
             _ => 0.02,
         };
 
-        if fastrand::f64() < failure_rate {
+        if rand::random::<f64>() < failure_rate {
             Err(NestGateError::internal_error(
                 format!("Simulated {selected_operation} failure"),
                 "execute_performance_operation".to_string(),

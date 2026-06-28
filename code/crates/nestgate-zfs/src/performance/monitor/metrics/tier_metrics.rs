@@ -159,7 +159,11 @@ impl ZfsPerformanceMonitor {
             }
         }
 
-        let cache_hit_ratio = Self::get_zfs_cache_hit_ratio().await.unwrap_or(0.85);
+        let cache_hit_ratio = Self::get_zfs_cache_hit_ratio()
+            .await
+            .ok()
+            .flatten()
+            .unwrap_or(0.0);
 
         Ok(TierMetrics {
             tier: tier.clone(),
@@ -178,7 +182,7 @@ impl ZfsPerformanceMonitor {
                 0.0
             },
             cache_hit_ratio,
-            queue_depth: Self::get_real_queue_depth(tier).unwrap_or(4.0),
+            queue_depth: Self::default_queue_depth(tier),
             utilization_percent: if dataset_count > 0.0 {
                 total_utilization / dataset_count
             } else {
@@ -232,29 +236,30 @@ impl ZfsPerformanceMonitor {
         Ok(stats)
     }
 
-    /// Get ZFS cache hit ratio
-    pub(super) async fn get_zfs_cache_hit_ratio() -> CoreResult<f64> {
-        // Read ARC statistics from /proc/spl/kstat/zfs/arcstats
+    /// Get ZFS cache hit ratio from `/proc/spl/kstat/zfs/arcstats`.
+    ///
+    /// Returns `None` when ARC stats are unavailable (ZFS kernel module not loaded).
+    pub(super) async fn get_zfs_cache_hit_ratio() -> CoreResult<Option<f64>> {
         if let Ok(content) = tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await
             && let Some(ratio) = cache_hit_ratio_percent_from_arcstats_text(&content)
         {
-            return Ok(ratio);
+            return Ok(Some(ratio));
         }
 
-        Ok(85.0) // Default fallback
+        Ok(None)
     }
 
-    /// Get real queue depth for a tier
-    pub(crate) const fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
-        // This would typically read from system statistics
-        // For now, return tier-appropriate defaults
-        Ok(match tier {
+    /// Tier-appropriate default queue depths (not live system values).
+    ///
+    /// Live iostat/nqn depth reading requires ZFS kernel stats wiring.
+    pub(crate) const fn default_queue_depth(tier: &StorageTier) -> f64 {
+        match tier {
             StorageTier::Hot => 32.0,
             StorageTier::Warm => 16.0,
             StorageTier::Cold => 8.0,
             StorageTier::Cache => 64.0,
             StorageTier::Archive => 4.0,
-        })
+        }
     }
 }
 
@@ -274,25 +279,23 @@ mod tier_metrics_queue_depth_tests {
     #[test]
     fn queue_depth_defaults_cover_all_tiers() {
         assert!(
-            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Hot).unwrap() - 32.0).abs()
+            (ZfsPerformanceMonitor::default_queue_depth(&StorageTier::Hot) - 32.0).abs()
                 < f64::EPSILON
         );
         assert!(
-            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Warm).unwrap() - 16.0).abs()
+            (ZfsPerformanceMonitor::default_queue_depth(&StorageTier::Warm) - 16.0).abs()
                 < f64::EPSILON
         );
         assert!(
-            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cold).unwrap() - 8.0).abs()
+            (ZfsPerformanceMonitor::default_queue_depth(&StorageTier::Cold) - 8.0).abs()
                 < f64::EPSILON
         );
         assert!(
-            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cache).unwrap() - 64.0)
-                .abs()
+            (ZfsPerformanceMonitor::default_queue_depth(&StorageTier::Cache) - 64.0).abs()
                 < f64::EPSILON
         );
         assert!(
-            (ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Archive).unwrap() - 4.0)
-                .abs()
+            (ZfsPerformanceMonitor::default_queue_depth(&StorageTier::Archive) - 4.0).abs()
                 < f64::EPSILON
         );
     }
@@ -382,11 +385,13 @@ mod tier_metrics_queue_depth_tests {
     }
 
     #[tokio::test]
-    async fn get_zfs_cache_hit_ratio_returns_fallback_or_proc_value() {
+    async fn get_zfs_cache_hit_ratio_returns_none_or_real_value() {
         let r = ZfsPerformanceMonitor::get_zfs_cache_hit_ratio()
             .await
-            .expect("cache ratio");
-        assert!(r >= 0.0);
+            .expect("cache ratio call");
+        if let Some(ratio) = r {
+            assert!((0.0..=100.0).contains(&ratio));
+        }
     }
 
     #[tokio::test]

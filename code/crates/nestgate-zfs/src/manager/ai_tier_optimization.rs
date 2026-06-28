@@ -200,10 +200,11 @@ impl AiTierOptimizer {
         }
     }
 
-    /// Determine the current tier of a dataset
+    /// Assumed current tier (ZFS tier metadata not yet wired).
+    ///
+    /// All datasets default to `Warm` until `zfs get` custom properties are
+    /// integrated. Recommendations still track access pattern deltas.
     const fn determine_current_tier(&self, _dataset: &str) -> Result<TierType> {
-        // This would integrate with actual ZFS tier information
-        // For now, return a default
         Ok(TierType::Warm)
     }
 

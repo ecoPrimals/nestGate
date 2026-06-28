@@ -190,11 +190,11 @@ impl ZfsManager {
         Ok(utilization)
     }
 
-    /// Get active migration jobs count
+    /// Get active migration jobs count.
+    ///
+    /// Returns zero until migration engine integration is wired.
     const fn get_active_migration_jobs(&self) -> Result<u32> {
-        // In a real implementation, this would query the migration engine
-        // For now, return a count based on system activity
-        Ok(1) // Typically 0-2 active jobs
+        Ok(0)
     }
 
     /// Get total snapshots count

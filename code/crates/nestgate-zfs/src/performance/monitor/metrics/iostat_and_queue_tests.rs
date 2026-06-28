@@ -39,25 +39,25 @@ fn parse_iostat_bandwidth_units_and_edge_cases() {
 }
 
 #[test]
-fn get_real_queue_depth_all_tiers() {
+fn default_queue_depth_all_tiers() {
     assert_eq!(
-        ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Hot).unwrap(),
+        ZfsPerformanceMonitor::test_default_queue_depth(&StorageTier::Hot),
         32.0
     );
     assert_eq!(
-        ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Warm).unwrap(),
+        ZfsPerformanceMonitor::test_default_queue_depth(&StorageTier::Warm),
         16.0
     );
     assert_eq!(
-        ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Cold).unwrap(),
+        ZfsPerformanceMonitor::test_default_queue_depth(&StorageTier::Cold),
         8.0
     );
     assert_eq!(
-        ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Cache).unwrap(),
+        ZfsPerformanceMonitor::test_default_queue_depth(&StorageTier::Cache),
         64.0
     );
     assert_eq!(
-        ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Archive).unwrap(),
+        ZfsPerformanceMonitor::test_default_queue_depth(&StorageTier::Archive),
         4.0
     );
 }

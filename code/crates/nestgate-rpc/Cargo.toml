@@ -47,7 +47,6 @@ default = []
 dev-stubs = []
 
 [dev-dependencies]
-fastrand = { workspace = true }
 serial_test = { workspace = true }
 temp-env = { workspace = true }
 tokio-test = { workspace = true }

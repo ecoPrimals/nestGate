@@ -27,7 +27,7 @@ pub struct PrimalSelfKnowledge {
     endpoints: Arc<Vec<Endpoint>>,
 
     /// Discovered other primals (runtime only, lock-free!)
-    discovered_primals: Arc<DashMap<String, DiscoveredPrimal>>, // Lock-free map
+    discovered_primals: Arc<DashMap<String, Arc<DiscoveredPrimal>>>,
 
     /// Discovery mechanisms we support
     discovery_mechanisms: Vec<DiscoveryMechanism>,
@@ -244,25 +244,20 @@ impl PrimalSelfKnowledge {
     /// # Errors
     ///
     /// Returns an error if the primal cannot be found.
-    pub async fn discover_primal(&mut self, primal_type: &str) -> Result<DiscoveredPrimal> {
-        // 1. Check cache (lock-free!)
+    pub async fn discover_primal(&mut self, primal_type: &str) -> Result<Arc<DiscoveredPrimal>> {
         if let Some(cached) = self.discovered_primals.get(primal_type) {
             debug!("Using cached discovery for {}", primal_type);
-            return Ok(cached.clone());
+            return Ok(Arc::clone(cached.value()));
         }
 
-        // 2. Try each discovery mechanism
         for mechanism in &self.discovery_mechanisms {
             match self.discover_via_mechanism(primal_type, mechanism).await {
                 Ok(Some(primal)) => {
                     info!("Discovered {} via {:?}", primal_type, mechanism);
-
-                    // Cache the discovery
-                    // Insert discovered primal into cache
+                    let shared = Arc::new(primal);
                     self.discovered_primals
-                        .insert(primal_type.to_string(), primal.clone());
-
-                    return Ok(primal);
+                        .insert(primal_type.to_string(), Arc::clone(&shared));
+                    return Ok(shared);
                 }
                 Ok(None) => {}
                 Err(e) => {
@@ -271,7 +266,6 @@ impl PrimalSelfKnowledge {
             }
         }
 
-        // 3. Not found - fail clearly (no hardcoded fallback!)
         anyhow::bail!(
             "Primal '{primal_type}' not discovered. Configure environment or enable discovery mechanisms."
         )
@@ -417,12 +411,12 @@ impl PrimalSelfKnowledge {
         &self.endpoints
     }
 
-    /// Get discovered primals (lock-free!)
+    /// Get discovered primals (lock-free, Arc-shared values avoid deep clones)
     #[must_use]
-    pub fn discovered_primals(&self) -> std::collections::HashMap<String, DiscoveredPrimal> {
+    pub fn discovered_primals(&self) -> std::collections::HashMap<String, Arc<DiscoveredPrimal>> {
         self.discovered_primals
             .iter()
-            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .map(|entry| (entry.key().clone(), Arc::clone(entry.value())))
             .collect()
     }
 }

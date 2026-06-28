@@ -109,7 +109,7 @@ impl RetryStrategy for ExponentialBackoff {
             // Add ±25% jitter
             let delay_ms_f = delay.as_secs_f64() * 1000.0;
             let jitter_range = delay_ms_f * 0.25;
-            let jitter = (fastrand::f64() - 0.5) * 2.0 * jitter_range;
+            let jitter = (rand::random::<f64>() - 0.5) * 2.0 * jitter_range;
             let jittered_delay = f64_to_delay_ms((delay_ms_f + jitter).max(0.0));
             Duration::from_millis(jittered_delay.min(max_ms))
         } else {
@@ -157,7 +157,7 @@ impl RetryStrategy for LinearBackoff {
         if self.config.jitter {
             let delay_ms_f = delay.as_secs_f64() * 1000.0;
             let jitter_range = delay_ms_f * 0.1;
-            let jitter = (fastrand::f64() - 0.5) * 2.0 * jitter_range;
+            let jitter = (rand::random::<f64>() - 0.5) * 2.0 * jitter_range;
             let jittered_delay = f64_to_delay_ms((delay_ms_f + jitter).max(0.0));
             Duration::from_millis(jittered_delay.min(max_ms))
         } else {

@@ -26,10 +26,8 @@ impl crate::performance::types::ZfsPerformanceMonitor {
         Self::parse_iostat_bandwidth(value)
     }
 
-    pub(crate) fn test_get_real_queue_depth(
-        tier: &crate::types::StorageTier,
-    ) -> nestgate_core::Result<f64> {
-        Self::get_real_queue_depth(tier)
+    pub(crate) fn test_default_queue_depth(tier: &crate::types::StorageTier) -> f64 {
+        Self::default_queue_depth(tier)
     }
 
     pub(crate) fn test_parse_zpool_iostat(

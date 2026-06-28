@@ -41,7 +41,6 @@ nestgate-types = { path = "code/crates/nestgate-types" }
 nestgate-zfs = { path = "code/crates/nestgate-zfs" }
 nestgate-nas = { path = "code/crates/nestgate-nas" }
 nestgate-performance = { path = "code/crates/nestgate-performance" }
-fastrand.workspace = true
 criterion.workspace = true
 temp-env = { workspace = true }
 base64.workspace = true
@@ -139,7 +138,6 @@ regex = "1.10"
 crossbeam = "0.8"
 dashmap = "6.1"
 parking_lot = "0.12"
-lru = "0.16"
 
 # Zero-copy and performance optimizations
 bytes = "1.7"
@@ -163,11 +161,9 @@ hkdf = "0.12"
 zeroize = { version = "1", features = ["derive"] }
 hex = "0.4"
 x509-parser = "0.17"
-getrandom = "0.3"
 
 # Compression and utilities
 rand = "0.9.3"
-fastrand = "2.0"
 url = "2.5"
 
 # Async utilities

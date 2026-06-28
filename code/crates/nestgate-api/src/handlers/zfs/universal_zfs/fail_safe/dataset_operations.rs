@@ -344,13 +344,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn list_datasets_circuit_open_no_fallback_returns_empty() {
+    async fn list_datasets_circuit_open_no_fallback_errors() {
         let s = svc_cb(1);
         open_circuit(&s, 1).await;
-        let r = list_datasets(&s)
+        let e = list_datasets(&s)
             .await
-            .expect("test: empty list when breaker open");
-        assert!(r.is_empty());
+            .expect_err("fallback not wired, should error");
+        assert!(
+            matches!(e, UniversalZfsError::CircuitBreakerOpen { .. }),
+            "expected CircuitBreakerOpen, got {e:?}"
+        );
     }
 
     #[tokio::test]

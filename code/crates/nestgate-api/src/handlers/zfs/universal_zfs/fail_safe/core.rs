@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-//
 // Contains the main service structure and core functionality.
 
 //! Core module
@@ -130,11 +125,15 @@ impl FailSafeZfsService {
         _fallback: &Arc<UniversalZfsServiceEnum>,
     ) -> UniversalZfsResult<()> {
         warn!(
-            "Executing fallback operation on service {}: {}",
-            self.service_name, operation
+            "Fallback for operation '{}' on service '{}' is not wired",
+            operation, self.service_name
         );
-        // For now, just return success from fallback
-        Ok(())
+        Err(UniversalZfsError::ServiceUnavailable {
+            message: format!(
+                "Fallback operation '{operation}' not wired for service '{}'",
+                self.service_name
+            ),
+        })
     }
 }
 
@@ -368,11 +367,11 @@ mod tests {
     }
 
     #[test]
-    fn execute_fallback_operation_ok() {
+    fn execute_fallback_operation_returns_unavailable() {
         let primary = Arc::new(UniversalZfsServiceEnum::new_native());
         let svc = FailSafeZfsService::new(primary, sample_fail_safe_config());
         let fb = Arc::new(UniversalZfsServiceEnum::new_native());
-        assert!(svc.execute_fallback_operation("list_pools", &fb).is_ok());
+        assert!(svc.execute_fallback_operation("list_pools", &fb).is_err());
     }
 
     #[tokio::test]

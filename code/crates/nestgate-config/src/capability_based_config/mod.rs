@@ -524,7 +524,7 @@ impl CapabilityConfig {
         Ok(())
     }
 
-    /// Announce via specific method
+    /// Announce via specific method.
     #[expect(
         clippy::unused_self,
         reason = "Announcement paths will use self (self_knowledge, discovery_config) when implemented"
@@ -532,27 +532,26 @@ impl CapabilityConfig {
     fn announce_via_method(&self, method: &DiscoveryMethod) -> Result<()> {
         match method {
             DiscoveryMethod::Environment => {
-                // Environment doesn't support announcement
+                debug!("Environment: passive mechanism, no active announcement");
                 Ok(())
             }
             DiscoveryMethod::MDns => {
-                // Future: Implement mDNS announcement
-                debug!("mDNS announcement not yet implemented");
-                Ok(())
+                anyhow::bail!(
+                    "mDNS announcement not yet wired — configure environment or capability IPC instead"
+                )
             }
             DiscoveryMethod::DnsSd => {
-                // Future: Implement DNS-SD announcement
-                debug!("DNS-SD announcement not yet implemented");
-                Ok(())
+                anyhow::bail!(
+                    "DNS-SD announcement not yet wired — configure environment or capability IPC instead"
+                )
             }
             DiscoveryMethod::Consul => {
-                // Future: Implement Consul registration
-                debug!("Consul registration not yet implemented");
-                Ok(())
+                anyhow::bail!(
+                    "Consul registration not yet wired — configure environment or capability IPC instead"
+                )
             }
             DiscoveryMethod::Kubernetes => {
-                // Future: Implement K8s service registration
-                debug!("Kubernetes registration not yet implemented");
+                debug!("Kubernetes services auto-registered via service objects");
                 Ok(())
             }
         }

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jun 28, 2026 (Wave 128 — P0 silent stub elimination, provenance depth wiring, discovery honesty, metrics collector → not_implemented, tarpc discover_capability error propagation)  
+**Last Updated**: Jun 28, 2026 (Wave 128b — dead dep removal [lru/getrandom/fastrand→rand], Arc cache clones, content_handlers split, fabricated metrics eliminated, fail-safe fallback → honest error)  
 **Version**: 0.5.0
 
 ---
@@ -14,7 +14,7 @@ Format:             CLEAN (cargo fmt --all -- --check passes)
 Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features (zero errors/warnings)
 Tests:              12,885 passed, 0 failures, 420 ignored — cargo test --workspace --all-features
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
-Files > 800 lines:  ZERO in production src/ (largest: 779 lines — content_handlers.rs; all files with inline tests extracted to siblings)
+Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (zero exceptions)
@@ -22,7 +22,7 @@ println! in lib:    ZERO in core libs; installer retains stdout for interactive 
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
 Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
-Mocks in prod:      ZERO — ZFS simulation fallbacks removed (Wave 120); Azure/GCS/native-ZFS/S3 stubs → explicit errors (sweep x6 + Wave 128); metrics_collector historicals → not_implemented; dev_environment gated behind `dev-stubs` feature
+Mocks in prod:      ZERO fabricated metrics — ZFS cache_hit_ratio → Option (no fake 85%), queue_depth renamed to default_*, migration_jobs → 0, fail-safe fallback → ServiceUnavailable, announce_via_method → bail; dev_environment gated behind `dev-stubs` feature
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305

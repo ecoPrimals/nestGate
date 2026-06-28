@@ -178,10 +178,10 @@ pub(super) async fn bonding_ledger_list(
                 if let Ok(mut sub_entries) = tokio::fs::read_dir(entry.path()).await {
                     while let Ok(Some(sub)) = sub_entries.next_entry().await {
                         let name = sub.file_name().to_string_lossy().into_owned();
-                        if let Some(rt) = name.strip_suffix(".json") {
-                            if !rt.starts_with("__") {
-                                record_types.push(rt.to_owned());
-                            }
+                        if let Some(rt) = name.strip_suffix(".json")
+                            && !rt.starts_with("__")
+                        {
+                            record_types.push(rt.to_owned());
                         }
                     }
                 }

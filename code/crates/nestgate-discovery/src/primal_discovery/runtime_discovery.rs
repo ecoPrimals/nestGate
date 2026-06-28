@@ -52,10 +52,10 @@ pub struct RuntimeDiscovery {
     cache_ttl: Duration,
 }
 
-/// Cached discovery result
+/// Cached discovery result (capabilities wrapped in Arc for cheap cache-hit clones)
 #[derive(Debug, Clone)]
 struct CachedDiscovery {
-    capabilities: Vec<CapabilityDescriptor>,
+    capabilities: Arc<Vec<CapabilityDescriptor>>,
     discovered_at: SystemTime,
 }
 
@@ -242,8 +242,8 @@ impl RuntimeDiscovery {
             })?;
 
         Ok(capabilities
-            .into_iter()
-            .filter_map(|cap| Self::capability_to_connection(cap).ok())
+            .iter()
+            .filter_map(|cap| Self::capability_to_connection(cap.clone()).ok())
             .collect())
     }
 
@@ -272,7 +272,7 @@ impl RuntimeDiscovery {
     async fn discover_with_cache(
         &self,
         capability_type: &str,
-    ) -> Result<Vec<CapabilityDescriptor>> {
+    ) -> Result<Arc<Vec<CapabilityDescriptor>>> {
         // Check cache first (lock-free read)
         if let Some(cached) = self.cache.get(capability_type) {
             let age = cached.discovered_at.elapsed().unwrap_or(Duration::MAX);
@@ -281,19 +281,17 @@ impl RuntimeDiscovery {
                     "Using cached discovery for: {} (lock-free)",
                     capability_type
                 );
-                return Ok(cached.capabilities.clone());
+                return Ok(Arc::clone(&cached.capabilities));
             }
         }
 
-        // Cache miss or expired - perform fresh discovery
         debug!("Performing fresh discovery for: {}", capability_type);
-        let capabilities = self.perform_discovery(capability_type).await?;
+        let capabilities = Arc::new(self.perform_discovery(capability_type).await?);
 
-        // Update cache (lock-free write)
         self.cache.insert(
             capability_type.to_string(),
             CachedDiscovery {
-                capabilities: capabilities.clone(),
+                capabilities: Arc::clone(&capabilities),
                 discovered_at: SystemTime::now(),
             },
         );
