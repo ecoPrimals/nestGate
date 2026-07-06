@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 104: CI-DIV-03 linker convergence (Jul 6, 2026)
+
+- **CI-DIV-03 fix** (Wave 133a): `.cargo/config.toml` `aarch64-unknown-linux-musl` linker
+  changed from `ld.lld` to `aarch64-linux-gnu-gcc` (ecosystem standard used by all 12 other
+  primals). Removes the `apt install lld` build host dependency. The musl safety rustflags
+  (`link-self-contained=yes`, `relocation-model=static`, `target-feature=+crt-static`) are
+  preserved — those prevent the static-PIE segfault on musl ≤1.2.2, not the linker choice.
+  Dropped `linker-flavor=ld` (only needed for raw ld-style linkers).
+
 ### Session 103: riboCipher signal acceptance on UDS (Jun 14, 2026)
 
 - **riboCipher `[0xEC, 0x01]` prefix acceptance** (Wave 113 guideStone amendment): all three
