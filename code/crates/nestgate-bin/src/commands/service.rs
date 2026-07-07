@@ -75,9 +75,21 @@ impl ServiceManager {
             env!("CARGO_PKG_VERSION")
         );
 
-        let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
-            || std::env::var("NESTGATE_FAMILY_ID").is_ok()
-            || std::env::var("FAMILY_ID").is_ok();
+        let bind_mode = std::env::var("PRIMAL_BIND_MODE")
+            .unwrap_or_default()
+            .to_lowercase();
+        let tcp_only = matches!(bind_mode.as_str(), "tcp_only" | "tcp");
+
+        let socket_requested = !tcp_only
+            && (std::env::var("NESTGATE_SOCKET").is_ok_and(|s| !s.is_empty())
+                || std::env::var("NESTGATE_FAMILY_ID").is_ok()
+                || std::env::var("FAMILY_ID").is_ok());
+
+        if tcp_only {
+            tracing::info!(
+                "PRIMAL_BIND_MODE={bind_mode}: skipping UDS, using HTTP/TCP only"
+            );
+        }
 
         if socket_requested {
             // Propagate FAMILY_ID → NESTGATE_FAMILY_ID so SocketConfig resolves consistently

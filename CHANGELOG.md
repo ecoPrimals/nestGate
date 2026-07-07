@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 105: NESTGATE-ANDROID-01 — UDS fatal on Android (Jul 7, 2026)
+
+- **NESTGATE-ANDROID-01 fix** (Wave 133a): nestGate was crashing on grapheneGate (Android)
+  because UDS bind was attempted even when `PRIMAL_BIND_MODE=tcp_only`. Three defensive fixes:
+  1. **`service.rs`**: `PRIMAL_BIND_MODE=tcp_only/tcp` now bypasses the `socket_requested`
+     check entirely — goes straight to HTTP mode even when `NESTGATE_FAMILY_ID` is set.
+  2. **`server/mod.rs`**: `IsomorphicIpcServer::start()` skips `try_unix_server()` and goes
+     directly to TCP fallback when `PRIMAL_BIND_MODE=tcp_only/tcp` (defense in depth).
+  3. **`socket_config.rs`**: Empty `NESTGATE_SOCKET=""` and `BIOMEOS_SOCKET_DIR=""` are now
+     filtered as unset — prevents empty-string tier-1 override producing an empty bind path.
+  - 6 new tests: 4 for `is_tcp_only_bind_mode`, 2 for empty-env-var filtering.
+  - Fixed pre-existing clippy lints in `platform_detection.rs` (stale `#[expect]`, unescaped
+    `SELinux` in doc comment).
+
 ### Session 104: CI-DIV-03 linker convergence (Jul 6, 2026)
 
 - **CI-DIV-03 fix** (Wave 133a): `.cargo/config.toml` `aarch64-unknown-linux-musl` linker

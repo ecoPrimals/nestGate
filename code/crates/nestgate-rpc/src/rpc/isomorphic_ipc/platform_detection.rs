@@ -55,10 +55,6 @@ use tracing::debug;
 ///
 /// * `true` - Error is a platform constraint (should adapt)
 /// * `false` - Error is a real failure (should report)
-#[expect(
-    clippy::option_if_let_else,
-    reason = "IO-kind ladder reads better as if-let than map_or_else"
-)]
 pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
     if let Some(io_err) = error.downcast_ref::<std::io::Error>() {
         match io_err.kind() {
@@ -105,7 +101,7 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
 ///
 /// When `deploy_pixel.sh` exports `PRIMAL_BIND_MODE=fallback`, any
 /// `PermissionDenied` on UDS bind should trigger TCP fallback regardless
-/// of whether SELinux detection succeeds (Android sandbox may block
+/// of whether `SELinux` detection succeeds (Android sandbox may block
 /// `/sys/fs/selinux/enforce` reads).
 fn is_bind_mode_fallback() -> bool {
     matches!(

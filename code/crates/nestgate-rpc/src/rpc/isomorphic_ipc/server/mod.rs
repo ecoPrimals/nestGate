@@ -206,6 +206,11 @@ impl IsomorphicIpcServer {
         info!("   Service: {}", self.service_name);
         info!("   Pattern: Try→Detect→Adapt→Succeed");
 
+        if Self::is_tcp_only_bind_mode() {
+            info!("   PRIMAL_BIND_MODE=tcp/tcp_only: skipping UDS, TCP fallback only");
+            return self.start_tcp_fallback().await;
+        }
+
         // 1. TRY Unix socket first (optimal)
         info!("   Trying Unix socket IPC (optimal)...");
         match self.try_unix_server().await {
@@ -231,6 +236,17 @@ impl IsomorphicIpcServer {
                 Err(e)
             }
         }
+    }
+
+    /// `PRIMAL_BIND_MODE=tcp_only` or `tcp` means UDS should not be attempted.
+    fn is_tcp_only_bind_mode() -> bool {
+        matches!(
+            std::env::var("PRIMAL_BIND_MODE")
+                .unwrap_or_default()
+                .to_lowercase()
+                .as_str(),
+            "tcp_only" | "tcp"
+        )
     }
 
     /// Try to start Unix socket server.

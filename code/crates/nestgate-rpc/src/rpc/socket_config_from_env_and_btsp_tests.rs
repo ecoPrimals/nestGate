@@ -273,3 +273,30 @@ fn nestgate_family_id_takes_precedence_over_generic() {
     let config = SocketConfig::from_env_source(&env).expect("resolve");
     assert_eq!(config.family_id, "nestgate-specific");
 }
+
+#[test]
+fn empty_nestgate_socket_env_skips_tier1() {
+    let env = MapEnv::from([
+        ("NESTGATE_SOCKET", ""),
+        ("NESTGATE_FAMILY_ID", "test-fam"),
+    ]);
+    let config = SocketConfig::from_env_source(&env).expect("resolve");
+    assert_ne!(
+        config.socket_path,
+        PathBuf::from(""),
+        "empty NESTGATE_SOCKET should be treated as unset, not as tier-1 empty path"
+    );
+}
+
+#[test]
+fn empty_biomeos_socket_dir_env_skips_tier2() {
+    let env = MapEnv::from([
+        ("BIOMEOS_SOCKET_DIR", ""),
+        ("NESTGATE_FAMILY_ID", "test-fam"),
+    ]);
+    let config = SocketConfig::from_env_source(&env).expect("resolve");
+    assert!(
+        !config.socket_path.to_string_lossy().is_empty(),
+        "empty BIOMEOS_SOCKET_DIR should be treated as unset"
+    );
+}

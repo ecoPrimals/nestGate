@@ -413,3 +413,34 @@ async fn json_rpc_keep_alive_loop_sends_idle_close_notification() {
 
     server.abort();
 }
+
+#[test]
+fn is_tcp_only_bind_mode_detects_tcp_only() {
+    temp_env::with_vars([("PRIMAL_BIND_MODE", Some("tcp_only"))], || {
+        assert!(
+            super::IsomorphicIpcServer::is_tcp_only_bind_mode(),
+            "tcp_only should be detected"
+        );
+    });
+}
+
+#[test]
+fn is_tcp_only_bind_mode_detects_tcp() {
+    temp_env::with_vars([("PRIMAL_BIND_MODE", Some("tcp"))], || {
+        assert!(super::IsomorphicIpcServer::is_tcp_only_bind_mode());
+    });
+}
+
+#[test]
+fn is_tcp_only_bind_mode_false_for_auto() {
+    temp_env::with_vars([("PRIMAL_BIND_MODE", Some("auto"))], || {
+        assert!(!super::IsomorphicIpcServer::is_tcp_only_bind_mode());
+    });
+}
+
+#[test]
+fn is_tcp_only_bind_mode_false_when_unset() {
+    temp_env::with_vars([("PRIMAL_BIND_MODE", None::<&str>)], || {
+        assert!(!super::IsomorphicIpcServer::is_tcp_only_bind_mode());
+    });
+}

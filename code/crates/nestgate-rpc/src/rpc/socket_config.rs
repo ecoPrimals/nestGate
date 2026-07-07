@@ -398,8 +398,8 @@ impl SocketConfig {
                 .into_owned()
         });
 
-        let socket_override = env.get("NESTGATE_SOCKET");
-        let biomeos_socket_dir = env.get("BIOMEOS_SOCKET_DIR");
+        let socket_override = env.get("NESTGATE_SOCKET").filter(|s| !s.is_empty());
+        let biomeos_socket_dir = env.get("BIOMEOS_SOCKET_DIR").filter(|s| !s.is_empty());
         let xdg_runtime_dir = env.get("XDG_RUNTIME_DIR");
 
         let mut config = Self::resolve(
