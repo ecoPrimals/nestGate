@@ -16,8 +16,9 @@ use crate::rpc::protocol::{normalize_method, warn_legacy_method_alias};
 
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
-    bonding_handlers, content_federation_handlers, content_handlers, external_handlers,
-    nat_handlers, session_handlers, storage_handlers, template_handlers, zfs_handlers,
+    bonding_handlers, content_federation_handlers, content_handlers, coord_handlers,
+    external_handlers, nat_handlers, session_handlers, storage_handlers, template_handlers,
+    zfs_handlers,
 };
 
 /// Extract owned params from a request, defaulting to `{}`.
@@ -303,6 +304,46 @@ pub(super) async fn handle_request(
                 .ok()
                 .is_some_and(|fid| !matches!(fid.as_str(), "" | "default" | "standalone")),
         })),
+        // Coordination domain — ecosystem state served from CAS (Wave 135)
+        "coord.blurbs.current" => {
+            coord_handlers::coord_blurbs_current(request.params.as_ref(), state).await
+        }
+        "coord.blurbs.list" => {
+            coord_handlers::coord_blurbs_list(request.params.as_ref(), state).await
+        }
+        "coord.blurbs.get" => {
+            coord_handlers::coord_blurbs_get(request.params.as_ref(), state).await
+        }
+        "coord.fragos.list" => {
+            coord_handlers::coord_fragos_list(request.params.as_ref(), state).await
+        }
+        "coord.fragos.get" => {
+            coord_handlers::coord_fragos_get(request.params.as_ref(), state).await
+        }
+        "coord.waves.current" => {
+            coord_handlers::coord_waves_current(request.params.as_ref(), state).await
+        }
+        "coord.waves.history" => {
+            coord_handlers::coord_waves_history(request.params.as_ref(), state).await
+        }
+        "coord.heads.get" => {
+            coord_handlers::coord_heads_get(request.params.as_ref(), state).await
+        }
+        "coord.heads.all" => {
+            coord_handlers::coord_heads_all(request.params.as_ref(), state).await
+        }
+        "coord.topology" => {
+            coord_handlers::coord_topology(request.params.as_ref(), state).await
+        }
+        "coord.depot.status" => {
+            coord_handlers::coord_depot_status(request.params.as_ref(), state).await
+        }
+        "coord.provenance" => {
+            coord_handlers::coord_provenance(request.params.as_ref(), state).await
+        }
+        "coord.ingest" => {
+            coord_handlers::coord_ingest(request.params.as_ref(), state).await
+        }
         _ => {
             return JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),

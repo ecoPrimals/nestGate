@@ -92,6 +92,14 @@ pub mod content_serve;
 /// Compliance and regulatory management for storage systems.
 pub mod compliance;
 
+/// **COORDINATION MODULE**
+///
+/// Ecosystem coordination backend — serves blurbs, FRAGOs, AARs, wave state,
+/// gate heads, and provenance trails from the coordination CAS. The live,
+/// queryable surface over wateringHole artifacts. Powered by rootPulse
+/// provenance trio when NUCLEUS composition is active.
+pub mod coordination;
+
 /// **DASHBOARD TYPES MODULE**
 ///
 /// Type definitions and structures for dashboard functionality.

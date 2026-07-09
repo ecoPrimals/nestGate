@@ -195,11 +195,31 @@ fn attach_workspace_routes(router: Router<AppState>) -> Router<AppState> {
         .route("/api/v1/teams", post(create_team))
 }
 
+/// Coordination backend routes — ecosystem state (blurbs, FRAGOs, waves, heads).
+fn attach_coordination_routes(router: Router<AppState>) -> Router<AppState> {
+    use crate::handlers::coordination;
+    router
+        .route("/coord/blurbs", get(coordination::coord_blurbs))
+        .route("/coord/blurbs/:wave", get(coordination::coord_blurb_by_wave))
+        .route("/coord/fragos", get(coordination::coord_fragos))
+        .route("/coord/fragos/:id", get(coordination::coord_frago_by_id))
+        .route("/coord/waves", get(coordination::coord_waves))
+        .route("/coord/heads", get(coordination::coord_heads))
+        .route("/coord/heads/:gate", get(coordination::coord_head_by_gate))
+        .route("/coord/topology", get(coordination::coord_topology))
+        .route("/coord/depot", get(coordination::coord_depot))
+        .route(
+            "/coord/provenance/:hash",
+            get(coordination::coord_provenance),
+        )
+}
+
 /// Standard REST routes shared by [`create_router`] and [`create_router_with_initialized_state`].
 fn attach_standard_routes(router: Router<AppState>) -> Router<AppState> {
     let router = attach_core_routes(router);
     let router = attach_zfs_routes(router);
-    attach_workspace_routes(router)
+    let router = attach_workspace_routes(router);
+    attach_coordination_routes(router)
 }
 
 /// Create a new router with default application state.
