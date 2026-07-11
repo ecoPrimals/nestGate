@@ -206,131 +206,103 @@ pub trait NestGateRpc {
     async fn protocols() -> Vec<ProtocolInfo>;
 }
 
-/// RPC error types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// RPC error types.
+#[derive(Debug, Clone, thiserror::Error, Serialize, Deserialize)]
 pub enum NestGateRpcError {
-    /// Dataset not found
+    /// Dataset not found.
+    #[error("Dataset not found: {dataset}")]
     DatasetNotFound {
-        /// Name of the dataset that was not found
+        /// Name of the dataset that was not found.
         dataset: Arc<str>,
     },
 
-    /// Dataset already exists
+    /// Dataset already exists.
+    #[error("Dataset already exists: {dataset}")]
     DatasetAlreadyExists {
-        /// Name of the dataset that already exists
+        /// Name of the dataset that already exists.
         dataset: Arc<str>,
     },
 
-    /// Object not found
+    /// Object not found.
+    #[error("Object not found: {dataset}/{key}")]
     ObjectNotFound {
-        /// Dataset name
+        /// Dataset name.
         dataset: Arc<str>,
-        /// Object key
+        /// Object key.
         key: Arc<str>,
     },
 
-    /// Object already exists
+    /// Object already exists.
+    #[error("Object already exists: {dataset}/{key}")]
     ObjectAlreadyExists {
-        /// Dataset name
+        /// Dataset name.
         dataset: Arc<str>,
-        /// Object key
+        /// Object key.
         key: Arc<str>,
     },
 
-    /// Invalid parameters
+    /// Invalid parameters.
+    #[error("Invalid parameters: {message}")]
     InvalidParameters {
-        /// Error message describing the invalid parameters
+        /// Error message describing the invalid parameters.
         message: String,
     },
 
-    /// Storage full
+    /// Storage full.
+    #[error("Storage full: required {required} bytes, available {available} bytes")]
     StorageFull {
-        /// Required storage space in bytes
+        /// Required storage space in bytes.
         required: u64,
-        /// Available storage space in bytes
+        /// Available storage space in bytes.
         available: u64,
     },
 
-    /// Quota exceeded
+    /// Quota exceeded.
+    #[error("Quota exceeded for dataset {dataset}: quota {quota} bytes, requested {requested} bytes")]
     QuotaExceeded {
-        /// Dataset name
+        /// Dataset name.
         dataset: Arc<str>,
-        /// Quota limit in bytes
+        /// Quota limit in bytes.
         quota: u64,
-        /// Requested storage in bytes
+        /// Requested storage in bytes.
         requested: u64,
     },
 
-    /// Permission denied
+    /// Permission denied.
+    #[error("Permission denied: {message}")]
     PermissionDenied {
-        /// Error message describing the permission denial
+        /// Error message describing the permission denial.
         message: String,
     },
 
-    /// Internal error
+    /// Internal error.
+    #[error("Internal error: {message}")]
     InternalError {
-        /// Error message describing the internal error
+        /// Error message describing the internal error.
         message: String,
     },
 
-    /// Service unavailable
+    /// Service unavailable.
+    #[error("Service unavailable: {message}")]
     ServiceUnavailable {
-        /// Error message describing why service is unavailable
+        /// Error message describing why service is unavailable.
         message: String,
     },
 
-    /// Connection error
+    /// Connection error.
+    #[error("Connection error: {message}")]
     ConnectionError {
-        /// Error message describing the connection failure
+        /// Error message describing the connection failure.
         message: String,
     },
 
-    /// Timeout
+    /// Timeout.
+    #[error("Timeout: {operation}")]
     Timeout {
-        /// Operation that timed out
+        /// Operation that timed out.
         operation: Arc<str>,
     },
 }
-
-impl std::fmt::Display for NestGateRpcError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::DatasetNotFound { dataset } => write!(f, "Dataset not found: {dataset}"),
-            Self::DatasetAlreadyExists { dataset } => {
-                write!(f, "Dataset already exists: {dataset}")
-            }
-            Self::ObjectNotFound { dataset, key } => {
-                write!(f, "Object not found: {dataset}/{key}")
-            }
-            Self::ObjectAlreadyExists { dataset, key } => {
-                write!(f, "Object already exists: {dataset}/{key}")
-            }
-            Self::InvalidParameters { message } => write!(f, "Invalid parameters: {message}"),
-            Self::StorageFull {
-                required,
-                available,
-            } => write!(
-                f,
-                "Storage full: required {required} bytes, available {available} bytes"
-            ),
-            Self::QuotaExceeded {
-                dataset,
-                quota,
-                requested,
-            } => write!(
-                f,
-                "Quota exceeded for dataset {dataset}: quota {quota} bytes, requested {requested} bytes"
-            ),
-            Self::PermissionDenied { message } => write!(f, "Permission denied: {message}"),
-            Self::InternalError { message } => write!(f, "Internal error: {message}"),
-            Self::ServiceUnavailable { message } => write!(f, "Service unavailable: {message}"),
-            Self::ConnectionError { message } => write!(f, "Connection error: {message}"),
-            Self::Timeout { operation } => write!(f, "Timeout: {operation}"),
-        }
-    }
-}
-
-impl std::error::Error for NestGateRpcError {}
 
 #[cfg(test)]
 mod tests {

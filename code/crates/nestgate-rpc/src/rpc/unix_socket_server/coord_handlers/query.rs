@@ -333,9 +333,12 @@ pub async fn coord_depot_status(
         .join("_depot");
 
     if !depot_path.exists() {
-        let alt_path = std::path::Path::new("/opt/ecoPrimals/depot");
+        let alt_path = std::env::var("ECOPRIMALS_DEPOT_PATH").map_or_else(
+            |_| std::path::PathBuf::from("/opt/ecoPrimals/depot"),
+            std::path::PathBuf::from,
+        );
         if alt_path.exists() {
-            return scan_depot(alt_path);
+            return scan_depot(&alt_path);
         }
         return Ok(json!({
             "status": "no_depot",

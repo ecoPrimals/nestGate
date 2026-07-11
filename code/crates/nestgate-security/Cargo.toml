@@ -21,6 +21,7 @@ hex = { workspace = true }
 hmac = { workspace = true }
 x509-parser = { workspace = true }
 sha2 = { workspace = true }
+thiserror = { workspace = true }
 
 # Core utilities
 chrono = { workspace = true }

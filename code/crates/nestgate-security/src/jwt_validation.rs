@@ -24,28 +24,15 @@ const INSECURE_ALTERNATE_4: &str = "test";
 /// Minimum secure JWT secret length (in bytes)
 const MINIMUM_SECRET_LENGTH: usize = 32;
 
-/// JWT secret validation error
-#[derive(Debug, Clone)]
-/// Error type for `JwtSecret` operations
+/// JWT secret validation error.
+#[derive(Debug, Clone, thiserror::Error)]
+#[error("JWT Security Error: {message}\n\nHelp: {help}")]
 pub struct JwtSecretError {
-    /// Error message describing the validation failure
+    /// Error message describing the validation failure.
     pub message: String,
-    /// Helpful guidance on how to fix the issue
+    /// Helpful guidance on how to fix the issue.
     pub help: String,
 }
-
-impl std::fmt::Display for JwtSecretError {
-    /// Fmt
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "JWT Security Error: {}\n\nHelp: {}",
-            self.message, self.help
-        )
-    }
-}
-
-impl std::error::Error for JwtSecretError {}
 
 /// Validate JWT secret at startup
 ///

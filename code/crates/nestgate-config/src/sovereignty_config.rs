@@ -35,10 +35,9 @@ impl SovereigntyConfig {
     /// let endpoint = SovereigntyConfig::api_endpoint()
     ///     .map_err(|e| MyError::Configuration(e))?;
     /// ```
-    pub fn api_endpoint() -> Result<String, String> {
+    pub fn api_endpoint() -> Result<String, &'static str> {
         env::var("NESTGATE_API_ENDPOINT").map_err(|_| {
             "NESTGATE_API_ENDPOINT must be set explicitly - no hardcoded defaults for sovereignty"
-                .to_string()
         })
     }
 
@@ -68,10 +67,9 @@ impl SovereigntyConfig {
     ///
     /// Returns an error if `NESTGATE_WS_ENDPOINT` is not set. This forces explicit
     /// configuration and makes missing configuration visible.
-    pub fn websocket_endpoint() -> Result<String, String> {
+    pub fn websocket_endpoint() -> Result<String, &'static str> {
         env::var("NESTGATE_WS_ENDPOINT").map_err(|_| {
             "NESTGATE_WS_ENDPOINT must be set explicitly - no hardcoded defaults for sovereignty"
-                .to_string()
         })
     }
 
@@ -108,14 +106,13 @@ impl SovereigntyConfig {
     /// Returns an error if sovereignty principles are violated:
     /// - API endpoint uses localhost without explicit configuration
     /// - Required environment variables are missing
-    pub fn validate_sovereignty() -> Result<(), String> {
-        // Check that API endpoint is explicitly configured
-        let api_endpoint = Self::api_endpoint()?; // Propagate error instead of panic
+    pub fn validate_sovereignty() -> Result<(), &'static str> {
+        let api_endpoint = Self::api_endpoint()?;
 
         if api_endpoint.contains("localhost") && env::var("NESTGATE_API_ENDPOINT").is_err() {
-            return Err(String::from(
+            return Err(
                 "API endpoint using localhost without explicit user configuration",
-            ));
+            );
         }
 
         Ok(())

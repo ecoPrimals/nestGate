@@ -85,22 +85,18 @@ impl PrimalSelfKnowledge {
 
         // Always provide storage capability
         capabilities.push(Capability {
-            name: String::from("storage"),
-            description: String::from("Universal storage management"),
-            endpoint: String::from("/api/v1/storage"),
+            name: "storage".into(),
+            description: "Universal storage management".into(),
+            endpoint: "/api/v1/storage".into(),
             metadata: std::collections::HashMap::new(),
         });
 
-        // Check if ZFS is available (runtime capability detection - universal!)
         if Self::check_zfs_available().await {
             capabilities.push(Capability {
-                name: String::from("zfs"),
-                description: String::from("ZFS pool and dataset management"),
-                endpoint: String::from("/api/v1/zfs"),
-                metadata: std::collections::HashMap::from([(
-                    String::from("backend"),
-                    String::from("native"),
-                )]),
+                name: "zfs".into(),
+                description: "ZFS pool and dataset management".into(),
+                endpoint: "/api/v1/zfs".into(),
+                metadata: std::collections::HashMap::from([("backend".into(), "native".into())]),
             });
         }
 

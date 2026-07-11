@@ -48,30 +48,19 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
 
     let gate_id = std::env::var("NESTGATE_GATE_ID")
         .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
-        .unwrap_or_else(|_| String::from("standalone"));
+        .unwrap_or_else(|_| "standalone".into());
 
-    let mut endpoints = serde_json::Map::new();
-    endpoints.insert(
-        String::from("uds"),
-        Value::String(own_socket.to_string_lossy().into_owned()),
-    );
+    let mut endpoints = json!({
+        "uds": own_socket.to_string_lossy(),
+    });
     if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
-        endpoints.insert(
-            String::from("tcp"),
-            Value::String(format!("tcp://127.0.0.1:{port}")),
-        );
+        endpoints["tcp"] = Value::String(format!("tcp://127.0.0.1:{port}"));
     }
 
-    let mut storage_backend = serde_json::Map::new();
-    if let Ok(dataset) = std::env::var("NESTGATE_ZFS_CAS_DATASET") {
-        storage_backend.insert(String::from("type"), Value::String(String::from("zfs")));
-        storage_backend.insert(String::from("dataset"), Value::String(dataset));
-    } else {
-        storage_backend.insert(
-            String::from("type"),
-            Value::String(String::from("filesystem")),
-        );
-    }
+    let storage_backend = std::env::var("NESTGATE_ZFS_CAS_DATASET").map_or_else(
+        |_| json!({ "type": "filesystem" }),
+        |dataset| json!({ "type": "zfs", "dataset": dataset }),
+    );
 
     json!({
         "primal": "nestgate",
@@ -169,25 +158,20 @@ pub async fn announce_to_coordinator(own_socket: &Path) -> Result<()> {
     );
 
     let endpoint = nestgate_types::TransportEndpoint::uds(&coordinator_path);
-    match super::JsonRpcClient::connect_transport(&endpoint).await {
-        Ok(mut client) => match client.call("primal.announce", payload).await {
-            Ok(resp) => {
-                info!("primal.announce accepted: {resp}");
-                Ok(())
-            }
-            Err(e) => {
-                warn!("primal.announce call failed: {e} — routing will use defaults");
-                Ok(())
-            }
-        },
-        Err(e) => {
-            warn!(
-                "Could not connect to ecosystem coordinator at {}: {e} — skipping announce",
-                coordinator_path.display()
-            );
-            Ok(())
-        }
+    let Ok(mut client) = super::JsonRpcClient::connect_transport(&endpoint).await else {
+        warn!(
+            "Could not connect to ecosystem coordinator at {} — skipping announce",
+            coordinator_path.display()
+        );
+        return Ok(());
+    };
+
+    match client.call("primal.announce", payload).await {
+        Ok(resp) => info!("primal.announce accepted: {resp}"),
+        Err(e) => warn!("primal.announce call failed: {e} — routing will use defaults"),
     }
+
+    Ok(())
 }
 
 #[cfg(test)]

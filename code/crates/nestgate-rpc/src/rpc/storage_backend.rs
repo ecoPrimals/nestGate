@@ -157,8 +157,8 @@ impl StorageBackend for InMemoryStorageBackend {
                 size_bytes: 0,
                 object_count: 0,
                 compression_ratio: 1.0,
-                params: params.clone(),
-                status: String::from("active"),
+                params,
+                status: "active".into(),
             };
             g.datasets.insert(name, info.clone());
             drop(g);

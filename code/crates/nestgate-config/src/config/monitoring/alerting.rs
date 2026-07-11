@@ -124,38 +124,38 @@ impl AlertThresholds {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String> {
+    pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), &'static str> {
         if value < 0.0 {
-            return Err(ERROR_THRESHOLD_NEGATIVE.to_string());
+            return Err(ERROR_THRESHOLD_NEGATIVE);
         }
 
         match metric {
             "cpu" => {
                 if value > 100.0 {
-                    return Err(ERROR_CPU_THRESHOLD_EXCEED.to_string());
+                    return Err(ERROR_CPU_THRESHOLD_EXCEED);
                 }
                 self.cpu_threshold = value;
             }
             "memory" => {
                 if value > 100.0 {
-                    return Err(ERROR_MEMORY_THRESHOLD_EXCEED.to_string());
+                    return Err(ERROR_MEMORY_THRESHOLD_EXCEED);
                 }
                 self.memory_threshold = value;
             }
             "disk" => {
                 if value > 100.0 {
-                    return Err(ERROR_DISK_THRESHOLD_EXCEED.to_string());
+                    return Err(ERROR_DISK_THRESHOLD_EXCEED);
                 }
                 self.disk_threshold = value;
             }
             "latency" => self.latency_threshold = value,
             "error_rate" => {
                 if value > 100.0 {
-                    return Err(ERROR_ERROR_RATE_EXCEED.to_string());
+                    return Err(ERROR_ERROR_RATE_EXCEED);
                 }
                 self.error_rate_threshold = value;
             }
-            _ => return Err(format!("Unknown metric: {metric}")),
+            _ => return Err("Unknown metric"),
         }
         Ok(())
     }
