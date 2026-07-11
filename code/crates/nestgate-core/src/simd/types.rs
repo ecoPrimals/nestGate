@@ -6,33 +6,22 @@
 //! This module defines common types, errors, and structures used across
 //! all SIMD optimization modules.
 
-/// SIMD operation error types
-#[derive(Debug, Clone, PartialEq, Eq)]
-/// Errors that can occur during Simd operations
+/// Errors that can occur during SIMD operations.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum SimdError {
-    /// Input and output arrays have mismatched lengths
+    /// Input and output arrays have mismatched lengths.
+    #[error("Input and output arrays have different lengths")]
     LengthMismatch,
-    /// Unsupported operation on current hardware
+    /// Unsupported operation on current hardware.
+    #[error("Operation not supported on current hardware")]
     UnsupportedOperation,
-    /// Invalid alignment for SIMD operations
+    /// Invalid alignment for SIMD operations.
+    #[error("Data not properly aligned for SIMD operations")]
     InvalidAlignment,
-    /// Buffer size exceeds maximum supported size
+    /// Buffer size exceeds maximum supported size.
+    #[error("Buffer size exceeds maximum supported size")]
     BufferTooLarge,
 }
-
-impl std::fmt::Display for SimdError {
-    /// Fmt
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::LengthMismatch => write!(f, "Input and output arrays have different lengths"),
-            Self::UnsupportedOperation => write!(f, "Operation not supported on current hardware"),
-            Self::InvalidAlignment => write!(f, "Data not properly aligned for SIMD operations"),
-            Self::BufferTooLarge => write!(f, "Buffer size exceeds maximum supported size"),
-        }
-    }
-}
-
-impl std::error::Error for SimdError {}
 
 /// SIMD capability flags
 #[derive(Debug, Clone, Default)]

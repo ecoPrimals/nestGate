@@ -260,6 +260,20 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "lifecycle.status",
     // BTSP security introspection
     "btsp.capabilities",
+    // Coordination domain — ecosystem state served from CAS
+    "coord.blurbs.current",
+    "coord.blurbs.list",
+    "coord.blurbs.get",
+    "coord.fragos.list",
+    "coord.fragos.get",
+    "coord.waves.current",
+    "coord.waves.history",
+    "coord.heads.get",
+    "coord.heads.all",
+    "coord.topology",
+    "coord.depot.status",
+    "coord.provenance",
+    "coord.ingest",
 ];
 
 /// capabilities.list — Wire Standard L3 compliant response.
@@ -347,6 +361,18 @@ pub fn capabilities_list() -> Result<Value> {
                 "methods": ["check", "mode", "peer_info"],
                 "version": env!("CARGO_PKG_VERSION"),
                 "description": "Method gate introspection — enforcement mode, caller identity, authorization check (JH-0)"
+            },
+            {
+                "type": "coordination",
+                "methods": [
+                    "blurbs.current", "blurbs.list", "blurbs.get",
+                    "fragos.list", "fragos.get",
+                    "waves.current", "waves.history",
+                    "heads.get", "heads.all",
+                    "topology", "depot.status", "provenance", "ingest"
+                ],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (rootPulse-traced CAS)"
             }
         ],
         "consumed_capabilities": [

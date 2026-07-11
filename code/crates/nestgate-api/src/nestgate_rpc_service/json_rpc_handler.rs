@@ -99,6 +99,8 @@ impl NestGateJsonRpcHandler {
             }
             // Content-addressed storage (delegates to canonical handlers)
             m if m.starts_with("content.") => handle_content_method(m, &params).await,
+            // Coordination domain — ecosystem state served from CAS
+            m if m.starts_with("coord.") => handle_coord_method(m, &params).await,
             "lifecycle.status" => Ok(json!({
                 "status": "running",
                 "primal": "nestgate",
@@ -147,6 +149,37 @@ async fn handle_content_method(
         "content.retrieve_stream" => content_ops::retrieve_stream_begin(params).await,
         "content.retrieve_stream_chunk" => content_ops::retrieve_stream_chunk(params).await,
         _ => return Err(format!("Unknown content method: {method}")),
+    };
+    result.map_err(|e| format!("{method} failed: {e}"))
+}
+
+/// Coordination domain `coord.*` methods — delegates to `coord_ops` which
+/// wraps `coord_handlers` from `nestgate-rpc`.
+///
+/// # Errors
+///
+/// Returns `Err` for unknown coordination methods or handler failures.
+async fn handle_coord_method(
+    method: &str,
+    params: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    use nestgate_core::rpc::coord_ops;
+
+    let result = match method {
+        "coord.blurbs.current" => coord_ops::blurbs_current(params).await,
+        "coord.blurbs.list" => coord_ops::blurbs_list(params).await,
+        "coord.blurbs.get" => coord_ops::blurbs_get(params).await,
+        "coord.fragos.list" => coord_ops::fragos_list(params).await,
+        "coord.fragos.get" => coord_ops::fragos_get(params).await,
+        "coord.waves.current" => coord_ops::waves_current(params).await,
+        "coord.waves.history" => coord_ops::waves_history(params).await,
+        "coord.heads.get" => coord_ops::heads_get(params).await,
+        "coord.heads.all" => coord_ops::heads_all(params).await,
+        "coord.topology" => coord_ops::topology(params).await,
+        "coord.depot.status" => coord_ops::depot_status(params).await,
+        "coord.provenance" => coord_ops::provenance(params).await,
+        "coord.ingest" => coord_ops::ingest(params).await,
+        _ => return Err(format!("Unknown coord method: {method}")),
     };
     result.map_err(|e| format!("{method} failed: {e}"))
 }

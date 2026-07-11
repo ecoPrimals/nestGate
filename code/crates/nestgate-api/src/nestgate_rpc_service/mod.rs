@@ -28,6 +28,7 @@ pub(crate) const NESTGATE_CAPABILITY_LABELS: &[&str] = &[
     "replication",
     "compression",
     "deduplication",
+    "coordination",
 ];
 
 /// Build the capability vector used by RPC and HTTP protocol advertisement.

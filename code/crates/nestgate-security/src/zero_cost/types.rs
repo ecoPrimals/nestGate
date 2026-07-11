@@ -52,21 +52,26 @@ pub struct ZeroCostMetrics {
     pub average_latency_ns: u64,
 }
 
-/// Zero-cost error enumeration
-#[derive(Debug, Clone, PartialEq, Eq)]
-/// Errors that can occur during `ZeroCost` operations
+/// Errors that can occur during zero-cost operations.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ZeroCostError {
-    /// Cacheerror
+    /// Cache operation failed.
+    #[error("Cache operation failed")]
     CacheError,
-    /// Securityerror
+    /// Security validation failed.
+    #[error("Security validation failed")]
     SecurityError,
-    /// Storageerror
+    /// Storage operation failed.
+    #[error("Storage operation failed")]
     StorageError,
-    /// Deprecated zero-cost file storage; use `UnifiedStorage` instead
+    /// Deprecated zero-cost file storage; use `UnifiedStorage` instead.
+    #[error("ZeroCostFileStorage is deprecated; use nestgate_core::traits::unified_storage::UnifiedStorage")]
     DeprecatedStorage,
-    /// Invalidrequest
+    /// Invalid request format.
+    #[error("Invalid request format")]
     InvalidRequest,
-    /// Systemoverload
+    /// System capacity exceeded.
+    #[error("System capacity exceeded")]
     SystemOverload,
 }
 
@@ -115,24 +120,6 @@ impl Default for RequestPriority {
     }
 }
 
-impl std::fmt::Display for ZeroCostError {
-    /// Fmt
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::CacheError => write!(f, "Cache operation failed"),
-            Self::SecurityError => write!(f, "Security validation failed"),
-            Self::StorageError => write!(f, "Storage operation failed"),
-            Self::DeprecatedStorage => write!(
-                f,
-                "ZeroCostFileStorage is deprecated; use nestgate_core::traits::unified_storage::UnifiedStorage"
-            ),
-            Self::InvalidRequest => write!(f, "Invalid request format"),
-            Self::SystemOverload => write!(f, "System capacity exceeded"),
-        }
-    }
-}
-
-impl std::error::Error for ZeroCostError {}
 
 #[cfg(test)]
 mod tests {

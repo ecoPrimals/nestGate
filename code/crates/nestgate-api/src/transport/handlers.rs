@@ -162,6 +162,21 @@ impl<S: StorageBackend + 'static> RpcMethodHandler for NestGateRpcHandler<S> {
                 nestgate_core::rpc::content_ops::retrieve_stream_chunk(&params).await
             }
 
+            // Coordination domain — ecosystem state served from CAS
+            "coord.blurbs.current" => nestgate_core::rpc::coord_ops::blurbs_current(&params).await,
+            "coord.blurbs.list" => nestgate_core::rpc::coord_ops::blurbs_list(&params).await,
+            "coord.blurbs.get" => nestgate_core::rpc::coord_ops::blurbs_get(&params).await,
+            "coord.fragos.list" => nestgate_core::rpc::coord_ops::fragos_list(&params).await,
+            "coord.fragos.get" => nestgate_core::rpc::coord_ops::fragos_get(&params).await,
+            "coord.waves.current" => nestgate_core::rpc::coord_ops::waves_current(&params).await,
+            "coord.waves.history" => nestgate_core::rpc::coord_ops::waves_history(&params).await,
+            "coord.heads.get" => nestgate_core::rpc::coord_ops::heads_get(&params).await,
+            "coord.heads.all" => nestgate_core::rpc::coord_ops::heads_all(&params).await,
+            "coord.topology" => nestgate_core::rpc::coord_ops::topology(&params).await,
+            "coord.depot.status" => nestgate_core::rpc::coord_ops::depot_status(&params).await,
+            "coord.provenance" => nestgate_core::rpc::coord_ops::provenance(&params).await,
+            "coord.ingest" => nestgate_core::rpc::coord_ops::ingest(&params).await,
+
             // Lifecycle
             "lifecycle.status" => self.handle_lifecycle_status(),
 

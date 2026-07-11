@@ -19,7 +19,7 @@ use tracing::{debug, info, warn};
 use super::model_cache_handlers::UNIX_SOCKET_SUPPORTED_METHODS;
 
 /// Capability domains `NestGate` provides to the ecosystem.
-const ANNOUNCED_CAPABILITIES: &[&str] = &["storage", "content"];
+const ANNOUNCED_CAPABILITIES: &[&str] = &["storage", "content", "coordination"];
 
 /// Signal tier — `NestGate` participates in the Nest Atomic composition.
 const SIGNAL_TIERS: &[&str] = &["nest"];
@@ -42,7 +42,11 @@ const FEDERATION_METHODS: &[&str] = &[
 pub fn build_announce_payload(own_socket: &Path) -> Value {
     let methods: Vec<&str> = UNIX_SOCKET_SUPPORTED_METHODS
         .iter()
-        .filter(|m| m.starts_with("storage.") || m.starts_with("content."))
+        .filter(|m| {
+            m.starts_with("storage.")
+                || m.starts_with("content.")
+                || m.starts_with("coord.")
+        })
         .copied()
         .collect();
 
@@ -203,7 +207,7 @@ mod tests {
             .iter()
             .filter_map(Value::as_str)
             .collect();
-        assert_eq!(caps, &["storage", "content"]);
+        assert_eq!(caps, &["storage", "content", "coordination"]);
     }
 
     #[test]
@@ -217,14 +221,15 @@ mod tests {
             .collect();
 
         assert!(
-            methods
-                .iter()
-                .all(|m| m.starts_with("storage.") || m.starts_with("content.")),
-            "all methods should be storage.* or content.*"
+            methods.iter().all(|m| m.starts_with("storage.")
+                || m.starts_with("content.")
+                || m.starts_with("coord.")),
+            "all methods should be storage.*, content.*, or coord.*"
         );
         assert!(methods.contains(&"storage.store"));
         assert!(methods.contains(&"content.put"));
         assert!(methods.contains(&"content.resolve"));
+        assert!(methods.contains(&"coord.blurbs.current"));
         assert!(
             !methods.contains(&"health.liveness"),
             "health methods should be excluded"

@@ -13,29 +13,34 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 // CANONICAL MODERNIZATION: Use canonical error system directly
 // Removed fragmented Result type alias
 pub use nestgate_core::error::Result;
 
-/// Main API error type
-#[derive(Debug)]
-/// Errors that can occur during Api operations
+/// Main API error type.
+#[derive(Debug, thiserror::Error)]
 pub enum ApiError {
-    /// Core `NestGate` errors
-    Core(nestgate_core::error::NestGateError),
-    /// I/O errors
-    Io(std::io::Error),
-    /// JSON serialization errors
-    Json(serde_json::Error),
-    /// Invalid request data
+    /// Core `NestGate` errors.
+    #[error("Core error: {0}")]
+    Core(#[from] nestgate_core::error::NestGateError),
+    /// I/O errors.
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    /// JSON serialization errors.
+    #[error("JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+    /// Invalid request data.
+    #[error("Invalid request: {0}")]
     InvalidRequest(String),
-    /// Resource not found
+    /// Resource not found.
+    #[error("Not found: {0}")]
     NotFound(String),
-    /// Internal server error
+    /// Internal server error.
+    #[error("Internal error: {0}")]
     Internal(String),
-    /// Service unavailable
+    /// Service unavailable.
+    #[error("Service unavailable: {0}")]
     ServiceUnavailable(String),
 }
 /// API error response format
@@ -50,32 +55,6 @@ pub struct ErrorResponse {
     pub details: Option<serde_json::Value>,
     /// Timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
-}
-impl fmt::Display for ApiError {
-    /// Fmt
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Core(e) => write!(f, "Core error: {e}"),
-            Self::Io(e) => write!(f, "I/O error: {e}"),
-            Self::Json(e) => write!(f, "JSON error: {e}"),
-            Self::InvalidRequest(msg) => write!(f, "Invalid request: {msg}"),
-            Self::NotFound(msg) => write!(f, "Not found: {msg}"),
-            Self::Internal(msg) => write!(f, "Internal error: {msg}"),
-            Self::ServiceUnavailable(msg) => write!(f, "Service unavailable: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for ApiError {
-    /// Source
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Core(e) => Some(e),
-            Self::Io(e) => Some(e),
-            Self::Json(e) => Some(e),
-            _ => None,
-        }
-    }
 }
 
 impl IntoResponse for ApiError {
@@ -118,27 +97,6 @@ impl IntoResponse for ApiError {
     }
 }
 
-// Conversion implementations
-impl From<nestgate_core::error::NestGateError> for ApiError {
-    /// From
-    fn from(err: nestgate_core::error::NestGateError) -> Self {
-        Self::Core(err)
-    }
-}
-
-impl From<std::io::Error> for ApiError {
-    /// From
-    fn from(err: std::io::Error) -> Self {
-        Self::Io(err)
-    }
-}
-
-impl From<serde_json::Error> for ApiError {
-    /// From
-    fn from(err: serde_json::Error) -> Self {
-        Self::Json(err)
-    }
-}
 
 #[cfg(test)]
 mod tests {

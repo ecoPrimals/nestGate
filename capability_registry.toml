@@ -234,6 +234,47 @@ methods = [
 # zfs.snapshot.destroy: {snapshot: "<pool/dataset@name>"} → {destroyed: "<full_name>"}
 #   Destroys a ZFS snapshot. The snapshot param must contain '@'.
 
+[capabilities.coordination]
+domain = "coordination"
+stability = "provisional"
+description = "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (rootPulse-traced CAS)"
+methods = [
+    "coord.blurbs.current", "coord.blurbs.list", "coord.blurbs.get",
+    "coord.fragos.list", "coord.fragos.get",
+    "coord.waves.current", "coord.waves.history",
+    "coord.heads.get", "coord.heads.all",
+    "coord.topology", "coord.depot.status", "coord.provenance", "coord.ingest",
+]
+
+# ── Coordination protocol (Wave 135) ────────────────────────────
+# coord.blurbs.current:  {} → {wave, date, content, hash, ingested_at}
+#   Returns the latest (highest wave number) ingested blurb.
+# coord.blurbs.list:     {} → {blurbs: [{wave, date, hash, ingested_at}], count}
+#   Lists all ingested blurbs, newest first.
+# coord.blurbs.get:      {hash|wave} → {wave, date, content, hash, ingested_at}
+#   Retrieve a specific blurb by BLAKE3 hash or wave number.
+# coord.fragos.list:     {} → {fragos: [{name, hash, ingested_at}], count}
+#   Lists all FRAGOs and AARs.
+# coord.fragos.get:      {hash} → {name, content, hash, ingested_at}
+#   Retrieve a specific FRAGO/AAR by hash.
+# coord.waves.current:   {} → {wave, date, posture, ...}
+#   Current wave state from coordination manifest.
+# coord.waves.history:   {} → {waves: [{wave, date}], count}
+#   Wave history from the coordination manifest.
+# coord.heads.get:       {gate} → {gate, commit, status, ...}
+#   Return a specific gate's HEAD state.
+# coord.heads.all:       {} → {heads: [{gate, commit, status}], count}
+#   Return all gate HEAD states.
+# coord.topology:        {} → {gates: [...], connections: [...]}
+#   Mesh topology derived from gate heads.
+# coord.depot.status:    {} → {path, exists, staleness, binaries}
+#   Depot staleness and binary info.
+# coord.provenance:      {hash} → {trail: [{source, ingested_at, ...}]}
+#   Provenance trail for a content-addressed artifact.
+# coord.ingest:          {artifacts: [{filename, content_base64}]} → {ingested: [{hash, filename}], count}
+#   Ingest wateringHole artifacts into the coordination CAS.
+#   Write-path: UDS-only by default (protected method gate).
+
 [capabilities.health]
 domain = "health"
 stability = "stable"
@@ -280,7 +321,7 @@ methods = ["btsp.capabilities"]
 method = "primal.announce"
 target = "biomeos"
 signal_tiers = ["nest"]
-capabilities = ["storage", "content"]
+capabilities = ["storage", "content", "coordination"]
 federation_methods = ["content.replicate", "content.replicate.pull", "content.fetch_heads", "content.push", "content.sync"]
 cost_hints = { storage = 10.0, content = 15.0 }
 latency_estimates = { storage = 50, content = 20 }
