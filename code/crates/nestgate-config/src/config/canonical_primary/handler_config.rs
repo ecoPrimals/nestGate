@@ -124,7 +124,7 @@ impl Default for ZfsHandlerConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            service_name: String::from("canonical-zfs-handler"),
+            service_name: "canonical-zfs-handler".into(),
             backend: ZfsBackendConfig::Auto,
             fail_safe: ZfsFailSafeConfig::default(),
             observability: ZfsObservabilityConfig::default(),
@@ -144,11 +144,10 @@ impl ZfsHandlerConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.service_name.is_empty() {
-            return Err(String::from("Service name cannot be empty"));
+            return Err("Service name cannot be empty");
         }
-        // Additional validation can be added here
         Ok(())
     }
 }
@@ -631,7 +630,7 @@ mod tests {
         z.service_name.clear();
         assert_eq!(
             z.validate(),
-            Err(String::from("Service name cannot be empty"))
+            Err("Service name cannot be empty")
         );
     }
 

@@ -19,7 +19,14 @@ use nestgate_types::error::{NestGateError, Result};
 
 /// Final fallback path when [`resolve_security_socket_path`] exhausts all 5 higher-priority
 /// tiers (env vars and `$XDG_RUNTIME_DIR/biomeos/` discovery).
-pub const DEFAULT_SECURITY_SOCKET_PATH: &str = "/run/capability/security.sock";
+///
+/// Overridable via `NESTGATE_SECURITY_SOCKET` environment variable.
+pub fn default_security_socket_path() -> PathBuf {
+    std::env::var("NESTGATE_SECURITY_SOCKET").map_or_else(
+        |_| PathBuf::from("/run/capability/security.sock"),
+        PathBuf::from,
+    )
+}
 
 /// Session lifecycle as reported by the security capability provider.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -66,7 +73,7 @@ pub fn is_btsp_required() -> bool {
 /// 3. `SECURITY_SOCKET` env
 /// 4. `SECURITY_ENDPOINT` if it is a local filesystem path (not a `scheme://` URL)
 /// 5. Capability-scoped discovery: `$XDG_RUNTIME_DIR/biomeos/{security,crypto}.sock`
-/// 6. [`DEFAULT_SECURITY_SOCKET_PATH`]
+/// 6. [`default_security_socket_path`] (overridable via `NESTGATE_SECURITY_SOCKET`)
 #[must_use]
 pub fn resolve_security_socket_path() -> PathBuf {
     for var in [
@@ -89,7 +96,7 @@ pub fn resolve_security_socket_path() -> PathBuf {
     if let Some(path) = discover_security_socket_xdg() {
         return path;
     }
-    PathBuf::from(DEFAULT_SECURITY_SOCKET_PATH)
+    default_security_socket_path()
 }
 
 /// Capability socket names probed during XDG runtime directory discovery.
@@ -325,7 +332,7 @@ mod tests {
         temp_env::with_vars(vars, || {
             assert_eq!(
                 resolve_security_socket_path(),
-                std::path::Path::new(DEFAULT_SECURITY_SOCKET_PATH)
+                std::path::Path::new("/run/capability/security.sock")
             );
         });
     }

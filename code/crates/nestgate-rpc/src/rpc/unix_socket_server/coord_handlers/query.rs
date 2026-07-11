@@ -235,7 +235,7 @@ pub async fn coord_waves_history(
         "count": waves.len(),
         "waves": waves,
         "source": "manifest",
-        "note": "Full provenance requires loamSpine IPC (spine.list on coordination spine)"
+        "note": "Full provenance requires a ledger capability provider (spine.list IPC)"
     }))
 }
 
@@ -316,7 +316,7 @@ pub async fn coord_topology(
         "gates": gates,
         "head_count": manifest.heads.len(),
         "source": "coordination_manifest",
-        "note": "Live mesh topology requires songBird mesh.peers IPC"
+        "note": "Live mesh topology requires a mesh capability provider (mesh.peers IPC)"
     }))
 }
 
@@ -416,7 +416,7 @@ pub async fn coord_provenance(
         "spine_index": artifact.spine_index,
         "braid_id": artifact.braid_id,
         "provenance_source": "manifest",
-        "note": "Full rootPulse provenance requires loamSpine entry.get + sweetGrass braid.get IPC"
+        "note": "Full provenance requires ledger (entry.get) + braid (braid.get) capability providers via IPC"
     }))
 }
 

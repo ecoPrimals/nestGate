@@ -237,7 +237,7 @@ methods = [
 [capabilities.coordination]
 domain = "coordination"
 stability = "provisional"
-description = "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (rootPulse-traced CAS)"
+description = "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (provenance-traced CAS)"
 methods = [
     "coord.blurbs.current", "coord.blurbs.list", "coord.blurbs.get",
     "coord.fragos.list", "coord.fragos.get",

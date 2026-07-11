@@ -95,115 +95,120 @@ impl UniversalAdapter {
             .ok_or_else(|| format!("Capability '{category}' not found"))
     }
 
-    /// Discover orchestration capabilities through dynamic discovery
-    fn discover_orchestration_capabilities(&mut self) -> Result<(), String> {
+    /// Discover orchestration capabilities through dynamic discovery.
+    fn discover_orchestration_capabilities(&mut self) -> Result<(), &'static str> {
         if let Some(endpoint) = self
             .discovery_config
             .get_discovery_endpoint("orchestration")
         {
-            let capability = CapabilityInfo {
-                category: String::from("orchestration"),
-                provider: String::from("dynamic-orchestration"),
-                endpoint: endpoint.to_string(),
-                performance_tier: String::from("standard"),
-                availability: 99.5,
-                metadata: HashMap::new(),
-                discovered_at: SystemTime::now(),
-            };
-            self.capabilities
-                .insert(String::from("orchestration"), capability);
+            self.capabilities.insert(
+                "orchestration".into(),
+                CapabilityInfo {
+                    category: "orchestration".into(),
+                    provider: "dynamic-orchestration".into(),
+                    endpoint: endpoint.to_string(),
+                    performance_tier: "standard".into(),
+                    availability: 99.5,
+                    metadata: HashMap::new(),
+                    discovered_at: SystemTime::now(),
+                },
+            );
         }
         Ok(())
     }
 
-    /// Discover compute capabilities through dynamic discovery
-    fn discover_compute_capabilities(&mut self) -> Result<(), String> {
+    /// Discover compute capabilities through dynamic discovery.
+    fn discover_compute_capabilities(&mut self) -> Result<(), &'static str> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("compute") {
-            let capability = CapabilityInfo {
-                category: String::from("compute"),
-                provider: String::from("dynamic-compute"),
-                endpoint: endpoint.to_string(),
-                performance_tier: String::from("high_performance"),
-                availability: 98.5,
-                metadata: HashMap::new(),
-                discovered_at: SystemTime::now(),
-            };
-            self.capabilities
-                .insert(String::from("compute"), capability);
+            self.capabilities.insert(
+                "compute".into(),
+                CapabilityInfo {
+                    category: "compute".into(),
+                    provider: "dynamic-compute".into(),
+                    endpoint: endpoint.to_string(),
+                    performance_tier: "high_performance".into(),
+                    availability: 98.5,
+                    metadata: HashMap::new(),
+                    discovered_at: SystemTime::now(),
+                },
+            );
         }
         Ok(())
     }
 
-    /// Discover security capabilities through dynamic discovery
-    fn discover_security_capabilities(&mut self) -> Result<(), String> {
+    /// Discover security capabilities through dynamic discovery.
+    fn discover_security_capabilities(&mut self) -> Result<(), &'static str> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("security") {
-            let capability = CapabilityInfo {
-                category: String::from("security"),
-                provider: String::from("dynamic-security"),
-                endpoint: endpoint.to_string(),
-                performance_tier: String::from("enterprise"),
-                availability: 99.9,
-                metadata: HashMap::new(),
-                discovered_at: SystemTime::now(),
-            };
-            self.capabilities
-                .insert(String::from("security"), capability);
+            self.capabilities.insert(
+                "security".into(),
+                CapabilityInfo {
+                    category: "security".into(),
+                    provider: "dynamic-security".into(),
+                    endpoint: endpoint.to_string(),
+                    performance_tier: "enterprise".into(),
+                    availability: 99.9,
+                    metadata: HashMap::new(),
+                    discovered_at: SystemTime::now(),
+                },
+            );
         }
         Ok(())
     }
 
-    /// Discover AI capabilities through dynamic discovery
-    fn discover_ai_capabilities(&mut self) -> Result<(), String> {
+    /// Discover AI capabilities through dynamic discovery.
+    fn discover_ai_capabilities(&mut self) -> Result<(), &'static str> {
         if let Some(endpoint) = self
             .discovery_config
             .get_discovery_endpoint("artificial_intelligence")
         {
-            let capability = CapabilityInfo {
-                category: String::from("artificial_intelligence"),
-                provider: String::from("dynamic-ai"),
-                endpoint: endpoint.to_string(),
-                performance_tier: String::from("standard"),
-                availability: 97.5,
-                metadata: HashMap::new(),
-                discovered_at: SystemTime::now(),
-            };
-            self.capabilities
-                .insert(String::from("artificial_intelligence"), capability);
+            self.capabilities.insert(
+                "artificial_intelligence".into(),
+                CapabilityInfo {
+                    category: "artificial_intelligence".into(),
+                    provider: "dynamic-ai".into(),
+                    endpoint: endpoint.to_string(),
+                    performance_tier: "standard".into(),
+                    availability: 97.5,
+                    metadata: HashMap::new(),
+                    discovered_at: SystemTime::now(),
+                },
+            );
         }
         Ok(())
     }
 
-    /// Discover storage capabilities (`NestGate`'s self-knowledge)
-    fn discover_storage_capabilities(&mut self) -> Result<(), String> {
-        // NestGate knows its own storage capabilities
-        let capability = CapabilityInfo {
-            category: String::from("storage"),
-            provider: String::from("nestgate-native"),
-            endpoint: String::from("internal://nestgate/storage"),
-            performance_tier: String::from("enterprise"),
-            availability: 99.9,
-            metadata: HashMap::new(),
-            discovered_at: SystemTime::now(),
-        };
-        self.capabilities
-            .insert(String::from("storage"), capability);
+    /// Discover storage capabilities (`NestGate`'s self-knowledge).
+    fn discover_storage_capabilities(&mut self) -> Result<(), &'static str> {
+        self.capabilities.insert(
+            "storage".into(),
+            CapabilityInfo {
+                category: "storage".into(),
+                provider: "nestgate-native".into(),
+                endpoint: "internal://nestgate/storage".into(),
+                performance_tier: "enterprise".into(),
+                availability: 99.9,
+                metadata: HashMap::new(),
+                discovered_at: SystemTime::now(),
+            },
+        );
         Ok(())
     }
 
-    /// Discover ecosystem capabilities through dynamic discovery
-    fn discover_ecosystem_capabilities(&mut self) -> Result<(), String> {
+    /// Discover ecosystem capabilities through dynamic discovery.
+    fn discover_ecosystem_capabilities(&mut self) -> Result<(), &'static str> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("ecosystem") {
-            let capability = CapabilityInfo {
-                category: String::from("ecosystem"),
-                provider: String::from("dynamic-ecosystem"),
-                endpoint: endpoint.to_string(),
-                performance_tier: String::from("standard"),
-                availability: 99.0,
-                metadata: HashMap::new(),
-                discovered_at: SystemTime::now(),
-            };
-            self.capabilities
-                .insert(String::from("ecosystem"), capability);
+            self.capabilities.insert(
+                "ecosystem".into(),
+                CapabilityInfo {
+                    category: "ecosystem".into(),
+                    provider: "dynamic-ecosystem".into(),
+                    endpoint: endpoint.to_string(),
+                    performance_tier: "standard".into(),
+                    availability: 99.0,
+                    metadata: HashMap::new(),
+                    discovered_at: SystemTime::now(),
+                },
+            );
         }
         Ok(())
     }

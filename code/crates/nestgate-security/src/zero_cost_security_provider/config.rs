@@ -98,33 +98,33 @@ impl ZeroCostSecurityConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.provider_id.is_empty() {
-            return Err(String::from("Provider ID cannot be empty"));
+            return Err("Provider ID cannot be empty");
         }
 
         if self.token_expiry_seconds == 0 {
-            return Err(String::from("Token expiry must be greater than 0"));
+            return Err("Token expiry must be greater than 0");
         }
 
         if self.max_concurrent_auth == 0 {
-            return Err(String::from("Max concurrent auth must be greater than 0"));
+            return Err("Max concurrent auth must be greater than 0");
         }
 
         if self.rate_limit_per_minute == 0 {
-            return Err(String::from("Rate limit must be greater than 0"));
+            return Err("Rate limit must be greater than 0");
         }
 
         if self.auth_timeout_seconds == 0 {
-            return Err(String::from("Auth timeout must be greater than 0"));
+            return Err("Auth timeout must be greater than 0");
         }
 
         if self.max_failed_attempts == 0 {
-            return Err(String::from("Max failed attempts must be greater than 0"));
+            return Err("Max failed attempts must be greater than 0");
         }
 
         if self.lockout_duration_seconds == 0 {
-            return Err(String::from("Lockout duration must be greater than 0"));
+            return Err("Lockout duration must be greater than 0");
         }
 
         Ok(())

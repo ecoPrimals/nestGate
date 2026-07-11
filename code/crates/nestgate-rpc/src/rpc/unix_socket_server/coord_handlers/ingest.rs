@@ -141,7 +141,7 @@ fn extract_title(content: &str, kind: &ArtifactKind, filename: &str) -> String {
             }
             filename.to_owned()
         }
-        ArtifactKind::Wave => "Wave State".to_owned(),
+        ArtifactKind::Wave => "Wave State".into(),
         ArtifactKind::Head => format!("{} HEAD", filename.trim_end_matches(".toml")),
     }
 }
@@ -291,7 +291,7 @@ pub async fn coord_ingest(
     // and will be activated when the NUCLEUS composition is live on sporeGate.
     let provenance_available = false;
     if provenance_available {
-        warn!("coord.ingest: rootPulse provenance trio integration is pending NUCLEUS activation");
+        warn!("coord.ingest: provenance pipeline integration is pending NUCLEUS activation");
     }
 
     Ok(json!({

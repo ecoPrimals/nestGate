@@ -372,7 +372,7 @@ pub fn capabilities_list() -> Result<Value> {
                     "topology", "depot.status", "provenance", "ingest"
                 ],
                 "version": env!("CARGO_PKG_VERSION"),
-                "description": "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (rootPulse-traced CAS)"
+                "description": "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (provenance-traced CAS)"
             }
         ],
         "consumed_capabilities": [

@@ -290,7 +290,7 @@ pub async fn coord_topology(
         "gates": gates,
         "head_count": gates.len(),
         "source": "coordination_manifest",
-        "note": "Live mesh topology requires songBird mesh.peers IPC"
+        "note": "Live mesh topology requires a mesh capability provider (mesh.peers IPC)"
     })))
 }
 
@@ -383,6 +383,6 @@ pub async fn coord_provenance(
         "spine_index": artifact["spine_index"],
         "braid_id": artifact["braid_id"],
         "provenance_source": "manifest",
-        "note": "Full rootPulse provenance requires loamSpine + sweetGrass IPC"
+        "note": "Full provenance requires ledger + braid capability providers via IPC"
     })))
 }

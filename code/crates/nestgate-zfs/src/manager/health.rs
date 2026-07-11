@@ -61,12 +61,11 @@ impl ZfsManager {
             available_capacity: pools.iter().map(|p| p.capacity.available_bytes).sum(),
         };
 
-        // Get tier status
         let tier_status = TierOverallStatus {
             hot_utilization: self.get_real_tier_utilization("hot").await.unwrap_or(0.0),
-            warm_utilization: 0.45,
-            cold_utilization: 0.25,
-            migration_queue_size: 5,
+            warm_utilization: self.get_real_tier_utilization("warm").await.unwrap_or(0.0),
+            cold_utilization: self.get_real_tier_utilization("cold").await.unwrap_or(0.0),
+            migration_queue_size: 0,
         };
 
         // Get performance metrics
@@ -95,20 +94,18 @@ impl ZfsManager {
             prediction_accuracy: 0.0,
         });
 
-        // Get migration status
         let migration_status = MigrationStatus {
             active_jobs: self.get_active_migration_jobs().unwrap_or(0),
-            queued_jobs: 5,
-            completed_jobs: 150,
-            failed_jobs: 3,
-            total_bytes_migrated: 1024 * 1024 * 1024 * 50, // 50GB
+            queued_jobs: 0,
+            completed_jobs: 0,
+            failed_jobs: 0,
+            total_bytes_migrated: 0,
         };
 
-        // Get snapshot status
         let snapshot_status = SnapshotStatus {
             total_snapshots: u64::from(self.get_total_snapshots().await.unwrap_or(0)),
-            active_policies: 8,
-            pending_operations: 2,
+            active_policies: 0,
+            pending_operations: 0,
             recent_failures: 0,
         };
 

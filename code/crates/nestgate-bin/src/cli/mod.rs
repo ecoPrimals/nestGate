@@ -52,7 +52,7 @@ EXAMPLES:
     -H 'Content-Type: application/json' \\
     -d '{\"name\": \"tank/data\", \"compression\": true}'
 
-For more information: https://github.com/your-org/nestgate
+For more information: https://github.com/ecoprimals/nestgate
 ")]
 pub struct Cli {
     /// Enable verbose logging

@@ -131,18 +131,16 @@ impl InstallerConfigUtils {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn validate(config: &InstallerConfig) -> Result<(), String> {
-        // Use canonical config structure - working_directory instead of services.installation
-        // Skip directory existence check in debug mode (for tests)
+    pub fn validate(config: &InstallerConfig) -> Result<(), &'static str> {
         if !config.base_config.system.debug_mode
             && !PathBuf::from(&config.installation_path).exists()
         {
-            return Err(String::from("Installation directory does not exist"));
+            return Err("Installation directory does not exist");
         }
 
         // Basic validation - can be expanded as needed
         if config.base_config.system.instance_name.is_empty() {
-            return Err(String::from("Service name cannot be empty"));
+            return Err("Service name cannot be empty");
         }
 
         Ok(())
