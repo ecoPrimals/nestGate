@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 106: COORD-ACTIVATE + deep debt sweep (Jul 11, 2026)
+
+- **COORD-ACTIVATE** (Wave 136b): Coordination backend fully wired to ALL RPC surfaces:
+  - New `coord_ops.rs` stateless bridge module (mirrors `content_ops` pattern)
+  - HTTP JSON-RPC (`/jsonrpc`): 14 `coord.*` methods via `handle_coord_method`
+  - Transport handler: 14 `coord.*` methods via `coord_ops` delegation
+  - `UNIX_SOCKET_SUPPORTED_METHODS`: 13 coord methods added (capability advertisement)
+  - `provided_capabilities`: "coordination" group with all method names
+  - `primal_announce`: "coordination" added to announced capabilities + method filter
+  - `capability_registry.toml`: `[capabilities.coordination]` with full protocol docs
+  - `NESTGATE_CAPABILITY_LABELS`: "coordination" added
+- **Deep debt — thiserror sweep**: `SimdError` (nestgate-core), `ZeroCostError` (nestgate-security),
+  `ApiError` (nestgate-api) converted from manual Display/Error to `thiserror::Error` derive.
+  `ApiError` gains `#[from]` for `NestGateError`, `io::Error`, `serde_json::Error`.
+- **Deep debt — self-knowledge**: 6 runtime strings naming other primals (`songBird`,
+  `loamSpine`, `sweetGrass`, `rootPulse`) replaced with capability-type references.
+- **Deep debt — hardcoding**: `DEFAULT_SECURITY_SOCKET_PATH` const → `default_security_socket_path()`
+  fn with `NESTGATE_SECURITY_SOCKET` env override. CLI placeholder URL fixed.
+- **Deep debt — production mocks**: `health.rs` fake metrics (hardcoded 0.45 warm, 150 completed,
+  50GB migrated) replaced with real tier utilization queries and honest zero-defaults.
+- **Deep debt — idiomatic Rust**: 8 `validate()` fns: `Result<_, String>` → `Result<_, &'static str>`;
+  3 promoted to `const fn`; 30+ `String::from("literal")` → `.into()`.
+
 ### Session 105: NESTGATE-ANDROID-01 — UDS fatal on Android (Jul 7, 2026)
 
 - **NESTGATE-ANDROID-01 fix** (Wave 133a): nestGate was crashing on grapheneGate (Android)

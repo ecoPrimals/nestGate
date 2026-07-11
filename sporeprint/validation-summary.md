@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 12,885 tests (881 RPC), 22 crates, 16 capability domains, 4 transport surfaces, Wave 128b (dead dep purge, Arc cache clones, content_handlers split, fabricated metrics eliminated, provenance depth wiring), STARTUP-NG-01 (HTTP default), riboCipher [0xEC,0x01], BTSP auth, native UDS compliance"
-date = 2026-06-28
+description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 19 capability domains, 4 transport surfaces, Wave 136b (COORD-ACTIVATE, deep debt: thiserror, self-knowledge, mocks, idiomatic Rust), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+date = 2026-07-11
 
 [taxonomies]
 primals = ["nestgate"]
@@ -10,7 +10,10 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 
 ## Status
 
-- **12,885 tests** (12,885 passing, 420 ignored, 881 RPC), **0 failures** (serial and parallel), 0 clippy warnings
+- **3,790 tests** (3,790 passing, 73 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 106 COORD-ACTIVATE + deep debt sweep**: Coordination domain wired to all 4 RPC surfaces (UDS dispatch was 14/14 — now HTTP JSON-RPC, transport handler, capability advertisement all 14/14); `coord_ops.rs` bridge module; `primal_announce` + `capability_registry.toml` updated with coordination capability; 3 error types → `thiserror`; 6 other-primal runtime strings → capability-type references; health.rs fake metrics eliminated; `DEFAULT_SECURITY_SOCKET_PATH` → env-overridable function; 8 `Result<_, String>` → `&'static str`; 3 `const fn` promotions; 30+ `String::from` → `.into()`
+- **Session 105 NESTGATE-ANDROID-01**: UDS fatal on grapheneGate fixed — `PRIMAL_BIND_MODE=tcp_only` authoritative across service.rs + IsomorphicIpcServer; empty env-var filtering; 6 new tests
+- **Session 104 CI-DIV-03**: `.cargo/config.toml` musl linker converged from `ld.lld` to `aarch64-linux-gnu-gcc` (ecosystem standard)
 - **Session 103 riboCipher signal acceptance**: `[0xEC, 0x01]` prefix stripped via `fill_buf()`/`consume(2)` on production UDS, legacy UDS, and TCP fallback connection handlers — no-op for plain JSON-RPC clients; 7 new tests in `protocol.rs`
 - **Session 102 STARTUP-NG-01**: `nestgate server` defaults to HTTP (guideStone Stream 1 primal startup contract); `--enable-http` removed, `--socket-only` is the opt-out; `PRIMAL_BIND_MODE` env respected (`tcp_only`/`tcp` → HTTP, `uds_only`/`uds` → socket-only); legacy `nestgate-server` symlink defaults HTTP; 17 new tests (7 `resolve_enable_http`, 10 `commands/env.rs`)
 - **Session 101b NG-DOWNCAST-01 fix**: `is_platform_constraint()` chain-walking evolution — `find_io_error()` walks `source()` chain to find nested `io::Error` through `.context()` wrappers; `UnixListener::bind` error path preserved via `.context()` instead of `anyhow::anyhow!()`; 7 new tests; root docs refreshed to honest test counts; registry synced from canonical `config/`; gitignore cleaned
@@ -45,7 +48,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 - **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup (Wave 43)
 - **Wave 47 deployment convergence**: `--socket PATH` CLI flag, `health.liveness` normalized to `{"status":"alive","primal":"nestgate"}` across all transports
 - **Wave 49 ecosystem tightening**: `plasmidBin` sole binary channel documented, `genomeBin` terminology evolved, 3 dead fuzz targets removed, `notify-plasmidbin.yml` active
-- **aarch64-musl segfault fix (validated)**: Replaced `aarch64-linux-gnu-gcc` linker with `ld.lld` + `link-self-contained=yes`; binary built, inspected (static ELF, no dynamic deps), and run under QEMU — no segfault. `nucleus-aarch64-mixed-tcp` cell unblocked
+- **aarch64-musl fix (validated)**: `link-self-contained=yes` + `relocation-model=static` prevents musl ≤1.2.2 segfault; linker converged to `aarch64-linux-gnu-gcc` (ecosystem standard, Session 104)
 - **Stale socket cleanup**: `SocketCleanupGuard` (RAII), `ctrl_c` graceful shutdown, PID sidecars
 - **Rust 2024 edition**, `#![forbid(unsafe_code)]`, `clippy::pedantic` + `clippy::nursery` clean
 - **`cargo deny check bans`** passing, pure-Rust crypto (no ring, no OpenSSL)

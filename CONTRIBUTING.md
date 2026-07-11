@@ -175,8 +175,8 @@ cargo llvm-cov --workspace --summary-only
 - [STATUS.md](./STATUS.md) — Current measured metrics
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capability reference
 - [capability_registry.toml](./capability_registry.toml) — Capability and method registry
-- [docs/](./docs/) — Architecture, guides, session archives
+- [docs/](./docs/) — Architecture and guides
 
 ---
 
-**Last Updated**: Jun 20, 2026 (Wave 120)
+**Last Updated**: Jul 11, 2026 (Wave 136b)

@@ -2,16 +2,16 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-06-28, Wave 128b)**  
+**Verification (as of 2026-07-11, Wave 136b)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 12,885 passed, 0 failures, 420 ignored  
+- **Tests**: 3,790 passed, 0 failures, 73 ignored (1 pre-existing env-specific)  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 12,885 passed, 0 failures, 420 ignored
+- **Tests (last recorded)**: 3,790 passed, 73 ignored
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -160,7 +160,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-06-21 (Wave 120 sweep x6).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-11 (Wave 136b).
 
 | Area | Status |
 |------|--------|
@@ -315,4 +315,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: June 2026 (Wave 120)
+**Latest**: July 2026 (Wave 136b)

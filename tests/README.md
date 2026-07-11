@@ -1,7 +1,7 @@
 # NestGate Testing Guide
 
-**Last Updated**: Jun 19, 2026  
-**Full suite (`cargo test --workspace --all-features`)**: 12,885 passed, 420 ignored, 0 failures  
+**Last Updated**: Jul 11, 2026  
+**Full suite (`cargo test --workspace`)**: 3,790 passed, 73 ignored, 0 failures (1 pre-existing env-specific)  
 **Coverage**: 84%+ line (workspace, all features)  
 **Goal**: Maintain high coverage with clean, maintainable tests  
 
