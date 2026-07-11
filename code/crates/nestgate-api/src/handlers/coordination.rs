@@ -283,7 +283,7 @@ pub async fn coord_topology(
     let gates: Vec<&str> = manifest["heads"]
         .as_object()
         .into_iter()
-        .flat_map(|m| m.keys().map(|s| s.as_str()))
+        .flat_map(|m| m.keys().map(String::as_str))
         .collect();
 
     Ok(Json(json!({
@@ -332,7 +332,7 @@ pub async fn coord_depot(
                 let meta = std::fs::metadata(&path).ok();
                 binaries.push(json!({
                     "name": name,
-                    "size": meta.as_ref().map(|m| m.len()),
+                    "size": meta.as_ref().map(std::fs::Metadata::len),
                     "modified": meta.and_then(|m| m.modified().ok())
                         .map(|t| {
                             let dt: chrono::DateTime<chrono::Utc> = t.into();

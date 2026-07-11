@@ -94,15 +94,13 @@ fn extract_wave_from_content(content: &str, kind: &ArtifactKind) -> Option<Strin
                 if let Some(rest) = line.strip_prefix("**Wave**:") {
                     return Some(rest.trim().to_owned());
                 }
-                if line.contains("Wave") {
-                    if let Some(start) = line.find("Wave") {
-                        let after = &line[start + 4..];
-                        let after = after.trim_start_matches([' ', ':', '—', '-'].as_ref());
-                        let wave_id: String =
-                            after.chars().take_while(|c| c.is_alphanumeric()).collect();
-                        if !wave_id.is_empty() {
-                            return Some(wave_id);
-                        }
+                if let Some(start) = line.find("Wave") {
+                    let after = &line[start + 4..];
+                    let after = after.trim_start_matches([' ', ':', '\u{2014}', '-'].as_ref());
+                    let wave_id: String =
+                        after.chars().take_while(|c| c.is_alphanumeric()).collect();
+                    if !wave_id.is_empty() {
+                        return Some(wave_id);
                     }
                 }
             }
@@ -191,20 +189,14 @@ pub async fn coord_ingest(
     let mut errors = Vec::new();
 
     for artifact_val in &artifacts {
-        let filename = match artifact_val["filename"].as_str() {
-            Some(f) => f,
-            None => {
-                errors.push(json!({"error": "missing filename"}));
-                continue;
-            }
+        let Some(filename) = artifact_val["filename"].as_str() else {
+            errors.push(json!({"error": "missing filename"}));
+            continue;
         };
 
-        let content_b64 = match artifact_val["content_base64"].as_str() {
-            Some(c) => c,
-            None => {
-                errors.push(json!({"error": format!("missing content_base64 for {filename}")}));
-                continue;
-            }
+        let Some(content_b64) = artifact_val["content_base64"].as_str() else {
+            errors.push(json!({"error": format!("missing content_base64 for {filename}")}));
+            continue;
         };
 
         let raw = match STANDARD.decode(content_b64) {

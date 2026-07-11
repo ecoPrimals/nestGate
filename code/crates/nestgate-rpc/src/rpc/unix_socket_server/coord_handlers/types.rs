@@ -18,7 +18,7 @@ pub enum ArtifactKind {
 }
 
 impl ArtifactKind {
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Blurb => "blurb",
             Self::Frago => "frago",
@@ -38,7 +38,10 @@ impl ArtifactKind {
             Self::Aar
         } else if lower.contains("wave") {
             Self::Wave
-        } else if lower.ends_with(".toml") && !lower.contains("wave") {
+        } else if std::path::Path::new(name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("toml"))
+        {
             Self::Head
         } else {
             Self::Frago
@@ -94,10 +97,4 @@ impl CoordManifest {
         }
     }
 
-    pub fn artifacts_by_kind(&self, kind: &ArtifactKind) -> Vec<&CoordArtifact> {
-        self.artifacts
-            .values()
-            .filter(|a| &a.kind == kind)
-            .collect()
-    }
 }

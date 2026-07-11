@@ -39,4 +39,3 @@ pub use query::{
     coord_provenance, coord_topology, coord_waves_current, coord_waves_history,
 };
 pub use ingest::coord_ingest;
-pub use types::{ArtifactKind, CoordArtifact, CoordManifest};

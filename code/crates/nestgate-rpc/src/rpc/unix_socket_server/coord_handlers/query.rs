@@ -308,7 +308,7 @@ pub async fn coord_topology(
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
 
-    let gates: Vec<&str> = manifest.heads.keys().map(|s| s.as_str()).collect();
+    let gates: Vec<&str> = manifest.heads.keys().map(String::as_str).collect();
 
     debug!("coord.topology: {} gates with HEAD state", gates.len());
 
@@ -358,7 +358,7 @@ fn scan_depot(depot_path: &std::path::Path) -> Result<Value> {
                 let metadata = std::fs::metadata(&path).ok();
                 binaries.push(json!({
                     "name": name,
-                    "size": metadata.as_ref().map(|m| m.len()),
+                    "size": metadata.as_ref().map(std::fs::Metadata::len),
                     "modified": metadata.and_then(|m| m.modified().ok())
                         .map(|t| {
                             let dt: chrono::DateTime<chrono::Utc> = t.into();
@@ -383,8 +383,8 @@ fn scan_depot(depot_path: &std::path::Path) -> Result<Value> {
 
 /// `coord.provenance` — return provenance trail for an artifact.
 ///
-/// Full provenance requires loamSpine + sweetGrass IPC. Returns what is
-/// available from the local manifest (spine_index, braid_id).
+/// Full provenance requires `loamSpine` + `sweetGrass` IPC. Returns what is
+/// available from the local manifest (`spine_index`, `braid_id`).
 pub async fn coord_provenance(
     params: Option<&Value>,
     state: &StorageState,
