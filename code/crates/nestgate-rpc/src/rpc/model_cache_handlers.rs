@@ -274,6 +274,12 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "coord.depot.status",
     "coord.provenance",
     "coord.ingest",
+    // footPrint domain — CAS-backed project persistence
+    "footprint.save",
+    "footprint.get",
+    "footprint.list",
+    "footprint.delete",
+    "footprint.history",
 ];
 
 /// capabilities.list — Wire Standard L3 compliant response.
@@ -373,6 +379,12 @@ pub fn capabilities_list() -> Result<Value> {
                 ],
                 "version": env!("CARGO_PKG_VERSION"),
                 "description": "Ecosystem coordination — blurbs, FRAGOs, wave state, gate heads, depot, provenance (provenance-traced CAS)"
+            },
+            {
+                "type": "footprint",
+                "methods": ["save", "get", "list", "delete", "history"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "CAS-backed project persistence — immutable revisions, BLAKE3 content-addressing, provenance-traced"
             }
         ],
         "consumed_capabilities": [

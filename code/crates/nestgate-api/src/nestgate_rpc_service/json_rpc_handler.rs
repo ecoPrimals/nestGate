@@ -101,6 +101,8 @@ impl NestGateJsonRpcHandler {
             m if m.starts_with("content.") => handle_content_method(m, &params).await,
             // Coordination domain — ecosystem state served from CAS
             m if m.starts_with("coord.") => handle_coord_method(m, &params).await,
+            // footPrint domain — CAS-backed project persistence
+            m if m.starts_with("footprint.") => handle_footprint_method(m, &params).await,
             "lifecycle.status" => Ok(json!({
                 "status": "running",
                 "primal": "nestgate",
@@ -180,6 +182,28 @@ async fn handle_coord_method(
         "coord.provenance" => coord_ops::provenance(params).await,
         "coord.ingest" => coord_ops::ingest(params).await,
         _ => return Err(format!("Unknown coord method: {method}")),
+    };
+    result.map_err(|e| format!("{method} failed: {e}"))
+}
+
+/// footPrint `footprint.*` methods — CAS-backed project persistence.
+///
+/// # Errors
+///
+/// Returns `Err` for unknown footprint methods or handler failures.
+async fn handle_footprint_method(
+    method: &str,
+    params: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    use nestgate_core::rpc::footprint_ops;
+
+    let result = match method {
+        "footprint.save" => footprint_ops::save(params).await,
+        "footprint.get" => footprint_ops::get(params).await,
+        "footprint.list" => footprint_ops::list(params).await,
+        "footprint.delete" => footprint_ops::delete(params).await,
+        "footprint.history" => footprint_ops::history(params).await,
+        _ => return Err(format!("Unknown footprint method: {method}")),
     };
     result.map_err(|e| format!("{method} failed: {e}"))
 }

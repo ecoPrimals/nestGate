@@ -177,6 +177,13 @@ impl<S: StorageBackend + 'static> RpcMethodHandler for NestGateRpcHandler<S> {
             "coord.provenance" => nestgate_core::rpc::coord_ops::provenance(&params).await,
             "coord.ingest" => nestgate_core::rpc::coord_ops::ingest(&params).await,
 
+            // footPrint domain — CAS-backed project persistence
+            "footprint.save" => nestgate_core::rpc::footprint_ops::save(&params).await,
+            "footprint.get" => nestgate_core::rpc::footprint_ops::get(&params).await,
+            "footprint.list" => nestgate_core::rpc::footprint_ops::list(&params).await,
+            "footprint.delete" => nestgate_core::rpc::footprint_ops::delete(&params).await,
+            "footprint.history" => nestgate_core::rpc::footprint_ops::history(&params).await,
+
             // Lifecycle
             "lifecycle.status" => self.handle_lifecycle_status(),
 

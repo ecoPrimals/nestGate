@@ -68,6 +68,7 @@ pub mod btsp_phase3;
 pub mod btsp_server_handshake;
 pub mod content_ops;
 pub mod coord_ops;
+pub mod footprint_ops;
 pub(crate) mod content_stream;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;

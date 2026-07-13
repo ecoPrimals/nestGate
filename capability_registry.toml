@@ -316,12 +316,39 @@ stability = "stable"
 description = "BTSP security capabilities — protocol version, cipher suite, handshake requirement"
 methods = ["btsp.capabilities"]
 
+[capabilities.footprint]
+domain = "footprint"
+stability = "provisional"
+description = "CAS-backed project persistence — immutable revisions, BLAKE3 content-addressing, provenance-traced"
+methods = [
+    "footprint.save", "footprint.get", "footprint.list",
+    "footprint.delete", "footprint.history",
+]
+
+# ── footPrint protocol (Wave 137b) ─────────────────────────────
+# footprint.save:    {project_id, name?, content_base64, message?, metadata?}
+#                    → {project_id, hash, message, size, revision_count, manifest_version}
+#   Creates or updates a project with a new CAS revision. Content is stored in
+#   _content/ via BLAKE3. If the project doesn't exist, it is created.
+# footprint.get:     {project_id, include_content?, revision?}
+#                    → {project_id, name, created_at, updated_at, current_revision,
+#                       revision_count, metadata, revision?, content_base64?}
+#   Retrieves project metadata. With include_content=true, returns the base64
+#   content of the current (or specified) revision from CAS.
+# footprint.list:    {limit?, offset?} → {count, projects: [{project_id, name, ...}]}
+#   Lists all projects sorted by updated_at descending. Paginated.
+# footprint.delete:  {project_id} → {deleted: true, note: "CAS content remains immutable"}
+#   Soft-deletes a project from the manifest. CAS blobs are immutable and remain
+#   addressable by hash via content.get.
+# footprint.history: {project_id, limit?} → {revisions: [{hash, message, saved_at, parent, size}]}
+#   Lists revision history for a project (newest first).
+
 # Neural API announce — self-registration with biomeOS (Wave 43, extended Wave 73)
 [announce]
 method = "primal.announce"
 target = "biomeos"
 signal_tiers = ["nest"]
-capabilities = ["storage", "content", "coordination"]
+capabilities = ["storage", "content", "coordination", "footprint"]
 federation_methods = ["content.replicate", "content.replicate.pull", "content.fetch_heads", "content.push", "content.sync"]
 cost_hints = { storage = 10.0, content = 15.0 }
 latency_estimates = { storage = 50, content = 20 }

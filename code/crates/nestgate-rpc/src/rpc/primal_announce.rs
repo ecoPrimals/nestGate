@@ -19,7 +19,7 @@ use tracing::{debug, info, warn};
 use super::model_cache_handlers::UNIX_SOCKET_SUPPORTED_METHODS;
 
 /// Capability domains `NestGate` provides to the ecosystem.
-const ANNOUNCED_CAPABILITIES: &[&str] = &["storage", "content", "coordination"];
+const ANNOUNCED_CAPABILITIES: &[&str] = &["storage", "content", "coordination", "footprint"];
 
 /// Signal tier — `NestGate` participates in the Nest Atomic composition.
 const SIGNAL_TIERS: &[&str] = &["nest"];
@@ -46,6 +46,7 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
             m.starts_with("storage.")
                 || m.starts_with("content.")
                 || m.starts_with("coord.")
+                || m.starts_with("footprint.")
         })
         .copied()
         .collect();
@@ -207,7 +208,7 @@ mod tests {
             .iter()
             .filter_map(Value::as_str)
             .collect();
-        assert_eq!(caps, &["storage", "content", "coordination"]);
+        assert_eq!(caps, &["storage", "content", "coordination", "footprint"]);
     }
 
     #[test]
@@ -223,8 +224,9 @@ mod tests {
         assert!(
             methods.iter().all(|m| m.starts_with("storage.")
                 || m.starts_with("content.")
-                || m.starts_with("coord.")),
-            "all methods should be storage.*, content.*, or coord.*"
+                || m.starts_with("coord.")
+                || m.starts_with("footprint.")),
+            "all methods should be storage.*, content.*, coord.*, or footprint.*"
         );
         assert!(methods.contains(&"storage.store"));
         assert!(methods.contains(&"content.put"));

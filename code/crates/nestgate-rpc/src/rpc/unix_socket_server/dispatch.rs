@@ -16,7 +16,7 @@ use crate::rpc::protocol::{normalize_method, warn_legacy_method_alias};
 
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
-    bonding_handlers, content_federation_handlers, content_handlers, coord_handlers,
+    bonding_handlers, content_federation_handlers, content_handlers, coord_handlers, footprint_handlers,
     external_handlers, nat_handlers, session_handlers, storage_handlers, template_handlers,
     zfs_handlers,
 };
@@ -343,6 +343,22 @@ pub(super) async fn handle_request(
         }
         "coord.ingest" => {
             coord_handlers::coord_ingest(request.params.as_ref(), state).await
+        }
+        // footPrint domain — CAS-backed project persistence (Wave 137b)
+        "footprint.save" => {
+            footprint_handlers::footprint_save(request.params.as_ref(), state).await
+        }
+        "footprint.get" => {
+            footprint_handlers::footprint_get(request.params.as_ref(), state).await
+        }
+        "footprint.list" => {
+            footprint_handlers::footprint_list(request.params.as_ref(), state).await
+        }
+        "footprint.delete" => {
+            footprint_handlers::footprint_delete(request.params.as_ref(), state).await
+        }
+        "footprint.history" => {
+            footprint_handlers::footprint_history(request.params.as_ref(), state).await
         }
         _ => {
             return JsonRpcResponse {
