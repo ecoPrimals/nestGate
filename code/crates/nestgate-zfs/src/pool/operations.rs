@@ -12,21 +12,21 @@ use crate::pool::types::PoolInfo;
 use super::manager::ZfsPoolManager;
 
 fn zpool_create_argv(name: &str, devices: &[String]) -> Vec<String> {
-    let mut args = vec![String::from("create"), name.to_string()];
+    let mut args = vec!["create".into(), name.to_string()];
     args.extend(devices.iter().cloned());
     args
 }
 
 fn zpool_destroy_argv(name: &str) -> [String; 3] {
     [
-        String::from("destroy"),
-        String::from("-f"),
+        "destroy".into(),
+        "-f".into(),
         name.to_string(),
     ]
 }
 
 fn zpool_scrub_argv(name: &str) -> [String; 2] {
-    [String::from("scrub"), name.to_string()]
+    ["scrub".into(), name.to_string()]
 }
 
 impl ZfsPoolManager {
@@ -48,10 +48,8 @@ impl ZfsPoolManager {
             .output()
             .await
             .map_err(|_e| {
-                create_zfs_error(
-                    String::from("Failed to execute zpool create: error details"),
-                    ZfsOperation::Command,
-                )
+                let message: String = "Failed to execute zpool create: error details".into();
+                create_zfs_error(message, ZfsOperation::Command)
             })?;
 
         if !output.status.success() {
@@ -131,10 +129,8 @@ impl ZfsPoolManager {
             .output()
             .await
             .map_err(|_e| {
-                create_zfs_error(
-                    String::from("Failed to execute zpool scrub: error details"),
-                    ZfsOperation::Command,
-                )
+                let message: String = "Failed to execute zpool scrub: error details".into();
+                create_zfs_error(message, ZfsOperation::Command)
             })?;
 
         if !output.status.success() {

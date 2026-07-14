@@ -250,17 +250,15 @@ pub mod validation {
     /// Validate API response structure
     pub fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), String> {
         if response.success && response.data.is_none() {
-            return Err(String::from("Successful response must have data"));
+            return Err("Successful response must have data".into());
         }
 
         if !response.success && response.error.is_none() {
-            return Err(String::from("Failed response must have error message"));
+            return Err("Failed response must have error message".into());
         }
 
         if response.success && response.error.is_some() {
-            return Err(String::from(
-                "Successful response cannot have error message",
-            ));
+            return Err("Successful response cannot have error message".into());
         }
         Ok(())
     }
@@ -271,7 +269,7 @@ pub mod validation {
     ) -> std::result::Result<(), String> {
         if response.component.is_empty() {
             // PEDANTIC: Fixed from service_name to component
-            response.component = String::from("unknown");
+            response.component = "unknown".into();
         }
         Ok(())
     }
@@ -281,7 +279,7 @@ pub mod validation {
         response: &SuccessResponse,
     ) -> std::result::Result<(), String> {
         if response.message.is_empty() {
-            return Err(String::from("Success response must have message"));
+            return Err("Success response must have message".into());
         }
         Ok(())
     }

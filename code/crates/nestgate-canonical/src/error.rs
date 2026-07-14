@@ -170,7 +170,7 @@ impl NestGateError {
     pub fn internal(message: impl Into<String>) -> Self {
         Self::Internal {
             message: message.into(),
-            component: String::from("unknown"),
+            component: "unknown".into(),
         }
     }
 
@@ -178,7 +178,7 @@ impl NestGateError {
     pub fn validation(message: impl Into<String>) -> Self {
         Self::Validation {
             message: message.into(),
-            field: String::from("unknown"),
+            field: "unknown".into(),
         }
     }
 

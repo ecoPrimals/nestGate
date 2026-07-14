@@ -95,9 +95,9 @@ impl ServiceResolver {
                     .find(|s| s.is_available())
                     .cloned()
                     .ok_or_else(|| {
-                        CapabilityError::ConnectionFailed(String::from(
-                            "No healthy providers available",
-                        ))
+                        CapabilityError::ConnectionFailed(
+                            "No healthy providers available".into(),
+                        )
                     })
             }
 
@@ -106,9 +106,9 @@ impl ServiceResolver {
                 let healthy: Vec<_> = providers.iter().filter(|s| s.is_available()).collect();
 
                 if healthy.is_empty() {
-                    return Err(CapabilityError::ConnectionFailed(String::from(
-                        "No healthy providers available",
-                    )));
+                    return Err(CapabilityError::ConnectionFailed(
+                        "No healthy providers available".into(),
+                    ));
                 }
 
                 Ok(healthy[0].clone())
@@ -125,9 +125,9 @@ impl ServiceResolver {
                     })
                     .cloned()
                     .ok_or_else(|| {
-                        CapabilityError::ConnectionFailed(String::from(
-                            "No healthy providers available",
-                        ))
+                        CapabilityError::ConnectionFailed(
+                            "No healthy providers available".into(),
+                        )
                     })
             }
 
@@ -158,9 +158,9 @@ impl ServiceResolver {
                     )
                     .cloned()
                     .ok_or_else(|| {
-                        CapabilityError::ConnectionFailed(String::from(
-                            "No healthy providers available",
-                        ))
+                        CapabilityError::ConnectionFailed(
+                            "No healthy providers available".into(),
+                        )
                     })
             }
         }

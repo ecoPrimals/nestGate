@@ -109,8 +109,8 @@ impl Default for PoolPropertyConfig {
             ashift: 12,
             autoexpand: true,
             autotrim: true,
-            compression: String::from("lz4"),
-            recordsize: String::from("128K"),
+            compression: "lz4".into(),
+            recordsize: "128K".into(),
         }
     }
 }
@@ -141,20 +141,20 @@ impl Default for DeviceDetectionConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            scan_paths: vec![String::from("/dev")],
-            exclude_patterns: vec![String::from("loop"), String::from("ram")],
+            scan_paths: vec!["/dev".into()],
+            exclude_patterns: vec!["loop".into(), "ram".into()],
             include_removable: false,
             min_device_size: 1024 * 1024 * 1024, // 1GB minimum
             max_device_size: 0,                  // 0 means no maximum
             skip_mountpoints: vec![
-                String::from("/"),
-                String::from("/boot"),
-                String::from("/home"),
+                "/".into(),
+                "/boot".into(),
+                "/home".into(),
             ],
             skip_fstypes: vec![
-                String::from("ext4"),
-                String::from("xfs"),
-                String::from("btrfs"),
+                "ext4".into(),
+                "xfs".into(),
+                "btrfs".into(),
             ],
             include_loop_devices: false,
         }
@@ -165,7 +165,7 @@ impl Default for PoolSetupConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            pool_name: String::from("rpool"),
+            pool_name: "rpool".into(),
             devices: Vec::new(),
             topology: PoolTopology::Single,
             properties: HashMap::new(),
@@ -293,13 +293,13 @@ impl Default for TierProperties {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            compression: String::from("lz4"),
-            recordsize: String::from("128K"),
-            primarycache: String::from("all"),
-            secondarycache: String::from("all"),
-            logbias: String::from("latency"),
-            sync: String::from("standard"),
-            atime: String::from("on"),
+            compression: "lz4".into(),
+            recordsize: "128K".into(),
+            primarycache: "all".into(),
+            secondarycache: "all".into(),
+            logbias: "latency".into(),
+            sync: "standard".into(),
+            atime: "on".into(),
         }
     }
 }
@@ -333,13 +333,13 @@ impl Default for ZfsConfig {
         tier_properties.insert(
             StorageTier::Hot,
             TierProperties {
-                compression: String::from("lz4"),
-                recordsize: String::from("128K"),
-                primarycache: String::from("all"),
-                secondarycache: String::from("all"),
-                logbias: String::from("latency"),
-                sync: String::from("standard"),
-                atime: String::from("on"),
+                compression: "lz4".into(),
+                recordsize: "128K".into(),
+                primarycache: "all".into(),
+                secondarycache: "all".into(),
+                logbias: "latency".into(),
+                sync: "standard".into(),
+                atime: "on".into(),
             },
         );
 
@@ -347,13 +347,13 @@ impl Default for ZfsConfig {
         tier_properties.insert(
             StorageTier::Warm,
             TierProperties {
-                compression: String::from("gzip-6"),
-                recordsize: String::from("1M"),
-                primarycache: String::from("all"),
-                secondarycache: String::from("all"),
-                logbias: String::from("throughput"),
-                sync: String::from("standard"),
-                atime: String::from("off"),
+                compression: "gzip-6".into(),
+                recordsize: "1M".into(),
+                primarycache: "all".into(),
+                secondarycache: "all".into(),
+                logbias: "throughput".into(),
+                sync: "standard".into(),
+                atime: "off".into(),
             },
         );
 
@@ -361,13 +361,13 @@ impl Default for ZfsConfig {
         tier_properties.insert(
             StorageTier::Cold,
             TierProperties {
-                compression: String::from("gzip-9"),
-                recordsize: String::from("1M"),
-                primarycache: String::from("metadata"),
-                secondarycache: String::from("none"),
-                logbias: String::from("throughput"),
-                sync: String::from("disabled"),
-                atime: String::from("off"),
+                compression: "gzip-9".into(),
+                recordsize: "1M".into(),
+                primarycache: "metadata".into(),
+                secondarycache: "none".into(),
+                logbias: "throughput".into(),
+                sync: "disabled".into(),
+                atime: "off".into(),
             },
         );
 

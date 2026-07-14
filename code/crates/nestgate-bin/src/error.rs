@@ -107,7 +107,7 @@ impl BinErrorHelper {
         config_path: Option<String>,
     ) -> NestGateError {
         NestGateError::configuration_error(
-            config_path.unwrap_or_else(|| String::from("bin_config")),
+            config_path.unwrap_or_else(|| "bin_config".into()),
             message.into(),
         )
     }
@@ -120,7 +120,7 @@ impl BinErrorHelper {
         NestGateError::validation(format!(
             "Argument parsing error: {} (arg: {})",
             message.into(),
-            argument.unwrap_or_else(|| String::from("unknown"))
+            argument.unwrap_or_else(|| "unknown".into())
         ))
     }
 
@@ -133,7 +133,7 @@ impl BinErrorHelper {
             format!(
                 "Service initialization error: {} (service: {})",
                 message.into(),
-                service_name.unwrap_or_else(|| String::from("unknown_service"))
+                service_name.unwrap_or_else(|| "unknown_service".into())
             ),
             "nestgate-bin",
         )
@@ -145,7 +145,7 @@ impl BinErrorHelper {
             format!(
                 "Runtime error: {} (operation: {})",
                 message.into(),
-                operation.unwrap_or_else(|| String::from("runtime"))
+                operation.unwrap_or_else(|| "runtime".into())
             ),
             "nestgate-bin",
         )
@@ -164,7 +164,7 @@ impl From<NestGateBinError> for NestGateError {
             NestGateBinError::ArgumentParsingError { argument, message } => {
                 Self::validation(format!(
                     "Argument parsing: {} - {}",
-                    argument.unwrap_or_else(|| String::from("unknown")),
+                    argument.unwrap_or_else(|| "unknown".into()),
                     message
                 ))
             }
@@ -175,14 +175,14 @@ impl From<NestGateBinError> for NestGateError {
                 "config",
                 format!(
                     "{} - {}",
-                    config_path.unwrap_or_else(|| String::from("unknown")),
+                    config_path.unwrap_or_else(|| "unknown".into()),
                     message
                 ),
             ),
             NestGateBinError::RuntimeError { operation, message } => Self::internal_error(
                 format!(
                     "Runtime: {} - {}",
-                    operation.unwrap_or_else(|| String::from("runtime")),
+                    operation.unwrap_or_else(|| "runtime".into()),
                     message
                 ),
                 "nestgate-bin",
@@ -193,7 +193,7 @@ impl From<NestGateBinError> for NestGateError {
             } => Self::internal_error(
                 format!(
                     "Service: {} - {}",
-                    service_name.unwrap_or_else(|| String::from("service")),
+                    service_name.unwrap_or_else(|| "service".into()),
                     message
                 ),
                 "nestgate-bin",

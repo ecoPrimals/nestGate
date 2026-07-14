@@ -18,23 +18,28 @@ pub mod validation;
 
 // Re-exports trimmed: use `execution`, `platform`, and `validation` modules directly.
 
+const DEFAULT_INSTALL_PATH: &str = "/opt/nestgate";
+
+fn install_path_from_env() -> String {
+    std::env::var("NESTGATE_INSTALL_PATH").unwrap_or_else(|_| DEFAULT_INSTALL_PATH.into())
+}
+
 /// Installer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallerConfig {
     /// Configuration for base
     pub base_config: NestGateCanonicalConfig,
-    /// Installation Path
+    /// Installation path — overridden by `NESTGATE_INSTALL_PATH` env var.
     pub installation_path: String,
     /// Environment
     pub environment: String,
 }
 impl Default for InstallerConfig {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
             base_config: NestGateCanonicalConfig::default(),
-            installation_path: String::from("/opt/nestgate"),
-            environment: String::from("development"),
+            installation_path: install_path_from_env(),
+            environment: "development".into(),
         }
     }
 }
@@ -45,7 +50,7 @@ impl InstallerConfig {
     pub fn development() -> Self {
         let mut config = Self::default();
         config.base_config.system.debug_mode = true; // Use available system field instead
-        config.environment = String::from("development");
+        config.environment = "development".into();
         config
     }
 
@@ -53,8 +58,8 @@ impl InstallerConfig {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            environment: String::from("production"),
-            installation_path: String::from("/opt/nestgate"),
+            environment: "production".into(),
+            installation_path: install_path_from_env(),
             base_config: {
                 let mut config = NestGateCanonicalConfig::default();
                 config.system.debug_mode = false;
@@ -102,11 +107,10 @@ pub mod installer_config_factory {
     /// Development configuration
     #[must_use]
     pub fn development() -> InstallerConfig {
-        // Installerconfig
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
-            installation_path: String::from("/opt/nestgate"),
-            environment: String::from("development"),
+            installation_path: super::install_path_from_env(),
+            environment: "development".into(),
         }
     }
 
@@ -115,8 +119,8 @@ pub mod installer_config_factory {
     pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
-            installation_path: String::from("/opt/nestgate"),
-            environment: String::from("production"),
+            installation_path: super::install_path_from_env(),
+            environment: "production".into(),
         }
     }
 }
@@ -151,10 +155,10 @@ impl InstallerConfigUtils {
     pub fn get_selected_components(_config: &InstallerConfig) -> Vec<String> {
         // For now, return default components since canonical config doesn't have components field yet
         vec![
-            String::from("core"),
-            String::from("api"),
-            String::from("storage"),
-            String::from("network"),
+            "core".into(),
+            "api".into(),
+            "storage".into(),
+            "network".into(),
         ]
     }
 

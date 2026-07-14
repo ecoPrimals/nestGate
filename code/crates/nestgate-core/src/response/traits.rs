@@ -71,8 +71,8 @@ impl ResponseConversion<UnifiedErrorResponse> for LegacyErrorResponse {
     fn convert(self) -> UnifiedErrorResponse {
         UnifiedErrorResponse {
             message: self.error,
-            code: self.code.unwrap_or_else(|| String::from("LEGACY_ERROR")),
-            component: String::from("legacy"),
+            code: self.code.unwrap_or_else(|| "LEGACY_ERROR".into()),
+            component: "legacy".into(),
             status: 500,
             details: None,
             timestamp: self.timestamp,
@@ -96,9 +96,9 @@ impl<T> ResponseConversion<ApiResponse<T>> for SuccessResponse {
                 .with_timezone(&chrono::Utc),
             metadata: Some({
                 let mut metadata = std::collections::HashMap::new();
-                metadata.insert(String::from("message"), serde_json::json!(self.message));
+                metadata.insert("message".into(), serde_json::json!(self.message));
                 if let Some(data) = self.data {
-                    metadata.insert(String::from("response_data"), serde_json::json!(data));
+                    metadata.insert("response_data".into(), serde_json::json!(data));
                 }
                 metadata
             }),
@@ -122,15 +122,15 @@ impl<T> ResponseMetadata for ApiResponse<T> {
     /// Extract Metadata
     fn extract_metadata(&self) -> std::collections::HashMap<String, serde_json::Value> {
         let mut metadata = std::collections::HashMap::new();
-        metadata.insert(String::from("success"), serde_json::json!(self.success));
-        metadata.insert(String::from("timestamp"), serde_json::json!(self.timestamp));
+        metadata.insert("success".into(), serde_json::json!(self.success));
+        metadata.insert("timestamp".into(), serde_json::json!(self.timestamp));
 
         if let Some(error) = &self.error {
-            metadata.insert(String::from("error"), serde_json::json!(error));
+            metadata.insert("error".into(), serde_json::json!(error));
         }
 
         if let Some(error_code) = &self.error_code {
-            metadata.insert(String::from("error_code"), serde_json::json!(error_code));
+            metadata.insert("error_code".into(), serde_json::json!(error_code));
         }
 
         if let Some(response_metadata) = &self.metadata {
@@ -157,9 +157,9 @@ impl ResponseMetadata for SuccessResponse {
     /// Extract Metadata
     fn extract_metadata(&self) -> std::collections::HashMap<String, serde_json::Value> {
         let mut metadata = std::collections::HashMap::new();
-        metadata.insert(String::from("success"), serde_json::json!(true));
-        metadata.insert(String::from("message"), serde_json::json!(self.message));
-        metadata.insert(String::from("timestamp"), serde_json::json!(self.timestamp));
+        metadata.insert("success".into(), serde_json::json!(true));
+        metadata.insert("message".into(), serde_json::json!(self.message));
+        metadata.insert("timestamp".into(), serde_json::json!(self.timestamp));
 
         if let Some(data) = &self.data {
             for (key, value) in data {
@@ -191,21 +191,21 @@ impl ResponseMetadata for UnifiedErrorResponse {
     /// Extract Metadata
     fn extract_metadata(&self) -> std::collections::HashMap<String, serde_json::Value> {
         let mut metadata = std::collections::HashMap::new();
-        metadata.insert(String::from("success"), serde_json::json!(false));
+        metadata.insert("success".into(), serde_json::json!(false));
         metadata.insert(
-            String::from("error_code"),
+            "error_code".into(),
             serde_json::json!(self.code), // Use direct field access
         );
         metadata.insert(
-            String::from("service_name"),
+            "service_name".into(),
             serde_json::json!(self.component), // Use direct field access
         );
         metadata.insert(
-            String::from("timestamp"),
+            "timestamp".into(),
             serde_json::json!(self.timestamp), // Use direct field access
         );
         metadata.insert(
-            String::from("status"),
+            "status".into(),
             serde_json::json!(self.status), // Use available field
         );
 

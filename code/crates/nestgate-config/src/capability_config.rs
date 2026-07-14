@@ -239,7 +239,7 @@ impl CapabilityConfig {
         // Read discovery backends
         let discovery_backends = env
             .get("NESTGATE_DISCOVERY_BACKENDS")
-            .unwrap_or_else(|| String::from("environment"))
+            .unwrap_or_else(|| "environment".into())
             .split(',')
             .filter_map(|backend| match backend.trim() {
                 "dns-srv" => {
@@ -249,7 +249,7 @@ impl CapabilityConfig {
                 "mdns" => {
                     let service_type = env
                         .get("NESTGATE_MDNS_SERVICE")
-                        .unwrap_or_else(|| String::from("_nestgate._tcp"));
+                        .unwrap_or_else(|| "_nestgate._tcp".into());
                     Some(DiscoveryBackend::MDns { service_type })
                 }
                 "consul" => {
@@ -259,7 +259,7 @@ impl CapabilityConfig {
                 "kubernetes" | "k8s" => {
                     let namespace = env
                         .get("NESTGATE_K8S_NAMESPACE")
-                        .unwrap_or_else(|| String::from("default"));
+                        .unwrap_or_else(|| "default".into());
                     Some(DiscoveryBackend::Kubernetes { namespace })
                 }
                 "environment" | "env" => Some(DiscoveryBackend::Environment),
@@ -360,21 +360,21 @@ impl CapabilityDefaults {
     pub fn secure() -> Self {
         let mut port_ranges = HashMap::new();
         port_ranges.insert(
-            String::from("api"),
+            "api".into(),
             PortRange {
                 start: 8000,
                 end: 8999,
             },
         );
         port_ranges.insert(
-            String::from("metrics"),
+            "metrics".into(),
             PortRange {
                 start: 9000,
                 end: 9999,
             },
         );
         port_ranges.insert(
-            String::from("admin"),
+            "admin".into(),
             PortRange {
                 start: 7000,
                 end: 7999,
@@ -382,7 +382,7 @@ impl CapabilityDefaults {
         );
 
         Self {
-            bind_address: String::from("0.0.0.0"),
+            bind_address: "0.0.0.0".into(),
             port_ranges,
             timeouts: DefaultTimeouts {
                 connection: Duration::from_secs(30),
@@ -398,7 +398,7 @@ impl CapabilityDefaults {
     #[must_use]
     pub fn development() -> Self {
         let mut defaults = Self::secure();
-        defaults.bind_address = String::from("127.0.0.1");
+        defaults.bind_address = "127.0.0.1".into();
         defaults
     }
 }

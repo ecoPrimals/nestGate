@@ -249,24 +249,24 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         // For demonstration, return discovered capabilities
         vec![
             CapabilityDescriptor {
-                id: String::from("dynamic_storage_001"),
+                id: "dynamic_storage_001".into(),
                 capability_type: CapabilityType::Storage,
-                endpoint: Some(String::from("discovered://storage.local")),
+                endpoint: Some("discovered://storage.local".into()),
                 metadata: HashMap::from([
-                    (String::from("discovered_at"), String::from("runtime")),
-                    (String::from("type"), String::from("inferred")),
+                    ("discovered_at".into(), "runtime".into()),
+                    ("type".into(), "inferred".into()),
                 ]),
                 sovereignty_compliant: true,
             },
             CapabilityDescriptor {
-                id: String::from("runtime_compute_001"),
+                id: "runtime_compute_001".into(),
                 capability_type: CapabilityType::Compute,
-                endpoint: Some(String::from("discovered://compute.local")),
+                endpoint: Some("discovered://compute.local".into()),
                 metadata: HashMap::from([
-                    (String::from("capabilities"), String::from("simd,parallel")),
+                    ("capabilities".into(), "simd,parallel".into()),
                     (
-                        String::from("discovery_method"),
-                        String::from("behavioral_inference"),
+                        "discovery_method".into(),
+                        "behavioral_inference".into(),
                     ),
                 ]),
                 sovereignty_compliant: true,
@@ -324,20 +324,20 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     fn create_default_dignity_rules() -> Vec<DignityRule> {
         vec![
             DignityRule {
-                id: String::from("no_surveillance"),
-                description: String::from("Capability must not enable surveillance"),
+                id: "no_surveillance".into(),
+                description: "Capability must not enable surveillance".into(),
                 validator: |cap| !cap.metadata.contains_key("surveillance"),
             },
             DignityRule {
-                id: String::from("user_consent"),
-                description: String::from("Capability must respect user consent"),
+                id: "user_consent".into(),
+                description: "Capability must respect user consent".into(),
                 validator: |cap| {
-                    cap.metadata.get("consent_required") != Some(&String::from("false"))
+                    cap.metadata.get("consent_required") != Some(&"false".into())
                 },
             },
             DignityRule {
-                id: String::from("data_sovereignty"),
-                description: String::from("Capability must preserve data sovereignty"),
+                id: "data_sovereignty".into(),
+                description: "Capability must preserve data sovereignty".into(),
                 validator: |cap| cap.sovereignty_compliant,
             },
         ]

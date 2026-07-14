@@ -140,7 +140,7 @@ impl ZfsCommand {
             .args(args)
             .output()
             .await
-            .with_context(|| String::from("Failed to execute error details command"))?;
+            .with_context(|| -> String { "Failed to execute error details command".into() })?;
 
         // Convert command output to strings
         let stdout_result = if output.stdout.is_empty() {
@@ -338,15 +338,15 @@ impl ZfsOperations {
         Ok(PoolStatus {
             name: String::from(pool_name),
             state: if healthy {
-                String::from("ONLINE")
+                "ONLINE".into()
             } else {
-                String::from("DEGRADED")
+                "DEGRADED".into()
             },
             scan: extract_scan_status(&output),
             errors: if errors {
-                String::from("Yes")
+                "Yes".into()
             } else {
-                String::from("No")
+                "No".into()
             },
             raw_output: output,
         })
@@ -508,7 +508,7 @@ fn extract_scan_status(output: &str) -> String {
             return String::from(line.strip_prefix("scan:").unwrap_or("").trim());
         }
     }
-    String::from("none requested")
+    "none requested".into()
 }
 
 /// ZFS Pool information
