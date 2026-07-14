@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 107: Deep debt sweep — String::from→.into(), env-override hardcoding (Jul 14, 2026)
+
+- **`String::from("literal")` → `.into()` sweep**: 12 production files across 7 crates
+  (`nestgate-bin`, `nestgate-canonical`, `nestgate-config`, `nestgate-core`,
+  `nestgate-discovery`, `nestgate-installer`, `nestgate-zfs`) — ~125 conversions total.
+- **Hardcoded path elimination**: `/opt/nestgate` install path now overridable via
+  `NESTGATE_INSTALL_PATH` env var; `install_path_from_env()` replaces 4 hardcoded defaults
+  in installer config constructors and factory functions.
+
 ### Session 106: COORD-ACTIVATE + deep debt sweep (Jul 11, 2026)
 
 - **COORD-ACTIVATE** (Wave 136b): Coordination backend fully wired to ALL RPC surfaces:
