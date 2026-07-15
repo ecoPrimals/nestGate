@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: Jul 11, 2026 (Wave 136b)
+**Last Updated**: Jul 15, 2026 (Wave 141a)
 
 ---
 
@@ -521,4 +521,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: Jul 11, 2026 (Wave 136b)
+**Last Updated**: Jul 15, 2026 (Wave 141a)

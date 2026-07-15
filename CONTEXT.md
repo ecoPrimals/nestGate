@@ -1,5 +1,7 @@
 # Context — NestGate
 
+**Last Updated**: Jul 15, 2026 (Wave 141a)
+
 ## What This Is
 
 NestGate is a pure Rust **storage and discovery primal** in the ecoPrimals sovereign

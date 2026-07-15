@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-07-15, Wave 140a)**  
+**Verification (as of 2026-07-15, Wave 141a)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
 - **Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific)  
@@ -30,7 +30,7 @@
 - **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners; transport hardened (decrypt/read errors propagate as Err, not silent Ok)
 - **JWT NUCLEUS bypass**: BTSP composition auto-detected via `is_btsp_required()` — skips `NESTGATE_JWT_SECRET` validation when FAMILY_ID signals a NUCLEUS stack
 - **`is_btsp_required` unified**: client delegates to canonical server version (eliminates env-var and `"standalone"` divergence)  
-- **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code); Azure/GCS/ObjectStorage backends return `not_implemented` until REST API wired; native ZFS config stubs return `ServiceUnavailable` instead of fake data  
+- **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code); Azure/GCS/ObjectStorage backends return `not_implemented` until REST API wired; 11 ZFS production handlers evolved from fake success to honest `not_implemented`; system memory reads `/proc/meminfo` (was hardcoded 16GB); ARC fallback uses `0.0` (was misleading `0.85`)  
 - **Primal sovereignty**: zero hardcoded other-primal names in production; capability-based socket discovery (`security.sock`, `crypto.sock`); `DEFAULT_SERVICE_NAME` for self-references  
 - **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
@@ -160,7 +160,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-15 (Wave 140a).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-15 (Wave 141a).
 
 | Area | Status |
 |------|--------|
@@ -315,4 +315,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: July 2026 (Wave 140a)
+**Latest**: July 2026 (Wave 141a)

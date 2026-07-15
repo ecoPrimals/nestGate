@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 15, 2026 (Wave 140a — deep debt sweep: test fixture gating, platform audit, String::from round 4)  
+**Last Updated**: Jul 15, 2026 (Wave 141a — production mock evolution, cross-arch Windows check, deep debt sweep)  
 **Version**: 0.5.0
 
 ---
@@ -22,7 +22,7 @@ println! in lib:    ZERO in core libs; installer retains stdout for interactive 
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
 Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
-Mocks in prod:      ZERO fabricated metrics — health.rs fake tier/migration/snapshot data eliminated (real queries + honest zero-defaults); dev_environment gated behind `dev-stubs` feature
+Mocks in prod:      ZERO fabricated metrics — 11 ZFS handlers evolved to honest not_implemented; system memory from /proc/meminfo (was hardcoded); ARC fallback 0.0 (was 0.85); dev_environment gated behind `dev-stubs` feature
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
@@ -50,4 +50,15 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–101) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
+Per-session detail (Sessions 43–110) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
+
+Recent sessions:
+- **Session 110** (Wave 141a): Production mock evolution — 11 ZFS fake handlers → honest `not_implemented`; `/proc/meminfo` for real memory; ARC fallback 0.85→0.0; String::from round 5
+- **Session 109** (Wave 141a): Cross-architecture adoption — `cargo check --target x86_64-pc-windows-gnu` PASS; `#[cfg(unix)]` guards on UDS transport + `rustix` platform calls across 12 files
+- **Session 108** (Wave 140a): Deep debt sweep — test fixture gating (`cert/utils.rs`), platform FS audit (all `PermissionsExt` already `#[cfg(unix)]`), String::from round 4 (63 conversions)
+- **Session 107** (Wave 139a): Deep debt sweep — ~425 String::from→.into(), 8 Result<_,String>→&'static str, ZfsError→thiserror, 3 enum #[default], install path→env override
+- **Session 106** (Wave 136b): COORD-ACTIVATE + FP-PERSIST — coordination and footprint domains wired to all 4 RPC surfaces
+- **Session 105** (Wave 133b): NESTGATE-ANDROID-01 — UDS fatal on grapheneGate fixed
+- **Session 104** (Wave 133a): CI-DIV-03 — linker converged to aarch64-linux-gnu-gcc
+- **Session 103** (Wave 113): riboCipher `[0xEC, 0x01]` prefix acceptance
+- **Session 102** (Wave 109): STARTUP-NG-01 — HTTP default in server mode
