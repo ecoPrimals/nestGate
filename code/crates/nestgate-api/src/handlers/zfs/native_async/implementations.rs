@@ -72,7 +72,7 @@ fn zfs_pool_to_info(p: &nestgate_zfs::command::ZfsPool) -> PoolInfo {
             available: free,
         },
         scrub: None,
-        properties: HashMap::from([(String::from("source"), String::from("zpool list"))]),
+        properties: HashMap::from([("source".into(), "zpool list".into())]),
     }
 }
 
@@ -118,8 +118,8 @@ impl ProductionZfsService {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            service_name: String::from("ProductionZfsService"),
-            service_version: String::from("1.0.0"),
+            service_name: "ProductionZfsService".into(),
+            service_version: "1.0.0".into(),
             ops: ZfsOperations::new(),
         }
     }
@@ -155,24 +155,24 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             ServiceStatus::Unhealthy
         };
         let mut checks = vec![HealthCheck {
-            name: String::from("zfs_stack"),
+            name: "zfs_stack".into(),
             passed: ok,
             message: Some(if ok {
-                String::from("ZFS kernel and zpool list OK")
+                "ZFS kernel and zpool list OK".into()
             } else {
                 Self::not_available_err().to_string()
             }),
         }];
         if let Ok(pools) = self.ops.list_pools().await {
             checks.push(HealthCheck {
-                name: String::from("pool_count"),
+                name: "pool_count".into(),
                 passed: true,
                 message: Some(format!("{} pool(s) reported", pools.len())),
             });
         }
         let mut meta = HashMap::new();
         meta.insert(
-            String::from("zfs_proc_present"),
+            "zfs_proc_present".into(),
             zfs_kernel_present().to_string(),
         );
         Ok(HealthStatus {
@@ -193,7 +193,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             .list_pools()
             .await
             .map_err(|e| UniversalZfsError::Backend {
-                backend: String::from("zpool"),
+                backend: "zpool".into(),
                 message: e.to_string(),
             })?;
         let datasets = self.ops.list_datasets(None).await.unwrap_or_default();
@@ -212,24 +212,24 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             .unwrap_or(0.0);
 
         let custom = HashMap::from([
-            (String::from("pool_count"), usize_to_f64_lossy(pools.len())),
+            ("pool_count".into(), usize_to_f64_lossy(pools.len())),
             (
-                String::from("dataset_count"),
+                "dataset_count".into(),
                 usize_to_f64_lossy(datasets.len()),
             ),
             (
-                String::from("snapshot_count"),
+                "snapshot_count".into(),
                 usize_to_f64_lossy(snapshots.len()),
             ),
             (
-                String::from("total_capacity_bytes"),
+                "total_capacity_bytes".into(),
                 u64_to_f64_approximate(total_cap),
             ),
             (
-                String::from("used_capacity_bytes"),
+                "used_capacity_bytes".into(),
                 u64_to_f64_approximate(used_cap),
             ),
-            (String::from("uptime_seconds"), uptime_secs),
+            ("uptime_seconds".into(), uptime_secs),
         ]);
 
         let mut m = ServiceMetrics::new(self.service_name.clone());
@@ -250,7 +250,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             .list_pools()
             .await
             .map_err(|e| UniversalZfsError::Backend {
-                backend: String::from("zpool"),
+                backend: "zpool".into(),
                 message: e.to_string(),
             })?;
         Ok(pools.iter().map(zfs_pool_to_info).collect())
@@ -265,7 +265,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             .list_pools()
             .await
             .map_err(|e| UniversalZfsError::Backend {
-                backend: String::from("zpool"),
+                backend: "zpool".into(),
                 message: e.to_string(),
             })?;
         Ok(pools.iter().find(|p| p.name == name).map(zfs_pool_to_info))
@@ -276,9 +276,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             return Err(Self::not_available_err());
         }
         Err(UniversalZfsError::InvalidInput {
-            message: String::from(
-                "Pool creation via this adapter is not implemented; use zpool directly or a higher-level orchestrator",
-            ),
+            message: "Pool creation via this adapter is not implemented; use zpool directly or a higher-level orchestrator".into(),
         })
     }
 
@@ -287,7 +285,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             return Err(Self::not_available_err());
         }
         Err(UniversalZfsError::InvalidInput {
-            message: String::from("Pool destroy via this adapter is not implemented"),
+            message: "Pool destroy via this adapter is not implemented".into(),
         })
     }
 
@@ -303,7 +301,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             .list_datasets(target.as_deref())
             .await
             .map_err(|e| UniversalZfsError::Backend {
-                backend: String::from("zfs"),
+                backend: "zfs".into(),
                 message: e.to_string(),
             })?;
         Ok(datasets.iter().map(zfs_dataset_to_info).collect())
@@ -318,7 +316,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
                 .list_datasets(None)
                 .await
                 .map_err(|e| UniversalZfsError::Backend {
-                    backend: String::from("zfs"),
+                    backend: "zfs".into(),
                     message: e.to_string(),
                 })?;
         Ok(datasets
@@ -332,7 +330,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             return Err(Self::not_available_err());
         }
         Err(UniversalZfsError::InvalidInput {
-            message: String::from("Dataset creation via this adapter is not implemented"),
+            message: "Dataset creation via this adapter is not implemented".into(),
         })
     }
 
@@ -341,7 +339,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             return Err(Self::not_available_err());
         }
         Err(UniversalZfsError::InvalidInput {
-            message: String::from("Dataset destroy via this adapter is not implemented"),
+            message: "Dataset destroy via this adapter is not implemented".into(),
         })
     }
 
@@ -354,7 +352,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
         }
         let snaps = self.ops.list_snapshots(dataset_name).await.map_err(|e| {
             UniversalZfsError::Backend {
-                backend: String::from("zfs"),
+                backend: "zfs".into(),
                 message: e.to_string(),
             }
         })?;
@@ -377,7 +375,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
 
     async fn destroy_snapshot(&self, _name: &str) -> UniversalZfsResult<()> {
         Err(UniversalZfsError::InvalidInput {
-            message: String::from("Snapshot destroy via this adapter is not implemented"),
+            message: "Snapshot destroy via this adapter is not implemented".into(),
         })
     }
 
@@ -404,7 +402,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             available: 0,
             referenced: 0,
             mountpoint: None,
-            properties: HashMap::from([(String::from("origin"), snapshot_name.to_string())]),
+            properties: HashMap::from([("origin".into(), snapshot_name.to_string())]),
         })
     }
 }
@@ -425,7 +423,7 @@ pub struct DevelopmentZfsService {
 impl Default for DevelopmentZfsService {
     fn default() -> Self {
         Self {
-            service_name: String::from("DevelopmentZfsService"),
+            service_name: "DevelopmentZfsService".into(),
         }
     }
 }
@@ -452,9 +450,9 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         let mut m = ServiceMetrics::new(self.service_name.clone());
         m.custom_metrics = HashMap::from([
-            (String::from("pool_count"), 1.0),
-            (String::from("dataset_count"), 1.0),
-            (String::from("snapshot_count"), 1.0),
+            ("pool_count".into(), 1.0),
+            ("dataset_count".into(), 1.0),
+            ("snapshot_count".into(), 1.0),
         ]);
         Ok(m)
     }
@@ -465,7 +463,7 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
 
     async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         Ok(vec![PoolInfo {
-            name: String::from("dev-pool"),
+            name: "dev-pool".into(),
             health: PoolHealth::Online,
             state: PoolState::Active,
             capacity: PoolCapacity {
@@ -602,7 +600,7 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
             available: 100_000_000_000,
             referenced: 0,
             mountpoint: None,
-            properties: HashMap::from([(String::from("origin"), snapshot_name.to_string())]),
+            properties: HashMap::from([("origin".into(), snapshot_name.to_string())]),
         })
     }
 }

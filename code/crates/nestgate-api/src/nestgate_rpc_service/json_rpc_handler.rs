@@ -313,7 +313,7 @@ async fn require_zpool() -> Result<(), String> {
     if is_zpool_available().await {
         Ok(())
     } else {
-        Err(String::from("zpool is not available on this system"))
+        Err("zpool is not available on this system".into())
     }
 }
 
@@ -321,7 +321,7 @@ async fn require_zfs() -> Result<(), String> {
     if is_zfs_available().await {
         Ok(())
     } else {
-        Err(String::from("zfs is not available on this system"))
+        Err("zfs is not available on this system".into())
     }
 }
 

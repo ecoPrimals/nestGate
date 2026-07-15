@@ -47,7 +47,7 @@ impl NestGateRpcServer {
     /// # Errors
     ///
     /// Returns error if ZFS backend initialisation fails.
-    pub fn with_default_backend() -> Result<Self, String> {
+    pub fn with_default_backend() -> Result<Self, &'static str> {
         let zfs_backend = ZfsOperations::new();
         Ok(Self::new(Arc::new(zfs_backend)))
     }

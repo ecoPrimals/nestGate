@@ -31,7 +31,7 @@ fn default_key_storage_path() -> String {
             .to_string_lossy()
             .into_owned();
     }
-    String::from("/etc/nestgate/keys")
+    "/etc/nestgate/keys".into()
 }
 
 /// XDG-compliant state directory for audit logs.
@@ -57,7 +57,7 @@ fn default_audit_log_path() -> String {
             .to_string_lossy()
             .into_owned();
     }
-    String::from("/var/log/nestgate/audit.log")
+    "/var/log/nestgate/audit.log".into()
 }
 /// Security and access control settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -187,10 +187,10 @@ impl Default for FsMonitorSecuritySettings {
             enabled: true,
             enable_access_logging: false,
             allowed_operations: vec![
-                String::from("read"),
-                String::from("write"),
-                String::from("create"),
-                String::from("delete"),
+                "read".into(),
+                "write".into(),
+                "create".into(),
+                "delete".into(),
             ],
             access_control: AccessControlSettings::default(),
             encryption: EncryptionSettings::default(),
@@ -206,7 +206,7 @@ impl Default for AccessControlSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            default_policy: String::from("allow"),
+            default_policy: "allow".into(),
             rules: Vec::new(),
             ip_allowlist: Vec::new(),
             ip_denylist: Vec::new(),
@@ -223,7 +223,7 @@ impl Default for EncryptionSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            algorithm: String::from("AES-256-GCM"),
+            algorithm: "AES-256-GCM".into(),
             key_management: KeyManagementSettings::default(),
             encrypt_at_rest: false,
             encrypt_in_transit: false,
@@ -235,9 +235,9 @@ impl Default for KeyManagementSettings {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            provider: String::from("local"),
+            provider: "local".into(),
             rotation_interval: Duration::from_secs(86400 * 30), // 30 days
-            kdf: String::from("PBKDF2"),
+            kdf: "PBKDF2".into(),
             key_size: 256,
             storage_location: default_key_storage_path(),
         }
@@ -249,7 +249,7 @@ impl Default for AuditLoggingSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            log_level: String::from("info"),
+            log_level: "info".into(),
             log_file: default_audit_log_path(),
             rotation: LogRotationSettings::default(),
             include_sensitive_data: false,
@@ -275,7 +275,7 @@ impl Default for AuthenticationSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            methods: vec![String::from("password")],
+            methods: vec!["password".into()],
             session_timeout: Duration::from_secs(3600), // 1 hour
             max_failed_attempts: 5,
             lockout_duration: Duration::from_secs(300), // 5 minutes
@@ -288,8 +288,8 @@ impl Default for AuthorizationSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            model: String::from("rbac"),
-            default_permissions: vec![String::from("read")],
+            model: "rbac".into(),
+            default_permissions: vec!["read".into()],
             cache_timeout: Duration::from_secs(300),
             roles: HashMap::new(),
         }

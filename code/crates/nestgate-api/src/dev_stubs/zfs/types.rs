@@ -14,29 +14,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::info;
 
-#[derive(Debug)]
-/// Errors that can occur during Zfs operations
+#[derive(Debug, thiserror::Error)]
 pub enum ZfsError {
-    /// ZFS operation failed with error message
+    /// ZFS operation failed with error message.
+    #[error("ZFS operation failed: {0}")]
     OperationFailed(String),
-    /// Specified pool was not found
+    /// Specified pool was not found.
+    #[error("Pool not found: {0}")]
     PoolNotFound(String),
-    /// Dataset-related error occurred
+    /// Dataset-related error occurred.
+    #[error("Dataset error: {0}")]
     DatasetError(String),
 }
-
-impl std::fmt::Display for ZfsError {
-    /// Fmt
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::OperationFailed(msg) => write!(f, "ZFS operation failed: {msg}"),
-            Self::PoolNotFound(pool) => write!(f, "Pool not found: {pool}"),
-            Self::DatasetError(msg) => write!(f, "Dataset error: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for ZfsError {}
 
 /// Result type for ZFS operations
 pub type ZfsResult<T> = Result<T, ZfsError>;
@@ -51,7 +40,6 @@ pub type ZfsResult<T> = Result<T, ZfsError>;
     reason = "Reserved for future snapshot operations in dev stubs"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Snapshotinfo
 pub struct SnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -65,7 +53,6 @@ pub struct SnapshotInfo {
 ///
 /// Zero-cost abstraction for ZFS operations with compile-time dispatch.
 #[derive(Debug, Clone)]
-/// Zerocostzfsoperations
 pub struct ZeroCostZfsOperations;
 
 impl Default for ZeroCostZfsOperations {
@@ -92,8 +79,8 @@ impl ZeroCostZfsOperations {
     /// - Network or I/O errors occur
     pub fn get_system_info(&self) -> Result<HashMap<String, String>, ZfsError> {
         let mut info = HashMap::new();
-        info.insert(String::from("version"), String::from("2.1.0"));
-        info.insert(String::from("kernel_module"), String::from("loaded"));
+        info.insert("version".into(), "2.1.0".into());
+        info.insert("kernel_module".into(), "loaded".into());
         Ok(info)
     }
 
@@ -108,15 +95,15 @@ impl ZeroCostZfsOperations {
     pub fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError> {
         Ok(vec![
             ZeroCostPoolInfo {
-                name: String::from("tank"),
-                health: String::from("ONLINE"),
+                name: "tank".into(),
+                health: "ONLINE".into(),
                 size: 1_000_000_000_000,
                 allocated: 500_000_000_000,
                 free: 500_000_000_000,
             },
             ZeroCostPoolInfo {
-                name: String::from("backup"),
-                health: String::from("ONLINE"),
+                name: "backup".into(),
+                health: "ONLINE".into(),
                 size: 2_000_000_000_000,
                 allocated: 800_000_000_000,
                 free: 1_200_000_000_000,
@@ -140,7 +127,7 @@ impl ZeroCostZfsOperations {
         let _ = devices;
         Ok(ZeroCostPoolInfo {
             name: name.to_string(),
-            health: String::from("ONLINE"),
+            health: "ONLINE".into(),
             size: 1_000_000_000_000,
             allocated: 0,
             free: 1_000_000_000_000,
@@ -203,7 +190,7 @@ impl ZeroCostZfsOperations {
             name: format!("{dataset}@snapshot1"),
             used: 50_000_000,
             referenced: 50_000_000,
-            creation_time: String::from("2024-01-01T00:00:00Z"),
+            creation_time: "2024-01-01T00:00:00Z".into(),
         }])
     }
 
@@ -304,7 +291,6 @@ impl PerformanceOptimizer {
 ///
 /// **DEV STUB**: Shared type — used by production handlers.
 #[derive(Debug, Clone)]
-/// Confidencecalculator
 pub struct ConfidenceCalculator;
 
 impl Default for ConfidenceCalculator {
@@ -336,7 +322,6 @@ impl ConfidenceCalculator {
 ///
 /// Dataset information using zero-cost abstractions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zerocostdatasetinfo
 pub struct ZeroCostDatasetInfo {
     /// Dataset name
     pub name: String,
@@ -356,7 +341,6 @@ pub struct ZeroCostDatasetInfo {
 ///
 /// Pool information using zero-cost abstractions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zerocostpoolinfo
 pub struct ZeroCostPoolInfo {
     /// Pool name
     pub name: String,
@@ -374,7 +358,6 @@ pub struct ZeroCostPoolInfo {
 ///
 /// Snapshot information using zero-cost abstractions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zerocostsnapshotinfo
 pub struct ZeroCostSnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -384,28 +367,6 @@ pub struct ZeroCostSnapshotInfo {
     pub referenced: u64,
     /// Creation timestamp
     pub creation_time: String,
-}
-
-/// **ZERO-COST DATASET INFO EXTENDED**
-///
-/// Extended dataset information with additional metadata.
-///
-/// **UNUSED**: Reserved for future use. Consider removing if not needed.
-#[expect(
-    dead_code,
-    reason = "Extended dataset metadata reserved for future dev-stub features"
-)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zerocostdatasetinfoextended
-pub struct ZeroCostDatasetInfoExtended {
-    /// Dataset name
-    pub name: String,
-    /// Used space in bytes
-    pub used: u64,
-    /// Available space in bytes
-    pub available: u64,
-    /// Whether the dataset is mounted
-    pub mounted: bool,
 }
 
 impl ZeroCostZfsOperations {

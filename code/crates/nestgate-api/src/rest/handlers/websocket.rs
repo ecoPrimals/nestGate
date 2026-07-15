@@ -212,7 +212,7 @@ fn zfs_arc_snapshot() -> (f64, u64, u64) {
     clippy::unused_async,
     reason = "cfg(test) awaits this helper; metrics assembly is synchronous"
 )]
-async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
+async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, &'static str> {
     let total_datasets = u32::try_from(state.zfs_engines.len()).unwrap_or(u32::MAX);
     let total_snapshots = u32::try_from(super::zfs::helpers::get_snapshot_count_from_engine_impl())
         .unwrap_or(u32::MAX);

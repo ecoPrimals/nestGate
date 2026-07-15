@@ -87,7 +87,7 @@ pub async fn content_store_stream_begin(
         bytes_written: 0,
         created: Instant::now(),
         family_id: family_id.to_string(),
-        dataset: String::from("_content_stream"),
+        dataset: "_content_stream".into(),
         key: stream_id.clone(),
         content_type,
     };

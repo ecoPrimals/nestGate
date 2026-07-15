@@ -101,13 +101,13 @@ impl UniversalZfsService for RemoteZfsService {
         let response = self.client().get("/api/v1/pools").await?;
         let pools_array = response.get("pools").ok_or_else(|| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
-                message: String::from("response missing 'pools' key"),
+                backend: "remote".into(),
+                message: "response missing 'pools' key".into(),
             }
         })?;
         serde_json::from_value(pools_array.clone()).map_err(|e| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
+                backend: "remote".into(),
                 message: format!("failed to parse pools response: {e}"),
             }
         })
@@ -157,7 +157,7 @@ impl UniversalZfsService for RemoteZfsService {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into PoolInfo
                 serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
-                    backend: String::from("remote"),
+                    backend: "remote".into(),
                     message: format!("Failed to parse pool response: {e}"),
                 })
             }
@@ -237,13 +237,13 @@ impl UniversalZfsService for RemoteZfsService {
         let response = self.client().get("/api/v1/datasets").await?;
         let datasets_array = response.get("datasets").ok_or_else(|| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
-                message: String::from("response missing 'datasets' key"),
+                backend: "remote".into(),
+                message: "response missing 'datasets' key".into(),
             }
         })?;
         serde_json::from_value(datasets_array.clone()).map_err(|e| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
+                backend: "remote".into(),
                 message: format!("failed to parse datasets response: {e}"),
             }
         })
@@ -295,7 +295,7 @@ impl UniversalZfsService for RemoteZfsService {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into DatasetInfo
                 serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
-                    backend: String::from("remote"),
+                    backend: "remote".into(),
                     message: format!("Failed to parse dataset response: {e}"),
                 })
             }
@@ -398,13 +398,13 @@ impl UniversalZfsService for RemoteZfsService {
         let response = self.client().get("/api/v1/snapshots").await?;
         let snapshots_array = response.get("snapshots").ok_or_else(|| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
-                message: String::from("response missing 'snapshots' key"),
+                backend: "remote".into(),
+                message: "response missing 'snapshots' key".into(),
             }
         })?;
         serde_json::from_value(snapshots_array.clone()).map_err(|e| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
+                backend: "remote".into(),
                 message: format!("failed to parse snapshots response: {e}"),
             }
         })
@@ -424,13 +424,13 @@ impl UniversalZfsService for RemoteZfsService {
         let response = self.client().get(&endpoint).await?;
         let snapshots_array = response.get("snapshots").ok_or_else(|| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
+                backend: "remote".into(),
                 message: format!("response missing 'snapshots' key for dataset '{dataset}'"),
             }
         })?;
         serde_json::from_value(snapshots_array.clone()).map_err(|e| {
             UniversalZfsError::Backend {
-                backend: String::from("remote"),
+                backend: "remote".into(),
                 message: format!("failed to parse dataset snapshots response: {e}"),
             }
         })
@@ -455,7 +455,7 @@ impl UniversalZfsService for RemoteZfsService {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into SnapshotInfo
                 serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
-                    backend: String::from("remote"),
+                    backend: "remote".into(),
                     message: format!("Failed to parse snapshot response: {e}"),
                 })
             }
@@ -498,7 +498,7 @@ impl UniversalZfsService for RemoteZfsService {
                 } else if let Some(status) = response.get("status").and_then(|s| s.as_str()) {
                     Ok(format!("Status: {status}"))
                 } else {
-                    Ok(String::from("Optimization completed successfully"))
+                    Ok("Optimization completed successfully".into())
                 }
             }
             Err(e) => {
@@ -554,13 +554,13 @@ impl UniversalZfsService for RemoteZfsService {
                     Ok(tier.to_string())
                 } else {
                     // Fallback to "unknown" if parsing fails
-                    Ok(String::from("unknown"))
+                    Ok("unknown".into())
                 }
             }
             Err(e) => {
                 debug!("Failed to predict tier for '{}': {}", file_path, e);
                 // Return default tier instead of error for graceful degradation
-                Ok(String::from("warm"))
+                Ok("warm".into())
             }
         }
     }

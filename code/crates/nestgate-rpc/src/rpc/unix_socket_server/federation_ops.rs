@@ -355,12 +355,12 @@ async fn resolve_best_remote(repo_path: &str) -> String {
         Ok(o) if o.status.success() => {
             let remotes = String::from_utf8_lossy(&o.stdout);
             if remotes.lines().any(|r| r.trim() == "forgejo") {
-                String::from("forgejo")
+                "forgejo".into()
             } else {
-                String::from("origin")
+                "origin".into()
             }
         }
-        _ => String::from("origin"),
+        _ => "origin".into(),
     }
 }
 

@@ -41,9 +41,9 @@ pub fn create_handler() -> Router {
 /// Simple example handler
 async fn example_handler() -> Json<AIFirstResponse<String>> {
     Json(AIFirstResponse {
-        data: String::from("AI First Example"),
+        data: "AI First Example".into(),
         success: true,
-        message: String::from("Example working"),
+        message: "Example working".into(),
         confidence_score: 0.95,
     })
 }
@@ -52,7 +52,6 @@ async fn example_handler() -> Json<AIFirstResponse<String>> {
 ///
 /// AI-generated action recommendation with metadata and priority.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Suggestedaction
 pub struct SuggestedAction {
     /// Unique identifier for this action
     pub action_id: String,
@@ -97,7 +96,7 @@ pub fn ai_success_with_confidence<T>(data: T, confidence: f64) -> AIFirstRespons
     AIFirstResponse {
         data,
         success: true,
-        message: String::from("Operation completed successfully"),
+        message: "Operation completed successfully".into(),
         confidence_score: confidence,
     }
 }
@@ -107,14 +106,13 @@ pub fn ai_response_with_actions<T>(data: T, _actions: Vec<SuggestedAction>) -> A
     AIFirstResponse {
         data,
         success: true,
-        message: String::from("Operation completed with suggested actions"),
+        message: "Operation completed with suggested actions".into(),
         confidence_score: 0.85,
     }
 }
 
 /// Example data structure for API responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Storageinfo
 pub struct StorageInfo {
     /// Name of the storage pool
     pub pool_name: String,
@@ -131,7 +129,6 @@ pub struct StorageInfo {
 }
 /// Query parameters for storage operations
 #[derive(Debug, Deserialize)]
-/// Storagequery
 pub struct StorageQuery {
     /// Optional pool name filter
     pub pool: Option<String>,
@@ -175,20 +172,20 @@ pub async fn get_storage_info(
     // Simulate storage data retrieval
     let storage_pools = vec![
         StorageInfo {
-            pool_name: String::from("main-pool"),
+            pool_name: "main-pool".into(),
             total_size_gb: 1000,
             used_size_gb: 650,
             available_size_gb: 350,
-            health_status: String::from("ONLINE"),
-            last_scrub: Some(String::from("2025-01-29T10:00:00Z")),
+            health_status: "ONLINE".into(),
+            last_scrub: Some("2025-01-29T10:00:00Z".into()),
         },
         StorageInfo {
-            pool_name: String::from("backup-pool"),
+            pool_name: "backup-pool".into(),
             total_size_gb: 500,
             used_size_gb: 200,
             available_size_gb: 300,
-            health_status: String::from("ONLINE"),
-            last_scrub: Some(String::from("2025-01-28T15:30:00Z")),
+            health_status: "ONLINE".into(),
+            last_scrub: Some("2025-01-28T15:30:00Z".into()),
         },
     ];
     // Filter by pool if specified
@@ -209,7 +206,6 @@ pub async fn get_storage_info(
 ///
 /// Comprehensive information about a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Poolinfo
 pub struct PoolInfo {
     /// Name of the storage pool
     pub pool_name: String,
@@ -229,7 +225,6 @@ pub struct PoolInfo {
 ///
 /// Query parameters for pool information requests.
 #[derive(Debug, Deserialize)]
-/// Poolquery
 pub struct PoolQuery {
     /// Optional pool name filter
     pub pool: Option<String>,
@@ -265,8 +260,8 @@ pub async fn get_pool_info(
             total_size_gb: 1000,
             used_size_gb: 650,
             available_size_gb: 350,
-            health_status: String::from("ONLINE"),
-            last_scrub: Some(String::from("2025-01-29T10:00:00Z")),
+            health_status: "ONLINE".into(),
+            last_scrub: Some("2025-01-29T10:00:00Z".into()),
         })
     } else if pool_name == "backup-pool" {
         Some(PoolInfo {
@@ -274,8 +269,8 @@ pub async fn get_pool_info(
             total_size_gb: 500,
             used_size_gb: 200,
             available_size_gb: 300,
-            health_status: String::from("DEGRADED"),
-            last_scrub: Some(String::from("2025-01-20T08:00:00Z")),
+            health_status: "DEGRADED".into(),
+            last_scrub: Some("2025-01-20T08:00:00Z".into()),
         })
     } else {
         None
@@ -290,9 +285,9 @@ pub async fn get_pool_info(
             };
 
             let mut suggestions = vec![SuggestedAction {
-                action_id: String::from("monitor_pool"),
+                action_id: "monitor_pool".into(),
                 action_type: ActionType::Monitor,
-                description: String::from("Continue monitoring pool health"),
+                description: "Continue monitoring pool health".into(),
                 confidence: 0.9,
                 parameters: HashMap::new(),
                 priority: 2, // Medium priority
@@ -303,14 +298,14 @@ pub async fn get_pool_info(
             // Add scrub suggestion if pool is degraded or scrub is old
             if info.health_status == "DEGRADED" {
                 suggestions.push(SuggestedAction {
-                    action_id: String::from("scrub_pool"),
+                    action_id: "scrub_pool".into(),
                     action_type: ActionType::Optimize,
-                    description: String::from("Consider running pool scrub to check integrity"),
+                    description: "Consider running pool scrub to check integrity".into(),
                     confidence: 0.8,
                     parameters: {
                         let mut params = HashMap::new();
                         params.insert(
-                            String::from("pool_name"),
+                            "pool_name".into(),
                             serde_json::Value::String(pool_name),
                         );
                         params
@@ -343,21 +338,21 @@ pub async fn execute_storage_operation(
     // Simulate operation execution
     let result = match request.b_operation.as_str() {
         "scrub" => {
-            let message = String::from("Scrub operation started for pool");
+            let message = "Scrub operation started for pool".into();
 
             let suggestions = vec![SuggestedAction {
-                action_id: String::from("poll_scrub_status"),
+                action_id: "poll_scrub_status".into(),
                 action_type: ActionType::Monitor,
-                description: String::from("Poll scrub status every 5 minutes"),
+                description: "Poll scrub status every 5 minutes".into(),
                 confidence: 0.9,
                 parameters: {
                     let mut params = HashMap::new();
                     params.insert(
-                        String::from("poll_interval_ms"),
+                        "poll_interval_ms".into(),
                         serde_json::Value::Number(serde_json::Number::from(300_000)),
                     );
                     params.insert(
-                        String::from("pool_name"),
+                        "pool_name".into(),
                         serde_json::Value::String(request.pool_name.clone()),
                     );
                     params
@@ -376,9 +371,9 @@ pub async fn execute_storage_operation(
             let message = format!("Export initiated for pool: {}", request.pool_name);
 
             let suggestions = vec![SuggestedAction {
-                action_id: String::from("verify_export"),
+                action_id: "verify_export".into(),
                 action_type: ActionType::Monitor,
-                description: String::from("Verify export completion and data integrity"),
+                description: "Verify export completion and data integrity".into(),
                 confidence: 0.85,
                 parameters: HashMap::new(),
                 priority: 2, // Medium priority
@@ -403,30 +398,30 @@ pub async fn execute_storage_operation(
 pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationScenario>>> {
     let demos = vec![
         OptimizationScenario {
-            scenario: String::from("High confidence - verified data"),
+            scenario: "High confidence - verified data".into(),
             confidence: 0.95,
-            description: String::from("Data verified from multiple sources, high reliability"),
+            description: "Data verified from multiple sources, high reliability".into(),
         },
         OptimizationScenario {
-            scenario: String::from("Medium confidence - single source"),
+            scenario: "Medium confidence - single source".into(),
             confidence: 0.7,
-            description: String::from("Data from single source, moderate reliability"),
+            description: "Data from single source, moderate reliability".into(),
         },
         OptimizationScenario {
-            scenario: String::from("Low confidence - estimated data"),
+            scenario: "Low confidence - estimated data".into(),
             confidence: 0.3,
-            description: String::from("Estimated data based on heuristics, low reliability"),
+            description: "Estimated data based on heuristics, low reliability".into(),
         },
         OptimizationScenario {
-            scenario: String::from("No confidence - error condition"),
+            scenario: "No confidence - error condition".into(),
             confidence: 0.0,
-            description: String::from("Error occurred, no reliable data available"),
+            description: "Error occurred, no reliable data available".into(),
         },
     ];
     let suggestions = vec![SuggestedAction {
-        action_id: String::from("improve_data_sources"),
+        action_id: "improve_data_sources".into(),
         action_type: ActionType::Optimize,
-        description: String::from("Consider adding more data sources to improve confidence"),
+        description: "Consider adding more data sources to improve confidence".into(),
         confidence: 0.8,
         parameters: HashMap::new(),
         priority: 3, // Low priority
@@ -441,37 +436,37 @@ pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationSc
 pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapability>>> {
     let demos = vec![
         AutomationCapability {
-            category: String::from("Monitoring"),
-            description: String::from("Continuous health monitoring with alerts"),
-            automation_level: String::from("Fully Automated"),
+            category: "Monitoring".into(),
+            description: "Continuous health monitoring with alerts".into(),
+            automation_level: "Fully Automated".into(),
         },
         AutomationCapability {
-            category: String::from("Optimization"),
-            description: String::from("Performance tuning based on usage patterns"),
-            automation_level: String::from("Semi-Automated"),
+            category: "Optimization".into(),
+            description: "Performance tuning based on usage patterns".into(),
+            automation_level: "Semi-Automated".into(),
         },
         AutomationCapability {
-            category: String::from("Recovery"),
-            description: String::from("Automated recovery from common failure modes"),
-            automation_level: String::from("Fully Automated"),
+            category: "Recovery".into(),
+            description: "Automated recovery from common failure modes".into(),
+            automation_level: "Fully Automated".into(),
         },
         AutomationCapability {
-            category: String::from("Scaling"),
-            description: String::from("Resource scaling based on demand"),
-            automation_level: String::from("Manual Approval Required"),
+            category: "Scaling".into(),
+            description: "Resource scaling based on demand".into(),
+            automation_level: "Manual Approval Required".into(),
         },
     ];
     let comprehensive_suggestions = vec![
         SuggestedAction {
-            action_id: String::from("enable_monitoring"),
+            action_id: "enable_monitoring".into(),
             action_type: ActionType::Monitor,
-            description: String::from("Enable comprehensive monitoring dashboard"),
+            description: "Enable comprehensive monitoring dashboard".into(),
             confidence: 0.95,
             parameters: {
                 let mut params = HashMap::new();
                 params.insert(
-                    String::from("dashboard_type"),
-                    serde_json::Value::String(String::from("comprehensive")),
+                    "dashboard_type".into(),
+                    serde_json::Value::String("comprehensive".into()),
                 );
                 params
             },
@@ -480,25 +475,25 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
             estimated_duration_ms: Some(5000),
         },
         SuggestedAction {
-            action_id: String::from("configure_alerts"),
+            action_id: "configure_alerts".into(),
             action_type: ActionType::Optimize,
-            description: String::from("Configure intelligent alerting based on thresholds"),
+            description: "Configure intelligent alerting based on thresholds".into(),
             confidence: 0.9,
             parameters: HashMap::new(),
             priority: 2, // Medium priority
-            dependencies: vec![String::from("enable_monitoring")],
+            dependencies: vec!["enable_monitoring".into()],
             estimated_duration_ms: Some(10_000),
         },
         SuggestedAction {
-            action_id: String::from("setup_automation"),
+            action_id: "setup_automation".into(),
             action_type: ActionType::Optimize,
-            description: String::from("Setup automated response workflows"),
+            description: "Setup automated response workflows".into(),
             confidence: 0.85,
             parameters: HashMap::new(),
             priority: 3, // Lower priority (depends on others)
             dependencies: vec![
-                String::from("enable_monitoring"),
-                String::from("configure_alerts"),
+                "enable_monitoring".into(),
+                "configure_alerts".into(),
             ],
             estimated_duration_ms: Some(30000),
         },
@@ -511,7 +506,6 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
 ///
 /// AI-generated optimization scenario with confidence scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Optimizationscenario
 pub struct OptimizationScenario {
     /// Name of the optimization scenario
     pub scenario: String,
@@ -525,7 +519,6 @@ pub struct OptimizationScenario {
 ///
 /// Describes an automation capability with AI assessment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Automationcapability
 pub struct AutomationCapability {
     /// Category of automation capability
     pub category: String,
@@ -572,8 +565,8 @@ pub fn ai_pool_status(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Poo
         total_size_gb: 1000,
         used_size_gb: 400,
         available_size_gb: 600,
-        health_status: String::from("Healthy"),
-        last_scrub: Some(String::from("2024-01-15T10:30:00Z")),
+        health_status: "Healthy".into(),
+        last_scrub: Some("2024-01-15T10:30:00Z".into()),
     };
 
     Json(ai_success_with_confidence(pool_info, 0.95))

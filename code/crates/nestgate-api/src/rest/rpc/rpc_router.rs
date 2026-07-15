@@ -37,109 +37,109 @@ impl UnifiedRpcRouter {
     fn initialize_routing_rules(&mut self) {
         // Security-related methods route to security via tarpc
         self.method_rules
-            .insert(String::from("encrypt_data"), RpcConnectionType::Tarpc);
+            .insert("encrypt_data".into(), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert(String::from("decrypt_data"), RpcConnectionType::Tarpc);
+            .insert("decrypt_data".into(), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert(String::from("generate_key"), RpcConnectionType::Tarpc);
+            .insert("generate_key".into(), RpcConnectionType::Tarpc);
         self.method_rules
-            .insert(String::from("authenticate_user"), RpcConnectionType::Tarpc);
+            .insert("authenticate_user".into(), RpcConnectionType::Tarpc);
         self.method_rules.insert(
-            String::from("get_security_status"),
+            "get_security_status".into(),
             RpcConnectionType::Tarpc,
         );
         self.method_rules.insert(
-            String::from("stream_security_events"),
+            "stream_security_events".into(),
             RpcConnectionType::Tarpc,
         );
         self.method_rules.insert(
-            String::from("stream_threat_detection"),
+            "stream_threat_detection".into(),
             RpcConnectionType::Tarpc,
         );
         self.method_rules
-            .insert(String::from("stream_audit_logs"), RpcConnectionType::Tarpc);
+            .insert("stream_audit_logs".into(), RpcConnectionType::Tarpc);
 
         // Orchestration-related methods route to orchestration via JSON RPC
         self.method_rules
-            .insert(String::from("register_service"), RpcConnectionType::JsonRpc);
+            .insert("register_service".into(), RpcConnectionType::JsonRpc);
         self.method_rules.insert(
-            String::from("discover_services"),
+            "discover_services".into(),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules.insert(
-            String::from("coordinate_workflow"),
+            "coordinate_workflow".into(),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules.insert(
-            String::from("get_service_status"),
+            "get_service_status".into(),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules
-            .insert(String::from("allocate_port"), RpcConnectionType::JsonRpc);
+            .insert("allocate_port".into(), RpcConnectionType::JsonRpc);
         self.method_rules.insert(
-            String::from("stream_service_events"),
+            "stream_service_events".into(),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules.insert(
-            String::from("stream_workflow_status"),
+            "stream_workflow_status".into(),
             RpcConnectionType::JsonRpc,
         );
         self.method_rules.insert(
-            String::from("stream_network_topology"),
+            "stream_network_topology".into(),
             RpcConnectionType::JsonRpc,
         );
 
         // Real-time data methods route to WebSocket
         self.method_rules.insert(
-            String::from("get_real_time_metrics"),
+            "get_real_time_metrics".into(),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            String::from("start_metrics_stream"),
+            "start_metrics_stream".into(),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            String::from("stream_realtime_metrics"),
+            "stream_realtime_metrics".into(),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            String::from("stream_zfs_events"),
+            "stream_zfs_events".into(),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            String::from("stream_storage_events"),
+            "stream_storage_events".into(),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            String::from("stream_system_logs"),
+            "stream_system_logs".into(),
             RpcConnectionType::WebSocket,
         );
         self.method_rules.insert(
-            String::from("stream_performance_data"),
+            "stream_performance_data".into(),
             RpcConnectionType::WebSocket,
         );
 
         // Capability-based service routing (sovereignty compliant)
         self.target_rules.insert(
-            String::from("security-encryption"),
+            "security-encryption".into(),
             RpcConnectionType::Tarpc,
         );
         self.target_rules.insert(
-            String::from("orchestration-discovery"),
+            "orchestration-discovery".into(),
             RpcConnectionType::JsonRpc,
         );
         self.target_rules.insert(
-            String::from("storage-management"),
+            "storage-management".into(),
             RpcConnectionType::WebSocket,
         );
         self.target_rules.insert(
-            String::from("ai-text-generation"),
+            "ai-text-generation".into(),
             RpcConnectionType::JsonRpc,
         );
         self.target_rules
-            .insert(String::from("ai-embedding"), RpcConnectionType::JsonRpc);
+            .insert("ai-embedding".into(), RpcConnectionType::JsonRpc);
         self.target_rules.insert(
-            String::from("ecosystem-management"),
+            "ecosystem-management".into(),
             RpcConnectionType::WebSocket,
         );
 
@@ -302,30 +302,28 @@ impl UnifiedRpcRouter {
         if method_pattern.contains("encrypt") || method_pattern.contains("security") {
             recommendations.push((
                 RpcConnectionType::Tarpc,
-                String::from(
-                    "High-performance binary protocol recommended for security operations",
-                ),
+                "High-performance binary protocol recommended for security operations".into(),
             ));
         }
 
         if method_pattern.contains("service") || method_pattern.contains("orchestr") {
             recommendations.push((
                 RpcConnectionType::JsonRpc,
-                String::from("Standard JSON RPC recommended for service orchestration"),
+                "Standard JSON RPC recommended for service orchestration".into(),
             ));
         }
 
         if method_pattern.contains("stream") || method_pattern.contains("realtime") {
             recommendations.push((
                 RpcConnectionType::WebSocket,
-                String::from("WebSocket recommended for real-time streaming data"),
+                "WebSocket recommended for real-time streaming data".into(),
             ));
         }
 
         if recommendations.is_empty() {
             recommendations.push((
                 self.default_connection,
-                String::from("Default connection type for general operations"),
+                "Default connection type for general operations".into(),
             ));
         }
 
@@ -335,7 +333,6 @@ impl UnifiedRpcRouter {
 
 /// Routing statistics
 #[derive(Debug, Clone)]
-/// Routingstats
 pub struct RoutingStats {
     /// Number of method-based routing rules
     pub method_rules_count: usize,

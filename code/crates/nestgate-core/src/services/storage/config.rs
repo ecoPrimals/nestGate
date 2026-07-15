@@ -172,17 +172,17 @@ impl ZfsConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.zfs_binary.is_empty() {
-            return Err("ZFS binary path cannot be empty".into());
+            return Err("ZFS binary path cannot be empty");
         }
 
         if self.zpool_binary.is_empty() {
-            return Err("ZPool binary path cannot be empty".into());
+            return Err("ZPool binary path cannot be empty");
         }
 
         if self.command_timeout.as_secs() == 0 {
-            return Err("Command timeout must be greater than zero".into());
+            return Err("Command timeout must be greater than zero");
         }
 
         // Check if binaries exist (in a real implementation)
@@ -268,28 +268,28 @@ impl StorageServiceConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), &'static str> {
         // Validate ZFS configuration
         self.zfs.validate()?;
 
         if self.discovery_interval == 0 {
-            return Err("Discovery interval must be greater than zero".into());
+            return Err("Discovery interval must be greater than zero");
         }
 
         if self.quota_check_interval == 0 {
-            return Err("Quota check interval must be greater than zero".into());
+            return Err("Quota check interval must be greater than zero");
         }
 
         if self.monitoring_interval == 0 {
-            return Err("Monitoring interval must be greater than zero".into());
+            return Err("Monitoring interval must be greater than zero");
         }
 
         if self.operation_timeout == 0 {
-            return Err("Operation timeout must be greater than zero".into());
+            return Err("Operation timeout must be greater than zero");
         }
 
         if self.max_concurrent_operations == 0 {
-            return Err("Max concurrent operations must be greater than zero".into());
+            return Err("Max concurrent operations must be greater than zero");
         }
 
         Ok(())

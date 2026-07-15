@@ -165,7 +165,7 @@ impl Default for UniversalAdapterConfig {
 /// # Errors
 ///
 /// Returns `Err` with a message when sovereignty checks fail (currently always returns [`Ok`]).
-pub const fn validate_primal_sovereignty() -> Result<(), String> {
+pub const fn validate_primal_sovereignty() -> Result<(), &'static str> {
     // This function would scan the codebase to ensure no hardcoded primal names
     // are used for direct connections - all must go through the universal adapter
     Ok(())

@@ -248,17 +248,17 @@ pub mod middleware {
 pub mod validation {
     use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
     /// Validate API response structure
-    pub fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), String> {
+    pub const fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), &'static str> {
         if response.success && response.data.is_none() {
-            return Err("Successful response must have data".into());
+            return Err("Successful response must have data");
         }
 
         if !response.success && response.error.is_none() {
-            return Err("Failed response must have error message".into());
+            return Err("Failed response must have error message");
         }
 
         if response.success && response.error.is_some() {
-            return Err("Successful response cannot have error message".into());
+            return Err("Successful response cannot have error message");
         }
         Ok(())
     }
@@ -266,7 +266,7 @@ pub mod validation {
     /// Validate unified error response structure
     pub fn validate_unified_error_response(
         response: &mut UnifiedErrorResponse,
-    ) -> std::result::Result<(), String> {
+    ) -> std::result::Result<(), &'static str> {
         if response.component.is_empty() {
             // PEDANTIC: Fixed from service_name to component
             response.component = "unknown".into();
@@ -275,11 +275,11 @@ pub mod validation {
     }
 
     /// Validate success response structure
-    pub fn validate_success_response(
+    pub const fn validate_success_response(
         response: &SuccessResponse,
-    ) -> std::result::Result<(), String> {
+    ) -> std::result::Result<(), &'static str> {
         if response.message.is_empty() {
-            return Err("Success response must have message".into());
+            return Err("Success response must have message");
         }
         Ok(())
     }
