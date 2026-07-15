@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 19 capability domains, 4 transport surfaces, Wave 136b (COORD-ACTIVATE, deep debt: thiserror, self-knowledge, mocks, idiomatic Rust), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
-date = 2026-07-11
+description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 140a (test fixture gating, platform audit, String::from round 4), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+date = 2026-07-15
 
 [taxonomies]
 primals = ["nestgate"]

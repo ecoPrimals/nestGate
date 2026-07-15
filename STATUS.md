@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 11, 2026 (Wave 136b — COORD-ACTIVATE wiring, deep debt sweep: thiserror, self-knowledge, mock elimination, idiomatic Rust)  
+**Last Updated**: Jul 15, 2026 (Wave 140a — deep debt sweep: test fixture gating, platform audit, String::from round 4)  
 **Version**: 0.5.0
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings in nestgate crates)
 Format:             CLEAN (cargo fmt --all -- --check passes)
 Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features (zero errors/warnings)
-Tests:              3,790 passed, 0 failures, 73 ignored — cargo test --workspace (1 pre-existing env-specific)
+Tests:              3,790 passed, 73 ignored (1 pre-existing env-specific) — cargo test --workspace
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
 Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
 Unwrap/Expect:      ZERO in production library code
@@ -29,7 +29,7 @@ Encrypt-at-rest:    ChaCha20-Poly1305
 Auth mode:          NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider
 Discovery:          Environment variables + capability IPC; 6-tier security socket discovery
 Env aliases:        Legacy BEARDOG_* aliases REMOVED — canonical SECURITY_PROVIDER_SOCKET / FAMILY_SEED only
-IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 90 methods
+IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 90 methods
 IPC routes (HTTP):  Aligned with UDS namespace (storage.store not storage.object.store); legacy aliases warn
 IPC routes (tarpc): storage.*, content.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.*, lifecycle.* — 52 semantic-routed methods
 content.* parity:   ALL transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API
@@ -42,7 +42,7 @@ Serial tests:       #[serial]: env-var-sensitive tests in nestgate-rpc (55), nes
 Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok; ring ELIMINATED
 Workspace:          20 crates, 100% hoisted deps, Rust 2024 edition
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
-Registry:           capability_registry.toml — machine-readable self-knowledge (19 capability domains)
+Registry:           capability_registry.toml — machine-readable self-knowledge (20 capability domains)
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 

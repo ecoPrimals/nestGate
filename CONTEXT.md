@@ -22,7 +22,7 @@ than by importing this crate graph.
 | **Version** | 0.5.0 |
 | **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
-| **Tests** | 12,885 passed, 0 failures, 420 ignored |
+| **Tests** | 3,790 passed, 73 ignored (1 pre-existing env-specific) |
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
 | **Architecture** | 22 workspace packages: 20 `code/crates/*` + fuzz + root |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
@@ -32,7 +32,7 @@ than by importing this crate graph.
 | **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean with `-D warnings` |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
-| **Registry** | `config/capability_registry.toml` — 18 capability sections, machine-readable self-knowledge |
+| **Registry** | `config/capability_registry.toml` — 20 capability domains, machine-readable self-knowledge |
 
 ### Workspace crates (authoritative list)
 

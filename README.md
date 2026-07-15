@@ -2,10 +2,10 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-07-11, Wave 136b)**  
+**Verification (as of 2026-07-15, Wave 140a)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 3,790 passed, 0 failures, 73 ignored (1 pre-existing env-specific)  
+- **Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific)  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jun 28, 2026
+**Last Updated**: Jul 15, 2026
 
 ---
 
@@ -160,14 +160,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-11 (Wave 136b).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-15 (Wave 140a).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 12,885 passed, 0 failures, 420 ignored |
+| Tests | 3,790 passed, 73 ignored (1 pre-existing env-specific) |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -315,4 +315,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: July 2026 (Wave 136b)
+**Latest**: July 2026 (Wave 140a)

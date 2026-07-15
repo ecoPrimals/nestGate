@@ -1,6 +1,6 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: Jun 19, 2026  
+**Last Updated**: Jul 15, 2026  
 **Status**: Active
 
 ---
@@ -48,9 +48,9 @@ See [README.md](README.md) for organization and **`cargo test --workspace`** (fu
 
 | Metric | Value |
 |--------|--------|
-| Passing | 12,885 |
-| Failed | 0 |
-| Ignored | 420 |
+| Passing | 3,790 |
+| Failed | 1 (pre-existing env-specific) |
+| Ignored | 73 |
 | Workspace coverage (line) | 84%+ |
 
 Re-run `cargo test --workspace` and `cargo llvm-cov` after large changes; numbers drift with the tree.

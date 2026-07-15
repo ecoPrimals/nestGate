@@ -1,7 +1,7 @@
 # NestGate Quick Start
 
 **Version**: 0.5.0  
-**Last Updated**: Jul 11, 2026 (Wave 136b)
+**Last Updated**: Jul 15, 2026 (Wave 140a)
 
 ---
 
@@ -12,7 +12,7 @@
 
 **Optional**: ZFS (for tiered storage features)
 
-**Current build status**: 22 workspace packages; 12,885 tests passed, 0 failures, 420 ignored; 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
+**Current build status**: 22 workspace packages; 3,790 tests passed, 73 ignored (1 pre-existing env-specific); 84%+ line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
 
 ---
 
@@ -127,4 +127,4 @@ RUST_LOG=info                    # Logging level
 ---
 
 **License**: AGPL-3.0-or-later  
-**Last Updated**: Jul 11, 2026 (Wave 136b)
+**Last Updated**: Jul 15, 2026 (Wave 140a)
