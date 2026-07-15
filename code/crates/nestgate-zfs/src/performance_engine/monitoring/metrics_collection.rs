@@ -162,6 +162,34 @@ pub(super) fn trim_metrics_cache_entries(
     }
 }
 
+/// Parse `/proc/meminfo` for real system memory, falling back to zeros.
+async fn read_proc_meminfo() -> SystemMemoryUsage {
+    let Ok(content) = tokio::fs::read_to_string("/proc/meminfo").await else {
+        return SystemMemoryUsage {
+            total: 0,
+            used: 0,
+            available: 0,
+        };
+    };
+
+    let mut total_kb = 0u64;
+    let mut available_kb = 0u64;
+    for line in content.lines() {
+        if let Some(rest) = line.strip_prefix("MemTotal:") {
+            total_kb = rest.split_whitespace().next().and_then(|s| s.parse().ok()).unwrap_or(0);
+        } else if let Some(rest) = line.strip_prefix("MemAvailable:") {
+            available_kb = rest.split_whitespace().next().and_then(|s| s.parse().ok()).unwrap_or(0);
+        }
+    }
+    let total = total_kb * 1024;
+    let available = available_kb * 1024;
+    SystemMemoryUsage {
+        total,
+        used: total.saturating_sub(available),
+        available,
+    }
+}
+
 impl RealTimePerformanceMonitor {
     /// Function description
     ///
@@ -229,10 +257,10 @@ impl RealTimePerformanceMonitor {
                             if hits + misses > 0 {
                                 hits as f64 / (hits + misses) as f64
                             } else {
-                                0.85 // Default hit ratio
+                                0.0
                             }
                         } else {
-                            0.85 // Default hit ratio
+                            0.0
                         };
 
                         // Get fragmentation from zpool list
@@ -304,12 +332,7 @@ impl RealTimePerformanceMonitor {
             }
         }
 
-        // Collect system memory usage
-        let system_memory = SystemMemoryUsage {
-            total: 16 * 1024 * 1024 * 1024,    // 16GB default
-            used: 8 * 1024 * 1024 * 1024,      // 8GB default
-            available: 8 * 1024 * 1024 * 1024, // 8GB default
-        };
+        let system_memory = read_proc_meminfo().await;
 
         // Collect detailed ARC statistics
         let arc_stats = if let Ok(arc_content) =
@@ -338,22 +361,22 @@ impl RealTimePerformanceMonitor {
                 hit_ratio: if hits + misses > 0 {
                     hits as f64 / (hits + misses) as f64
                 } else {
-                    0.85
+                    0.0
                 },
                 size,
                 target_size: c,
                 miss_ratio: if hits + misses > 0 {
                     misses as f64 / (hits + misses) as f64
                 } else {
-                    0.15
+                    0.0
                 },
             }
         } else {
             ArcStatistics {
-                hit_ratio: 0.85,
-                size: 4 * 1024 * 1024 * 1024,        // 4GB default
-                target_size: 8 * 1024 * 1024 * 1024, // 8GB default
-                miss_ratio: 0.15,
+                hit_ratio: 0.0,
+                size: 0,
+                target_size: 0,
+                miss_ratio: 0.0,
             }
         };
 
@@ -369,7 +392,7 @@ impl RealTimePerformanceMonitor {
         self.metrics_cache
             .write()
             .await
-            .insert(String::from("latest"), metrics.clone());
+            .insert("latest".into(), metrics.clone());
         trim_metrics_cache_entries(&mut *self.metrics_cache.write().await, 50);
 
         // Get metrics for trending

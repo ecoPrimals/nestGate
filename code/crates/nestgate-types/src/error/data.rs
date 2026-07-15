@@ -139,7 +139,7 @@ impl Default for NetworkErrorData {
         Self {
             endpoint: None,
             port: None,
-            protocol: String::from("HTTP"),
+            protocol: "HTTP".into(),
             timeout_duration: None,
             retry_count: 0,
             response_code: None,

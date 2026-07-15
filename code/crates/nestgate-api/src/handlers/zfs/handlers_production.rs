@@ -84,12 +84,12 @@ pub async fn create_pool(
     let pool_name = body
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| ApiError::InvalidRequest(String::from("Pool name is required")))?;
+        .ok_or_else(|| ApiError::InvalidRequest("Pool name is required".into()))?;
 
     let devices = body
         .get("devices")
         .and_then(|v| v.as_array())
-        .ok_or_else(|| ApiError::InvalidRequest(String::from("Devices array is required")))?;
+        .ok_or_else(|| ApiError::InvalidRequest("Devices array is required".into()))?;
 
     let device_paths: Vec<String> = devices
         .iter()
@@ -98,7 +98,7 @@ pub async fn create_pool(
 
     if device_paths.is_empty() {
         return Err(ApiError::InvalidRequest(
-            String::from("At least one device is required"),
+            "At least one device is required".into(),
         ));
     }
 
@@ -168,16 +168,10 @@ pub async fn trigger_optimization(
 ) -> Result<Json<serde_json::Value>> {
     info!("Triggering optimization for pool: {}", pool_name);
 
-    // For now, return success - actual optimization would be implemented here
     Ok(Json(json!({
-        "status": "success",
+        "status": "not_implemented",
         "pool": pool_name,
-        "optimizations_applied": [
-            "Checked compression settings",
-            "Analyzed dataset layout",
-            "Reviewed snapshot retention"
-        ],
-        "message": "Optimization analysis complete"
+        "message": "Pool optimization requires ZFS scrub and property analysis integration"
     })))
 }
 
@@ -215,15 +209,14 @@ pub async fn create_dataset(
     let dataset_name = body
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| ApiError::InvalidRequest(String::from("Dataset name is required")))?;
+        .ok_or_else(|| ApiError::InvalidRequest("Dataset name is required".into()))?;
 
     info!("Creating ZFS dataset: {}", dataset_name);
 
-    // For now, return success - actual dataset creation would be implemented here
     Ok(Json(json!({
-        "status": "success",
+        "status": "not_implemented",
         "dataset": dataset_name,
-        "message": format!("Dataset '{}' created successfully", dataset_name)
+        "message": "Dataset creation requires zfs create integration"
     })))
 }
 
@@ -232,13 +225,9 @@ pub async fn get_dataset(Path(dataset_name): Path<String>) -> Result<Json<serde_
     debug!("Getting details for dataset: {}", dataset_name);
 
     Ok(Json(json!({
-        "status": "success",
+        "status": "not_implemented",
         "dataset": dataset_name,
-        "properties": {
-            "compression": "lz4",
-            "atime": "off",
-            "quota": "none"
-        }
+        "message": "Dataset properties require zfs get integration"
     })))
 }
 
@@ -247,8 +236,9 @@ pub async fn delete_dataset(Path(dataset_name): Path<String>) -> Result<Json<ser
     info!("Deleting ZFS dataset: {}", dataset_name);
 
     Ok(Json(json!({
-        "status": "success",
-        "message": format!("Dataset '{}' deleted successfully", dataset_name)
+        "status": "not_implemented",
+        "dataset": dataset_name,
+        "message": "Dataset deletion requires zfs destroy integration"
     })))
 }
 
@@ -257,36 +247,31 @@ pub async fn get_dataset_properties(
     Path(dataset_name): Path<String>,
 ) -> Result<Json<serde_json::Value>> {
     Ok(Json(json!({
+        "status": "not_implemented",
         "dataset": dataset_name,
-        "properties": {
-            "compression": "lz4",
-            "atime": "off",
-            "quota": "none",
-            "recordsize": "128K"
-        }
+        "message": "Dataset properties require zfs get integration"
     })))
 }
 
 /// Set dataset properties
 pub async fn set_dataset_properties(
     Path(dataset_name): Path<String>,
-    Json(properties): Json<HashMap<String, serde_json::Value>>,
+    Json(_properties): Json<HashMap<String, serde_json::Value>>,
 ) -> Result<Json<serde_json::Value>> {
     info!("Setting properties for dataset: {}", dataset_name);
 
     Ok(Json(json!({
-        "status": "success",
+        "status": "not_implemented",
         "dataset": dataset_name,
-        "properties_set": properties.keys().collect::<Vec<_>>()
+        "message": "Property mutation requires zfs set integration"
     })))
 }
 
 /// List all snapshots
 pub async fn list_snapshots() -> Result<Json<serde_json::Value>> {
     Ok(Json(json!({
-        "snapshots": [],
-        "count": 0,
-        "status": "success"
+        "status": "not_implemented",
+        "message": "Snapshot listing requires zfs list -t snapshot integration"
     })))
 }
 
@@ -297,14 +282,14 @@ pub async fn create_snapshot(
     let snapshot_name = body
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| ApiError::InvalidRequest(String::from("Snapshot name is required")))?;
+        .ok_or_else(|| ApiError::InvalidRequest("Snapshot name is required".into()))?;
 
     info!("Creating ZFS snapshot: {}", snapshot_name);
 
     Ok(Json(json!({
-        "status": "success",
+        "status": "not_implemented",
         "snapshot": snapshot_name,
-        "message": format!("Snapshot '{}' created successfully", snapshot_name)
+        "message": "Snapshot creation requires zfs snapshot integration"
     })))
 }
 
@@ -313,8 +298,9 @@ pub async fn delete_snapshot(Path(snapshot_name): Path<String>) -> Result<Json<s
     info!("Deleting ZFS snapshot: {}", snapshot_name);
 
     Ok(Json(json!({
-        "status": "success",
-        "message": format!("Snapshot '{}' deleted successfully", snapshot_name)
+        "status": "not_implemented",
+        "snapshot": snapshot_name,
+        "message": "Snapshot deletion requires zfs destroy snapshot integration"
     })))
 }
 
@@ -349,12 +335,8 @@ pub async fn get_pool_status(Path(pool_name): Path<String>) -> Result<Json<serde
 /// Get performance analytics
 pub async fn get_performance_analytics() -> Result<Json<serde_json::Value>> {
     Ok(Json(json!({
-        "status": "success",
-        "metrics": {
-            "read_ops_per_sec": 0,
-            "write_ops_per_sec": 0,
-            "average_latency_ms": 0
-        }
+        "status": "not_implemented",
+        "message": "Performance analytics requires live ZFS pool with iostat integration"
     })))
 }
 
@@ -363,9 +345,8 @@ pub async fn predict_tier(
     Json(_body): Json<HashMap<String, serde_json::Value>>,
 ) -> Result<Json<serde_json::Value>> {
     Ok(Json(json!({
-        "status": "success",
-        "predicted_tier": "standard",
-        "confidence": 0.85
+        "status": "not_implemented",
+        "message": "Tier prediction requires access-pattern analysis integration"
     })))
 }
 
@@ -438,7 +419,8 @@ mod tests {
         
         // May fail if dataset doesn't exist
         if let Ok(json) = result {
-            assert!(json.0["name"].is_string() || json.0["error"].is_string());
+            assert_eq!(json.0["status"], "not_implemented");
+            assert!(json.0["message"].is_string());
         }
     }
 
@@ -481,12 +463,11 @@ mod tests {
             "access_pattern": "random"
         });
         
-        let result = predict_storage_tier(Json(request)).await;
+        let result = predict_tier(Json(request)).await;
         
         if let Ok(json) = result {
-            assert_eq!(json.0["status"], "success");
-            assert!(json.0["predicted_tier"].is_string());
-            assert!(json.0["confidence"].is_number());
+            assert_eq!(json.0["status"], "not_implemented");
+            assert!(json.0["message"].is_string());
         }
     }
 }
