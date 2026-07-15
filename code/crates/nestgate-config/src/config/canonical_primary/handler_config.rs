@@ -88,9 +88,9 @@ impl Default for GlobalHandlerConfig {
             max_request_size: 10 * 1024 * 1024, // 10MB
             enable_logging: true,
             enable_metrics: true,
-            default_content_type: String::from("application/json"),
+            default_content_type: "application/json".into(),
             enable_cors: true,
-            cors_origins: vec![String::from("*")],
+            cors_origins: vec!["*".into()],
             rate_limiting: RateLimitConfig::default(),
             security: HandlerSecurityConfig::default(),
         }
@@ -308,9 +308,9 @@ impl Default for ZfsSecurityConfig {
             enable_signing: false,
             enable_encryption: true,
             allowed_operations: vec![
-                String::from("list_pools"),
-                String::from("create_dataset"),
-                String::from("snapshot"),
+                "list_pools".into(),
+                "create_dataset".into(),
+                "snapshot".into(),
             ],
         }
     }
@@ -504,7 +504,7 @@ impl Default for ComplianceHandlerConfig {
     fn default() -> Self {
         Self {
             enable_monitoring: true,
-            standards: vec![String::from("ISO27001"), String::from("GDPR")],
+            standards: vec!["ISO27001".into(), "GDPR".into()],
             audit_interval: Duration::from_secs(3600),
         }
     }
@@ -597,13 +597,13 @@ impl Default for HandlerSecurityConfig {
             security_headers: {
                 let mut headers = HashMap::new();
                 headers.insert(
-                    String::from("X-Content-Type-Options"),
-                    String::from("nosniff"),
+                    "X-Content-Type-Options".into(),
+                    "nosniff".into(),
                 );
-                headers.insert(String::from("X-Frame-Options"), String::from("DENY"));
+                headers.insert("X-Frame-Options".into(), "DENY".into());
                 headers.insert(
-                    String::from("X-XSS-Protection"),
-                    String::from("1; mode=block"),
+                    "X-XSS-Protection".into(),
+                    "1; mode=block".into(),
                 );
                 headers
             },

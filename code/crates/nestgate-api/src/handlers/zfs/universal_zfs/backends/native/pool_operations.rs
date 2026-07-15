@@ -133,7 +133,7 @@ fn parse_pool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
         };
 
         pools.push(PoolInfo {
-            name: name.clone(),
+            name,
             health,
             state: PoolState::Active,
             capacity: PoolCapacity {

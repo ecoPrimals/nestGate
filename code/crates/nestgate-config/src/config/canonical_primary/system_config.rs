@@ -103,7 +103,7 @@ impl Default for DeploymentEnvironment {
 }
 
 /// Log level configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 /// Loglevel
 pub enum LogLevel {
     /// Error log level (only errors)
@@ -111,17 +111,12 @@ pub enum LogLevel {
     /// Warning log level (warnings and errors)
     Warn,
     /// Info log level (informational messages)
+    #[default]
     Info,
     /// Debug log level (detailed debugging information)
     Debug,
     /// Trace log level (very detailed tracing)
     Trace,
-}
-impl Default for LogLevel {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self::Info
-    }
 }
 
 #[cfg(test)]

@@ -100,24 +100,18 @@ pub struct ZeroCostBenchmarkResults {
 }
 
 /// Request priority for metadata
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 /// Requestpriority
 pub enum RequestPriority {
     /// Low
     Low,
     /// Normal
+    #[default]
     Normal,
     /// High
     High,
     /// Critical
     Critical,
-}
-
-impl Default for RequestPriority {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self::Normal
-    }
 }
 
 

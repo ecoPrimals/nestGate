@@ -74,12 +74,12 @@ impl NetworkDiscoveryConfig {
 
         Self {
             scan_timeout: Duration::from_secs(5),
-            preferred_interfaces: vec![String::from("eth0"), String::from("wlan0")],
+            preferred_interfaces: vec!["eth0".into(), "wlan0".into()],
             port_scan_range: (start_port, end_port),
             interface_priority: vec![
-                String::from("lo"),
-                String::from("eth0"),
-                String::from("wlan0"),
+                "lo".into(),
+                "eth0".into(),
+                "wlan0".into(),
             ],
         }
     }
@@ -285,7 +285,7 @@ impl NetworkDiscovery {
         // returning an incomplete list — callers that need LAN interfaces
         // should use explicit endpoint configuration via env/config.
         let interfaces = vec![InterfaceInfo {
-            name: String::from("lo"),
+            name: "lo".into(),
             ip_endpoint: IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,
@@ -369,15 +369,15 @@ impl NetworkDiscovery {
         let mut config = HashMap::new();
 
         config.insert(
-            String::from("scan_timeout"),
+            "scan_timeout".into(),
             format!("{:?}", self.legacy_discovery.scan_timeout),
         );
         config.insert(
-            String::from("port_range"),
+            "port_range".into(),
             format!("{:?}", self.legacy_discovery.port_scan_range),
         );
         config.insert(
-            String::from("preferred_interfaces"),
+            "preferred_interfaces".into(),
             self.legacy_discovery.preferred_interfaces.join(","),
         );
 

@@ -65,7 +65,7 @@ impl ConfigMigrator {
         config: &serde_json::Value,
         options: MigrationOptions,
     ) -> Result<Self> {
-        let mut migrator = Self::new(String::from("NestGatePrimaryConfig"), options);
+        let mut migrator = Self::new("NestGatePrimaryConfig".into(), options);
         migrator.migrate_from_primary_config(config)?;
         Ok(migrator)
     }
@@ -75,7 +75,7 @@ impl ConfigMigrator {
         config: &serde_json::Value,
         options: MigrationOptions,
     ) -> Result<Self> {
-        let mut migrator = Self::new(String::from("UnifiedCanonicalExtensions"), options);
+        let mut migrator = Self::new("UnifiedCanonicalExtensions".into(), options);
         migrator.migrate_from_unified_config(config)?;
         Ok(migrator)
     }
@@ -85,7 +85,7 @@ impl ConfigMigrator {
         config: &serde_json::Value,
         options: MigrationOptions,
     ) -> Result<Self> {
-        let mut migrator = Self::new(String::from("NestGateFinalConfig"), options);
+        let mut migrator = Self::new("NestGateFinalConfig".into(), options);
         migrator.migrate_from_final_config(config)?;
         Ok(migrator)
     }
@@ -131,9 +131,11 @@ impl ConfigMigrator {
             self.restore_from_backup(backup)?;
             Ok(())
         } else {
+            let field: String = "backup".into();
+            let message: String = "No backup available for rollback".into();
             Err(NestGateError::configuration_error_detailed(
-                String::from("backup"),
-                String::from("No backup available for rollback"),
+                field,
+                message,
                 None,
                 Some("Valid backup".into()),
                 false,
@@ -157,7 +159,7 @@ impl ConfigMigrator {
     }
 
     fn migrate_from_primary_config(&mut self, config: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Parsed NestGatePrimaryConfig"));
+        self.add_completed_step("Parsed NestGatePrimaryConfig".into());
         if let Some(system) = config.get("system") {
             self.migrate_system_config(system)?;
         }
@@ -171,7 +173,7 @@ impl ConfigMigrator {
     }
 
     fn migrate_from_unified_config(&mut self, config: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Parsed UnifiedCanonicalExtensions"));
+        self.add_completed_step("Parsed UnifiedCanonicalExtensions".into());
         if let Some(api) = config.get("api") {
             self.migrate_api_config(api)?;
         }
@@ -182,7 +184,7 @@ impl ConfigMigrator {
     }
 
     fn migrate_from_final_config(&mut self, config: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Parsed NestGateFinalConfig"));
+        self.add_completed_step("Parsed NestGateFinalConfig".into());
         if let Some(system) = config.get("system") {
             self.migrate_system_config(system)?;
         }
@@ -190,27 +192,27 @@ impl ConfigMigrator {
     }
 
     fn migrate_system_config(&mut self, _system: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Migrated system configuration"));
+        self.add_completed_step("Migrated system configuration".into());
         Ok(())
     }
 
     fn migrate_unified_base_config(&mut self, _unified: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Migrated unified base configuration"));
+        self.add_completed_step("Migrated unified base configuration".into());
         Ok(())
     }
 
     fn migrate_domain_configs(&mut self, _domains: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Migrated domain configurations"));
+        self.add_completed_step("Migrated domain configurations".into());
         Ok(())
     }
 
     fn migrate_api_config(&mut self, _api: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Migrated API configuration"));
+        self.add_completed_step("Migrated API configuration".into());
         Ok(())
     }
 
     fn migrate_automation_config(&mut self, _automation: &serde_json::Value) -> Result<()> {
-        self.add_completed_step(String::from("Migrated automation configuration"));
+        self.add_completed_step("Migrated automation configuration".into());
         Ok(())
     }
 
@@ -247,7 +249,7 @@ impl ConfigMigrator {
                 "Migration source type must be specified before validation",
             ));
         }
-        self.add_completed_step(String::from("Source validation completed"));
+        self.add_completed_step("Source validation completed".into());
         Ok(())
     }
 
@@ -259,13 +261,13 @@ impl ConfigMigrator {
             created_at: SystemTime::now(),
             metadata: BackupMetadata {
                 source_type: self.source_type.clone(),
-                version: String::from("1.0.0"),
-                environment: String::from("development"),
+                version: "1.0.0".into(),
+                environment: "development".into(),
                 additional_metadata: HashMap::new(),
             },
         };
         self.backup = Some(backup);
-        self.add_completed_step(String::from("Backup created successfully"));
+        self.add_completed_step("Backup created successfully".into());
         Ok(())
     }
 
@@ -275,7 +277,7 @@ impl ConfigMigrator {
                 "Migration source type must be specified before analysis",
             ));
         }
-        self.add_completed_step(String::from("Source analysis completed"));
+        self.add_completed_step("Source analysis completed".into());
         Ok(())
     }
 
@@ -299,7 +301,7 @@ impl ConfigMigrator {
                 for warning in warnings {
                     self.add_warning(warning);
                 }
-                self.add_completed_step(String::from("Target validation completed"));
+                self.add_completed_step("Target validation completed".into());
                 Ok(())
             }
             Err(e) => {
@@ -308,8 +310,8 @@ impl ConfigMigrator {
                     severity: ErrorSeverity::Critical,
                     source_field: None,
                     target_field: None,
-                    error_code: String::from("TARGET_VALIDATION_FAILED"),
-                    suggested_resolution: Some(String::from("Check configuration structure")),
+                    error_code: "TARGET_VALIDATION_FAILED".into(),
+                    suggested_resolution: Some("Check configuration structure".into()),
                 });
                 Err(e)
             }
@@ -324,7 +326,7 @@ impl ConfigMigrator {
     }
 
     fn dry_run_migration(&mut self) -> Result<NestGateCanonicalConfig> {
-        self.add_completed_step(String::from("Dry run completed - no changes made"));
+        self.add_completed_step("Dry run completed - no changes made".into());
         Ok(self.target_config.clone())
     }
 

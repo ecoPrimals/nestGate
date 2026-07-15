@@ -41,14 +41,14 @@ impl UniversalStorageBridge {
         // Try backends in order of preference: ZFS -> Filesystem -> Others
         if Self::is_zfs_available() {
             info!("Selected storage backend: zfs");
-            self.preferred_backend = Some(String::from("zfs"));
-            return Ok(String::from("zfs"));
+            self.preferred_backend = Some("zfs".into());
+            return Ok("zfs".into());
         }
 
         // Filesystem is always available as fallback
         info!("Selected storage backend: filesystem");
-        self.preferred_backend = Some(String::from("filesystem"));
-        Ok(String::from("filesystem"))
+        self.preferred_backend = Some("filesystem".into());
+        Ok("filesystem".into())
     }
 
     /// Check if ZFS is available
@@ -84,7 +84,7 @@ impl UniversalStorageBridge {
             .args(["list", "-H", "-o", "name,size,alloc,free,health"])
             .output()
             .map_err(|_e| {
-                UniversalZfsError::internal(String::from("Failed to execute ZFS command"))
+                UniversalZfsError::internal("Failed to execute ZFS command")
             })?;
 
         if !output.status.success() {
@@ -176,7 +176,7 @@ impl UniversalStorageBridge {
                     let available_bytes = Self::parse_size_to_bytes(avail_str)?;
 
                     pools.push(PoolInfo {
-                        name: String::from("default_pool"),
+                        name: "default_pool".into(),
                         state: PoolState::Active, // Use correct enum variant
                         capacity: PoolCapacity {
                             total: total_bytes,
@@ -187,8 +187,8 @@ impl UniversalStorageBridge {
                         scrub: None,
                         properties: {
                             let mut props = HashMap::new();
-                            props.insert(String::from("filesystem_type"), fstype.to_string());
-                            props.insert(String::from("mount_point"), mount_point.to_string());
+                            props.insert("filesystem_type".into(), fstype.to_string());
+                            props.insert("mount_point".into(), mount_point.to_string());
                             props
                         },
                     });
@@ -207,14 +207,14 @@ impl UniversalStorageBridge {
         // Create a minimal pool representing the root filesystem
         let mut properties = HashMap::new();
         properties.insert(
-            String::from("preferred_backend"),
+            "preferred_backend".into(),
             self.preferred_backend
                 .clone()
-                .unwrap_or_else(|| String::from("unset")),
+                .unwrap_or_else(|| "unset".into()),
         );
 
         let pool = PoolInfo {
-            name: String::from("root-filesystem"),
+            name: "root-filesystem".into(),
             state: PoolState::Active, // Use correct enum variant
             capacity: PoolCapacity {
                 total: 0,
@@ -257,7 +257,7 @@ impl UniversalStorageBridge {
 
         let number: f64 = number_part
             .parse()
-            .map_err(|_| UniversalZfsError::internal(String::from("Failed to parse size value")))?;
+            .map_err(|_| UniversalZfsError::internal("Failed to parse size value"))?;
 
         let multiplier = match unit.to_uppercase().as_str() {
             "K" | "KB" => 1024,
@@ -322,7 +322,7 @@ impl UniversalStorageBridge {
         let output = std::process::Command::new("zfs")
             .args(["create", &config.name])
             .output()
-            .map_err(|_e| UniversalZfsError::internal(String::from("Failed to execute command")))?;
+            .map_err(|_e| UniversalZfsError::internal("Failed to execute command"))?;
 
         if !output.status.success() {
             let error = String::from_utf8_lossy(&output.stderr);
@@ -353,7 +353,7 @@ impl UniversalStorageBridge {
         let path = std::path::Path::new(&config.name);
 
         std::fs::create_dir_all(path).map_err(|_e| {
-            UniversalZfsError::internal(String::from("Failed to create directory"))
+            UniversalZfsError::internal("Failed to create directory")
         })?;
 
         info!("Created filesystem dataset at: {:?}", path);

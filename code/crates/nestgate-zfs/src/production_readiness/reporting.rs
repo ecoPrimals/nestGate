@@ -15,31 +15,31 @@ impl ProductionReadinessValidator {
     ) -> Result<()> {
         if !report.zfs_available {
             report.findings.push(ReadinessFinding {
-                category: String::from("ZFS Availability"),
-                description: String::from("ZFS is not available on this system"),
+                category: "ZFS Availability".into(),
+                description: "ZFS is not available on this system".into(),
                 severity: FindingSeverity::Critical,
                 blocking: true,
             });
             report
                 .recommendations
-                .push(String::from("Install ZFS kernel modules and utilities"));
+                .push("Install ZFS kernel modules and utilities".into());
         }
 
         if !report.real_hardware_detected {
             report.findings.push(ReadinessFinding {
-                category: String::from("Hardware Detection"),
-                description: String::from("Running in mock/virtual mode — not real hardware"),
+                category: "Hardware Detection".into(),
+                description: "Running in mock/virtual mode — not real hardware".into(),
                 severity: FindingSeverity::Warning,
                 blocking: false,
             });
-            report.recommendations.push(String::from(
-                "Run on real hardware for production workloads",
-            ));
+            report.recommendations.push(
+                "Run on real hardware for production workloads".into(),
+            );
         }
 
         if !report.mock_dependencies.is_empty() {
             report.findings.push(ReadinessFinding {
-                category: String::from("Mock Dependencies"),
+                category: "Mock Dependencies".into(),
                 description: format!(
                     "Mock dependencies active: {}",
                     report.mock_dependencies.join(", ")
@@ -47,57 +47,57 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report.recommendations.push(String::from(
-                "Disable mock mode for production: unset NESTGATE_MOCK_MODE",
-            ));
+            report.recommendations.push(
+                "Disable mock mode for production: unset NESTGATE_MOCK_MODE".into(),
+            );
         }
 
         if !report.performance_validated {
             report.findings.push(ReadinessFinding {
-                category: String::from("Performance"),
-                description: String::from("Performance validation failed — insufficient resources"),
+                category: "Performance".into(),
+                description: "Performance validation failed — insufficient resources".into(),
                 severity: FindingSeverity::Warning,
                 blocking: false,
             });
-            report.recommendations.push(String::from(
-                "Ensure sufficient memory and CPU for production workloads",
-            ));
+            report.recommendations.push(
+                "Ensure sufficient memory and CPU for production workloads".into(),
+            );
         }
 
         if !report.security_validated {
             report.findings.push(ReadinessFinding {
-                category: String::from("Security"),
-                description: String::from("Security validation failed — encryption not available"),
+                category: "Security".into(),
+                description: "Security validation failed — encryption not available".into(),
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report.recommendations.push(String::from(
-                "Enable ZFS encryption support for secure mode",
-            ));
+            report.recommendations.push(
+                "Enable ZFS encryption support for secure mode".into(),
+            );
         }
 
         if !report.configuration_validated {
             report.findings.push(ReadinessFinding {
-                category: String::from("Configuration"),
-                description: String::from("Required directories could not be created"),
+                category: "Configuration".into(),
+                description: "Required directories could not be created".into(),
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report.recommendations.push(String::from(
-                "Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable",
-            ));
+            report.recommendations.push(
+                "Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable".into(),
+            );
         }
 
         // Add general production recommendations
-        report.recommendations.push(String::from(
-            "Review logs for any warnings during operation",
-        ));
-        report.recommendations.push(String::from(
-            "Monitor ZFS pool health and performance metrics",
-        ));
-        report.recommendations.push(String::from(
-            "Ensure backup and recovery procedures are tested",
-        ));
+        report.recommendations.push(
+            "Review logs for any warnings during operation".into(),
+        );
+        report.recommendations.push(
+            "Monitor ZFS pool health and performance metrics".into(),
+        );
+        report.recommendations.push(
+            "Ensure backup and recovery procedures are tested".into(),
+        );
 
         Ok(())
     }

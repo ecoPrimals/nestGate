@@ -19,10 +19,11 @@ use crate::constants::hardcoding::runtime_fallback_ports;
 /// **ENVIRONMENT ENUMERATION**
 ///
 /// Defines the deployment environment for configuration validation and behavior
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 /// Environment
 pub enum Environment {
     /// Development environment - relaxed validation and debugging features
+    #[default]
     Development,
 
     /// Staging environment - production-like but with additional testing features
@@ -33,12 +34,6 @@ pub enum Environment {
 
     /// Testing environment - specialized for automated testing
     Testing,
-}
-impl Default for Environment {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self::Development
-    }
 }
 
 impl std::fmt::Display for Environment {

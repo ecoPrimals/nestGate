@@ -34,7 +34,7 @@ fn try_zfs_compression_for_dataset(dataset: &str) -> Option<(f64, String)> {
             .unwrap_or("lz4")
             .trim()
             .to_string(),
-        _ => String::from("lz4"),
+        _ => "lz4".into(),
     };
 
     Some((ratio, algorithm))
@@ -81,7 +81,7 @@ impl CompressionAnalytics {
             } else {
                 (
                     Self::estimate_compression_ratio_from_sample(data_sample),
-                    String::from("lz4"),
+                    "lz4".into(),
                 )
             };
         let efficiency = Self::calculate_efficiency(compression_ratio);
@@ -116,13 +116,13 @@ impl CompressionAnalytics {
         let mut recommendations = Vec::new();
 
         if self.compression_ratio < 1.2 {
-            recommendations.push(String::from(
-                "Consider disabling compression for this dataset",
-            ));
+            recommendations.push(
+                "Consider disabling compression for this dataset".into(),
+            );
         } else if self.compression_ratio < 1.5 {
-            recommendations.push(String::from("lz4 compression is optimal for this data"));
+            recommendations.push("lz4 compression is optimal for this data".into());
         } else {
-            recommendations.push(String::from("Consider gzip compression for better ratio"));
+            recommendations.push("Consider gzip compression for better ratio".into());
         }
 
         recommendations

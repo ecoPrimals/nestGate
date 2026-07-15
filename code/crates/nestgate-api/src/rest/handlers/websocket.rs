@@ -111,7 +111,7 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
 /// Handle logs WebSocket connection
 async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: WebSocketQuery) {
     info!("Logs WebSocket connection established");
-    let level_filter = query.level.unwrap_or_else(|| String::from("info"));
+    let level_filter = query.level.unwrap_or_else(|| "info".into());
     let update_interval = Duration::from_secs(query.interval.unwrap_or(1));
     let mut ticker = interval(update_interval);
 
@@ -390,7 +390,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
 
     let (description, data) = match *event_type {
         "dataset_created" => (
-            String::from("New ZFS dataset created"),
+            "New ZFS dataset created".into(),
             serde_json::json!({
                 "dataset_name": format!("tank/data_{}", ((seed >> 8) % 100)),
                 "backend": "filesystem",
@@ -398,7 +398,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         "snapshot_taken" => (
-            String::from("Automatic snapshot created"),
+            "Automatic snapshot created".into(),
             serde_json::json!({
                 "dataset": "tank/data",
                 "snapshot_name": format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
@@ -406,14 +406,14 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         "storage_scanned" => (
-            String::from("Storage scan completed"),
+            "Storage scan completed".into(),
             serde_json::json!({
                 "backends_found": (seed % 5) + 2,
                 "scan_duration_ms": (seed % 5000) + 1000
             }),
         ),
         "metrics_updated" => (
-            String::from("System metrics refreshed"),
+            "System metrics refreshed".into(),
             serde_json::json!({
                 "datasets": dataset_count,
                 "cpu_usage": nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0),
@@ -421,7 +421,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         "threshold_exceeded" => (
-            String::from("Performance threshold exceeded"),
+            "Performance threshold exceeded".into(),
             serde_json::json!({
                 "metric": "cpu_usage_percent",
                 "threshold": 80.0,
@@ -429,7 +429,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             }),
         ),
         _ => (
-            String::from("System event occurred"),
+            "System event occurred".into(),
             serde_json::json!({"info": "Generic system event"}),
         ),
     };
