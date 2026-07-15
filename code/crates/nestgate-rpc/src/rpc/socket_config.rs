@@ -392,10 +392,17 @@ impl SocketConfig {
         }
 
         let node_id = env.get("NESTGATE_NODE_ID").unwrap_or_else(|| {
-            rustix::system::uname()
-                .nodename()
-                .to_string_lossy()
-                .into_owned()
+            #[cfg(unix)]
+            {
+                rustix::system::uname()
+                    .nodename()
+                    .to_string_lossy()
+                    .into_owned()
+            }
+            #[cfg(not(unix))]
+            {
+                String::from("unknown")
+            }
         });
 
         let socket_override = env.get("NESTGATE_SOCKET").filter(|s| !s.is_empty());

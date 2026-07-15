@@ -64,11 +64,11 @@ impl<'a> DetectionEngine<'a> {
             let mut storage = DetectedStorage::new(fs.id.clone(), fs.storage_type, fs.name.clone());
 
             storage.available_space = fs.available_bytes;
-            storage.add_metadata(String::from("filesystem_type"), fs.fs_type.clone());
-            storage.add_metadata(String::from("device"), fs.device.clone());
-            storage.add_metadata(String::from("total_bytes"), fs.total_bytes.to_string());
+            storage.add_metadata("filesystem_type".into(), fs.fs_type.clone());
+            storage.add_metadata("device".into(), fs.device.clone());
+            storage.add_metadata("total_bytes".into(), fs.total_bytes.to_string());
             storage.add_metadata(
-                String::from("mount_point"),
+                "mount_point".into(),
                 fs.mount_point.to_string_lossy().to_string(),
             );
 
@@ -181,9 +181,9 @@ impl<'a> DetectionEngine<'a> {
                 );
 
                 storage.available_space = fs.available_bytes;
-                storage.add_metadata(String::from("device"), fs.device.clone());
-                storage.add_metadata(String::from("filesystem_type"), fs.fs_type.clone());
-                storage.add_metadata(String::from("total_bytes"), fs.total_bytes.to_string());
+                storage.add_metadata("device".into(), fs.device.clone());
+                storage.add_metadata("filesystem_type".into(), fs.fs_type.clone());
+                storage.add_metadata("total_bytes".into(), fs.total_bytes.to_string());
 
                 for cap in fs.capabilities {
                     storage.add_capability(cap);
@@ -264,7 +264,7 @@ impl<'a> DetectionEngine<'a> {
             let mut storage =
                 DetectedStorage::new(id, UnifiedStorageType::Network, format!("iSCSI host {i}"));
             storage.add_metadata(
-                String::from("iscsi_host"),
+                "iscsi_host".into(),
                 host.file_name().to_string_lossy().to_string(),
             );
             targets.push(storage);
@@ -321,18 +321,21 @@ impl<'a> DetectionEngine<'a> {
             let display = format!("{mount_point} ({fs_type})");
             let mut storage = DetectedStorage::new(id, storage_type.clone(), display);
 
-            let mount_path = std::path::Path::new(mount_point);
-            if let Ok(stat) = rustix::fs::statvfs(mount_path) {
-                let block_size = stat.f_frsize;
-                let total = stat.f_blocks * block_size;
-                let avail = stat.f_bavail * block_size;
-                storage.available_space = avail;
-                storage.add_metadata(String::from("total_bytes"), total.to_string());
+            #[cfg(unix)]
+            {
+                let mount_path = std::path::Path::new(mount_point);
+                if let Ok(stat) = rustix::fs::statvfs(mount_path) {
+                    let block_size = stat.f_frsize;
+                    let total = stat.f_blocks * block_size;
+                    let avail = stat.f_bavail * block_size;
+                    storage.available_space = avail;
+                    storage.add_metadata("total_bytes".into(), total.to_string());
+                }
             }
 
-            storage.add_metadata(String::from("device"), device.to_string());
-            storage.add_metadata(String::from("filesystem_type"), fs_type.to_string());
-            storage.add_metadata(String::from("mount_point"), mount_point.to_string());
+            storage.add_metadata("device".into(), device.to_string());
+            storage.add_metadata("filesystem_type".into(), fs_type.to_string());
+            storage.add_metadata("mount_point".into(), mount_point.to_string());
             results.push(storage);
         }
 

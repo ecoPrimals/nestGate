@@ -211,30 +211,38 @@ impl IsomorphicIpcServer {
             return self.start_tcp_fallback().await;
         }
 
-        // 1. TRY Unix socket first (optimal)
-        info!("   Trying Unix socket IPC (optimal)...");
-        match self.try_unix_server().await {
-            Ok(()) => {
-                info!("Unix socket IPC active (optimal path)");
-                Ok(())
-            }
+        #[cfg(unix)]
+        {
+            // 1. TRY Unix socket first (optimal)
+            info!("   Trying Unix socket IPC (optimal)...");
+            match self.try_unix_server().await {
+                Ok(()) => {
+                    info!("Unix socket IPC active (optimal path)");
+                    Ok(())
+                }
 
-            // 2. DETECT platform constraints
-            Err(e) if is_platform_constraint(&e) => {
-                warn!("Unix sockets unavailable: {}", e);
-                warn!("   Detected platform constraint, adapting...");
+                // 2. DETECT platform constraints
+                Err(e) if is_platform_constraint(&e) => {
+                    warn!("Unix sockets unavailable: {}", e);
+                    warn!("   Detected platform constraint, adapting...");
 
-                // 3. ADAPT to TCP fallback
-                info!("Initiating TCP IPC fallback (isomorphic mode)");
-                self.start_tcp_fallback().await
-            }
+                    // 3. ADAPT to TCP fallback
+                    info!("Initiating TCP IPC fallback (isomorphic mode)");
+                    self.start_tcp_fallback().await
+                }
 
-            // 4. Real error (not platform constraint)
-            Err(e) => {
-                error!("Failed to start IPC server: {}", e);
-                error!("   This is a real error, not a platform constraint");
-                Err(e)
+                // 4. Real error (not platform constraint)
+                Err(e) => {
+                    error!("Failed to start IPC server: {}", e);
+                    error!("   This is a real error, not a platform constraint");
+                    Err(e)
+                }
             }
+        }
+        #[cfg(not(unix))]
+        {
+            info!("   Unix sockets not available on this platform, using TCP fallback");
+            self.start_tcp_fallback().await
         }
     }
 
@@ -253,6 +261,7 @@ impl IsomorphicIpcServer {
     ///
     /// Uses `tokio::signal::ctrl_c` so SIGINT/SIGTERM triggers graceful
     /// shutdown with socket file cleanup (prevents stale socket accumulation).
+    #[cfg(unix)]
     async fn try_unix_server(&self) -> Result<()> {
         use tokio::net::UnixListener;
 
@@ -341,6 +350,7 @@ impl IsomorphicIpcServer {
     /// When BTSP is required (production: `FAMILY_ID` set, not `BIOMEOS_INSECURE`),
     /// the 4-step BTSP handshake runs first, delegating crypto to the security
     /// capability provider. Development connections proceed directly.
+    #[cfg(unix)]
     pub(crate) async fn handle_unix_connection(
         stream: tokio::net::UnixStream,
         handler: Arc<dyn RpcHandler>,

@@ -11,6 +11,7 @@ use serde_json::Value;
 use std::future::Future;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
+#[cfg(unix)]
 use tokio::net::UnixStream;
 use tracing::{debug, error, trace};
 
@@ -174,6 +175,7 @@ where
     /// # Errors
     ///
     /// Returns error if connection handling fails
+    #[cfg(unix)]
     pub async fn handle_connection(&self, mut stream: UnixStream) -> Result<()> {
         let mut buffer = vec![0u8; 65536]; // 64KB buffer
 
@@ -246,6 +248,7 @@ where
         }
     }
 
+    #[cfg(unix)]
     async fn send_response(
         &self,
         stream: &mut UnixStream,

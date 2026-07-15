@@ -43,6 +43,7 @@ pub mod handlers;
 pub mod jsonrpc;
 pub mod security;
 pub mod server;
+#[cfg(unix)]
 pub mod unix_socket;
 
 pub use config::TransportConfig;
@@ -52,4 +53,5 @@ pub use jsonrpc::{
 };
 pub use security::SecurityProviderClient;
 pub use server::TransportServer;
+#[cfg(unix)]
 pub use unix_socket::UnixSocketListener;

@@ -40,8 +40,9 @@
 use super::{
     config::TransportConfig,
     jsonrpc::{JsonRpcHandler, RpcMethodHandler},
-    unix_socket::UnixSocketListener,
 };
+#[cfg(unix)]
+use super::unix_socket::UnixSocketListener;
 use axum::{Router, http::StatusCode, routing::get};
 use nestgate_core::error::{NestGateError, Result};
 use std::net::SocketAddr;
@@ -103,23 +104,24 @@ where
             warn!("   This is for debugging only - production should use Unix sockets");
         }
 
-        // Start Unix socket listener
-        let unix_handle = self.start_unix_socket()?;
+        #[cfg(unix)]
+        let unix_handle = Some(self.start_unix_socket()?);
+        #[cfg(not(unix))]
+        let unix_handle: Option<tokio::task::JoinHandle<()>> = None;
 
-        // Start HTTP fallback if configured
         let http_handle = if self.config.http_port.is_some() {
             Some(self.start_http_fallback()?)
         } else {
             None
         };
 
-        // Wait for shutdown signal
         self.shutdown.notified().await;
 
         info!("Shutting down gracefully...");
 
-        // Wait for tasks to complete
-        let _ = tokio::join!(unix_handle);
+        if let Some(handle) = unix_handle {
+            let _ = tokio::join!(handle);
+        }
         if let Some(handle) = http_handle {
             let _ = handle.await;
         }
@@ -128,7 +130,7 @@ where
         Ok(())
     }
 
-    /// Start Unix socket listener
+    #[cfg(unix)]
     fn start_unix_socket(&self) -> Result<tokio::task::JoinHandle<()>> {
         let mut listener = UnixSocketListener::new(&self.config.socket_path)?;
         listener.bind()?;

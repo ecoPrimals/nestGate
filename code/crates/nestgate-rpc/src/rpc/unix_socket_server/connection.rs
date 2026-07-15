@@ -13,6 +13,7 @@ use serde_json::{Value, json};
 use std::borrow::Cow;
 use std::sync::Arc;
 use tokio::io::BufReader;
+#[cfg(unix)]
 use tokio::net::UnixStream;
 use tracing::{debug, error, info, warn};
 
@@ -27,6 +28,7 @@ use crate::rpc::protocol::CONNECTION_IDLE_LIMIT;
 /// When BTSP is required (production), runs the 4-step handshake before
 /// entering the JSON-RPC dispatch loop. Development connections proceed
 /// directly.
+#[cfg(unix)]
 pub(super) async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Result<()> {
     let (reader, mut writer) = stream.into_split();
     let mut raw_reader = BufReader::new(reader);

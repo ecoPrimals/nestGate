@@ -118,6 +118,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 #[cfg(unix)]
 use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(unix)]
 use tokio::net::UnixListener;
 use tracing::{error, info, warn};
 
@@ -269,6 +270,7 @@ impl JsonRpcUnixServer {
     ///
     /// Returns [`NestGateError`] if binding the Unix listener fails. Accept-loop errors are logged
     /// and do not stop the server.
+    #[cfg(unix)]
     pub async fn serve(&self) -> Result<()> {
         let listener = UnixListener::bind(&self.socket_path).map_err(|e| {
             NestGateError::configuration_error(

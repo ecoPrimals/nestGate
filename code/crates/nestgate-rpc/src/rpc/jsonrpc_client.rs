@@ -66,6 +66,7 @@ use std::borrow::Cow;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+#[cfg(unix)]
 use tokio::net::UnixStream;
 use tracing::{debug, warn};
 
@@ -138,6 +139,7 @@ impl JsonRpcClient {
     ///
     /// # Errors
     /// Returns error if connection fails.
+    #[cfg(unix)]
     pub async fn connect_unix(path: &str) -> Result<Self> {
         debug!("Connecting to JSON-RPC service at: {}", path);
 

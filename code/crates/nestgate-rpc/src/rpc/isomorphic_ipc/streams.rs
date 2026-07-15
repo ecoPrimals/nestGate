@@ -44,7 +44,9 @@ use anyhow::Result;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
-use tokio::net::{TcpStream, UnixStream};
+use tokio::net::TcpStream;
+#[cfg(unix)]
+use tokio::net::UnixStream;
 use tracing::debug;
 
 use super::discovery::IpcEndpoint;
@@ -61,6 +63,7 @@ use super::discovery::IpcEndpoint;
 pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
 
 /// Implement `AsyncStream` for Unix sockets
+#[cfg(unix)]
 impl AsyncStream for UnixStream {}
 
 /// Implement `AsyncStream` for TCP sockets
@@ -73,6 +76,7 @@ impl AsyncStream for TcpStream {}
 #[derive(Debug)]
 pub enum IpcStream {
     /// Unix socket stream
+    #[cfg(unix)]
     Unix(UnixStream),
     /// TCP stream (localhost only)
     Tcp(TcpStream),
@@ -82,6 +86,7 @@ impl IpcStream {
     /// Get stream type description (for logging)
     pub const fn stream_type(&self) -> &str {
         match self {
+            #[cfg(unix)]
             Self::Unix(_) => "Unix socket",
             Self::Tcp(_) => "TCP (localhost)",
         }
@@ -96,6 +101,7 @@ impl AsyncRead for IpcStream {
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         match &mut *self {
+            #[cfg(unix)]
             Self::Unix(stream) => Pin::new(stream).poll_read(cx, buf),
             Self::Tcp(stream) => Pin::new(stream).poll_read(cx, buf),
         }
@@ -110,6 +116,7 @@ impl AsyncWrite for IpcStream {
         buf: &[u8],
     ) -> Poll<Result<usize, std::io::Error>> {
         match &mut *self {
+            #[cfg(unix)]
             Self::Unix(stream) => Pin::new(stream).poll_write(cx, buf),
             Self::Tcp(stream) => Pin::new(stream).poll_write(cx, buf),
         }
@@ -120,6 +127,7 @@ impl AsyncWrite for IpcStream {
         cx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
         match &mut *self {
+            #[cfg(unix)]
             Self::Unix(stream) => Pin::new(stream).poll_flush(cx),
             Self::Tcp(stream) => Pin::new(stream).poll_flush(cx),
         }
@@ -130,6 +138,7 @@ impl AsyncWrite for IpcStream {
         cx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
         match &mut *self {
+            #[cfg(unix)]
             Self::Unix(stream) => Pin::new(stream).poll_shutdown(cx),
             Self::Tcp(stream) => Pin::new(stream).poll_shutdown(cx),
         }
@@ -172,6 +181,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
     debug!("Connecting to: {}", endpoint.description());
 
     match endpoint {
+        #[cfg(unix)]
         IpcEndpoint::UnixSocket(path) => {
             debug!("   Using Unix socket transport");
             let stream = UnixStream::connect(path)
@@ -181,6 +191,10 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
             debug!("Connected via Unix socket");
             Ok(IpcStream::Unix(stream))
         }
+        #[cfg(not(unix))]
+        IpcEndpoint::UnixSocket(_) => Err(anyhow::anyhow!(
+            "Unix sockets not available on this platform — use TCP"
+        )),
         IpcEndpoint::TcpLocal(addr) => {
             debug!("   Using TCP transport (localhost)");
             let stream = TcpStream::connect(addr)
@@ -213,6 +227,7 @@ pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> 
     debug!("Connecting via transport endpoint: {endpoint}");
 
     match endpoint {
+        #[cfg(unix)]
         TransportEndpoint::Uds { path } => {
             debug!("  Transport: UDS → {}", path.display());
             let stream = UnixStream::connect(path)
@@ -220,6 +235,11 @@ pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> 
                 .map_err(|e| anyhow::anyhow!("UDS connect to {}: {e}", path.display()))?;
             Ok(IpcStream::Unix(stream))
         }
+        #[cfg(not(unix))]
+        TransportEndpoint::Uds { path } => Err(anyhow::anyhow!(
+            "UDS transport not available on this platform: {}",
+            path.display()
+        )),
         TransportEndpoint::Tcp { host, port } => {
             let addr = format!("{host}:{port}");
             debug!("  Transport: TCP → {addr}");
@@ -250,7 +270,13 @@ pub fn transport_to_ipc_endpoint(
     use nestgate_types::TransportEndpoint;
 
     match endpoint {
+        #[cfg(unix)]
         TransportEndpoint::Uds { path } => Ok(IpcEndpoint::UnixSocket(path.clone())),
+        #[cfg(not(unix))]
+        TransportEndpoint::Uds { path } => Err(anyhow::anyhow!(
+            "UDS transport not available on this platform: {}",
+            path.display()
+        )),
         TransportEndpoint::Tcp { host, port } => {
             let addr: std::net::SocketAddr = format!("{host}:{port}")
                 .parse()
