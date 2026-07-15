@@ -314,7 +314,7 @@ impl Default for EnvironmentConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: String::from("development"),
+            name: "development".into(),
             variables: std::collections::HashMap::new(),
             features: std::collections::HashMap::new(),
             resource_limits: ResourceLimits::default(),
@@ -366,9 +366,9 @@ impl Default for FeatureFlags {
     /// Returns the default instance
     fn default() -> Self {
         let mut features = std::collections::HashMap::new();
-        features.insert(String::from("async_trait_migration"), false);
-        features.insert(String::from("zero_cost_abstractions"), true);
-        features.insert(String::from("canonical_config"), true);
+        features.insert("async_trait_migration".into(), false);
+        features.insert("zero_cost_abstractions".into(), true);
+        features.insert("canonical_config".into(), true);
 
         Self {
             experimental_features: false,
@@ -413,12 +413,12 @@ impl Default for ConfigMetadata {
             .to_string();
 
         Self {
-            version: String::from("1.0.0"),
+            version: "1.0.0".into(),
             created_at: now.clone(),
             modified_at: now,
-            source: String::from("canonical_primary"),
+            source: "canonical_primary".into(),
             checksum: None,
-            schema_version: String::from("2.0.0"),
+            schema_version: "2.0.0".into(),
         }
     }
 }
@@ -441,8 +441,8 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
 
         Self {
             instance_id,
-            instance_name: String::from("nestgate-default"),
-            version: String::from("3.0.0"),
+            instance_name: "nestgate-default".into(),
+            version: "3.0.0".into(),
             environment: DeploymentEnvironment::default(),
             log_level: LogLevel::Info,
             debug_mode: false,

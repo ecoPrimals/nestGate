@@ -138,7 +138,7 @@ impl PrimalSelfKnowledge {
         // Get API endpoint from environment
         let api_host = env
             .get("NESTGATE_API_HOST")
-            .unwrap_or_else(|| String::from("0.0.0.0"));
+            .unwrap_or_else(|| "0.0.0.0".into());
 
         let api_port_str = env.get("NESTGATE_API_PORT").unwrap_or_else(|| {
             nestgate_config::constants::hardcoding::runtime_fallback_ports::api().to_string()
@@ -149,11 +149,11 @@ impl PrimalSelfKnowledge {
             .with_context(|| format!("Invalid NESTGATE_API_PORT: {api_port_str}"))?;
 
         endpoints.push(Endpoint {
-            protocol: String::from("http"),
+            protocol: "http".into(),
             address: api_host,
             port: api_port,
-            path: Some(String::from("/api/v1")),
-            health_path: Some(String::from("/health")),
+            path: Some("/api/v1".into()),
+            health_path: Some("/health".into()),
         });
 
         Ok(endpoints)
@@ -307,17 +307,17 @@ impl PrimalSelfKnowledge {
                 .with_context(|| format!("Invalid port in {port_var}"))?;
 
             let endpoint = Endpoint {
-                protocol: String::from("http"),
+                protocol: "http".into(),
                 address: host,
                 port,
-                path: Some(String::from("/api/v1")),
-                health_path: Some(String::from("/health")),
+                path: Some("/api/v1".into()),
+                health_path: Some("/health".into()),
             };
 
             let identity = PrimalIdentity {
                 id: format!("{primal_type}-discovered-via-env"),
                 primal_type: primal_type.to_string(),
-                version: String::from("unknown"),
+                version: "unknown".into(),
                 started_at: std::time::SystemTime::now(),
             };
 
@@ -348,7 +348,7 @@ impl PrimalSelfKnowledge {
         let namespace = self
             .env
             .get("KUBERNETES_NAMESPACE")
-            .unwrap_or_else(|| String::from("default"));
+            .unwrap_or_else(|| "default".into());
 
         // K8s service DNS: <service>.<namespace>.svc.cluster.local
         let dns_name = format!("{service_name}.{namespace}.svc.cluster.local");
@@ -358,17 +358,17 @@ impl PrimalSelfKnowledge {
             Ok(mut addrs) => {
                 if let Some(addr) = addrs.next() {
                     let endpoint = Endpoint {
-                        protocol: String::from("http"),
+                        protocol: "http".into(),
                         address: dns_name,
                         port: addr.port(),
-                        path: Some(String::from("/api/v1")),
-                        health_path: Some(String::from("/health")),
+                        path: Some("/api/v1".into()),
+                        health_path: Some("/health".into()),
                     };
 
                     let identity = PrimalIdentity {
                         id: format!("{primal_type}-k8s"),
                         primal_type: primal_type.to_string(),
-                        version: String::from("unknown"),
+                        version: "unknown".into(),
                         started_at: std::time::SystemTime::now(),
                     };
 

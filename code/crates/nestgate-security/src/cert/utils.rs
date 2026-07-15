@@ -3,7 +3,7 @@
 
 /// Certificate Utility Functions
 /// Utility functions for certificate generation, parsing, and manipulation.
-use super::types::{Certificate, CertificateType};
+use super::types::Certificate;
 use nestgate_types::{NestGateError, Result};
 use std::time::{Duration, SystemTime};
 
@@ -11,7 +11,7 @@ use std::time::{Duration, SystemTime};
 #[must_use]
 pub fn format_system_time(time: SystemTime) -> String {
     time.duration_since(SystemTime::UNIX_EPOCH).map_or_else(
-        |_| String::from("0"), // fallback for times before Unix epoch
+        |_| "0".into(),
         |duration| duration.as_secs().to_string(),
     )
 }
@@ -73,7 +73,7 @@ impl CertUtils {
             }
         }
 
-        Ok(String::from("Unknown Subject"))
+        Ok("Unknown Subject".into())
     }
 
     /// Parse certificate issuer from PEM data
@@ -98,7 +98,7 @@ impl CertUtils {
             return Ok(remaining.trim().to_string());
         }
 
-        Ok(String::from("Unknown Issuer"))
+        Ok("Unknown Issuer".into())
     }
 
     /// Check if certificate PEM format is valid
@@ -109,69 +109,70 @@ impl CertUtils {
     }
 
     /// Create test certificate for development
+    #[cfg(test)]
     #[must_use]
     pub fn create_test_certificate() -> Certificate {
+        use super::types::CertificateType;
         let now = SystemTime::now();
         Certificate {
-            id: String::from("test-cert-001"),
+            id: "test-cert-001".into(),
             cert_type: CertificateType::Server,
             principal: format!(
                 "CN={}",
                 nestgate_config::constants::canonical_defaults::network::LOCALHOST
             ),
-            issuer: String::from("CN=NestGate Test CA"),
+            issuer: "CN=NestGate Test CA".into(),
             data: b"test certificate data".to_vec(),
             not_before: format_system_time(now),
-            not_after: format_system_time(now + Duration::from_secs(365 * 24 * 3600)), // 1 year
-            serial_number: String::from("TEST-001"),
-            fingerprint: String::from("sha256:test123456789abcdef"),
+            not_after: format_system_time(now + Duration::from_secs(365 * 24 * 3600)),
+            serial_number: "TEST-001".into(),
+            fingerprint: "sha256:test123456789abcdef".into(),
             metadata: std::collections::HashMap::new(),
         }
     }
 
     /// Create expired certificate for testing
+    #[cfg(test)]
     #[must_use]
     pub fn create_expired_certificate() -> Certificate {
         let mut cert = Self::create_test_certificate();
-        cert.id = String::from("expired-test-cert");
-        cert.not_after = format_system_time(SystemTime::UNIX_EPOCH + Duration::from_secs(1)); // Already expired
-        cert.serial_number = String::from("EXPIRED-001");
+        cert.id = "expired-test-cert".into();
+        cert.not_after = format_system_time(SystemTime::UNIX_EPOCH + Duration::from_secs(1));
+        cert.serial_number = "EXPIRED-001".into();
         cert
     }
 
     /// Validate certificate format without cryptographic verification
     #[must_use]
     pub fn validate_certificate_format(cert: &Certificate) -> Vec<String> {
-        let mut errors = Vec::new();
+        let mut errors: Vec<String> = Vec::new();
 
         if cert.id.is_empty() {
-            errors.push(String::from("Certificate ID cannot be empty"));
+            errors.push("Certificate ID cannot be empty".into());
         }
 
         if cert.principal.is_empty() {
-            errors.push(String::from("Certificate subject cannot be empty"));
+            errors.push("Certificate subject cannot be empty".into());
         }
 
         if cert.issuer.is_empty() {
-            errors.push(String::from("Certificate issuer cannot be empty"));
+            errors.push("Certificate issuer cannot be empty".into());
         }
 
         if cert.data.is_empty() {
-            errors.push(String::from("Certificate data cannot be empty"));
+            errors.push("Certificate data cannot be empty".into());
         }
 
         if cert.serial_number.is_empty() {
-            errors.push(String::from("Certificate serial number cannot be empty"));
+            errors.push("Certificate serial number cannot be empty".into());
         }
 
         if cert.fingerprint.is_empty() {
-            errors.push(String::from("Certificate fingerprint cannot be empty"));
+            errors.push("Certificate fingerprint cannot be empty".into());
         }
 
         if cert.not_before > cert.not_after {
-            errors.push(String::from(
-                "Certificate not_before time cannot be after not_after time",
-            ));
+            errors.push("Certificate not_before time cannot be after not_after time".into());
         }
 
         errors
