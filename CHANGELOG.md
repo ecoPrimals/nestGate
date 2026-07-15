@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 108: Deep debt sweep — test fixture gating, platform audit, String::from (Jul 15, 2026)
+
+- **Test fixture gating**: `create_test_certificate()` and `create_expired_certificate()` in
+  `cert/utils.rs` gated with `#[cfg(test)]` — no longer leak test fixtures into production binary.
+  `CertificateType` import moved into cfg-gated scope.
+- **Platform FS audit**: All `PermissionsExt` / `std::os::unix` usage confirmed behind
+  `#[cfg(unix)]` guards (3 sites in nestgate-installer). No Phase 3 cross-platform blockers.
+- **`String::from("literal")` → `.into()` round 4**: 63 conversions
+  (`pools.rs` 31, `knowledge.rs` 13, `system_config.rs` 9, `cert/utils.rs` 10).
+
 ### Session 107: Deep debt sweep — String::from, Result typing, thiserror, enum #[default] (Jul 14, 2026)
 
 - **`String::from("literal")` → `.into()` sweep** (3 rounds): ~425 conversions across 36
