@@ -9,14 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
-### Session 107: Deep debt sweep — String::from→.into(), env-override hardcoding (Jul 14, 2026)
+### Session 107: Deep debt sweep — String::from, Result typing, thiserror, enum #[default] (Jul 14, 2026)
 
-- **`String::from("literal")` → `.into()` sweep**: 12 production files across 7 crates
-  (`nestgate-bin`, `nestgate-canonical`, `nestgate-config`, `nestgate-core`,
-  `nestgate-discovery`, `nestgate-installer`, `nestgate-zfs`) — ~125 conversions total.
-- **Hardcoded path elimination**: `/opt/nestgate` install path now overridable via
-  `NESTGATE_INSTALL_PATH` env var; `install_path_from_env()` replaces 4 hardcoded defaults
-  in installer config constructors and factory functions.
+- **`String::from("literal")` → `.into()` sweep** (3 rounds): ~425 conversions across 36
+  production files in 9 crates. Fixed `.into()` ambiguity in `impl Into<String>` contexts
+  (UniversalZfsError::internal). Type annotations added for `Vec::new()` inference.
+- **`Result<_, String>` → `Result<_, &'static str>`**: 8 functions converted across
+  `adapter_types`, `storage/config`, `response/mod`, `websocket`, `tarpc_server`.
+  3 promoted to `const fn` (`validate_api_response`, `validate_success_response`,
+  `ZfsConfig::validate`).
+- **thiserror**: `ZfsError` (dev_stubs) converted from manual Display/Error to
+  `thiserror::Error` derive.
+- **Enum `#[default]` migration**: `RequestPriority`, `LogLevel`, `Environment` —
+  removed manual `impl Default` blocks in favor of `#[default]` variant attribute.
+- **Dead code cleanup**: Removed unused `ZeroCostDatasetInfoExtended` type and
+  8 redundant auto-generated doc comments from dev_stubs/zfs/types.rs.
+- **Hardcoded path elimination**: `/opt/nestgate` install path → `NESTGATE_INSTALL_PATH`
+  env override (4 sites in installer config).
+- **Clone elimination**: 1 redundant `.clone()` removed in pool_operations.rs (6 other
+  clones verified necessary).
+- **Production mock audit**: All stub/mock surfaces (`http_client_stub.rs`,
+  `orchestrator_registration.rs`, `dev_stubs/`) confirmed feature-gated — no production leak.
 
 ### Session 106: COORD-ACTIVATE + deep debt sweep (Jul 11, 2026)
 

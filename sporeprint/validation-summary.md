@@ -11,7 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **3,790 tests** (3,790 passing, 73 ignored), **0 failures** (serial and parallel), 0 clippy warnings
-- **Session 107 Deep debt sweep** (Wave 139a): ~125 `String::from("literal")` → `.into()` across 12 production files / 7 crates; `/opt/nestgate` → `NESTGATE_INSTALL_PATH` env override (4 sites in installer config)
+- **Session 107 Deep debt sweep** (Wave 139a): ~425 `String::from("literal")` → `.into()` across 36 files / 9 crates; 8 `Result<_, String>` → `&'static str` (3 → `const fn`); `ZfsError` → `thiserror`; 3 enum `#[default]` migrations; `/opt/nestgate` → `NESTGATE_INSTALL_PATH` env override; unused type + redundant docs removed; production mock surfaces verified feature-gated
 - **Session 106 COORD-ACTIVATE + deep debt sweep**: Coordination domain wired to all 4 RPC surfaces (UDS dispatch was 14/14 — now HTTP JSON-RPC, transport handler, capability advertisement all 14/14); `coord_ops.rs` bridge module; `primal_announce` + `capability_registry.toml` updated with coordination capability; 3 error types → `thiserror`; 6 other-primal runtime strings → capability-type references; health.rs fake metrics eliminated; `DEFAULT_SECURITY_SOCKET_PATH` → env-overridable function; 8 `Result<_, String>` → `&'static str`; 3 `const fn` promotions; 30+ `String::from` → `.into()`
 - **Session 105 NESTGATE-ANDROID-01**: UDS fatal on grapheneGate fixed — `PRIMAL_BIND_MODE=tcp_only` authoritative across service.rs + IsomorphicIpcServer; empty env-var filtering; 6 new tests
 - **Session 104 CI-DIV-03**: `.cargo/config.toml` musl linker converged from `ld.lld` to `aarch64-linux-gnu-gcc` (ecosystem standard)
