@@ -165,7 +165,7 @@ pub(super) async fn handle_request(
         }
         "storage.retrieve_stream_chunk" | "content.retrieve_stream_chunk" => {
             let params = take_params(&mut request);
-            crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
+            crate::rpc::storage_stream::storage_retrieve_stream_chunk(&params).await
         }
         "storage.object.size" => {
             external_handlers::storage_object_size(request.params.as_ref(), state).await
@@ -198,19 +198,19 @@ pub(super) async fn handle_request(
         "content.store_stream" => {
             let params = take_params(&mut request);
             crate::rpc::content_stream::content_store_stream_begin(
-                params,
+                &params,
                 state.family_id.as_deref(),
             )
             .await
         }
         "content.store_stream_chunk" => {
             let params = take_params(&mut request);
-            crate::rpc::content_stream::content_store_stream_chunk(params).await
+            crate::rpc::content_stream::content_store_stream_chunk(&params).await
         }
         "content.retrieve_stream" => {
             let params = take_params(&mut request);
             crate::rpc::content_stream::content_retrieve_stream_begin(
-                params,
+                &params,
                 state.family_id.as_deref(),
             )
             .await

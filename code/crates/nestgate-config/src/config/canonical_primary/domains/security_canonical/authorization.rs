@@ -31,7 +31,7 @@ impl AccessControlConfig {
     pub fn development_optimized() -> Self {
         Self {
             enabled: false,
-            default_policy: String::from("allow_all"),
+            default_policy: "allow_all".into(),
         }
     }
 
@@ -40,7 +40,7 @@ impl AccessControlConfig {
     pub fn compliance_focused() -> Self {
         Self {
             enabled: true,
-            default_policy: String::from("deny_all"),
+            default_policy: "deny_all".into(),
         }
     }
 
@@ -49,7 +49,7 @@ impl AccessControlConfig {
     pub fn production_hardened() -> Self {
         Self {
             enabled: true,
-            default_policy: String::from("strict_deny"),
+            default_policy: "strict_deny".into(),
         }
     }
 
@@ -103,7 +103,7 @@ impl Default for AccessControlConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            default_policy: String::from("deny"),
+            default_policy: "deny".into(),
         }
     }
 }

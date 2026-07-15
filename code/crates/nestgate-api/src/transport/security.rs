@@ -507,7 +507,7 @@ mod tests {
                 .as_array()
                 .map(|a| {
                     a.iter()
-                        .filter_map(|x| x.as_u64().map(|n| n as u8))
+                        .filter_map(|x| x.as_u64().and_then(|n| u8::try_from(n).ok()))
                         .collect::<Vec<u8>>()
                 })
                 .unwrap_or_default();

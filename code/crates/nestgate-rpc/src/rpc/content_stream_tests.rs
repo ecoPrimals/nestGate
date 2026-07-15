@@ -15,14 +15,12 @@ async fn content_stream_store_and_retrieve_roundtrip() {
     let family_id = format!("content-stream-rt-{}", Uuid::new_v4());
     let payload = vec![0xAB_u8; 6000];
 
-    let begin = content_store_stream_begin(
-        json!({
-            "family_id": family_id,
-            "total_size": payload.len(),
-            "content_type": "application/octet-stream"
-        }),
-        Some("default"),
-    )
+    let begin_params = json!({
+        "family_id": family_id,
+        "total_size": payload.len(),
+        "content_type": "application/octet-stream"
+    });
+    let begin = content_store_stream_begin(&begin_params, Some("default"))
     .await
     .expect("content store stream begin");
 
@@ -35,12 +33,13 @@ async fn content_stream_store_and_retrieve_roundtrip() {
         let end = (offset as usize + chunk_size).min(payload.len());
         let is_last = end == payload.len();
         let chunk = &payload[offset as usize..end];
-        let result = content_store_stream_chunk(json!({
+        let chunk_params = json!({
             "stream_id": sid,
             "offset": offset,
             "data": STANDARD.encode(chunk),
             "is_last": is_last
-        }))
+        });
+        let result = content_store_stream_chunk(&chunk_params)
         .await
         .expect("content store stream chunk");
 
@@ -51,13 +50,11 @@ async fn content_stream_store_and_retrieve_roundtrip() {
             assert_eq!(hash.len(), 64);
             assert_eq!(content_hash_hex(&payload), hash, "BLAKE3 mismatch");
 
-            let r_begin = content_retrieve_stream_begin(
-                json!({
-                    "family_id": family_id,
-                    "hash": hash
-                }),
-                Some("default"),
-            )
+            let retrieve_params = json!({
+                "family_id": family_id,
+                "hash": hash
+            });
+            let r_begin = content_retrieve_stream_begin(&retrieve_params, Some("default"))
             .await
             .expect("content retrieve stream begin");
 
@@ -68,10 +65,11 @@ async fn content_stream_store_and_retrieve_roundtrip() {
             let mut ro = 0_u64;
             let mut out = Vec::new();
             loop {
-                let part = crate::rpc::storage_stream::storage_retrieve_stream_chunk(json!({
+                let part_params = json!({
                     "stream_id": rsid,
                     "offset": ro
-                }))
+                });
+                let part = crate::rpc::storage_stream::storage_retrieve_stream_chunk(&part_params)
                 .await
                 .expect("content retrieve chunk");
                 let bytes = STANDARD.decode(part["data"].as_str().unwrap()).unwrap();
@@ -100,18 +98,17 @@ async fn content_stream_dedup_on_second_upload() {
         let fam = fam.to_owned();
         let data = data.to_vec();
         async move {
-            let begin = content_store_stream_begin(
-                json!({"family_id": fam, "total_size": data.len()}),
-                Some("default"),
-            )
-            .await?;
+            let begin_params = json!({"family_id": fam, "total_size": data.len()});
+            let begin = content_store_stream_begin(&begin_params, Some("default"))
+                .await?;
             let sid = begin["stream_id"].as_str().unwrap().to_owned();
-            content_store_stream_chunk(json!({
+            let chunk_params = json!({
                 "stream_id": sid,
                 "offset": 0,
                 "data": STANDARD.encode(&data),
                 "is_last": true
-            }))
+            });
+            content_store_stream_chunk(&chunk_params)
             .await
         }
     };
@@ -130,10 +127,8 @@ async fn content_stream_dedup_on_second_upload() {
 async fn content_retrieve_stream_not_found() {
     let family_id = format!("content-stream-404-{}", Uuid::new_v4());
     let fake_hash = "b".repeat(64);
-    let err = content_retrieve_stream_begin(
-        json!({"family_id": family_id, "hash": fake_hash}),
-        Some("default"),
-    )
+    let retrieve_params = json!({"family_id": family_id, "hash": fake_hash});
+    let err = content_retrieve_stream_begin(&retrieve_params, Some("default"))
     .await;
     assert!(err.is_err());
 }
@@ -141,7 +136,8 @@ async fn content_retrieve_stream_not_found() {
 #[tokio::test]
 async fn begin_rejects_missing_total_size() {
     let fam = format!("cs-no-size-{}", Uuid::new_v4());
-    let err = content_store_stream_begin(json!({"family_id": fam}), None).await;
+    let p = json!({"family_id": fam});
+    let err = content_store_stream_begin(&p, None).await;
     assert!(err.is_err(), "missing total_size should be rejected");
     cleanup_family(&fam).await;
 }
@@ -149,10 +145,8 @@ async fn begin_rejects_missing_total_size() {
 #[tokio::test]
 async fn begin_rejects_oversized_total() {
     let fam = format!("cs-oversize-{}", Uuid::new_v4());
-    let err = content_store_stream_begin(
-        json!({"family_id": fam, "total_size": MAX_STREAM_TOTAL + 1}),
-        None,
-    )
+    let p = json!({"family_id": fam, "total_size": MAX_STREAM_TOTAL + 1});
+    let err = content_store_stream_begin(&p, None)
     .await;
     assert!(err.is_err());
     cleanup_family(&fam).await;
@@ -160,12 +154,13 @@ async fn begin_rejects_oversized_total() {
 
 #[tokio::test]
 async fn chunk_rejects_unknown_stream_id() {
-    let err = content_store_stream_chunk(json!({
+    let p = json!({
         "stream_id": "nonexistent-uuid",
         "offset": 0,
         "data": STANDARD.encode(b"x"),
         "is_last": true
-    }))
+    });
+    let err = content_store_stream_chunk(&p)
     .await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
@@ -175,17 +170,19 @@ async fn chunk_rejects_unknown_stream_id() {
 #[tokio::test]
 async fn chunk_rejects_bad_offset() {
     let fam = format!("cs-offset-{}", Uuid::new_v4());
-    let begin = content_store_stream_begin(json!({"family_id": fam, "total_size": 100}), None)
+    let begin_params = json!({"family_id": fam, "total_size": 100});
+    let begin = content_store_stream_begin(&begin_params, None)
         .await
         .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let err = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "offset": 50,
         "data": STANDARD.encode(b"data"),
         "is_last": false
-    }))
+    });
+    let err = content_store_stream_chunk(&chunk_params)
     .await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
@@ -196,17 +193,19 @@ async fn chunk_rejects_bad_offset() {
 #[tokio::test]
 async fn chunk_rejects_exceeding_total_size() {
     let fam = format!("cs-exceed-{}", Uuid::new_v4());
-    let begin = content_store_stream_begin(json!({"family_id": fam, "total_size": 4}), None)
+    let begin_params = json!({"family_id": fam, "total_size": 4});
+    let begin = content_store_stream_begin(&begin_params, None)
         .await
         .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let err = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "offset": 0,
         "data": STANDARD.encode(b"too much data for 4 bytes"),
         "is_last": true
-    }))
+    });
+    let err = content_store_stream_chunk(&chunk_params)
     .await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
@@ -217,17 +216,19 @@ async fn chunk_rejects_exceeding_total_size() {
 #[tokio::test]
 async fn chunk_rejects_invalid_base64() {
     let fam = format!("cs-b64-{}", Uuid::new_v4());
-    let begin = content_store_stream_begin(json!({"family_id": fam, "total_size": 100}), None)
+    let begin_params = json!({"family_id": fam, "total_size": 100});
+    let begin = content_store_stream_begin(&begin_params, None)
         .await
         .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let err = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "offset": 0,
         "data": "not!valid!base64!!!",
         "is_last": false
-    }))
+    });
+    let err = content_store_stream_chunk(&chunk_params)
     .await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
@@ -237,7 +238,8 @@ async fn chunk_rejects_invalid_base64() {
 
 #[tokio::test]
 async fn begin_missing_family_id_errors() {
-    let err = content_store_stream_begin(json!({"total_size": 10}), None).await;
+    let p = json!({"total_size": 10});
+    let err = content_store_stream_begin(&p, None).await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
     assert!(msg.contains("family_id") || msg.contains("family"));
@@ -246,8 +248,8 @@ async fn begin_missing_family_id_errors() {
 #[tokio::test]
 async fn retrieve_begin_invalid_hash_format() {
     let fam = format!("cs-badhash-{}", Uuid::new_v4());
-    let err =
-        content_retrieve_stream_begin(json!({"family_id": fam, "hash": "tooshort"}), None).await;
+    let p = json!({"family_id": fam, "hash": "tooshort"});
+    let err = content_retrieve_stream_begin(&p, None).await;
     assert!(err.is_err());
     cleanup_family(&fam).await;
 }
@@ -255,7 +257,8 @@ async fn retrieve_begin_invalid_hash_format() {
 #[tokio::test]
 async fn begin_uses_family_fallback() {
     let fam = format!("cs-fallback-{}", Uuid::new_v4());
-    let result = content_store_stream_begin(json!({"total_size": 16}), Some(&fam)).await;
+    let p = json!({"total_size": 16});
+    let result = content_store_stream_begin(&p, Some(&fam)).await;
     assert!(result.is_ok(), "should succeed with fallback family");
     cleanup_family(&fam).await;
 }
@@ -263,10 +266,8 @@ async fn begin_uses_family_fallback() {
 #[tokio::test]
 async fn empty_upload_fast_path_returns_hash() {
     let fam = format!("cs-empty-{}", Uuid::new_v4());
-    let result = content_store_stream_begin(
-        json!({"family_id": &fam, "total_size": 0, "content_type": "text/plain"}),
-        None,
-    )
+    let p = json!({"family_id": &fam, "total_size": 0, "content_type": "text/plain"});
+    let result = content_store_stream_begin(&p, None)
     .await
     .expect("empty upload should succeed");
 
@@ -293,10 +294,10 @@ async fn empty_upload_dedup_on_second_call() {
     let fam = format!("cs-empty-dedup-{}", Uuid::new_v4());
     let params = json!({"family_id": &fam, "total_size": 0});
 
-    let first = content_store_stream_begin(params.clone(), None)
+    let first = content_store_stream_begin(&params, None)
         .await
         .unwrap();
-    let second = content_store_stream_begin(params, None).await.unwrap();
+    let second = content_store_stream_begin(&params, None).await.unwrap();
 
     assert_eq!(first["hash"], second["hash"]);
     assert_eq!(second["deduplicated"], true);
@@ -308,18 +309,20 @@ async fn empty_upload_dedup_on_second_call() {
 async fn chunk_rejects_oversized_decoded_data() {
     let fam = format!("cs-chunkmax-{}", Uuid::new_v4());
     let total = MAX_STREAM_CHUNK + 1024;
-    let begin = content_store_stream_begin(json!({"family_id": &fam, "total_size": total}), None)
+    let begin_params = json!({"family_id": &fam, "total_size": total});
+    let begin = content_store_stream_begin(&begin_params, None)
         .await
         .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
     let oversized = vec![0xCC_u8; (MAX_STREAM_CHUNK + 1) as usize];
-    let err = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "offset": 0,
         "data": STANDARD.encode(&oversized),
         "is_last": false
-    }))
+    });
+    let err = content_store_stream_chunk(&chunk_params)
     .await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
@@ -333,25 +336,25 @@ async fn retrieve_stream_begin_valid_hash_returns_stream() {
     let fam = format!("cs-retrieve-ok-{}", Uuid::new_v4());
     let payload = b"retrieve me via stream";
 
-    let begin = content_store_stream_begin(
-        json!({"family_id": &fam, "total_size": payload.len()}),
-        None,
-    )
-    .await
-    .unwrap();
+    let begin_params = json!({"family_id": &fam, "total_size": payload.len()});
+    let begin = content_store_stream_begin(&begin_params, None)
+        .await
+        .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let fin = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "offset": 0,
         "data": STANDARD.encode(payload),
         "is_last": true
-    }))
-    .await
-    .unwrap();
+    });
+    let fin = content_store_stream_chunk(&chunk_params)
+        .await
+        .unwrap();
     let hash = fin["hash"].as_str().unwrap();
 
-    let r = content_retrieve_stream_begin(json!({"family_id": &fam, "hash": hash}), None)
+    let retrieve_params = json!({"family_id": &fam, "hash": hash});
+    let r = content_retrieve_stream_begin(&retrieve_params, None)
         .await
         .expect("should open retrieve stream");
     assert!(r.get("stream_id").is_some());
@@ -362,11 +365,12 @@ async fn retrieve_stream_begin_valid_hash_returns_stream() {
 
 #[tokio::test]
 async fn chunk_missing_stream_id_param_errors() {
-    let err = content_store_stream_chunk(json!({
+    let p = json!({
         "offset": 0,
         "data": STANDARD.encode(b"x"),
         "is_last": true
-    }))
+    });
+    let err = content_store_stream_chunk(&p)
     .await;
     assert!(err.is_err(), "missing stream_id should be rejected");
 }
@@ -374,16 +378,18 @@ async fn chunk_missing_stream_id_param_errors() {
 #[tokio::test]
 async fn chunk_missing_offset_param_errors() {
     let fam = format!("cs-no-offset-{}", Uuid::new_v4());
-    let begin = content_store_stream_begin(json!({"family_id": &fam, "total_size": 100}), None)
+    let begin_params = json!({"family_id": &fam, "total_size": 100});
+    let begin = content_store_stream_begin(&begin_params, None)
         .await
         .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let err = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "data": STANDARD.encode(b"x"),
         "is_last": false
-    }))
+    });
+    let err = content_store_stream_chunk(&chunk_params)
     .await;
     assert!(err.is_err(), "missing offset should be rejected");
     cleanup_family(&fam).await;
@@ -392,16 +398,18 @@ async fn chunk_missing_offset_param_errors() {
 #[tokio::test]
 async fn chunk_missing_data_param_errors() {
     let fam = format!("cs-no-data-{}", Uuid::new_v4());
-    let begin = content_store_stream_begin(json!({"family_id": &fam, "total_size": 100}), None)
+    let begin_params = json!({"family_id": &fam, "total_size": 100});
+    let begin = content_store_stream_begin(&begin_params, None)
         .await
         .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let err = content_store_stream_chunk(json!({
+    let chunk_params = json!({
         "stream_id": sid,
         "offset": 0,
         "is_last": false
-    }))
+    });
+    let err = content_store_stream_chunk(&chunk_params)
     .await;
     assert!(err.is_err(), "missing data should be rejected");
     cleanup_family(&fam).await;

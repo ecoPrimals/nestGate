@@ -183,7 +183,7 @@ impl ServiceRegistryClient {
         self.config.get_adapter_port(&adapter_key).map_or_else(
             || {
                 Err(NestGateError::configuration_error_detailed(
-                    String::from("adapter_configuration"),
+                    "adapter_configuration",
                     format!("No adapter configuration found for {service_name}:{port_type}"),
                     None,
                     Some(
@@ -214,7 +214,7 @@ impl ServiceRegistryClient {
 
         // Check if registry URL is configured
         health.insert(
-            String::from("registry_configured"),
+            "registry_configured".into(),
             self.base_url.is_some().to_string(),
         );
 
@@ -234,10 +234,10 @@ impl ServiceRegistryClient {
         }
 
         health.insert(
-            String::from("cache_size"),
+            "cache_size".into(),
             self.registry_cache.len().to_string(),
         );
-        health.insert(String::from("timeout"), format!("{:?}", self.timeout));
+        health.insert("timeout".into(), format!("{:?}", self.timeout));
 
         Ok(health)
     }
@@ -255,23 +255,23 @@ impl ServiceRegistryClient {
 
         // Check for basic configuration
         if self.base_url.is_none() {
-            warnings.push(String::from(
-                "No registry URL configured - using fallback discovery",
-            ));
+            warnings.push(
+                "No registry URL configured - using fallback discovery".into(),
+            );
         }
 
         // Check for service mesh configuration (from config)
         if !self.config.has_service_mesh() {
-            warnings.push(String::from(
-                "No service mesh configuration detected - using localhost fallback",
-            ));
+            warnings.push(
+                "No service mesh configuration detected - using localhost fallback".into(),
+            );
         }
 
         // Check timeout configuration
         if self.timeout > Duration::from_secs(30) {
-            warnings.push(String::from(
-                "Registry timeout is very high - may impact startup performance",
-            ));
+            warnings.push(
+                "Registry timeout is very high - may impact startup performance".into(),
+            );
         }
 
         Ok(warnings)
@@ -289,20 +289,20 @@ impl ServiceRegistryClient {
         let mut config = HashMap::new();
 
         config.insert(
-            String::from("registry_url"),
+            "registry_url".into(),
             self.base_url
                 .clone()
-                .unwrap_or_else(|| String::from("not_configured")),
+                .unwrap_or_else(|| "not_configured".into()),
         );
-        config.insert(String::from("timeout"), format!("{:?}", self.timeout));
+        config.insert("timeout".into(), format!("{:?}", self.timeout));
         config.insert(
-            String::from("cache_entries"),
+            "cache_entries".into(),
             self.registry_cache.len().to_string(),
         );
 
         // Add discovery method availability (from config)
         config.insert(
-            String::from("service_mesh_available"),
+            "service_mesh_available".into(),
             self.config
                 .has_env_var("NESTGATE_SERVICE_MESH_ENDPOINT")
                 .to_string(),
@@ -310,13 +310,13 @@ impl ServiceRegistryClient {
         config.insert(
             // DEPRECATED: Kubernetes orchestration - migrate to capability-based orchestration
             // Capability-based discovery implemented
-            String::from("kubernetes_available"),
+            "kubernetes_available".into(),
             self.config.has_env_var("KUBERNETES_NAMESPACE").to_string(),
         );
         config.insert(
             // DEPRECATED: Docker containerization - migrate to capability-based container runtime
             // Capability-based discovery implemented
-            String::from("docker_compose_available"),
+            "docker_compose_available".into(),
             self.config
                 .has_env_var("DOCKER_COMPOSE_PROJECT")
                 .to_string(),

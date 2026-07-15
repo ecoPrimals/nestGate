@@ -27,10 +27,10 @@ use super::unix_socket_server::storage_paths::{content_cas_path, content_hash_he
 /// Unlike `storage.store_stream`, the caller does not supply a key.
 /// The content hash is computed on finalize and becomes the CAS key.
 pub async fn content_store_stream_begin(
-    params: Value,
+    params: &Value,
     family_fallback: Option<&str>,
 ) -> Result<Value> {
-    let family_id = resolve_family_id(&params, family_fallback)?;
+    let family_id = resolve_family_id(params, family_fallback)?;
     let total_size = params
         .get("total_size")
         .and_then(Value::as_u64)
@@ -109,7 +109,7 @@ pub async fn content_store_stream_begin(
 ///
 /// On `is_last: true`, computes BLAKE3 of the full staging file and
 /// renames to the CAS path. Returns the content hash.
-pub async fn content_store_stream_chunk(params: Value) -> Result<Value> {
+pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
     let stream_id = params
         .get("stream_id")
         .and_then(Value::as_str)
@@ -238,10 +238,10 @@ pub async fn content_store_stream_chunk(params: Value) -> Result<Value> {
 
 /// `content.retrieve_stream` — begin a chunked CAS download by hash.
 pub async fn content_retrieve_stream_begin(
-    params: Value,
+    params: &Value,
     family_fallback: Option<&str>,
 ) -> Result<Value> {
-    let family_id = resolve_family_id(&params, family_fallback)?;
+    let family_id = resolve_family_id(params, family_fallback)?;
     let hash = params
         .get("hash")
         .and_then(Value::as_str)

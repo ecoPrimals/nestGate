@@ -174,7 +174,7 @@ pub async fn replicate_pull(params: &Value) -> Result<Value> {
 ///
 /// Returns error on invalid parameters or session creation failure.
 pub async fn store_stream_begin(params: &Value) -> Result<Value> {
-    content_stream::content_store_stream_begin(params.clone(), None).await
+    content_stream::content_store_stream_begin(params, None).await
 }
 
 /// `content.store_stream_chunk` — append a chunk to an active upload session.
@@ -183,7 +183,7 @@ pub async fn store_stream_begin(params: &Value) -> Result<Value> {
 ///
 /// Returns error if `stream_id` is invalid, expired, or data exceeds limits.
 pub async fn store_stream_chunk(params: &Value) -> Result<Value> {
-    content_stream::content_store_stream_chunk(params.clone()).await
+    content_stream::content_store_stream_chunk(params).await
 }
 
 /// `content.retrieve_stream` — begin a chunked content download session.
@@ -194,7 +194,7 @@ pub async fn store_stream_chunk(params: &Value) -> Result<Value> {
 ///
 /// Returns error if the hash is not found or session creation fails.
 pub async fn retrieve_stream_begin(params: &Value) -> Result<Value> {
-    content_stream::content_retrieve_stream_begin(params.clone(), None).await
+    content_stream::content_retrieve_stream_begin(params, None).await
 }
 
 /// `content.retrieve_stream_chunk` / `storage.retrieve_stream_chunk` — read the
@@ -204,7 +204,7 @@ pub async fn retrieve_stream_begin(params: &Value) -> Result<Value> {
 ///
 /// Returns error if `stream_id` is invalid, expired, or I/O fails.
 pub async fn retrieve_stream_chunk(params: &Value) -> Result<Value> {
-    storage_stream::storage_retrieve_stream_chunk(params.clone()).await
+    storage_stream::storage_retrieve_stream_chunk(params).await
 }
 
 #[cfg(test)]

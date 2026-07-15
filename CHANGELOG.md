@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 111: Deep debt sweep — streaming clone elimination, cast safety (Jul 15, 2026)
+
+- **Streaming hot-path clone elimination**: Refactored 4 streaming function signatures
+  (`content_store_stream_begin`, `content_store_stream_chunk`, `content_retrieve_stream_begin`,
+  `storage_retrieve_stream_chunk`) from `params: Value` to `params: &Value`. Removes 4
+  unnecessary `.clone()` calls in `content_ops.rs` that were copying entire base64 chunks
+  (potentially MBs) on every HTTP streaming operation. 16 files updated, 9 production callers.
+- **Cast safety**: Fixed `u64 as u8` truncation in `transport/security.rs` that could silently
+  overflow byte values >255. Now uses `u8::try_from(n).ok()` to safely discard out-of-range.
+- **`String::from` → `.into()` round 6**: 55 conversions across 6 production files
+  (`transport/jsonrpc.rs` 9, `discovery/registry.rs` 13, `discovery/performance.rs` 14,
+  `config/authorization.rs` 4, `config/environment.rs` 9, `config/services.rs` 6).
+  Remaining instances confirmed >95% test-only.
+- **Cross-arch 14/14**: Reported nestGate Session 109 completion to overwatch. All 14 ecosystem
+  primals now cross-arch adopted.
+
 ### Session 110: Deep debt sweep — production mock evolution, metrics honesty (Jul 15, 2026)
 
 - **Production mock elimination**: 11 ZFS handlers in `handlers_production.rs` that returned

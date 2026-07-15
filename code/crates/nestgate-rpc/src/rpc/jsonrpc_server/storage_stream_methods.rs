@@ -61,7 +61,7 @@ pub(super) fn register_stream_methods<S: StorageBackend + 'static>(
         |params, _ctx, _ext| async move {
             let p: Value = params.parse()?;
             debug!("JSON-RPC: storage.retrieve_stream_chunk");
-            storage_stream::storage_retrieve_stream_chunk(p)
+            storage_stream::storage_retrieve_stream_chunk(&p)
                 .await
                 .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))
         },

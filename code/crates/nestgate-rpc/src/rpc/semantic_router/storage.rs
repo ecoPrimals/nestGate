@@ -199,7 +199,7 @@ pub(super) async fn storage_retrieve_stream_chunk(
     _router: &SemanticRouter<impl MetadataBackend>,
     params: Value,
 ) -> Result<Value> {
-    crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
+    crate::rpc::storage_stream::storage_retrieve_stream_chunk(&params).await
 }
 
 /// Route `storage.store_blob`

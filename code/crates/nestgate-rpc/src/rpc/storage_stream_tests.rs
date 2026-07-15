@@ -75,10 +75,11 @@ async fn store_and_retrieve_stream_roundtrip_multichunk() {
     let mut ro = 0_u64;
     let mut out = Vec::new();
     loop {
-        let part = storage_retrieve_stream_chunk(json!({
+        let part_params = json!({
             "stream_id": rsid,
             "offset": ro
-        }))
+        });
+        let part = storage_retrieve_stream_chunk(&part_params)
         .await
         .expect("retrieve chunk");
         let b64 = part["data"].as_str().expect("data");
@@ -344,10 +345,11 @@ async fn retrieve_stream_not_found() {
 
 #[tokio::test]
 async fn retrieve_stream_chunk_unknown_stream() {
-    let err = storage_retrieve_stream_chunk(json!({
+    let p = json!({
         "stream_id": "bogus",
         "offset": 0
-    }))
+    });
+    let err = storage_retrieve_stream_chunk(&p)
     .await
     .expect_err("unknown");
     assert!(err.to_string().contains("unknown or expired"));
@@ -373,10 +375,11 @@ async fn retrieve_stream_chunk_offset_past_end() {
     .unwrap();
     let sid = begin["stream_id"].as_str().unwrap();
 
-    let err = storage_retrieve_stream_chunk(json!({
+    let p = json!({
         "stream_id": sid,
         "offset": 999
-    }))
+    });
+    let err = storage_retrieve_stream_chunk(&p)
     .await
     .expect_err("past end");
     assert!(err.to_string().contains("past end"));
@@ -413,10 +416,11 @@ async fn retrieve_stream_chunk_size_zero_normalized() {
     assert_eq!(begin["chunk_size"], MAX_STREAM_CHUNK);
 
     let sid = begin["stream_id"].as_str().unwrap();
-    let chunk = storage_retrieve_stream_chunk(json!({
+    let p = json!({
         "stream_id": sid,
         "offset": 0
-    }))
+    });
+    let chunk = storage_retrieve_stream_chunk(&p)
     .await
     .unwrap();
     assert_eq!(chunk["is_last"], true);
@@ -451,10 +455,11 @@ async fn retrieve_stream_falls_back_to_flat_blob_path() {
     assert_eq!(begin["total_size"], 256);
     let stream_id = begin["stream_id"].as_str().unwrap();
 
-    let chunk = storage_retrieve_stream_chunk(json!({
+    let p = json!({
         "stream_id": stream_id,
         "offset": 0
-    }))
+    });
+    let chunk = storage_retrieve_stream_chunk(&p)
     .await
     .expect("chunk");
     let bytes = STANDARD.decode(chunk["data"].as_str().unwrap()).unwrap();

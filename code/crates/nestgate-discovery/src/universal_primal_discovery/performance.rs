@@ -181,30 +181,30 @@ impl PerformanceTestRunner {
         let mut metrics = HashMap::new();
 
         metrics.insert(
-            String::from("test_name"),
-            String::from("performance_discovery"),
+            "test_name".into(),
+            "performance_discovery".into(),
         );
         metrics.insert(
-            String::from("test_type"),
-            String::from("timeout_optimization"),
+            "test_type".into(),
+            "timeout_optimization".into(),
         );
-        metrics.insert(String::from("concurrent_users"), String::from("1"));
-        metrics.insert(String::from("target_rps"), String::from("100"));
+        metrics.insert("concurrent_users".into(), "1".into());
+        metrics.insert("target_rps".into(), "100".into());
 
         metrics.insert(
-            String::from("test_iterations"),
+            "test_iterations".into(),
             self.config.testing.test_iterations.to_string(),
         );
         metrics.insert(
-            String::from("baseline_timeout"),
+            "baseline_timeout".into(),
             format!("{}s", self.config.testing.baseline_timeout_seconds),
         );
         metrics.insert(
-            String::from("max_timeout"),
+            "max_timeout".into(),
             format!("{}s", self.config.testing.baseline_timeout_seconds),
         );
         metrics.insert(
-            String::from("percentile_target"),
+            "percentile_target".into(),
             self.config.testing.percentile_target.to_string(),
         );
 
@@ -267,11 +267,11 @@ impl PerformanceDiscovery {
 
         let logical_cpus = std::thread::available_parallelism().map_or(4u64, |n| n.get() as u64);
         characteristics.insert(
-            String::from("cpu_cores"),
+            "cpu_cores".into(),
             serde_json::Value::Number(serde_json::Number::from(logical_cpus)),
         );
         characteristics.insert(
-            String::from("discovery_timestamp"),
+            "discovery_timestamp".into(),
             serde_json::Value::String(
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)

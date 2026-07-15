@@ -76,7 +76,7 @@ impl JsonRpcError {
     pub fn parse_error() -> Self {
         Self {
             code: -32700,
-            message: String::from("Parse error"),
+            message: "Parse error".into(),
             data: None,
         }
     }
@@ -86,7 +86,7 @@ impl JsonRpcError {
     pub fn invalid_request() -> Self {
         Self {
             code: -32600,
-            message: String::from("Invalid Request"),
+            message: "Invalid Request".into(),
             data: None,
         }
     }
@@ -96,7 +96,7 @@ impl JsonRpcError {
     pub fn method_not_found() -> Self {
         Self {
             code: -32601,
-            message: String::from("Method not found"),
+            message: "Method not found".into(),
             data: None,
         }
     }
@@ -106,7 +106,7 @@ impl JsonRpcError {
     pub fn internal_error() -> Self {
         Self {
             code: -32603,
-            message: String::from("Internal error"),
+            message: "Internal error".into(),
             data: None,
         }
     }
@@ -117,7 +117,7 @@ impl JsonRpcResponse {
     #[must_use]
     pub fn success(id: impl Into<Value>, result: impl Into<Value>) -> Self {
         Self {
-            jsonrpc: String::from("2.0"),
+            jsonrpc: "2.0".into(),
             result: Some(result.into()),
             error: None,
             id: id.into(),
@@ -128,7 +128,7 @@ impl JsonRpcResponse {
     #[must_use]
     pub fn error(id: impl Into<Value>, error: JsonRpcError) -> Self {
         Self {
-            jsonrpc: String::from("2.0"),
+            jsonrpc: "2.0".into(),
             result: None,
             error: Some(error),
             id: id.into(),
@@ -139,7 +139,7 @@ impl JsonRpcResponse {
     #[must_use]
     pub fn error_with_code(id: impl Into<Value>, code: i32, message: impl Into<String>) -> Self {
         Self {
-            jsonrpc: String::from("2.0"),
+            jsonrpc: "2.0".into(),
             result: None,
             error: Some(JsonRpcError {
                 code,
@@ -238,7 +238,7 @@ where
             Err(e) => {
                 let err_msg = e.to_string();
                 let (code, message) = if err_msg.contains("Unknown method") {
-                    (-32601, String::from("Method not found"))
+                    (-32601, "Method not found".into())
                 } else {
                     (-32603, format!("Internal error: {e}"))
                 };

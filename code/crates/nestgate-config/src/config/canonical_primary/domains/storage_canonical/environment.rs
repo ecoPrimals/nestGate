@@ -64,19 +64,19 @@ impl Default for StorageEnvironmentConfig {
     fn default() -> Self {
         Self {
             development: EnvironmentStorageSettings {
-                backend_type: String::from("filesystem"),
-                performance_mode: String::from("standard"),
-                security_level: String::from("basic"),
+                backend_type: "filesystem".into(),
+                performance_mode: "standard".into(),
+                security_level: "basic".into(),
             },
             staging: EnvironmentStorageSettings {
-                backend_type: String::from("zfs"),
-                performance_mode: String::from("optimized"),
-                security_level: String::from("enhanced"),
+                backend_type: "zfs".into(),
+                performance_mode: "optimized".into(),
+                security_level: "enhanced".into(),
             },
             production: EnvironmentStorageSettings {
-                backend_type: String::from("zfs"),
-                performance_mode: String::from("high_performance"),
-                security_level: String::from("maximum"),
+                backend_type: "zfs".into(),
+                performance_mode: "high_performance".into(),
+                security_level: "maximum".into(),
             },
             deployment: DeploymentStorageConfig {
                 auto_provision: false,

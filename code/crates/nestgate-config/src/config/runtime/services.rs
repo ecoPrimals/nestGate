@@ -73,22 +73,22 @@ impl ServicesConfig {
         let mut discovered_capabilities = HashMap::new();
 
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_SECURITY") {
-            discovered_capabilities.insert(String::from("security"), url);
+            discovered_capabilities.insert("security".into(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_ORCHESTRATION") {
-            discovered_capabilities.insert(String::from("orchestration"), url);
+            discovered_capabilities.insert("orchestration".into(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_NETWORKING") {
-            discovered_capabilities.insert(String::from("networking"), url);
+            discovered_capabilities.insert("networking".into(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_AI") {
-            discovered_capabilities.insert(String::from("ai"), url);
+            discovered_capabilities.insert("ai".into(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_COMPUTE") {
-            discovered_capabilities.insert(String::from("compute"), url);
+            discovered_capabilities.insert("compute".into(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_ECOSYSTEM") {
-            discovered_capabilities.insert(String::from("ecosystem"), url);
+            discovered_capabilities.insert("ecosystem".into(), url);
         }
 
         Ok(Self {

@@ -437,7 +437,7 @@ pub async fn storage_retrieve_stream_begin(
 }
 
 /// `storage.retrieve_stream_chunk` — read the next range of bytes for a download session.
-pub async fn storage_retrieve_stream_chunk(params: Value) -> Result<Value> {
+pub async fn storage_retrieve_stream_chunk(params: &Value) -> Result<Value> {
     let stream_id = params
         .get("stream_id")
         .and_then(Value::as_str)

@@ -288,7 +288,7 @@ pub(super) async fn handle_storage_retrieve_stream_chunk(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?.clone();
-    crate::rpc::storage_stream::storage_retrieve_stream_chunk(params)
+    crate::rpc::storage_stream::storage_retrieve_stream_chunk(&params)
         .await
         .map_err(|e| (-32603, Cow::Owned(e.to_string())))
 }
