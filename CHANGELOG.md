@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 109: Cross-architecture adoption — Windows check PASS (Jul 15, 2026)
+
+- **Wave 141a**: Per-primal cross-architecture handoff. `cargo check --target x86_64-pc-windows-gnu` now **passes** (0 errors).
+- **Category 3 (Platform FS)**: `rustix::fs::statvfs` in storage detector gated behind `#[cfg(unix)]`.
+- **Category 1 (UDS transport)**: All `UnixStream`/`UnixListener` imports and usage gated
+  behind `#[cfg(unix)]` across 9 files in `nestgate-rpc` and `nestgate-api`. TCP fallback
+  path remains always available. Non-Unix platforms get clear error messages directing to TCP.
+- **Platform readiness**: nestGate can now compile for Windows targets. Transport abstraction
+  (Phase 2 `primal-transport` crate) will provide full runtime UDS↔NamedPipe dispatch.
+
 ### Session 108: Deep debt sweep — test fixture gating, platform audit, String::from (Jul 15, 2026)
 
 - **Test fixture gating**: `create_test_certificate()` and `create_expired_certificate()` in
