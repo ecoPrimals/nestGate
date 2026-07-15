@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 140a (test fixture gating, platform audit, String::from round 4), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 141a (production mock evolution, metrics honesty, cross-arch), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
 date = 2026-07-15
 
 [taxonomies]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **3,790 tests** (3,790 passing, 73 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 110 Deep debt sweep** (Wave 141a): 11 ZFS production mocks → honest `not_implemented`; `/proc/meminfo` for real memory (was hardcoded 16GB); ARC fallback 0.85→0.0; 7 `String::from` → `.into()`; full codebase audit confirmed clean (no files >800L, no primal coupling, pure Rust deps)
 - **Session 109 Cross-architecture adoption** (Wave 141a): `cargo check --target x86_64-pc-windows-gnu` PASS; Category 3 (rustix::fs::statvfs gated) + Category 1 (UDS transport gated across 9 files); TCP fallback always available
 - **Session 108 Deep debt sweep** (Wave 140a): Test fixture gating (`create_test_certificate` → `#[cfg(test)]`); platform FS audit (all `PermissionsExt` already `#[cfg(unix)]` — zero Phase 3 blockers); 63 more `String::from` → `.into()` (pools 31, knowledge 13, system_config 9, cert/utils 10)
 - **Session 107 Deep debt sweep** (Wave 139a): ~425 `String::from("literal")` → `.into()` across 36 files / 9 crates; 8 `Result<_, String>` → `&'static str` (3 → `const fn`); `ZfsError` → `thiserror`; 3 enum `#[default]` migrations; `/opt/nestgate` → `NESTGATE_INSTALL_PATH` env override; unused type + redundant docs removed; production mock surfaces verified feature-gated

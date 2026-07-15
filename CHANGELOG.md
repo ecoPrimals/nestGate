@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 110: Deep debt sweep — production mock evolution, metrics honesty (Jul 15, 2026)
+
+- **Production mock elimination**: 11 ZFS handlers in `handlers_production.rs` that returned
+  fake success with hardcoded data now return honest `"not_implemented"` status with descriptive
+  messages indicating what integration is needed (`zfs get`, `zfs snapshot`, `iostat`, etc.).
+- **Metrics honesty**: `metrics_collection.rs` no longer fabricates system memory (was hardcoded
+  `16GB/8GB/8GB`) — reads `/proc/meminfo` at runtime with zero-fallback. ARC fallback ratio
+  changed from misleading `0.85` to `0.0` when no ZFS data available. ARC fallback sizes
+  changed from `4GB/8GB` to `0`.
+- **`String::from` → `.into()` round 5**: 7 conversions in production code
+  (`handlers_production.rs` 5, `error/data.rs` 1, `metrics_collection.rs` 1). Top-5 remaining
+  files (backends/mod.rs 48, cert/types.rs 35, registry.rs 34) confirmed 95% test-only.
+- **Audit**: Confirmed no files >800L (max 689), no primal name coupling in runtime code,
+  pure-Rust dependency posture (no `-sys` crates), centralized config with env overrides.
+  `map_err(format!)` patterns (225 sites) analyzed — all use protocol error types, not
+  `anyhow`, so `.context()` conversion requires typed error variants (deferred).
+
 ### Session 109: Cross-architecture adoption — Windows check PASS (Jul 15, 2026)
 
 - **Wave 141a**: Per-primal cross-architecture handoff. `cargo check --target x86_64-pc-windows-gnu` now **passes** (0 errors).
