@@ -23,8 +23,6 @@ pub mod idiomatic_evolution;
 /// Unified enumerations providing standardized enum types
 pub mod unified_enums;
 /// REMOVED: unified_types was migrated to config::canonical_primary (November 2025)
-/// Zero-cost trait implementations providing high-performance abstractions
-pub mod zero_cost_traits;
 // ==================== SECTION ====================
 
 use crate::config::canonical_primary::NestGateCanonicalConfig;

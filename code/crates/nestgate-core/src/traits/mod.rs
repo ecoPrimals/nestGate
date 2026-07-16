@@ -39,7 +39,6 @@ pub mod service_discovery;
 pub mod service_trait;
 pub mod unified_storage;
 pub mod universal;
-pub mod universal_service_zero_cost;
 
 // ==================== RE-EXPORTS ====================
 

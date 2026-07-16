@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 15, 2026 (Wave 141a — production mock evolution, cross-arch Windows check, deep debt sweep)  
+**Last Updated**: Jul 16, 2026 (Wave 142b — mock evolution, String::from R7, visibility tightening, deep debt sweep)  
 **Version**: 0.5.0
 
 ---
@@ -50,15 +50,14 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–110) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
+Per-session detail (Sessions 43–113) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
 
 Recent sessions:
-- **Session 110** (Wave 141a): Production mock evolution — 11 ZFS fake handlers → honest `not_implemented`; `/proc/meminfo` for real memory; ARC fallback 0.85→0.0; String::from round 5
-- **Session 109** (Wave 141a): Cross-architecture adoption — `cargo check --target x86_64-pc-windows-gnu` PASS; `#[cfg(unix)]` guards on UDS transport + `rustix` platform calls across 12 files
-- **Session 108** (Wave 140a): Deep debt sweep — test fixture gating (`cert/utils.rs`), platform FS audit (all `PermissionsExt` already `#[cfg(unix)]`), String::from round 4 (63 conversions)
-- **Session 107** (Wave 139a): Deep debt sweep — ~425 String::from→.into(), 8 Result<_,String>→&'static str, ZfsError→thiserror, 3 enum #[default], install path→env override
-- **Session 106** (Wave 136b): COORD-ACTIVATE + FP-PERSIST — coordination and footprint domains wired to all 4 RPC surfaces
-- **Session 105** (Wave 133b): NESTGATE-ANDROID-01 — UDS fatal on grapheneGate fixed
-- **Session 104** (Wave 133a): CI-DIV-03 — linker converged to aarch64-linux-gnu-gcc
-- **Session 103** (Wave 113): riboCipher `[0xEC, 0x01]` prefix acceptance
-- **Session 102** (Wave 109): STARTUP-NG-01 — HTTP default in server mode
+- **Session 113** (Wave 142b): Production mock evolution — ZFS defaults zeroed, tier utilization real, AI confidence computed, String::from R7 (21)
+- **Session 112** (Wave 142b): Visibility tightening — `btsp_client`/`btsp_phase3`/`primal_announce` → `pub(crate)`, infallible nonce, unwrap_or sweep (31)
+- **Session 111** (Wave 141b): Streaming clone elimination — 4 function signatures `Value` → `&Value`, cast safety fix, String::from R6 (55), cross-arch 14/14
+- **Session 110** (Wave 141a): Production mock evolution — 11 ZFS fake handlers → honest `not_implemented`; `/proc/meminfo` for real memory; ARC fallback 0.85→0.0
+- **Session 109** (Wave 141a): Cross-architecture adoption — `cargo check --target x86_64-pc-windows-gnu` PASS
+- **Session 108** (Wave 140a): Deep debt sweep — test fixture gating, platform FS audit, String::from R4 (63)
+- **Session 107** (Wave 139a): Deep debt sweep — ~425 String::from→.into(), ZfsError→thiserror, install path→env override
+- **Session 106** (Wave 136b): COORD-ACTIVATE + FP-PERSIST — coordination and footprint wired to all 4 surfaces

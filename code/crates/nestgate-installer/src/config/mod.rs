@@ -10,8 +10,6 @@ use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-// Re-export specialized modules
-pub mod execution;
 pub mod platform;
 /// Pre-install, post-install, and health-check validation settings.
 pub mod validation;

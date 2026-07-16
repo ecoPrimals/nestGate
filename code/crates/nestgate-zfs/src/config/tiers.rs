@@ -9,10 +9,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Migration module not yet implemented - using local types
 use crate::automation::policies::MigrationRules;
 
-// Temporary local definition until migration module is implemented
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Capacitylimits
 pub struct CapacityLimits {

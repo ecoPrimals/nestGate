@@ -321,7 +321,7 @@ async fn test_analyze_trends_snapshot_structure() {
     assert_eq!(snapshot.metrics.pool_metrics.total_throughput_mbs, 500.0);
     assert_eq!(snapshot.metrics.pool_metrics.avg_latency_ms, 5.0);
     assert!(
-        (snapshot.performance_score - 74.5).abs() < f64::EPSILON,
+        (snapshot.performance_score - 98.5).abs() < f64::EPSILON,
         "score should be derived from pool metrics, got {}",
         snapshot.performance_score
     );
@@ -393,8 +393,8 @@ async fn test_analyze_trends_performance_score_calculation() {
     let snapshot = hist.back().unwrap();
 
     assert!(
-        (snapshot.performance_score - 75.25).abs() < f64::EPSILON,
-        "default metrics should yield 75.25, got {}",
+        (snapshot.performance_score - 100.0).abs() < f64::EPSILON,
+        "zero-default metrics should yield 100.0, got {}",
         snapshot.performance_score
     );
     assert!(snapshot.performance_score >= 0.0);

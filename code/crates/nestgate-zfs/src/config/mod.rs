@@ -20,7 +20,6 @@
 pub mod automation;
 /// Health monitoring configuration
 pub mod health;
-pub mod metrics;
 // Migration module removed as part of cleanup
 /// Pool configuration settings
 pub mod pool;

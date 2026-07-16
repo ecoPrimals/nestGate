@@ -25,8 +25,6 @@ pub mod configuration;
 pub mod core;
 /// Dataset creation, management, and deletion operations
 pub mod dataset_operations;
-/// Metrics collection and monitoring for ZFS operations
-pub mod metrics;
 /// Parsing utilities for ZFS command output
 pub mod parsing;
 /// Pool creation, management, and status operations

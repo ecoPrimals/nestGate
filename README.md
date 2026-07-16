@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-07-15, Wave 141a)**  
+**Verification (as of 2026-07-16, Wave 142b)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
 - **Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific)  
@@ -57,7 +57,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jul 15, 2026
+**Last Updated**: Jul 16, 2026
 
 ---
 
@@ -160,7 +160,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-15 (Wave 141a).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-16 (Wave 142b).
 
 | Area | Status |
 |------|--------|
@@ -315,4 +315,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: July 2026 (Wave 141a)
+**Latest**: July 2026 (Wave 142b)

@@ -104,7 +104,6 @@ pub mod types;
 
 // Performance and optimization
 pub mod performance;
-pub mod zero_cost_zfs_handler;
 pub mod zero_cost_zfs_operations;
 
 // Configuration and management

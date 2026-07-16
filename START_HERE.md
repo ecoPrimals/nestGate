@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 141a)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 142b)
 Tests:       PASS — 3,790 passed, 73 ignored (1 pre-existing env-specific) (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 141a)
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 142b)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -182,4 +182,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jul 15, 2026 (Wave 141a)
+**Last Updated**: Jul 16, 2026 (Wave 142b)

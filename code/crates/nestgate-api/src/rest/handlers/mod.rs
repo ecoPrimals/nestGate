@@ -13,8 +13,6 @@ pub mod monitoring;
 
 /// **STORAGE HANDLERS**
 ///
-/// API endpoints for storage operations and management.
-pub mod storage;
 
 /// **SYSTEM HANDLERS**
 ///

@@ -390,21 +390,21 @@ mod tests {
     fn test_system_resource_metrics_default() {
         let metrics = SystemResourceMetrics::default();
 
-        assert!(metrics.cpu_utilization_percent >= 0.0);
-        assert!(metrics.memory_usage_bytes > 0);
-        assert!(metrics.available_memory_bytes > 0);
-        assert!(metrics.load_average_1m >= 0.0);
+        assert_eq!(metrics.cpu_utilization_percent, 0.0);
+        assert_eq!(metrics.memory_usage_bytes, 0);
+        assert_eq!(metrics.available_memory_bytes, 0);
+        assert_eq!(metrics.load_average_1m, 0.0);
     }
 
     #[test]
     fn test_pool_performance_metrics_default() {
         let metrics = PoolPerformanceMetrics::default();
 
-        assert!(metrics.total_iops > 0.0);
-        assert!(metrics.total_throughput_mbs > 0.0);
-        assert!(metrics.avg_latency_ms >= 0.0);
-        assert!(metrics.utilization_percent >= 0.0);
-        assert!(metrics.compression_ratio >= 1.0);
+        assert_eq!(metrics.total_iops, 0.0);
+        assert_eq!(metrics.total_throughput_mbs, 0.0);
+        assert_eq!(metrics.avg_latency_ms, 0.0);
+        assert_eq!(metrics.utilization_percent, 0.0);
+        assert_eq!(metrics.compression_ratio, 1.0);
     }
 
     #[tokio::test]
