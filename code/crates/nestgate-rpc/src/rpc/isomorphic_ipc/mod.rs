@@ -159,6 +159,7 @@ pub mod platform_detection;
 pub mod server;
 pub mod streams;
 pub mod tcp_fallback;
+pub mod transport_stream;
 pub mod unix_adapter;
 // Phase 3: Deployment Coordination
 pub mod atomic;
@@ -169,8 +170,12 @@ pub mod launcher;
 pub use discovery::{IpcEndpoint, discover_ipc_endpoint};
 pub use platform_detection::is_platform_constraint;
 pub use server::IsomorphicIpcServer;
-pub use streams::{IpcStream, connect_endpoint, connect_transport, transport_to_ipc_endpoint};
+pub use streams::{connect_endpoint, transport_to_ipc_endpoint};
 pub use tcp_fallback::{RpcHandler, TcpFallbackServer};
+pub use transport_stream::{TransportListener, TransportStream, connect_transport};
+
+/// Backward-compatible alias for [`TransportStream`].
+pub type IpcStream = TransportStream;
 pub use unix_adapter::UnixSocketRpcHandler;
 // Phase 3 re-exports
 pub use atomic::{AtomicStatus, AtomicType, verify_nest_health, verify_nestgate_health};

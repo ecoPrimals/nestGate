@@ -41,9 +41,6 @@
 //! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::Result;
-use std::pin::Pin;
-use std::task::{Context, Poll};
-use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::TcpStream;
 #[cfg(unix)]
 use tokio::net::UnixStream;
@@ -51,99 +48,9 @@ use tracing::debug;
 
 use super::discovery::IpcEndpoint;
 
-/// Polymorphic async stream trait
-///
-/// **Unified interface** for Unix socket and TCP streams:
-/// - Implements `AsyncRead` for reading
-/// - Implements `AsyncWrite` for writing
-/// - Send + Unpin for safe concurrent usage
-///
-/// Both `UnixStream` and `TcpStream` implement this trait,
-/// allowing transparent usage regardless of transport.
-pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
-
-/// Implement `AsyncStream` for Unix sockets
-#[cfg(unix)]
-impl AsyncStream for UnixStream {}
-
-/// Implement `AsyncStream` for TCP sockets
-impl AsyncStream for TcpStream {}
-
-/// Polymorphic stream wrapper
-///
-/// Wraps either Unix or TCP stream with a unified interface.
-/// Uses enum dispatch for zero-cost abstraction.
-#[derive(Debug)]
-pub enum IpcStream {
-    /// Unix socket stream
-    #[cfg(unix)]
-    Unix(UnixStream),
-    /// TCP stream (localhost only)
-    Tcp(TcpStream),
-}
-
-impl IpcStream {
-    /// Get stream type description (for logging)
-    pub const fn stream_type(&self) -> &str {
-        match self {
-            #[cfg(unix)]
-            Self::Unix(_) => "Unix socket",
-            Self::Tcp(_) => "TCP (localhost)",
-        }
-    }
-}
-
-/// Implement `AsyncRead` for `IpcStream` (delegates to inner stream)
-impl AsyncRead for IpcStream {
-    fn poll_read(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<std::io::Result<()>> {
-        match &mut *self {
-            #[cfg(unix)]
-            Self::Unix(stream) => Pin::new(stream).poll_read(cx, buf),
-            Self::Tcp(stream) => Pin::new(stream).poll_read(cx, buf),
-        }
-    }
-}
-
-/// Implement `AsyncWrite` for `IpcStream` (delegates to inner stream)
-impl AsyncWrite for IpcStream {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<Result<usize, std::io::Error>> {
-        match &mut *self {
-            #[cfg(unix)]
-            Self::Unix(stream) => Pin::new(stream).poll_write(cx, buf),
-            Self::Tcp(stream) => Pin::new(stream).poll_write(cx, buf),
-        }
-    }
-
-    fn poll_flush(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), std::io::Error>> {
-        match &mut *self {
-            #[cfg(unix)]
-            Self::Unix(stream) => Pin::new(stream).poll_flush(cx),
-            Self::Tcp(stream) => Pin::new(stream).poll_flush(cx),
-        }
-    }
-
-    fn poll_shutdown(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), std::io::Error>> {
-        match &mut *self {
-            #[cfg(unix)]
-            Self::Unix(stream) => Pin::new(stream).poll_shutdown(cx),
-            Self::Tcp(stream) => Pin::new(stream).poll_shutdown(cx),
-        }
-    }
-}
+/// Backward-compatible alias — the canonical type is now
+/// [`TransportStream`](super::transport_stream::TransportStream).
+pub type IpcStream = super::transport_stream::TransportStream;
 
 /// Connect to IPC endpoint (polymorphic)
 ///
@@ -207,55 +114,14 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
     }
 }
 
-/// Connect to a [`nestgate_types::TransportEndpoint`] — the ecosystem-standard transport abstraction.
-///
-/// Routes UDS and TCP variants to their respective `tokio` stream connections.
-/// `MeshRelay` endpoints are not yet supported for direct connection; they require
-/// relay capability negotiation (returns an error with guidance).
-///
-/// This is the primary replacement for raw `UnixStream::connect` / `TcpStream::connect`
-/// in production IPC paths. The launcher provides the endpoint via `TRANSPORT_ENDPOINT`
-/// env var; the primal calls `connect_transport()` instead of choosing its own transport.
+/// Delegate to the canonical [`connect_transport`](super::transport_stream::connect_transport).
 ///
 /// # Errors
 ///
 /// Returns [`anyhow::Error`] when the connection fails or the transport variant
 /// is not supported for direct connection.
 pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> Result<IpcStream> {
-    use nestgate_types::TransportEndpoint;
-
-    debug!("Connecting via transport endpoint: {endpoint}");
-
-    match endpoint {
-        #[cfg(unix)]
-        TransportEndpoint::Uds { path } => {
-            debug!("  Transport: UDS → {}", path.display());
-            let stream = UnixStream::connect(path)
-                .await
-                .map_err(|e| anyhow::anyhow!("UDS connect to {}: {e}", path.display()))?;
-            Ok(IpcStream::Unix(stream))
-        }
-        #[cfg(not(unix))]
-        TransportEndpoint::Uds { path } => Err(anyhow::anyhow!(
-            "UDS transport not available on this platform: {}",
-            path.display()
-        )),
-        TransportEndpoint::Tcp { host, port } => {
-            let addr = format!("{host}:{port}");
-            debug!("  Transport: TCP → {addr}");
-            let stream = TcpStream::connect(&addr)
-                .await
-                .map_err(|e| anyhow::anyhow!("TCP connect to {addr}: {e}"))?;
-            Ok(IpcStream::Tcp(stream))
-        }
-        TransportEndpoint::MeshRelay {
-            peer_id,
-            capability,
-        } => Err(anyhow::anyhow!(
-            "MeshRelay transport ({peer_id}/{capability}) requires relay capability negotiation — \
-             not yet wired for direct connect_transport()"
-        )),
-    }
+    super::transport_stream::connect_transport(endpoint).await
 }
 
 /// Convert a [`nestgate_types::TransportEndpoint`] to the legacy [`IpcEndpoint`] for backward-compatible
@@ -326,7 +192,7 @@ mod tests {
         let addr = listener.local_addr().unwrap();
         let endpoint = IpcEndpoint::TcpLocal(addr);
         let stream = connect_endpoint(&endpoint).await.unwrap();
-        assert_eq!(stream.stream_type(), "TCP (localhost)");
+        assert_eq!(stream.transport_type(), "TCP");
     }
 
     #[tokio::test]
@@ -359,7 +225,7 @@ mod tests {
         let addr = listener.local_addr().unwrap();
         let ep = nestgate_types::TransportEndpoint::tcp("127.0.0.1", addr.port());
         let stream = connect_transport(&ep).await.unwrap();
-        assert_eq!(stream.stream_type(), "TCP (localhost)");
+        assert_eq!(stream.transport_type(), "TCP");
     }
 
     #[tokio::test]
@@ -375,7 +241,7 @@ mod tests {
         let result = connect_transport(&ep).await;
         let err_msg = result.unwrap_err().to_string();
         assert!(err_msg.contains("MeshRelay"));
-        assert!(err_msg.contains("relay capability"));
+        assert!(err_msg.contains("relay negotiation"));
     }
 
     #[test]

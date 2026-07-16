@@ -75,7 +75,7 @@ pub struct JsonRpcError {
 impl JsonRpcError {
     /// Create an error from a typed code with default message.
     #[must_use]
-    pub fn from_code(code: JsonRpcErrorCode) -> Self {
+    pub const fn from_code(code: JsonRpcErrorCode) -> Self {
         Self {
             code: code.code(),
             message: Cow::Borrowed(code.default_message()),
@@ -109,19 +109,19 @@ impl JsonRpcError {
 
     /// Parse error (-32700).
     #[must_use]
-    pub fn parse_error() -> Self {
+    pub const fn parse_error() -> Self {
         Self::from_code(JsonRpcErrorCode::ParseError)
     }
 
     /// Invalid request (-32600).
     #[must_use]
-    pub fn invalid_request() -> Self {
+    pub const fn invalid_request() -> Self {
         Self::from_code(JsonRpcErrorCode::InvalidRequest)
     }
 
     /// Method not found (-32601).
     #[must_use]
-    pub fn method_not_found() -> Self {
+    pub const fn method_not_found() -> Self {
         Self::from_code(JsonRpcErrorCode::MethodNotFound)
     }
 
@@ -139,13 +139,13 @@ impl JsonRpcError {
 
     /// Internal error (-32603) with the default message.
     #[must_use]
-    pub fn internal_error() -> Self {
+    pub const fn internal_error() -> Self {
         Self::from_code(JsonRpcErrorCode::InternalError)
     }
 
     /// BTSP authentication required (-32604).
     #[must_use]
-    pub fn auth_required() -> Self {
+    pub const fn auth_required() -> Self {
         Self::from_code(JsonRpcErrorCode::AuthRequired)
     }
 }

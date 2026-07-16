@@ -24,10 +24,10 @@ use nestgate_types::error::{NestGateError, Result};
 /// Constructs from `$XDG_RUNTIME_DIR` or `/run/user/{uid}` — never hardcodes
 /// a fixed FHS path.
 pub fn default_security_socket_path() -> PathBuf {
-    if let Ok(p) = std::env::var("NESTGATE_SECURITY_SOCKET") {
-        if !p.is_empty() {
-            return PathBuf::from(p);
-        }
+    if let Ok(p) = std::env::var("NESTGATE_SECURITY_SOCKET")
+        && !p.is_empty()
+    {
+        return PathBuf::from(p);
     }
     let socket_dir = std::env::var("ECOSYSTEM_SOCKET_DIR")
         .unwrap_or_else(|_| nestgate_config::constants::system::ecosystem_path_segment());

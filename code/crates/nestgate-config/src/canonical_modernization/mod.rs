@@ -22,9 +22,6 @@ pub mod builders;
 pub mod idiomatic_evolution;
 /// Unified enumerations providing standardized enum types
 pub mod unified_enums;
-/// REMOVED: unified_types was migrated to config::canonical_primary (November 2025)
-// ==================== SECTION ====================
-
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 /// **BACKWARD COMPATIBILITY**: Legacy configuration type alias for migration compatibility

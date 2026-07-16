@@ -30,12 +30,12 @@ use super::types::{FootPrintManifest, FootPrintProject, ProjectRevision};
 /// 1. `PROJECTS_PATH` env var (footPrint composition wiring)
 /// 2. Standard CAS layout: `{storage_base}/datasets/{family}/_footprint`
 fn footprint_base_path(family_id: &str) -> std::path::PathBuf {
-    if let Ok(projects_path) = std::env::var("PROJECTS_PATH") {
-        if !projects_path.is_empty() {
-            return std::path::PathBuf::from(projects_path)
-                .join(family_id)
-                .join("_footprint");
-        }
+    if let Ok(projects_path) = std::env::var("PROJECTS_PATH")
+        && !projects_path.is_empty()
+    {
+        return std::path::PathBuf::from(projects_path)
+            .join(family_id)
+            .join("_footprint");
     }
     get_storage_base_path()
         .join("datasets")

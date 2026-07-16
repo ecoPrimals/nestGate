@@ -341,8 +341,8 @@ impl RpcHandler for UnixSocketRpcHandler {
         Box::pin(async move {
             match serde_json::from_value::<JsonRpcRequest>(request) {
                 Ok(rpc_request) => {
-                    let response = self.handle_rpc_request(rpc_request).await;
                     use nestgate_types::JsonRpcErrorCode;
+                    let response = self.handle_rpc_request(rpc_request).await;
                     serde_json::to_value(response).unwrap_or_else(|e| {
                         json!({
                             "jsonrpc": "2.0",

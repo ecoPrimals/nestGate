@@ -263,7 +263,7 @@ impl IsomorphicIpcServer {
     /// shutdown with socket file cleanup (prevents stale socket accumulation).
     #[cfg(unix)]
     async fn try_unix_server(&self) -> Result<()> {
-        use tokio::net::UnixListener;
+        use super::transport_stream::TransportListener;
 
         let (socket_path, family_id) =
             match crate::rpc::socket_config::SocketConfig::from_environment() {
@@ -284,9 +284,10 @@ impl IsomorphicIpcServer {
                 }
             };
 
-        let listener = UnixListener::bind(&socket_path).context("Failed to bind Unix socket")?;
+        let listener =
+            TransportListener::bind_unix(&socket_path).context("Failed to bind Unix socket")?;
 
-        info!("Unix socket bound: {}", socket_path.display());
+        info!("Transport listener bound: {listener}");
 
         let _socket_guard = SocketCleanupGuard {
             path: socket_path.clone(),
@@ -309,6 +310,17 @@ impl IsomorphicIpcServer {
         let _storage_capability_symlink_guard =
             crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path, &family_id);
 
+        Self::serve_listener(listener, self.handler.clone()).await
+    }
+
+    /// Transport-agnostic accept loop.
+    ///
+    /// Runs until Ctrl-C, accepting connections from `listener` and
+    /// spawning `handle_connection` for each.
+    async fn serve_listener(
+        listener: super::transport_stream::TransportListener,
+        handler: Arc<dyn RpcHandler>,
+    ) -> Result<()> {
         let shutdown = tokio::signal::ctrl_c();
         tokio::pin!(shutdown);
 
@@ -316,21 +328,22 @@ impl IsomorphicIpcServer {
             tokio::select! {
                 biased;
                 _ = &mut shutdown => {
-                    info!("Shutdown signal received, cleaning up socket");
+                    info!("Shutdown signal received, cleaning up");
                     break;
                 }
                 accept = listener.accept() => {
                     match accept {
-                        Ok((stream, _addr)) => {
-                            let handler = self.handler.clone();
+                        Ok((stream, peer)) => {
+                            debug!(peer, transport = stream.transport_type(), "accepted connection");
+                            let handler = handler.clone();
                             tokio::spawn(async move {
-                                if let Err(e) = Self::handle_unix_connection(stream, handler).await {
-                                    error!("Unix connection error: {}", e);
+                                if let Err(e) = Self::handle_connection(stream, handler).await {
+                                    error!("Connection error ({peer}): {e}");
                                 }
                             });
                         }
                         Err(e) => {
-                            error!("Failed to accept Unix connection: {}", e);
+                            error!("Failed to accept connection: {e}");
                         }
                     }
                 }
@@ -340,7 +353,7 @@ impl IsomorphicIpcServer {
         Ok(())
     }
 
-    /// Handle Unix socket connection (persistent keep-alive).
+    /// Handle a transport-agnostic connection (persistent keep-alive).
     ///
     /// Reads newline-delimited JSON-RPC requests in a loop until the client
     /// disconnects (EOF). Each response is flushed before reading the next
@@ -350,15 +363,15 @@ impl IsomorphicIpcServer {
     /// When BTSP is required (production: `FAMILY_ID` set, not `BIOMEOS_INSECURE`),
     /// the 4-step BTSP handshake runs first, delegating crypto to the security
     /// capability provider. Development connections proceed directly.
-    #[cfg(unix)]
-    pub(crate) async fn handle_unix_connection(
-        stream: tokio::net::UnixStream,
+    pub(crate) async fn handle_connection(
+        stream: super::transport_stream::TransportStream,
         handler: Arc<dyn RpcHandler>,
     ) -> Result<()> {
         use tokio::io::BufReader;
 
-        let (reader, mut writer) = stream.into_split();
+        let (reader, writer) = tokio::io::split(stream);
         let mut raw_reader = BufReader::new(reader);
+        let mut writer = writer;
 
         crate::rpc::protocol::strip_ribocipher_prefix(&mut raw_reader).await;
 
@@ -411,6 +424,20 @@ impl IsomorphicIpcServer {
         }
 
         Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler, true).await
+    }
+
+    /// Backward-compatible wrapper: wraps a raw `UnixStream` in
+    /// [`TransportStream::Unix`] and delegates to [`Self::handle_connection`].
+    #[cfg(all(unix, test))]
+    pub(crate) async fn handle_unix_connection(
+        stream: tokio::net::UnixStream,
+        handler: Arc<dyn RpcHandler>,
+    ) -> Result<()> {
+        Self::handle_connection(
+            super::transport_stream::TransportStream::Unix(stream),
+            handler,
+        )
+        .await
     }
 
     /// After Phase 2 handshake, intercept the first message to check for

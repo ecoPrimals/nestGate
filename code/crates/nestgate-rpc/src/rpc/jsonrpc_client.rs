@@ -65,13 +65,13 @@ use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-#[cfg(unix)]
-use tokio::net::UnixStream;
 use tracing::{debug, warn};
 
 use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 
-use super::isomorphic_ipc::streams::IpcStream;
+use super::isomorphic_ipc::TransportStream;
+
+type IpcStream = TransportStream;
 
 /// JSON-RPC 2.0 request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -127,23 +127,13 @@ pub struct JsonRpcClient {
 impl JsonRpcClient {
     /// Connect to a JSON-RPC service over Unix socket.
     ///
+    /// Delegates to [`Self::connect_transport`] with a UDS endpoint.
+    ///
     /// # Errors
     /// Returns error if connection fails.
     #[cfg(unix)]
     pub async fn connect_unix(path: &str) -> Result<Self> {
-        debug!("Connecting to JSON-RPC service at: {}", path);
-
-        let stream = UnixStream::connect(path).await.map_err(|e| {
-            NestGateError::network_error(format!(
-                "Failed to connect to JSON-RPC service at {path}: {e}"
-            ))
-        })?;
-
-        Ok(Self {
-            stream: Some(BufReader::new(IpcStream::Unix(stream))),
-            next_id: 1,
-            timeout: Duration::from_secs(5),
-        })
+        Self::connect_transport(&nestgate_types::TransportEndpoint::uds(path)).await
     }
 
     /// Connect via an ecosystem-standard [`TransportEndpoint`](nestgate_types::TransportEndpoint).
@@ -157,12 +147,12 @@ impl JsonRpcClient {
     pub async fn connect_transport(endpoint: &nestgate_types::TransportEndpoint) -> Result<Self> {
         debug!("JSON-RPC client connecting via transport: {endpoint}");
 
-        let ipc_stream = super::isomorphic_ipc::streams::connect_transport(endpoint)
+        let stream = super::isomorphic_ipc::connect_transport(endpoint)
             .await
             .net_ctx("Transport connect failed")?;
 
         Ok(Self {
-            stream: Some(BufReader::new(ipc_stream)),
+            stream: Some(BufReader::new(stream)),
             next_id: 1,
             timeout: Duration::from_secs(5),
         })
@@ -170,23 +160,12 @@ impl JsonRpcClient {
 
     /// Connect to a JSON-RPC service over TCP.
     ///
+    /// Delegates to [`Self::connect_transport`] with a TCP endpoint.
+    ///
     /// # Errors
     /// Returns error if connection fails.
     pub async fn connect_tcp(host: &str, port: u16) -> Result<Self> {
-        let addr = format!("{host}:{port}");
-        debug!("Connecting to JSON-RPC service at TCP: {addr}");
-
-        let stream = tokio::net::TcpStream::connect(&addr).await.map_err(|e| {
-            NestGateError::network_error(format!(
-                "Failed to connect to JSON-RPC service at {addr}: {e}"
-            ))
-        })?;
-
-        Ok(Self {
-            stream: Some(BufReader::new(IpcStream::Tcp(stream))),
-            next_id: 1,
-            timeout: Duration::from_secs(5),
-        })
+        Self::connect_transport(&nestgate_types::TransportEndpoint::tcp(host, port)).await
     }
 
     /// Set request timeout
@@ -367,9 +346,10 @@ impl JsonRpcClient {
 #[cfg(test)]
 impl JsonRpcClient {
     /// Construct a client around an existing Unix stream (in-process pair testing).
-    pub(crate) fn from_unix_stream_for_test(stream: UnixStream) -> Self {
+    #[cfg(unix)]
+    pub(crate) fn from_unix_stream_for_test(stream: tokio::net::UnixStream) -> Self {
         Self {
-            stream: Some(BufReader::new(IpcStream::Unix(stream))),
+            stream: Some(BufReader::new(TransportStream::Unix(stream))),
             next_id: 1,
             timeout: Duration::from_secs(5),
         }
@@ -384,6 +364,7 @@ mod tests {
     use serde_json::json;
     use std::borrow::Cow;
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixStream;
 
     #[test]
     fn test_request_serialization() {

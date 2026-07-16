@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 16, 2026 (Wave 144a — Session 116: typed JSON-RPC errors, visibility tightening, hardcoded path elimination)  
+**Last Updated**: Jul 16, 2026 (Wave 144b — Session 116: typed JSON-RPC errors, visibility tightening, hardcoded path elimination)  
 **Version**: 0.5.0
 
 ---
@@ -50,11 +50,11 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–116) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
+Per-session detail (Sessions 43–117) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
-- **Session 116** (Wave 144a): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types`, replaced 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules, `models.rs`, `rest`); removed `/opt/ecoPrimals/depot` hardcoded fallback, security socket tier-6 → XDG-based
-- **Session 115** (Wave 144a): ErrorContextExt trait — 152 map_err(format!()) sites → .io_ctx/.net_ctx/.internal_ctx/.api_ctx/.validation_ctx/.security_ctx, 42 remaining (runtime-interpolated)
+- **Session 116** (Wave 144b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types`, replaced 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules, `models.rs`, `rest`); removed `/opt/ecoPrimals/depot` hardcoded fallback, security socket tier-6 → XDG-based
+- **Session 115** (Wave 144b): ErrorContextExt trait — 152 map_err(format!()) sites → .io_ctx/.net_ctx/.internal_ctx/.api_ctx/.validation_ctx/.security_ctx, 42 remaining (runtime-interpolated)
 - **Session 114** (Wave 143b): PROJECTS_PATH CAS wiring (footPrint composition), String::from R8 sweep (2500+ across 382 files), deep debt continuation
 - **Session 113** (Wave 142b): Production mock evolution — ZFS defaults zeroed, tier utilization real, AI confidence computed, String::from R7 (21)
 - **Session 112** (Wave 142b): Visibility tightening — `btsp_client`/`btsp_phase3`/`primal_announce` → `pub(crate)`, infallible nonce, unwrap_or sweep (31)

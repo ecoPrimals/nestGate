@@ -58,7 +58,6 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::net::{TcpListener, TcpStream};
 use tracing::{debug, error, info, warn};
 
 /// Dyn-compatible RPC handler trait for JSON-RPC 2.0 request dispatch.
@@ -109,35 +108,34 @@ impl TcpFallbackServer {
     /// Returns [`anyhow::Error`] if binding the TCP listener or reading its local address fails
     /// before the accept loop starts.
     pub async fn start(self: Arc<Self>) -> Result<()> {
+        use super::transport_stream::TransportListener;
+
         info!("Starting TCP IPC fallback (isomorphic mode)");
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
         info!("   Security: Localhost only (127.0.0.1)");
 
-        // Bind address configurable via NESTGATE_IPC_BIND_ADDRESS (default: loopback from config)
         let bind_addr =
             env_var_or_default(&ProcessEnv, "NESTGATE_IPC_BIND_ADDRESS", LOCALHOST_IPV4);
-        let bind_socket = format!("{bind_addr}:0");
+        let bind_socket: SocketAddr = format!("{bind_addr}:0")
+            .parse()
+            .context("Invalid bind address")?;
 
-        // Bind to configurable address:0 (ephemeral port, OS assigns)
-        let listener = TcpListener::bind(&bind_socket)
+        let listener = TransportListener::bind_tcp(bind_socket)
             .await
             .context("Failed to bind TCP socket for IPC fallback")?;
 
-        let local_addr = listener
-            .local_addr()
-            .context("Failed to get local address")?;
+        let display = listener.display_address();
+        info!("Transport listener bound: {listener}  (ephemeral port)");
 
-        info!(
-            "TCP IPC listening on {} (resolved from bind pattern {} — ephemeral port)",
-            local_addr, bind_socket
-        );
+        let local_addr: SocketAddr = display
+            .parse()
+            .context("Failed to parse local address from listener")?;
 
-        // Write discovery file for clients
         self.write_tcp_discovery_file(&local_addr)?;
 
         info!("   Status: READY  (isomorphic TCP fallback active)");
 
-        self.accept_loop(listener).await
+        self.accept_loop_transport(listener).await
     }
 
     /// Start TCP JSON-RPC listener on a fixed address (e.g. `UniBin` `daemon --port` / `--listen`).
@@ -150,46 +148,47 @@ impl TcpFallbackServer {
     /// Returns [`anyhow::Error`] if binding `addr` or reading the listener's local address fails
     /// before the accept loop starts.
     pub async fn start_bound(self: Arc<Self>, addr: SocketAddr) -> Result<()> {
+        use super::transport_stream::TransportListener;
+
         info!("Starting TCP JSON-RPC listener (isomorphic IPC, fixed address)");
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
 
-        let listener = TcpListener::bind(addr)
+        let listener = TransportListener::bind_tcp(addr)
             .await
             .with_context(|| format!("Failed to bind TCP JSON-RPC listener on {addr}"))?;
 
-        let local_addr = listener
-            .local_addr()
-            .context("Failed to get local address after bind")?;
+        let local_addr: SocketAddr = listener
+            .display_address()
+            .parse()
+            .context("Failed to parse local address after bind")?;
 
-        info!(
-            "TCP JSON-RPC listening on {} (requested {})",
-            local_addr, addr
-        );
+        info!("Transport listener bound: {listener}  (requested {addr})");
 
         self.write_tcp_discovery_file(&local_addr)?;
 
         info!("   Status: READY  (TCP JSON-RPC alongside Unix socket when enabled)");
 
-        self.accept_loop(listener).await
+        self.accept_loop_transport(listener).await
     }
 
-    async fn accept_loop(self: Arc<Self>, listener: TcpListener) -> Result<()> {
-        // Accept connections (same pattern as Unix socket server)
+    async fn accept_loop_transport(
+        self: Arc<Self>,
+        listener: super::transport_stream::TransportListener,
+    ) -> Result<()> {
         loop {
             match listener.accept().await {
-                Ok((stream, addr)) => {
-                    debug!("TCP client connected: {}", addr);
-                    let handler = self.clone();
+                Ok((stream, peer)) => {
+                    debug!(peer, transport = stream.transport_type(), "TCP client connected");
+                    let handler = self.handler.clone();
 
-                    // Spawn task for each connection
                     tokio::spawn(async move {
-                        if let Err(e) = handler.handle_tcp_connection(stream).await {
-                            error!("TCP connection error: {}", e);
+                        if let Err(e) = Self::handle_transport_connection(stream, handler).await {
+                            error!("TCP connection error ({peer}): {e}");
                         }
                     });
                 }
                 Err(e) => {
-                    error!("Failed to accept TCP connection: {}", e);
+                    error!("Failed to accept TCP connection: {e}");
                 }
             }
         }
@@ -197,15 +196,19 @@ impl TcpFallbackServer {
 
     const CONNECTION_IDLE_LIMIT: std::time::Duration = crate::rpc::protocol::CONNECTION_IDLE_LIMIT;
 
-    /// Event-driven TCP JSON-RPC keep-alive loop.
+    /// Event-driven JSON-RPC keep-alive loop over a [`TransportStream`].
     ///
     /// Uses `tokio::select!` to multiplex between I/O readiness and a
     /// resettable idle timer. Each response is flushed (critical for TCP —
     /// Nagle's algorithm can delay small writes). On idle expiry the client
     /// receives a `connection.closing` notification before teardown.
-    async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
-        let (reader, mut writer) = stream.into_split();
+    async fn handle_transport_connection(
+        stream: super::transport_stream::TransportStream,
+        handler: Arc<dyn RpcHandler>,
+    ) -> Result<()> {
+        let (reader, writer) = tokio::io::split(stream);
         let mut reader = BufReader::new(reader);
+        let mut writer = writer;
 
         crate::rpc::protocol::strip_ribocipher_prefix(&mut reader).await;
 
@@ -238,7 +241,7 @@ impl TcpFallbackServer {
                             requests_served += 1;
 
                             let response = match serde_json::from_slice::<Value>(trimmed) {
-                                Ok(request) => self.handler.handle_request(request).await,
+                                Ok(request) => handler.handle_request(request).await,
                                 Err(e) => {
                                     warn!("Invalid JSON-RPC request: {}", e);
                                     {
@@ -366,6 +369,7 @@ mod tests {
 
     use super::*;
     use nestgate_types::MapEnv;
+    use tokio::net::TcpStream;
 
     /// Mock RPC handler for testing
     struct MockHandler;

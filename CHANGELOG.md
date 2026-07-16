@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 117: Phase 2 Transport — TransportStream + TransportListener (Jul 16, 2026)
+
+- **`TransportStream` enum**: Canonical ecosystem-standard stream type (UDS | TCP) with
+  `AsyncRead + AsyncWrite` enum dispatch, replacing the internal `IpcStream` which is
+  now a backward-compatible type alias. Lives in `nestgate-rpc::isomorphic_ipc::transport_stream`.
+- **`TransportListener` enum**: Unified bind/accept for server-side transport (UDS | TCP).
+  `bind_unix()`, `bind_tcp()`, `from_tcp()`, `accept() -> (TransportStream, peer_label)`,
+  `display_address()`, `unix_path()`, and `Display` impl.
+- **Server accept loop unified**: `IsomorphicIpcServer::try_unix_server` now binds via
+  `TransportListener::bind_unix` and dispatches through a shared `serve_listener()` method.
+  `TcpFallbackServer` accept paths also refactored to `TransportListener::bind_tcp`.
+  Both use `handle_connection(TransportStream)` instead of transport-specific handlers.
+- **Client connect consolidated**: `JsonRpcClient::connect_unix` and `connect_tcp` now
+  delegate to `connect_transport(TransportEndpoint)` — no more raw `UnixStream::connect`
+  or `TcpStream::connect` in client code.
+- **`IpcStream` retired as primary type**: Re-exported as `type IpcStream = TransportStream`
+  for backward compatibility. `AsyncStream` marker trait removed (dead code).
+- **`connect_transport()` canonical function**: Moved from `streams.rs` to
+  `transport_stream.rs` (streams delegates). Returns `TransportStream` directly.
+- **7 new tests**: UDS roundtrip, TCP roundtrip, TCP listener accept, mesh relay error,
+  UDS nonexistent error, listener display format, transport_type assertions.
+- **Registry updated**: `transport_evolution` comment now describes full Phase 2 scope
+  (server + client abstraction, not just outbound Wave 101).
+
 ### Session 116: Typed JSON-RPC errors, visibility tightening, hardcoded path elimination (Jul 16, 2026)
 
 - **Canonical `JsonRpcErrorCode` enum**: New `nestgate_types::transport::jsonrpc` module — single
