@@ -126,7 +126,7 @@ impl PrimalId {
         let hostname = env
             .get("HOSTNAME")
             .or_else(|| env.get("HOST"))
-            .unwrap_or_else(|| String::from("unknown"));
+            .unwrap_or_else(|| "unknown".into());
 
         let pid = std::process::id();
 

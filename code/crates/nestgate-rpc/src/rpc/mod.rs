@@ -63,8 +63,8 @@
 //! ```
 
 pub mod audit_storage;
-pub mod btsp_client;
-pub mod btsp_phase3;
+pub(crate) mod btsp_client;
+pub(crate) mod btsp_phase3;
 pub mod btsp_server_handshake;
 pub mod content_ops;
 pub mod coord_ops;
@@ -76,7 +76,7 @@ pub mod metadata_backend;
 pub(crate) mod method_gate;
 #[cfg(any(feature = "dev-stubs", test))]
 pub mod orchestrator_registration;
-pub mod primal_announce;
+pub(crate) mod primal_announce;
 pub(crate) mod protocol;
 pub mod semantic_router;
 pub mod socket_config;

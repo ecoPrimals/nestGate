@@ -313,7 +313,7 @@ impl CapabilityDiscovery {
 
         let standard_path = env
             .get("ORCHESTRATION_IPC_STANDARD_PATH")
-            .unwrap_or_else(|| String::from("/primal/orchestration"));
+            .unwrap_or_else(|| "/primal/orchestration".into());
         tracing::debug!(path = %standard_path, "Trying standard IPC path");
         if Path::new(&standard_path).exists() {
             let endpoint = nestgate_types::TransportEndpoint::uds(&standard_path);

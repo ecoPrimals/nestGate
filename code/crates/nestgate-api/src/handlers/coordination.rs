@@ -30,7 +30,7 @@ fn resolve_family(query: &CoordQuery) -> String {
         .family_id
         .clone()
         .or_else(|| std::env::var("NESTGATE_FAMILY_ID").ok())
-        .unwrap_or_else(|| String::from("default"))
+        .unwrap_or_else(|| "default".into())
 }
 
 fn coord_base_path(family_id: &str) -> std::path::PathBuf {

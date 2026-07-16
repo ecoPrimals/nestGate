@@ -61,6 +61,7 @@ pub struct BtspClient {
 /// Delegates to [`super::btsp_server_handshake::is_btsp_required`] so
 /// client and server use identical env-var resolution and sentinel logic.
 #[must_use]
+#[expect(dead_code, reason = "BTSP client re-export — used by downstream crates via pub mod btsp_server_handshake")]
 pub fn is_btsp_required() -> bool {
     super::btsp_server_handshake::is_btsp_required()
 }
@@ -124,6 +125,7 @@ fn discover_security_socket_xdg() -> Option<PathBuf> {
     None
 }
 
+#[expect(dead_code, reason = "BTSP client surface — will activate with security primal integration")]
 impl BtspClient {
     /// Wraps a path to the security provider's JSON-RPC socket.
     #[must_use]

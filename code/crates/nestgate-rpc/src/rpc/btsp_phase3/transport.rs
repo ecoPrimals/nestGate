@@ -147,7 +147,7 @@ pub async fn try_phase3_negotiate<W: AsyncWriteExt + Unpin>(
         NestGateError::validation_error(format!("Invalid base64 in client_nonce: {e}"))
     })?;
 
-    let server_nonce = generate_server_nonce()?;
+    let server_nonce = generate_server_nonce();
     let server_nonce_b64 = BASE64.encode(server_nonce);
 
     let keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)?;

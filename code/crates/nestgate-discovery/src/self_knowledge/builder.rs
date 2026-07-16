@@ -157,7 +157,7 @@ impl SelfKnowledgeBuilder {
             })
         });
 
-        let version = self.version.unwrap_or_else(|| String::from("0.0.0"));
+        let version = self.version.unwrap_or_else(|| "0.0.0".into());
         let resources = self.resources.unwrap_or_default();
         let health = self.health.unwrap_or_default();
 

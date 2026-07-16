@@ -64,7 +64,7 @@ impl TransportConfig {
     pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let family_id = env
             .get("NESTGATE_FAMILY_ID")
-            .unwrap_or_else(|| String::from("default"));
+            .unwrap_or_else(|| "default".into());
 
         let socket_path = env.get("NESTGATE_SOCKET_PATH").unwrap_or_else(|| {
             std::env::temp_dir()
@@ -75,7 +75,7 @@ impl TransportConfig {
 
         let security_slug = env
             .get("NESTGATE_SECURITY_SLUG")
-            .unwrap_or_else(|| String::from("security"));
+            .unwrap_or_else(|| "security".into());
         let security_provider = env.get("NESTGATE_SECURITY_PROVIDER").unwrap_or_else(|| {
             std::env::temp_dir()
                 .join(format!("{security_slug}-{family_id}-default.sock"))

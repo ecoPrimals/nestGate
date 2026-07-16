@@ -131,7 +131,7 @@ impl NativeZfsPoolManager {
         let health_str = properties
             .get("health")
             .cloned()
-            .unwrap_or_else(|| String::from("UNKNOWN"));
+            .unwrap_or_else(|| "UNKNOWN".into());
         let health = self.parse_pool_health(&health_str);
 
         // Get pool status for more detailed information
@@ -195,7 +195,7 @@ impl NativeZfsPoolManager {
         let health_str = properties
             .get("health")
             .cloned()
-            .unwrap_or_else(|| String::from("UNKNOWN"));
+            .unwrap_or_else(|| "UNKNOWN".into());
         let health = self.parse_pool_health(&health_str);
 
         Ok(PoolStats {
@@ -233,7 +233,7 @@ impl NativeZfsPoolManager {
         let health_str = properties
             .get("health")
             .cloned()
-            .unwrap_or_else(|| String::from("UNKNOWN"));
+            .unwrap_or_else(|| "UNKNOWN".into());
         Ok(self.parse_pool_health(&health_str).into())
     }
 

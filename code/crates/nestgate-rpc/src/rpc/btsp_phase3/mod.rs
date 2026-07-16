@@ -244,16 +244,13 @@ pub fn derive_handshake_key(family_seed: &[u8]) -> Result<[u8; 32]> {
 }
 
 /// Generate a 32-byte random nonce for Phase 3 key derivation salt.
-///
-/// # Errors
-///
-/// Returns an error if the OS CSPRNG is unavailable.
-pub fn generate_server_nonce() -> Result<[u8; KEY_DERIVATION_NONCE_SIZE]> {
+#[must_use]
+pub fn generate_server_nonce() -> [u8; KEY_DERIVATION_NONCE_SIZE] {
     use rand::RngCore;
 
     let mut nonce = [0u8; KEY_DERIVATION_NONCE_SIZE];
     rand::rng().fill_bytes(&mut nonce);
-    Ok(nonce)
+    nonce
 }
 
 /// Select the best cipher from the client's offered list.
@@ -368,14 +365,14 @@ mod tests {
 
     #[test]
     fn generate_server_nonce_produces_32_bytes() {
-        let nonce = generate_server_nonce().expect("nonce");
+        let nonce = generate_server_nonce();
         assert_eq!(nonce.len(), 32);
     }
 
     #[test]
     fn generate_server_nonce_is_random() {
-        let a = generate_server_nonce().expect("nonce a");
-        let b = generate_server_nonce().expect("nonce b");
+        let a = generate_server_nonce();
+        let b = generate_server_nonce();
         assert_ne!(a, b, "two nonces should differ");
     }
 

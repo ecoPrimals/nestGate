@@ -176,7 +176,7 @@ async fn get_config_from_env_source(env: &(impl EnvSource + ?Sized), key: &str) 
         }
         "family_id" => env
             .get("NESTGATE_FAMILY_ID")
-            .unwrap_or_else(|| String::from("(not set)")),
+            .unwrap_or_else(|| "(not set)".into()),
         "socket_path" | "socket" => match nestgate_core::rpc::SocketConfig::from_environment() {
             Ok(cfg) => cfg.socket_path.display().to_string(),
             Err(_) => String::from("(default)"),

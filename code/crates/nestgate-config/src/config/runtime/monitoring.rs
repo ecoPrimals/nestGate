@@ -51,7 +51,7 @@ impl MonitoringConfig {
                 .unwrap_or(9090),
             log_level: env
                 .get("NESTGATE_LOG_LEVEL")
-                .unwrap_or_else(|| String::from("info")),
+                .unwrap_or_else(|| "info".into()),
             tracing_enabled: env
                 .get("NESTGATE_TRACING_ENABLED")
                 .and_then(|s| s.parse().ok())

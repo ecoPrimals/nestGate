@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 112: Deep debt sweep — visibility tightening, unwrap_or, infallible nonce (Jul 16, 2026)
+
+- **Visibility tightening**: `btsp_client`, `btsp_phase3`, `primal_announce` modules narrowed
+  from `pub` to `pub(crate)` in `nestgate-rpc`. These are internal-only modules not used by
+  external crates. Exposed hidden dead-code lint on `BtspClient` surface (justified
+  `#[expect]` added — forward-looking security primal integration surface).
+- **Infallible nonce**: `generate_server_nonce()` return type simplified from
+  `Result<[u8; 32]>` to `[u8; 32]` — `rand::rng().fill_bytes()` cannot fail. Removes
+  unnecessary `?` at call site and `.expect()` in tests.
+- **`unwrap_or_else(|| String::from(...))` → `.into()`**: 31 conversions across 18 files,
+  making default-value construction idiomatic.
+
 ### Session 111: Deep debt sweep — streaming clone elimination, cast safety (Jul 15, 2026)
 
 - **Streaming hot-path clone elimination**: Refactored 4 streaming function signatures

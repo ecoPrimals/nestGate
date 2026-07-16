@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 141b (streaming clone elimination, cast safety, cross-arch 14/14), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 142b (visibility tightening, unwrap_or, infallible nonce), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
 date = 2026-07-15
 
 [taxonomies]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **3,790 tests** (3,790 passing, 73 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 112 Deep debt sweep** (Wave 142b): `btsp_client`, `btsp_phase3`, `primal_announce` → `pub(crate)` (3 internal-only modules); `generate_server_nonce()` simplified from `Result<[u8;32]>` → `[u8;32]` (infallible); 31 `unwrap_or_else(|| String::from(...))` → `.into()` across 18 files
 - **Session 111 Deep debt sweep** (Wave 141b): Streaming hot-path clone elimination — 4 function signatures `Value` → `&Value`, removes 4 `.clone()` of potentially-MB base64 chunks in `content_ops.rs`; cast safety fix (`u64 as u8` → `u8::try_from`); 55 `String::from` → `.into()` across 6 files; cross-arch 14/14 reported to overwatch
 - **Session 110 Deep debt sweep** (Wave 141a): 11 ZFS production mocks → honest `not_implemented`; `/proc/meminfo` for real memory (was hardcoded 16GB); ARC fallback 0.85→0.0; 7 `String::from` → `.into()`; full codebase audit confirmed clean (no files >800L, no primal coupling, pure Rust deps)
 - **Session 109 Cross-architecture adoption** (Wave 141a): `cargo check --target x86_64-pc-windows-gnu` PASS; Category 3 (rustix::fs::statvfs gated) + Category 1 (UDS transport gated across 9 files); TCP fallback always available

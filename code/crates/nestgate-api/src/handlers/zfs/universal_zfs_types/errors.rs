@@ -335,7 +335,7 @@ impl From<UniversalZfsError> for NestGateError {
                 String::from("backend"),
                 error_data
                     .backend
-                    .unwrap_or_else(|| String::from("unknown")),
+                    .unwrap_or_else(|| "unknown".into()),
             ),
         ]);
 

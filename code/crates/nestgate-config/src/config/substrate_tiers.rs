@@ -140,7 +140,7 @@ impl SubstrateMount {
     #[cfg(target_os = "linux")]
     fn probe_mount(path: &Path) -> (String, bool, u64) {
         let fs_type =
-            Self::detect_fs_type_from_mounts(path).unwrap_or_else(|| String::from("unknown"));
+            Self::detect_fs_type_from_mounts(path).unwrap_or_else(|| "unknown".into());
 
         let rotational = Self::detect_rotational(path);
 

@@ -60,7 +60,7 @@ impl CacheSystem {
             max_size,
             ttl_seconds: cache_config.ttl_seconds,
             cache_dir: cache_config.cache_dir.clone(),
-            eviction_policy: cache_config.policy.unwrap_or_else(|| String::from("lru")),
+            eviction_policy: cache_config.policy.unwrap_or_else(|| "lru".into()),
         };
 
         let manager = CacheManager::new(unified_config);

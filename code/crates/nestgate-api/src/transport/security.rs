@@ -98,7 +98,7 @@ impl SecurityProviderClient {
 
         let security_slug = env
             .get("NESTGATE_SECURITY_SLUG")
-            .unwrap_or_else(|| String::from("security"));
+            .unwrap_or_else(|| "security".into());
 
         let socket_dirs = Self::candidate_socket_dirs_from_env(env);
         for dir in &socket_dirs {
@@ -334,7 +334,7 @@ impl SecurityProviderClient {
                 "Security provider error: {}",
                 response
                     .error
-                    .unwrap_or_else(|| String::from("Unknown error"))
+                    .unwrap_or_else(|| "Unknown error".into())
             )));
         }
 

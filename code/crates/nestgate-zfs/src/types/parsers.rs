@@ -52,7 +52,7 @@ pub fn pool_info_from_zfs_output(pool_name: &str, output: &str) -> ZfsResult<Poo
     let health_str = properties
         .get("health")
         .cloned()
-        .unwrap_or_else(|| String::from("UNKNOWN"));
+        .unwrap_or_else(|| "UNKNOWN".into());
 
     let health = match health_str.to_uppercase().as_str() {
         "ONLINE" | "HEALTHY" => PoolHealth::Healthy,
@@ -159,7 +159,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
     let compression = properties
         .get("compression")
         .cloned()
-        .unwrap_or_else(|| String::from("lz4"));
+        .unwrap_or_else(|| "lz4".into());
 
     let mountpoint = properties
         .get("mountpoint")

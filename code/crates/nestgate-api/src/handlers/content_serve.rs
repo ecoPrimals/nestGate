@@ -44,7 +44,7 @@ pub async fn serve_content_by_hash(
     let family_id = query
         .family_id
         .or_else(|| std::env::var("NESTGATE_FAMILY_ID").ok())
-        .unwrap_or_else(|| String::from("default"));
+        .unwrap_or_else(|| "default".into());
 
     debug!(hash = %hash, family_id = %family_id, "content serve request");
 
@@ -52,7 +52,7 @@ pub async fn serve_content_by_hash(
         Ok(Some(content)) => {
             let mime = content
                 .content_type
-                .unwrap_or_else(|| String::from("application/octet-stream"));
+                .unwrap_or_else(|| "application/octet-stream".into());
 
             let mut headers = HeaderMap::new();
 
