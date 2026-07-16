@@ -33,7 +33,7 @@ impl Default for DatasetParams {
     fn default() -> Self {
         Self {
             description: None,
-            compression: Some(String::from("lz4")),
+            compression: Some("lz4".into()),
             encrypted: true,
             deduplicated: true,
             quota: None,

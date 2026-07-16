@@ -443,7 +443,7 @@ async fn pull_blob_from_remote(
 
     let data_b64 = get_response["result"]["data"]
         .as_str()
-        .ok_or_else(|| NestGateError::internal(String::from("remote returned no data field")))?;
+        .ok_or_else(|| NestGateError::internal("remote returned no data field"))?;
 
     let raw = STANDARD
         .decode(data_b64)

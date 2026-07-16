@@ -358,10 +358,10 @@ pub(super) async fn zfs_health(_params: Option<&Value>) -> Result<Value> {
                 .trim()
                 .to_string()
         } else {
-            String::from("unknown")
+            "unknown".into()
         }
     } else {
-        String::from("unknown")
+        "unknown".into()
     };
 
     Ok(json!({

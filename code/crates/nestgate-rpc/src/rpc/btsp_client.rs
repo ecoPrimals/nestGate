@@ -228,7 +228,7 @@ fn parse_status_value(v: Option<&Value>) -> BtspSessionStatus {
     if let Some(s) = val.as_str() {
         return match s.to_ascii_lowercase().as_str() {
             "active" => BtspSessionStatus::Active,
-            "failed" => BtspSessionStatus::Failed(String::from("failed")),
+            "failed" => BtspSessionStatus::Failed("failed".into()),
             _ => BtspSessionStatus::Pending,
         };
     }

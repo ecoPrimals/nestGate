@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::info;
 
+/// Errors returned by development-stub ZFS operations.
 #[derive(Debug, thiserror::Error)]
 pub enum ZfsError {
     /// ZFS operation failed with error message.

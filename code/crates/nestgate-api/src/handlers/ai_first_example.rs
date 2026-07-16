@@ -102,12 +102,15 @@ pub fn ai_success_with_confidence<T>(data: T, confidence: f64) -> AIFirstRespons
 }
 
 /// Create an AI-first response with suggested actions
-pub fn ai_response_with_actions<T>(data: T, _actions: Vec<SuggestedAction>) -> AIFirstResponse<T> {
+pub fn ai_response_with_actions<T>(data: T, actions: Vec<SuggestedAction>) -> AIFirstResponse<T> {
+    let count = actions.len();
+    #[expect(clippy::cast_precision_loss, reason = "action count fits f64")]
+    let confidence = if count == 0 { 0.0 } else { actions.iter().map(|a| a.confidence).sum::<f64>() / count as f64 };
     AIFirstResponse {
         data,
         success: true,
         message: "Operation completed with suggested actions".into(),
-        confidence_score: 0.85,
+        confidence_score: confidence,
     }
 }
 

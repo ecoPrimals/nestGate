@@ -86,22 +86,21 @@ pub struct ArcStatistics {
 }
 
 impl Default for ZfsPerformanceMetrics {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
             pool_metrics: HashMap::new(),
             dataset_metrics: HashMap::new(),
             system_memory: SystemMemoryUsage {
-                total: 16 * 1024 * 1024 * 1024,
-                used: 8 * 1024 * 1024 * 1024,
-                available: 8 * 1024 * 1024 * 1024,
+                total: 0,
+                used: 0,
+                available: 0,
             },
             arc_stats: ArcStatistics {
-                size: 4 * 1024 * 1024 * 1024,
-                target_size: 8 * 1024 * 1024 * 1024,
-                hit_ratio: 0.85,
-                miss_ratio: 0.15,
+                size: 0,
+                target_size: 0,
+                hit_ratio: 0.0,
+                miss_ratio: 0.0,
             },
         }
     }

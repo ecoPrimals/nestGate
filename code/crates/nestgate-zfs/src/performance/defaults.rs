@@ -32,44 +32,41 @@ impl Default for CurrentPerformanceMetrics {
 }
 
 impl Default for PoolPerformanceMetrics {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
-            total_iops: 80000.0,
-            total_throughput_mbs: 1200.0,
-            avg_latency_ms: 2.5,
-            utilization_percent: 70.0,
-            fragmentation_percent: 15.0,
-            compression_ratio: 2.1,
-            dedup_ratio: 1.3,
+            total_iops: 0.0,
+            total_throughput_mbs: 0.0,
+            avg_latency_ms: 0.0,
+            utilization_percent: 0.0,
+            fragmentation_percent: 0.0,
+            compression_ratio: 1.0,
+            dedup_ratio: 1.0,
         }
     }
 }
 
 impl Default for SystemResourceMetrics {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
-            cpu_utilization_percent: 25.0,
-            memory_usage_bytes: 8 * 1024 * 1024 * 1024, // 8GB
-            available_memory_bytes: 24 * 1024 * 1024 * 1024, // 24GB available
-            network_io_mbs: 150.0,
-            io_wait_percent: 5.0,
-            load_average_1m: 1.2,
+            cpu_utilization_percent: 0.0,
+            memory_usage_bytes: 0,
+            available_memory_bytes: 0,
+            network_io_mbs: 0.0,
+            io_wait_percent: 0.0,
+            load_average_1m: 0.0,
         }
     }
 }
 
 impl Default for IoStatistics {
-    /// Returns the default instance
     fn default() -> Self {
         Self {
-            total_reads: 1_000_000,
-            total_writes: 500000,
-            total_bytes_read: 100 * 1024 * 1024 * 1024, // 100GB
-            total_bytes_written: 50 * 1024 * 1024 * 1024, // 50GB
-            avg_io_size_bytes: 64 * 1024,               // 64KB
-            read_write_ratio: 2.0,
+            total_reads: 0,
+            total_writes: 0,
+            total_bytes_read: 0,
+            total_bytes_written: 0,
+            avg_io_size_bytes: 0,
+            read_write_ratio: 0.0,
         }
     }
 }

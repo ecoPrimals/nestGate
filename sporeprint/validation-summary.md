@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 142b (visibility tightening, unwrap_or, infallible nonce), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
-date = 2026-07-15
+description = "Content-addressed storage primal v0.5.0 — 3,790 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 142b (mock evolution, String::from R7, visibility tightening), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+date = 2026-07-16
 
 [taxonomies]
 primals = ["nestgate"]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **3,790 tests** (3,790 passing, 73 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 113 Deep debt sweep** (Wave 142b): Production mock evolution — ZFS performance defaults zero'd (was 80K IOPS/16GB/0.85 ARC), tier utilization now real `used/(used+available)` computation, AI confidence computed from actions (was hardcoded 0.85); 21 `String::from` → `.into()` across 11 files in `nestgate-rpc`; `ZfsError` doc added (clippy `missing-docs` fix); full codebase audit clean (no files >800L, no hardcoded primal names, no `todo!()`/`unimplemented!()` in production)
 - **Session 112 Deep debt sweep** (Wave 142b): `btsp_client`, `btsp_phase3`, `primal_announce` → `pub(crate)` (3 internal-only modules); `generate_server_nonce()` simplified from `Result<[u8;32]>` → `[u8;32]` (infallible); 31 `unwrap_or_else(|| String::from(...))` → `.into()` across 18 files
 - **Session 111 Deep debt sweep** (Wave 141b): Streaming hot-path clone elimination — 4 function signatures `Value` → `&Value`, removes 4 `.clone()` of potentially-MB base64 chunks in `content_ops.rs`; cast safety fix (`u64 as u8` → `u8::try_from`); 55 `String::from` → `.into()` across 6 files; cross-arch 14/14 reported to overwatch
 - **Session 110 Deep debt sweep** (Wave 141a): 11 ZFS production mocks → honest `not_implemented`; `/proc/meminfo` for real memory (was hardcoded 16GB); ARC fallback 0.85→0.0; 7 `String::from` → `.into()`; full codebase audit confirmed clean (no files >800L, no primal coupling, pure Rust deps)

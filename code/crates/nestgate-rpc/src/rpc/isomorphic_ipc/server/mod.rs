@@ -280,7 +280,7 @@ impl IsomorphicIpcServer {
                     );
                     let socket_path = self.get_socket_path()?;
                     Self::prepare_socket_path(&socket_path)?;
-                    (socket_path, String::from("standalone"))
+                    (socket_path, "standalone".into())
                 }
             };
 

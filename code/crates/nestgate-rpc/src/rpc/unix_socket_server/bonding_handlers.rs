@@ -66,9 +66,9 @@ pub(super) async fn bonding_ledger_store(
 
     let mut enriched = data.clone();
     if let Some(obj) = enriched.as_object_mut() {
-        obj.insert(String::from("ledger_depth"), json!(new_depth));
+        obj.insert("ledger_depth".into(), json!(new_depth));
         obj.insert(
-            String::from("ledger_timestamp"),
+            "ledger_timestamp".into(),
             json!(chrono::Utc::now().to_rfc3339()),
         );
     }

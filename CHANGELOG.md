@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 113: Deep debt sweep — production mock evolution, String::from round 7 (Jul 16, 2026)
+
+- **Production mock evolution**: ZFS performance `Default` impls (`PoolPerformanceMetrics`,
+  `SystemResourceMetrics`, `IoStatistics`, `ZfsPerformanceMetrics`) no longer fabricate data
+  (was 80K IOPS, 16GB/8GB memory, 100GB IO, 0.85 ARC hit ratio). All now zero-default, meaning
+  health endpoints report `0` rather than fake-healthy when ZFS is absent.
+- **Tier utilization now real**: `get_real_tier_utilization()` in `health.rs` replaced hardcoded
+  ratios (0.65/0.45/0.25) with actual `used/(used+available)` computation from ZFS dataset
+  properties, using existing `pool_helpers::parse_size_with_units`.
+- **AI confidence now computed**: `ai_response_with_actions()` no longer returns hardcoded 0.85.
+  Computes mean confidence from provided `SuggestedAction` list; returns 0.0 when empty.
+- **Missing doc**: Added doc comment for `ZfsError` enum in dev-stubs (clippy `missing-docs` fix).
+- **`String::from` → `.into()` round 7**: 21 conversions across 11 production files in
+  `nestgate-rpc` (`tarpc_server` 6, `socket_config` 3, `zfs_handlers` 2, `bonding_handlers` 2,
+  `semantic_router/session` 2, `capability_methods` 1, `content_federation_handlers` 1,
+  `unix_adapter` 1, `btsp_client` 1, `tarpc_types/storage` 1, `isomorphic_ipc/server` 1).
+- **Audit clean**: No files >800L (max 760). No hardcoded primal names in runtime code.
+  FHS paths all have env-var fallback chains. No `todo!()` / `unimplemented!()` in production.
+
 ### Session 112: Deep debt sweep — visibility tightening, unwrap_or, infallible nonce (Jul 16, 2026)
 
 - **Visibility tightening**: `btsp_client`, `btsp_phase3`, `primal_announce` modules narrowed

@@ -118,11 +118,11 @@ pub(super) async fn session_save(
         endpoint: None,
         metadata: HashMap::from([
             (
-                String::from("created_at"),
+                "created_at".into(),
                 doc["created_at"].as_str().unwrap_or("").to_string(),
             ),
             (
-                String::from("updated_at"),
+                "updated_at".into(),
                 doc["updated_at"].as_str().unwrap_or("").to_string(),
             ),
         ]),

@@ -171,19 +171,27 @@ impl ZfsManager {
             .await
             .map_err(|e| create_zfs_error(e.to_string(), ZfsOperation::Configuration))?;
 
-        if !datasets.iter().any(|d| d.name.contains(tier)) {
+        let tier_datasets: Vec<_> = datasets.iter().filter(|d| d.name.contains(tier)).collect();
+
+        if tier_datasets.is_empty() {
             return Ok(0.0);
         }
 
-        // Simple utilization calculation based on used space
-        // In a real implementation, this would be more sophisticated
-        let utilization = match tier {
-            "hot" => 0.65,  // High utilization for hot tier
-            "warm" => 0.45, // Medium utilization for warm tier
-            "cold" => 0.25, // Low utilization for cold tier
-            _ => 0.0,
-        };
+        let mut total_used: u64 = 0;
+        let mut total_space: u64 = 0;
+        for ds in &tier_datasets {
+            let used = crate::pool_helpers::parse_size_with_units(&ds.used).unwrap_or(0);
+            let avail = crate::pool_helpers::parse_size_with_units(&ds.available).unwrap_or(0);
+            total_used += used;
+            total_space += used + avail;
+        }
 
+        if total_space == 0 {
+            return Ok(0.0);
+        }
+
+        #[expect(clippy::cast_precision_loss, reason = "byte counts fit f64 for ratio computation")]
+        let utilization = total_used as f64 / total_space as f64;
         Ok(utilization)
     }
 

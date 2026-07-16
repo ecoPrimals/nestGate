@@ -105,7 +105,7 @@ impl SelfKnowledgeBuilder {
                 .name
                 .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string()),
             capabilities: self.capabilities,
-            version: String::from("1.0.0"),
+            version: "1.0.0".into(),
             endpoints: HashMap::new(),
         })
     }

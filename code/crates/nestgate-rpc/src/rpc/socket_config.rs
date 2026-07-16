@@ -211,7 +211,7 @@ fn socket_file_name(family_id: &str) -> String {
     if is_family_scoped(family_id) {
         format!("nestgate-{family_id}.sock")
     } else {
-        String::from("nestgate.sock")
+        "nestgate.sock".into()
     }
 }
 
@@ -377,7 +377,7 @@ impl SocketConfig {
             .or_else(|| env.get("FAMILY_ID"))
             .unwrap_or_else(|| {
                 warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
-                String::from("standalone")
+                "standalone".into()
             });
 
         // BTSP guard: FAMILY_ID + BIOMEOS_INSECURE is a conflicting configuration.
@@ -401,7 +401,7 @@ impl SocketConfig {
             }
             #[cfg(not(unix))]
             {
-                String::from("unknown")
+                "unknown".into()
             }
         });
 

@@ -392,7 +392,7 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
             format!("tarpc://{raw}")
         };
         let mut endpoints = HashMap::new();
-        endpoints.insert(String::from("tarpc"), tarpc_ep);
+        endpoints.insert("tarpc".into(), tarpc_ep);
         let cap = capability.clone();
         Ok(vec![ServiceInfo {
             id: Arc::from(format!("discovered-{cap}")),
@@ -411,7 +411,7 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
         let metrics = self.calculate_metrics().await;
 
         HealthStatus {
-            status: String::from("healthy"),
+            status: "healthy".into(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             uptime_seconds: self.uptime_seconds(),
             total_datasets: metrics.dataset_count,
@@ -436,7 +436,7 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
                 PROTOCOL_VERSION_TARPC.to_string(),
                 PROTOCOL_VERSION_JSONRPC.to_string(),
             ],
-            build_info: Some(String::from("NestGate Storage Primal")),
+            build_info: Some("NestGate Storage Primal".into()),
         }
     }
 
@@ -448,21 +448,21 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
 
         vec![
             ProtocolInfo {
-                protocol: String::from("tarpc"),
+                protocol: "tarpc".into(),
                 version: TARPC_WIRE_VERSION.to_string(),
                 endpoint: format!("tarpc://{rpc_addr}"),
                 priority: 1,
                 enabled: true,
             },
             ProtocolInfo {
-                protocol: String::from("jsonrpc"),
+                protocol: "jsonrpc".into(),
                 version: JSONRPC_WIRE_VERSION.to_string(),
                 endpoint: format!("http://{api_addr}/rpc"),
                 priority: 2,
                 enabled: false,
             },
             ProtocolInfo {
-                protocol: String::from("http"),
+                protocol: "http".into(),
                 version: HTTP_WIRE_VERSION.to_string(),
                 endpoint: format!("http://{api_addr}"),
                 priority: 3,

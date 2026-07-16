@@ -47,7 +47,7 @@ mod tests {
 
         assert_eq!(response.data, "test");
         assert!(response.success);
-        assert_eq!(response.confidence_score, 0.85);
+        assert_eq!(response.confidence_score, 0.0);
     }
 
     #[test]
@@ -428,7 +428,7 @@ mod tests {
 
         let response = ai_response_with_actions("test_data", actions);
         assert!(response.success);
-        assert_eq!(response.confidence_score, 0.85);
+        assert_eq!(response.confidence_score, 0.875);
     }
 
     // ==================== STORAGE INFO TESTS ====================

@@ -156,7 +156,7 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
         |_params, _ctx, _ext| async move {
             debug!("JSON-RPC: identity.get()");
             let family_id =
-                std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| String::from("default"));
+                std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".into());
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
                 "version": env!("CARGO_PKG_VERSION"),
