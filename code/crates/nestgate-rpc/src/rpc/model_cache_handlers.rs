@@ -9,7 +9,7 @@
 
 use nestgate_config::config::storage_paths::StoragePaths;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use nestgate_types::{EnvSource, ProcessEnv};
 use serde_json::{Value, json};
 use std::path::PathBuf;
@@ -80,10 +80,10 @@ pub async fn model_register_from_env_source(
     });
 
     let data = serde_json::to_vec_pretty(&record)
-        .map_err(|e| NestGateError::io_error(format!("Failed to serialize model record: {e}")))?;
+        .io_ctx("Failed to serialize model record")?;
     tokio::fs::write(&path, &data)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to write model file: {e}")))?;
+        .io_ctx("Failed to write model file")?;
 
     debug!(model_id, "model.register: persisted");
 
@@ -158,7 +158,7 @@ pub async fn model_metadata_from_env_source(
     })?;
 
     let record: Value = serde_json::from_slice(&data)
-        .map_err(|e| NestGateError::io_error(format!("Corrupted model record: {e}")))?;
+        .io_ctx("Corrupted model record")?;
 
     debug!(model_id, "model.metadata: loaded");
     Ok(record)

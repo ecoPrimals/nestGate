@@ -212,6 +212,82 @@ pub fn debug_error_report(error: &NestGateError) -> String {
     )
 }
 
+/// Domain-specific `Result` context helpers.
+///
+/// Replaces the verbose `map_err(|e| NestGateError::variant(format!("ctx: {e}")))` pattern
+/// with ergonomic one-liners that preserve the correct error variant.
+///
+/// ```rust,ignore
+/// // Before (87 sites for io_error alone):
+/// fs::read(path).io_ctx("read")?;
+///
+/// // After:
+/// fs::read(path).io_ctx("read")?;
+/// ```
+pub trait ErrorContextExt<T> {
+    /// Wrap the error as [`NestGateError::io_error`] with a context prefix.
+    ///
+    /// # Errors
+    /// Returns [`NestGateError`] (System/Io variant) when `self` is `Err`.
+    fn io_ctx(self, ctx: &str) -> Result<T>;
+
+    /// Wrap the error as [`NestGateError::network_error`] with a context prefix.
+    ///
+    /// # Errors
+    /// Returns [`NestGateError`] (Network variant) when `self` is `Err`.
+    fn net_ctx(self, ctx: &str) -> Result<T>;
+
+    /// Wrap the error as [`NestGateError::internal`] with a context prefix.
+    ///
+    /// # Errors
+    /// Returns [`NestGateError`] (Internal variant) when `self` is `Err`.
+    fn internal_ctx(self, ctx: &str) -> Result<T>;
+
+    /// Wrap the error as [`NestGateError::api_internal_error`] with a context prefix.
+    ///
+    /// # Errors
+    /// Returns [`NestGateError`] (Api variant) when `self` is `Err`.
+    fn api_ctx(self, ctx: &str) -> Result<T>;
+
+    /// Wrap the error as [`NestGateError::validation`] with a context prefix.
+    ///
+    /// # Errors
+    /// Returns [`NestGateError`] (Validation variant) when `self` is `Err`.
+    fn validation_ctx(self, ctx: &str) -> Result<T>;
+
+    /// Wrap the error as [`NestGateError::security_error`] with a context prefix.
+    ///
+    /// # Errors
+    /// Returns [`NestGateError`] (Security variant) when `self` is `Err`.
+    fn security_ctx(self, ctx: &str) -> Result<T>;
+}
+
+impl<T, E: std::fmt::Display> ErrorContextExt<T> for std::result::Result<T, E> {
+    fn io_ctx(self, ctx: &str) -> Result<T> {
+        self.map_err(|e| NestGateError::io_error(format!("{ctx}: {e}")))
+    }
+
+    fn net_ctx(self, ctx: &str) -> Result<T> {
+        self.map_err(|e| NestGateError::network_error(format!("{ctx}: {e}")))
+    }
+
+    fn internal_ctx(self, ctx: &str) -> Result<T> {
+        self.map_err(|e| NestGateError::internal(format!("{ctx}: {e}")))
+    }
+
+    fn api_ctx(self, ctx: &str) -> Result<T> {
+        self.map_err(|e| NestGateError::api_internal_error(format!("{ctx}: {e}")))
+    }
+
+    fn validation_ctx(self, ctx: &str) -> Result<T> {
+        self.map_err(|e| NestGateError::validation(format!("{ctx}: {e}")))
+    }
+
+    fn security_ctx(self, ctx: &str) -> Result<T> {
+        self.map_err(|e| NestGateError::security_error(format!("{ctx}: {e}")))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,5 +367,62 @@ mod tests {
         });
         assert!(safe_rwlock_read(&rw2, "rp").is_err());
         assert!(safe_rwlock_write(&rw2, "wp").is_err());
+    }
+
+    #[test]
+    fn error_context_ext_io_ctx() {
+        let r: std::result::Result<(), std::io::Error> =
+            Err(std::io::Error::other("disk full"));
+        let err = r.io_ctx("write staging").unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("write staging"), "missing context in: {msg}");
+        assert!(msg.contains("disk full"), "missing cause in: {msg}");
+    }
+
+    #[test]
+    fn error_context_ext_net_ctx() {
+        let r: std::result::Result<(), std::io::Error> =
+            Err(std::io::Error::other("refused"));
+        let err = r.net_ctx("connect").unwrap_err();
+        assert!(err.to_string().contains("connect"));
+        assert!(matches!(err, NestGateError::Network(_)));
+    }
+
+    #[test]
+    fn error_context_ext_internal_ctx() {
+        let r: std::result::Result<(), &str> = Err("oops");
+        let err = r.internal_ctx("spawn").unwrap_err();
+        assert!(err.to_string().contains("spawn"));
+        assert!(matches!(err, NestGateError::Internal(_)));
+    }
+
+    #[test]
+    fn error_context_ext_api_ctx() {
+        let r: std::result::Result<(), &str> = Err("bad");
+        let err = r.api_ctx("handler").unwrap_err();
+        assert!(err.to_string().contains("handler"));
+        assert!(matches!(err, NestGateError::Api(_)));
+    }
+
+    #[test]
+    fn error_context_ext_validation_ctx() {
+        let r: std::result::Result<(), &str> = Err("empty");
+        let err = r.validation_ctx("field_name").unwrap_err();
+        assert!(err.to_string().contains("field_name"));
+        assert!(matches!(err, NestGateError::Validation(_)));
+    }
+
+    #[test]
+    fn error_context_ext_security_ctx() {
+        let r: std::result::Result<(), &str> = Err("denied");
+        let err = r.security_ctx("cert verify").unwrap_err();
+        assert!(err.to_string().contains("cert verify"));
+        assert!(matches!(err, NestGateError::Security(_)));
+    }
+
+    #[test]
+    fn error_context_ext_ok_passthrough() {
+        let r: std::result::Result<u32, &str> = Ok(42);
+        assert_eq!(r.io_ctx("irrelevant").unwrap(), 42);
     }
 }

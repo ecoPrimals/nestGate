@@ -9,7 +9,7 @@ use super::{MetadataBackend, SemanticRouter};
 use crate::rpc::tarpc_types::DatasetParams;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use bytes::Bytes;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 
 /// Route storage.put → `store_object`
@@ -223,12 +223,12 @@ pub(super) async fn storage_store_blob(
     if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent)
             .await
-            .map_err(|e| NestGateError::io_error(format!("mkdir: {e}")))?;
+            .io_ctx("mkdir")?;
     }
     let size = data.len();
     tokio::fs::write(&path, &data)
         .await
-        .map_err(|e| NestGateError::io_error(format!("write blob: {e}")))?;
+        .io_ctx("write blob")?;
 
     Ok(json!({"status": "stored", "key": key, "family_id": fid, "size": size}))
 }
@@ -249,7 +249,7 @@ pub(super) async fn storage_retrieve_blob(
     }
     let data = tokio::fs::read(&path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("read blob: {e}")))?;
+        .io_ctx("read blob")?;
 
     Ok(json!({"blob": STANDARD.encode(&data), "key": key, "family_id": fid, "size": data.len()}))
 }
@@ -285,21 +285,21 @@ pub(super) async fn storage_retrieve_range(
 
     let mut file = tokio::fs::File::open(&path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("open: {e}")))?;
+        .io_ctx("open")?;
     let total_size = file
         .metadata()
         .await
-        .map_err(|e| NestGateError::io_error(format!("stat: {e}")))?
+        .io_ctx("stat")?
         .len();
     file.seek(std::io::SeekFrom::Start(offset))
         .await
-        .map_err(|e| NestGateError::io_error(format!("seek: {e}")))?;
+        .io_ctx("seek")?;
 
     let mut buf = vec![0u8; length];
     let bytes_read = file
         .read(&mut buf)
         .await
-        .map_err(|e| NestGateError::io_error(format!("read: {e}")))?;
+        .io_ctx("read")?;
     buf.truncate(bytes_read);
 
     Ok(json!({
@@ -335,7 +335,7 @@ pub(super) async fn storage_object_size(
 
     let meta = tokio::fs::metadata(&path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("stat: {e}")))?;
+        .io_ctx("stat")?;
 
     Ok(json!({"size": meta.len(), "key": key, "family_id": fid, "exists": true}))
 }
@@ -351,7 +351,7 @@ pub(super) async fn storage_namespaces_list(
     if dir.exists() {
         let mut entries = tokio::fs::read_dir(&dir)
             .await
-            .map_err(|e| NestGateError::io_error(format!("readdir: {e}")))?;
+            .io_ctx("readdir")?;
         while let Ok(Some(entry)) = entries.next_entry().await {
             let name = entry.file_name();
             let name = name.to_string_lossy();

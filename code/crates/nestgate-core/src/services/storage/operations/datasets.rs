@@ -9,7 +9,7 @@
 //! **Phase 3: Smart Refactoring** - Extracted for logical cohesion (Jan 30, 2026)
 
 use crate::Result;
-use crate::error::NestGateError;
+use crate::error::{ErrorContextExt, NestGateError};
 use std::path::PathBuf;
 use std::time::SystemTime;
 use tracing::{debug, info};
@@ -34,7 +34,7 @@ pub async fn create_dataset(
 
     tokio::fs::create_dir_all(&dataset_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to create dataset directory: {e}")))?;
+        .io_ctx("Failed to create dataset directory")?;
 
     // Create dataset info
     let now = current_timestamp();
@@ -77,12 +77,12 @@ pub async fn list_datasets(
     let mut datasets = Vec::new();
     let mut entries = tokio::fs::read_dir(&datasets_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to read datasets directory: {e}")))?;
+        .io_ctx("Failed to read datasets directory")?;
 
     while let Some(entry) = entries
         .next_entry()
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to read directory entry: {e}")))?
+        .io_ctx("Failed to read directory entry")?
     {
         let path = entry.path();
         if path.is_dir()
@@ -91,7 +91,7 @@ pub async fn list_datasets(
             // Get directory metadata
             let metadata = tokio::fs::metadata(&path)
                 .await
-                .map_err(|e| NestGateError::io_error(format!("Failed to read metadata: {e}")))?;
+                .io_ctx("Failed to read metadata")?;
 
             let modified = metadata.modified().map_err(|e| {
                 NestGateError::io_error(format!("Failed to get modification time: {e}"))
@@ -144,7 +144,7 @@ pub async fn get_dataset(
 
     let modified = metadata
         .modified()
-        .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {e}")))?;
+        .io_ctx("Failed to get modification time")?;
     let modified_at = i64::try_from(
         modified
             .duration_since(SystemTime::UNIX_EPOCH)

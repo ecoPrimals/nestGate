@@ -13,7 +13,7 @@
 //! 3. **No Hardcoding**: Zero hardcoded ports, hosts, or endpoints
 //! 4. **Capability-Based**: Services discovered by capability, not location
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use nestgate_types::{EnvSource, ProcessEnv};
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -133,7 +133,7 @@ impl PrimalId {
         // Nanosecond timestamps for unique IDs under rapid successive calls
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?
+            .internal_ctx("System time error")?
             .as_nanos();
 
         Ok(Self(format!("{hostname}-{pid}-{timestamp}")))

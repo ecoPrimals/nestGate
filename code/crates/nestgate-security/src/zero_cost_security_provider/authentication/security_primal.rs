@@ -6,6 +6,7 @@
 use crate::zero_cost_security_provider::types::{ZeroCostAuthToken, ZeroCostCredentials};
 use nestgate_discovery::primal_discovery::PrimalConnection;
 use nestgate_types::{NestGateError, Result};
+use nestgate_types::error::ErrorContextExt;
 use std::path::Path;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -52,13 +53,13 @@ pub async fn call_security_primal(
         stream
             .write_all(&request_bytes)
             .await
-            .map_err(|e| NestGateError::network_error(format!("Write to security primal: {e}")))?;
+            .net_ctx("Write to security primal")?;
 
         let mut buf = vec![0u8; 4096];
         let n = stream
             .read(&mut buf)
             .await
-            .map_err(|e| NestGateError::network_error(format!("Read from security primal: {e}")))?;
+            .net_ctx("Read from security primal")?;
 
         let response: serde_json::Value = serde_json::from_slice(&buf[..n]).map_err(|e| {
             NestGateError::internal_error(

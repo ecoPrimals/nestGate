@@ -28,7 +28,7 @@ pub mod transport;
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 
 const HKDF_HANDSHAKE_SALT: &[u8] = b"btsp-v1";
 const HKDF_HANDSHAKE_INFO: &[u8] = b"handshake";
@@ -184,7 +184,7 @@ impl SessionKeys {
 
         let ciphertext = cipher
             .encrypt(&nonce, plaintext)
-            .map_err(|e| NestGateError::api_internal_error(format!("BTSP Phase 3 encrypt: {e}")))?;
+            .api_ctx("BTSP Phase 3 encrypt")?;
 
         let mut frame = Vec::with_capacity(NONCE_SIZE + ciphertext.len());
         frame.extend_from_slice(&nonce);
@@ -219,7 +219,7 @@ impl SessionKeys {
 
         cipher
             .decrypt(nonce, ciphertext)
-            .map_err(|e| NestGateError::api_internal_error(format!("BTSP Phase 3 decrypt: {e}")))
+            .api_ctx("BTSP Phase 3 decrypt")
     }
 }
 

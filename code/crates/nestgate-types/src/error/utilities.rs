@@ -10,7 +10,7 @@
 //! - `error/helpers.rs` (safe operation wrappers)
 //! - `error/modernized_error_helpers.rs` (error constructors)
 
-use super::{NestGateError, NestGateUnifiedError};
+use super::{ErrorContextExt, NestGateError, NestGateUnifiedError};
 use crate::{EnvSource, ProcessEnv, env_var_or_default};
 
 // ==================== SAFE OPERATION WRAPPERS ====================
@@ -131,7 +131,7 @@ pub fn safe_read_to_string(path: &std::path::Path) -> Result<String, NestGateErr
 /// ```
 pub fn safe_json_parse<T: serde::de::DeserializeOwned>(content: &str) -> Result<T, NestGateError> {
     serde_json::from_str(content)
-        .map_err(|e| NestGateError::validation_error(format!("JSON parsing failed: {e}")))
+        .validation_ctx("JSON parsing failed")
 }
 
 /// Safe mutex lock (returns error instead of poisoning)

@@ -8,7 +8,7 @@
 //! backed by the same durable filesystem as `storage.*`.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::debug;
@@ -47,7 +47,7 @@ pub(super) async fn session_save(params: Option<&Value>, state: &StorageState) -
     let family_id = resolve_family_id(params, state)?;
 
     let bytes = serde_json::to_vec_pretty(data)
-        .map_err(|e| NestGateError::io_error(format!("Failed to serialize session: {e}")))?;
+        .io_ctx("Failed to serialize session")?;
 
     debug!(
         "session.save: family_id='{}', session_id='{}', size={} bytes",

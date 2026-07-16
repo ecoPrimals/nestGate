@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 115: ErrorContextExt trait — map_err(format!()) P0 evolution (Jul 16, 2026)
+
+- **`ErrorContextExt` trait**: New domain-specific `Result` extension trait in `nestgate-types`
+  that replaces the verbose `map_err(|e| NestGateError::variant(format!("ctx: {e}")))` pattern
+  with ergonomic one-liners: `.io_ctx("ctx")`, `.net_ctx("ctx")`, `.internal_ctx("ctx")`,
+  `.api_ctx("ctx")`, `.validation_ctx("ctx")`, `.security_ctx("ctx")`.
+- **152 call sites converted** across 34 files. 42 remaining sites use runtime-interpolated
+  context strings (e.g., `{family_id}`, `{hash}`) that legitimately need `format!`.
+- **7 new tests** for `ErrorContextExt` covering all 6 domain methods plus Ok passthrough.
+- **Zero unused imports**: Cleaned up `NestGateError` imports that became redundant after
+  conversion (e.g., `jsonrpc.rs`, `jwt_claims.rs`).
+
 ### Session 114: PROJECTS_PATH CAS wiring + String::from R8 sweep (Jul 16, 2026)
 
 - **footPrint PROJECTS_PATH wiring** (Wave 143b P2): `footprint_base_path()` now checks

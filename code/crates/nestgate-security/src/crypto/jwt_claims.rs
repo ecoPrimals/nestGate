@@ -9,7 +9,7 @@
 //! `CryptoDelegate::sign_jwt` and `CryptoDelegate::verify_jwt`
 //! in the `delegate` sibling module.
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, Result};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -42,7 +42,7 @@ impl JwtClaims {
         let now = i64::try_from(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .map_err(|e| NestGateError::validation_error(format!("Time error: {e}")))?
+                .validation_ctx("Time error")?
                 .as_secs(),
         )
         .unwrap_or(i64::MAX);

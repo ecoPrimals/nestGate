@@ -9,7 +9,7 @@
 //! **Phase 3: Smart Refactoring** - Extracted for logical cohesion (Jan 30, 2026)
 
 use crate::Result;
-use crate::error::NestGateError;
+use crate::error::{ErrorContextExt, NestGateError};
 use bytes::Bytes;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -107,11 +107,11 @@ pub async fn retrieve_object(
     // Get metadata
     let metadata = tokio::fs::metadata(&object_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to get metadata: {e}")))?;
+        .io_ctx("Failed to get metadata")?;
 
     let modified = metadata
         .modified()
-        .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {e}")))?;
+        .io_ctx("Failed to get modification time")?;
     let modified_at = unix_secs(modified);
 
     let object_info = crate::rpc::tarpc_types::ObjectInfo {
@@ -188,12 +188,12 @@ async fn collect_objects(
 
         let mut entries = tokio::fs::read_dir(&dir)
             .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to read directory: {e}")))?;
+            .io_ctx("Failed to read directory")?;
 
         while let Some(entry) = entries
             .next_entry()
             .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to read entry: {e}")))?
+            .io_ctx("Failed to read entry")?
         {
             if let Some(lim) = limit
                 && results.len() >= lim
@@ -218,10 +218,10 @@ async fn collect_objects(
 
                 let metadata = tokio::fs::metadata(&path)
                     .await
-                    .map_err(|e| NestGateError::io_error(format!("metadata: {e}")))?;
+                    .io_ctx("metadata")?;
                 let modified = metadata
                     .modified()
-                    .map_err(|e| NestGateError::io_error(format!("mod time: {e}")))?;
+                    .io_ctx("mod time")?;
                 let ts = unix_secs(modified);
 
                 results.push(crate::rpc::tarpc_types::ObjectInfo {
@@ -264,7 +264,7 @@ pub async fn get_object_metadata(
     })?;
     let modified = metadata
         .modified()
-        .map_err(|e| NestGateError::io_error(format!("mod time: {e}")))?;
+        .io_ctx("mod time")?;
     let ts = unix_secs(modified);
 
     Ok(crate::rpc::tarpc_types::ObjectInfo {

@@ -9,6 +9,7 @@
 
 use super::config::AuthenticationConfig;
 use super::security_primal::call_security_primal;
+use nestgate_types::error::ErrorContextExt;
 use crate::crypto::jwt_claims::JwtClaims;
 use crate::zero_cost_security_provider::types::{
     AuthMethod, ZeroCostAuthToken, ZeroCostCredentials,
@@ -106,7 +107,7 @@ impl HybridAuthenticationManager {
             if let Some(created_at) = created_at {
                 let elapsed = created_at
                     .elapsed()
-                    .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?;
+                    .internal_ctx("System time error")?;
 
                 if elapsed < self.config.local_token_settings.token_expiry {
                     debug!("Token found in cache and still valid");
@@ -373,7 +374,7 @@ impl HybridAuthenticationManager {
             .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
 
         let old_claims: JwtClaims = serde_json::from_str(&claims_json)
-            .map_err(|e| NestGateError::validation_error(format!("JWT claims parse error: {e}")))?;
+            .validation_ctx("JWT claims parse error")?;
 
         let new_expiry_seconds =
             i64::try_from(self.config.local_token_settings.token_expiry.as_secs())

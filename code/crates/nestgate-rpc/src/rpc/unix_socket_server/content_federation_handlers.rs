@@ -24,7 +24,7 @@
 //! similar to how the installer uses system `curl`.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::Path;
 
@@ -447,7 +447,7 @@ async fn pull_blob_from_remote(
 
     let raw = STANDARD
         .decode(data_b64)
-        .map_err(|e| NestGateError::internal(format!("base64 decode failed: {e}")))?;
+        .internal_ctx("base64 decode failed")?;
 
     let actual_hash = content_hash_hex(&raw);
     if actual_hash != cid {

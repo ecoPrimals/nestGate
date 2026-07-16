@@ -70,7 +70,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, warn};
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 
 use super::isomorphic_ipc::streams::IpcStream;
 
@@ -169,7 +169,7 @@ impl JsonRpcClient {
 
         let ipc_stream = super::isomorphic_ipc::streams::connect_transport(endpoint)
             .await
-            .map_err(|e| NestGateError::network_error(format!("Transport connect failed: {e}")))?;
+            .net_ctx("Transport connect failed")?;
 
         Ok(Self {
             stream: Some(BufReader::new(ipc_stream)),
@@ -277,18 +277,18 @@ impl JsonRpcClient {
         tokio::time::timeout(self.timeout, inner.write_all(request_line.as_bytes()))
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC request", self.timeout))?
-            .map_err(|e| NestGateError::network_error(format!("Failed to send request: {e}")))?;
+            .net_ctx("Failed to send request")?;
 
         tokio::time::timeout(self.timeout, inner.flush())
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC flush", self.timeout))?
-            .map_err(|e| NestGateError::network_error(format!("Failed to flush request: {e}")))?;
+            .net_ctx("Failed to flush request")?;
 
         let mut response_line = String::new();
         tokio::time::timeout(self.timeout, br.read_line(&mut response_line))
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC response", self.timeout))?
-            .map_err(|e| NestGateError::network_error(format!("Failed to read response: {e}")))?;
+            .net_ctx("Failed to read response")?;
 
         let response: JsonRpcResponse = serde_json::from_str(&response_line).map_err(|e| {
             warn!("Invalid JSON-RPC response: {}", response_line);

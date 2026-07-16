@@ -4,7 +4,7 @@
 //! External storage operations: HTTPS `storage.fetch_external` and `storage.object.size`.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::debug;
@@ -123,11 +123,11 @@ async fn try_cached_external(url: &str, cache_key: &str, family_id: &str) -> Res
     debug!("storage.fetch_external: cache hit for '{cache_key}' (family={family_id})");
     let meta_bytes = tokio::fs::read(&meta_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to read cache metadata: {e}")))?;
+        .io_ctx("Failed to read cache metadata")?;
     let meta: Value = serde_json::from_slice(&meta_bytes).unwrap_or_else(|_| json!({}));
     let payload_bytes = tokio::fs::read(&cache_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to read cached payload: {e}")))?;
+        .io_ctx("Failed to read cached payload")?;
     let value: Value = serde_json::from_slice(&payload_bytes)
         .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&payload_bytes).into_owned()));
     Ok(Some(json!({
@@ -179,12 +179,12 @@ async fn do_external_fetch(
         let body = response
             .body_mut()
             .read_to_vec()
-            .map_err(|e| NestGateError::io_error(format!("Failed to read body: {e}")))?;
+            .io_ctx("Failed to read body")?;
 
         Ok::<_, NestGateError>((ct, body))
     })
     .await
-    .map_err(|e| NestGateError::io_error(format!("Fetch task failed: {e}")))??;
+    .io_ctx("Fetch task failed")??;
 
     let payload_bytes = bytes::Bytes::from(payload_bytes);
 

@@ -4,7 +4,7 @@
 //! Minimal HTTP/1.1 client over `tokio::net::TcpStream` for [`super::adapter::UniversalStorageAdapter`].
 //! Intentionally self-contained (no `nestgate-core`) to avoid a dependency cycle.
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -95,14 +95,14 @@ async fn send_request(
     writer
         .write_all(&buf)
         .await
-        .map_err(|e| NestGateError::network_error(format!("universal storage HTTP: write: {e}")))?;
+        .net_ctx("universal storage HTTP: write")?;
     writer.shutdown().await.ok();
 
     let mut response_buf = Vec::with_capacity(4096);
     tokio::time::timeout(timeout, reader.read_to_end(&mut response_buf))
         .await
         .map_err(|_| NestGateError::network_error("universal storage HTTP: read timeout"))?
-        .map_err(|e| NestGateError::network_error(format!("universal storage HTTP: read: {e}")))?;
+        .net_ctx("universal storage HTTP: read")?;
 
     parse_http_response(&response_buf)
 }

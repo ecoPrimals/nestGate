@@ -27,6 +27,9 @@ pub use variants::core_errors::NestGateUnifiedError;
 // Re-export context types from context module
 pub use context::{ErrorContext, RetryInfo};
 
+// Re-export domain-specific error context trait
+pub use enhanced_ergonomics::ErrorContextExt;
+
 // Re-export data types from data module
 pub use data::*;
 

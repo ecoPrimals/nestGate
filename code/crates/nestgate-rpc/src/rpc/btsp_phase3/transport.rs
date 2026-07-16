@@ -9,7 +9,7 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::Value;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, info, warn};
@@ -65,7 +65,7 @@ pub async fn write_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, payload: &[u8
     writer
         .flush()
         .await
-        .map_err(|e| NestGateError::io_error(format!("BTSP Phase 3: flush failed: {e}")))?;
+        .io_ctx("BTSP Phase 3: flush failed")?;
     Ok(())
 }
 
@@ -182,7 +182,7 @@ async fn write_negotiate_response<W: AsyncWriteExt + Unpin>(
         writer
             .write_all(line.as_bytes())
             .await
-            .map_err(|e| NestGateError::io_error(format!("BTSP Phase 3: write response: {e}")))?;
+            .io_ctx("BTSP Phase 3: write response")?;
     } else {
         let payload = serde_json::to_vec(response).map_err(|e| {
             NestGateError::api_internal_error(format!("BTSP Phase 3: serialize response: {e}"))
@@ -192,7 +192,7 @@ async fn write_negotiate_response<W: AsyncWriteExt + Unpin>(
     writer
         .flush()
         .await
-        .map_err(|e| NestGateError::io_error(format!("BTSP Phase 3: flush: {e}")))?;
+        .io_ctx("BTSP Phase 3: flush")?;
     Ok(())
 }
 
@@ -262,7 +262,7 @@ async fn encrypt_and_write<W: AsyncWriteExt + Unpin>(
     response: &Value,
 ) -> Result<()> {
     let payload = serde_json::to_vec(response)
-        .map_err(|e| NestGateError::api_internal_error(format!("BTSP Phase 3: serialize: {e}")))?;
+        .api_ctx("BTSP Phase 3: serialize")?;
     let encrypted = keys.encrypt(&payload)?;
     write_frame(writer, &encrypted).await
 }

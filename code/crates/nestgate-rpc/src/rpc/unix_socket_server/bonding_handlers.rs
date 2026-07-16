@@ -8,7 +8,7 @@
 //! provider. Records are scoped under `{base}/datasets/{family}/__bonding/`.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::debug;
@@ -74,7 +74,7 @@ pub(super) async fn bonding_ledger_store(
     }
 
     let bytes = serde_json::to_vec_pretty(&enriched)
-        .map_err(|e| NestGateError::io_error(format!("Failed to serialize bond record: {e}")))?;
+        .io_ctx("Failed to serialize bond record")?;
 
     tokio::fs::write(&record_path, &bytes).await.map_err(|e| {
         NestGateError::io_error(format!(
@@ -131,7 +131,7 @@ pub(super) async fn bonding_ledger_retrieve(
     })?;
 
     let data: Value = serde_json::from_slice(&bytes)
-        .map_err(|e| NestGateError::io_error(format!("Corrupt bond record: {e}")))?;
+        .io_ctx("Corrupt bond record")?;
 
     let depth_path = bonding_record_path(family_id, contract_id, "__depth");
     let ledger_depth: u64 = tokio::fs::read_to_string(&depth_path)
@@ -168,7 +168,7 @@ pub(super) async fn bonding_ledger_list(
     if bonding_dir.exists() {
         let mut entries = tokio::fs::read_dir(&bonding_dir)
             .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to read bonding dir: {e}")))?;
+            .io_ctx("Failed to read bonding dir")?;
 
         while let Ok(Some(entry)) = entries.next_entry().await {
             if entry.path().is_dir() {

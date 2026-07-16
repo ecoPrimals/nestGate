@@ -5,7 +5,8 @@
 //!
 //! JSON-RPC 2.0 protocol implementation for TRUE PRIMAL communication.
 
-use nestgate_core::error::{NestGateError, Result};
+use nestgate_core::error::Result;
+use nestgate_types::error::ErrorContextExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::future::Future;
@@ -184,7 +185,7 @@ where
             stream
                 .readable()
                 .await
-                .map_err(|e| NestGateError::network_error(format!("Socket not readable: {e}")))?;
+                .net_ctx("Socket not readable")?;
 
             let n = match stream.try_read(&mut buffer) {
                 Ok(0) => {
@@ -255,19 +256,19 @@ where
         response: &JsonRpcResponse,
     ) -> Result<()> {
         let response_str = serde_json::to_string(response)
-            .map_err(|e| NestGateError::api_error(format!("Failed to serialize response: {e}")))?;
+            .api_ctx("Failed to serialize response")?;
 
         trace!("Sending response: {}", response_str);
 
         stream
             .writable()
             .await
-            .map_err(|e| NestGateError::network_error(format!("Socket not writable: {e}")))?;
+            .net_ctx("Socket not writable")?;
 
         stream
             .write_all(response_str.as_bytes())
             .await
-            .map_err(|e| NestGateError::network_error(format!("Failed to write response: {e}")))?;
+            .net_ctx("Failed to write response")?;
 
         Ok(())
     }
@@ -288,7 +289,7 @@ pub trait RpcMethodHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_core::error::Result;
+    use nestgate_core::error::{NestGateError, Result};
 
     #[test]
     fn test_jsonrpc_request_parsing() {

@@ -8,7 +8,7 @@
 //! [`super::external_handlers`]. See [`super::bonding_handlers`] for `bonding.ledger.*`.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::Path;
 use tracing::debug;
@@ -44,7 +44,7 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
     let namespace = extract_namespace(params)?;
 
     let serialized = serde_json::to_vec_pretty(data)
-        .map_err(|e| NestGateError::io_error(format!("Failed to serialize value: {e}")))?;
+        .io_ctx("Failed to serialize value")?;
 
     let bytes = if let Some(ref enc) = state.encryption {
         enc.encrypt(&serialized)?

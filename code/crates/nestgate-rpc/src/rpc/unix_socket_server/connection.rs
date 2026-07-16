@@ -19,7 +19,7 @@ use tracing::{debug, error, info, warn};
 
 use super::dispatch::handle_request;
 use super::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState};
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 
 use crate::rpc::protocol::CONNECTION_IDLE_LIMIT;
 
@@ -109,15 +109,15 @@ where
         writer
             .write_all(&response_bytes)
             .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to write response: {e}")))?;
+            .io_ctx("Failed to write response")?;
         writer
             .write_all(b"\n")
             .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to write newline: {e}")))?;
+            .io_ctx("Failed to write newline")?;
         writer
             .flush()
             .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to flush: {e}")))?;
+            .io_ctx("Failed to flush")?;
         return json_rpc_loop(reader, writer, state, true).await;
     }
 

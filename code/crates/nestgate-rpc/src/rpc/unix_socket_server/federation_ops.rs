@@ -11,7 +11,7 @@
 //! - **Repo sync**: `fetch_head_refs`, `push_to_remote`, `sync_repo`, `clone_repo`
 //! - **JSON-RPC transport**: `send_jsonrpc` (UDS via socat, TCP direct)
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::Path;
 use tokio::process::Command;
@@ -35,7 +35,7 @@ pub(super) async fn fetch_head_refs(repo_path: &str, remote: &str, branch: &str)
         .current_dir(repo_path)
         .output()
         .await
-        .map_err(|e| NestGateError::internal(format!("git ls-remote failed: {e}")))?;
+        .internal_ctx("git ls-remote failed")?;
 
     if !remote_output.status.success() {
         let stderr = String::from_utf8_lossy(&remote_output.stderr);
@@ -90,7 +90,7 @@ pub(super) async fn push_to_remote(repo_path: &str, remote: &str, branch: &str) 
         .current_dir(repo_path)
         .output()
         .await
-        .map_err(|e| NestGateError::internal(format!("git push failed: {e}")))?;
+        .internal_ctx("git push failed")?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);
 
@@ -162,7 +162,7 @@ pub(super) async fn sync_repo(
         .current_dir(path)
         .output()
         .await
-        .map_err(|e| NestGateError::internal(format!("git fetch failed: {e}")))?;
+        .internal_ctx("git fetch failed")?;
 
     if !fetch.status.success() {
         let stderr = String::from_utf8_lossy(&fetch.stderr);
@@ -183,7 +183,7 @@ pub(super) async fn sync_repo(
         .current_dir(path)
         .output()
         .await
-        .map_err(|e| NestGateError::internal(format!("git merge --ff-only failed: {e}")))?;
+        .internal_ctx("git merge --ff-only failed")?;
 
     let after_head = git_rev_parse(path, "HEAD").await.unwrap_or_default();
 
@@ -226,7 +226,7 @@ pub(super) async fn sync_repo(
 /// Send a JSON-RPC request to a remote `NestGate` (UDS socket or TCP).
 pub(super) async fn send_jsonrpc(target: &str, request: &Value) -> Result<Value> {
     let payload = serde_json::to_string(request)
-        .map_err(|e| NestGateError::internal(format!("serialize request: {e}")))?;
+        .internal_ctx("serialize request")?;
 
     if target.starts_with("tcp://") {
         send_jsonrpc_tcp(target, &payload).await
@@ -250,7 +250,7 @@ async fn clone_repo(url: &str, path: &str, branch: &str) -> Result<Value> {
         .args(["clone", "--branch", branch, "--single-branch", url, path])
         .output()
         .await
-        .map_err(|e| NestGateError::internal(format!("git clone failed: {e}")))?;
+        .internal_ctx("git clone failed")?;
 
     if output.status.success() {
         Ok(json!({
@@ -295,7 +295,7 @@ async fn git_rev_parse(repo_path: &str, refspec: &str) -> Result<String> {
         .current_dir(repo_path)
         .output()
         .await
-        .map_err(|e| NestGateError::internal(format!("git rev-parse failed: {e}")))?;
+        .internal_ctx("git rev-parse failed")?;
 
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
 }
@@ -382,7 +382,7 @@ async fn send_jsonrpc_uds(socket_path: &str, payload: &str) -> Result<Value> {
         stdin
             .write_all(payload.as_bytes())
             .await
-            .map_err(|e| NestGateError::internal(format!("write to socat: {e}")))?;
+            .internal_ctx("write to socat")?;
         stdin.write_all(b"\n").await.ok();
         drop(stdin);
     }
@@ -390,11 +390,11 @@ async fn send_jsonrpc_uds(socket_path: &str, payload: &str) -> Result<Value> {
     let out = child
         .wait_with_output()
         .await
-        .map_err(|e| NestGateError::internal(format!("socat wait: {e}")))?;
+        .internal_ctx("socat wait")?;
 
     let response_text = String::from_utf8_lossy(&out.stdout);
     serde_json::from_str(response_text.trim())
-        .map_err(|e| NestGateError::internal(format!("parse remote response: {e}")))
+        .internal_ctx("parse remote response")
 }
 
 async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
@@ -413,7 +413,7 @@ async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
     writer
         .write_all(payload.as_bytes())
         .await
-        .map_err(|e| NestGateError::internal(format!("tcp write: {e}")))?;
+        .internal_ctx("tcp write")?;
     writer.write_all(b"\n").await.ok();
     writer.shutdown().await.ok();
 
@@ -422,10 +422,10 @@ async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
     buf_reader
         .read_line(&mut line)
         .await
-        .map_err(|e| NestGateError::internal(format!("tcp read response: {e}")))?;
+        .internal_ctx("tcp read response")?;
 
     serde_json::from_str(line.trim())
-        .map_err(|e| NestGateError::internal(format!("parse tcp response: {e}")))
+        .internal_ctx("parse tcp response")
 }
 
 #[cfg(test)]

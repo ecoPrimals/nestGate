@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
@@ -136,7 +136,7 @@ pub async fn ensure_parent(path: &Path) -> Result<()> {
     if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent)
             .await
-            .map_err(|e| NestGateError::io_error(format!("mkdir: {e}")))?;
+            .io_ctx("mkdir")?;
     }
     Ok(())
 }
@@ -187,7 +187,7 @@ pub async fn storage_store_stream_begin(
         ensure_parent(&final_path).await?;
         tokio::fs::write(&final_path, [])
             .await
-            .map_err(|e| NestGateError::io_error(format!("write empty blob: {e}")))?;
+            .io_ctx("write empty blob")?;
         return Ok(json!({
             "stream_id": stream_id,
             "chunk_size": MAX_STREAM_CHUNK,
@@ -203,7 +203,7 @@ pub async fn storage_store_stream_begin(
 
     tokio::fs::File::create(&temp_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("create staging: {e}")))?;
+        .io_ctx("create staging")?;
 
     let upload = StoreUpload {
         temp_path,
@@ -315,16 +315,16 @@ pub async fn storage_store_stream_chunk(params: Value) -> Result<Value> {
             .write(true)
             .open(&upload.temp_path)
             .await
-            .map_err(|e| NestGateError::io_error(format!("open staging: {e}")))?;
+            .io_ctx("open staging")?;
         file.seek(std::io::SeekFrom::Start(offset))
             .await
-            .map_err(|e| NestGateError::io_error(format!("seek: {e}")))?;
+            .io_ctx("seek")?;
         file.write_all(&chunk)
             .await
-            .map_err(|e| NestGateError::io_error(format!("write staging: {e}")))?;
+            .io_ctx("write staging")?;
         file.flush()
             .await
-            .map_err(|e| NestGateError::io_error(format!("flush staging: {e}")))?;
+            .io_ctx("flush staging")?;
     }
 
     upload.bytes_written = next;
@@ -344,7 +344,7 @@ pub async fn storage_store_stream_chunk(params: Value) -> Result<Value> {
         ensure_parent(&upload.final_path).await?;
         tokio::fs::rename(&upload.temp_path, &upload.final_path)
             .await
-            .map_err(|e| NestGateError::io_error(format!("finalize rename: {e}")))?;
+            .io_ctx("finalize rename")?;
 
         drop(guard);
 
@@ -410,7 +410,7 @@ pub async fn storage_retrieve_stream_begin(
 
     let meta = tokio::fs::metadata(&path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("stat: {e}")))?;
+        .io_ctx("stat")?;
     let total_size = meta.len();
 
     let stream_id = Uuid::new_v4().to_string();
@@ -478,16 +478,16 @@ pub async fn storage_retrieve_stream_chunk(params: &Value) -> Result<Value> {
 
     let mut file = tokio::fs::File::open(&session.path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("open: {e}")))?;
+        .io_ctx("open")?;
     file.seek(std::io::SeekFrom::Start(offset))
         .await
-        .map_err(|e| NestGateError::io_error(format!("seek: {e}")))?;
+        .io_ctx("seek")?;
 
     let mut buf = vec![0u8; to_read_usize];
     let n = file
         .read(&mut buf)
         .await
-        .map_err(|e| NestGateError::io_error(format!("read: {e}")))?;
+        .io_ctx("read")?;
     buf.truncate(n);
 
     let is_last = offset.saturating_add(u64::try_from(n).unwrap_or(0)) >= session.total_size;

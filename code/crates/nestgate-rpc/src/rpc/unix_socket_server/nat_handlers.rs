@@ -8,7 +8,7 @@
 //! Beacon records are stored under `{storage_base}/datasets/_known_beacons/{peer_id}.json`.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::debug;
@@ -72,10 +72,10 @@ pub(super) async fn nat_store_traversal_info(
     });
 
     let data = serde_json::to_vec_pretty(&record)
-        .map_err(|e| NestGateError::io_error(format!("Failed to serialize NAT record: {e}")))?;
+        .io_ctx("Failed to serialize NAT record")?;
     tokio::fs::write(&path, &data)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to write NAT traversal file: {e}")))?;
+        .io_ctx("Failed to write NAT traversal file")?;
 
     debug!(peer_id, "nat.store_traversal_info: persisted");
     Ok(json!({ "peer_id": peer_id, "stored": true }))
@@ -98,7 +98,7 @@ pub(super) async fn nat_retrieve_traversal_info(
     })?;
 
     let record: Value = serde_json::from_slice(&data)
-        .map_err(|e| NestGateError::io_error(format!("Corrupted NAT record: {e}")))?;
+        .io_ctx("Corrupted NAT record")?;
 
     debug!(peer_id, "nat.retrieve_traversal_info: loaded");
     Ok(record)
@@ -124,10 +124,10 @@ pub(super) async fn beacon_store(params: Option<&Value>, _state: &StorageState) 
     });
 
     let data = serde_json::to_vec_pretty(&record)
-        .map_err(|e| NestGateError::io_error(format!("Failed to serialize beacon record: {e}")))?;
+        .io_ctx("Failed to serialize beacon record")?;
     tokio::fs::write(&path, &data)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to write beacon file: {e}")))?;
+        .io_ctx("Failed to write beacon file")?;
 
     debug!(peer_id, "beacon.store: persisted");
     Ok(json!({ "peer_id": peer_id, "stored": true }))
@@ -150,7 +150,7 @@ pub(super) async fn beacon_retrieve(
     })?;
 
     let record: Value = serde_json::from_slice(&data)
-        .map_err(|e| NestGateError::io_error(format!("Corrupted beacon record: {e}")))?;
+        .io_ctx("Corrupted beacon record")?;
 
     debug!(peer_id, "beacon.retrieve: loaded");
     Ok(record)
@@ -203,7 +203,7 @@ pub(super) async fn beacon_delete(params: Option<&Value>, _state: &StorageState)
 
     tokio::fs::remove_file(&path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to delete beacon file: {e}")))?;
+        .io_ctx("Failed to delete beacon file")?;
 
     debug!(peer_id, "beacon.delete: removed");
     Ok(json!({ "peer_id": peer_id, "deleted": true }))

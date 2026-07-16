@@ -63,7 +63,7 @@ use jsonrpsee::{
 };
 use tracing::info;
 
-use nestgate_types::NestGateError;
+use nestgate_types::{NestGateError, error::ErrorContextExt};
 
 use super::storage_backend::StorageBackend;
 use super::tarpc_server::NestGateRpcService;
@@ -81,7 +81,7 @@ mod storage_stream_methods;
 pub(super) fn map_jsonrpc_registration<T>(
     result: std::result::Result<T, impl std::fmt::Display>,
 ) -> std::result::Result<T, NestGateError> {
-    result.map_err(|e| NestGateError::internal(format!("JSON-RPC registration: {e}")))
+    result.internal_ctx("JSON-RPC registration")
 }
 
 /// JSON-RPC server configuration

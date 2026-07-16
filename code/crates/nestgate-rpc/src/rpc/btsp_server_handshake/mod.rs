@@ -33,7 +33,7 @@
 //! On failure at any step, write an error frame and close the connection.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
@@ -94,7 +94,7 @@ async fn write_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, payload: &[u8]) -
     writer
         .flush()
         .await
-        .map_err(|e| NestGateError::io_error(format!("BTSP handshake: flush failed: {e}")))?;
+        .io_ctx("BTSP handshake: flush failed")?;
     Ok(())
 }
 
@@ -134,14 +134,14 @@ async fn write_json_line<W: AsyncWriteExt + Unpin>(writer: &mut W, payload: &[u8
     writer
         .write_all(payload)
         .await
-        .map_err(|e| NestGateError::io_error(format!("BTSP JSON-line: failed to write: {e}")))?;
+        .io_ctx("BTSP JSON-line: failed to write")?;
     writer.write_all(b"\n").await.map_err(|e| {
         NestGateError::io_error(format!("BTSP JSON-line: failed to write newline: {e}"))
     })?;
     writer
         .flush()
         .await
-        .map_err(|e| NestGateError::io_error(format!("BTSP JSON-line: flush failed: {e}")))?;
+        .io_ctx("BTSP JSON-line: flush failed")?;
     Ok(())
 }
 
@@ -270,7 +270,7 @@ where
     let first = buf_reader
         .fill_buf()
         .await
-        .map_err(|e| NestGateError::io_error(format!("BTSP: failed to peek first byte: {e}")))?;
+        .io_ctx("BTSP: failed to peek first byte")?;
     let mode = if first.first() == Some(&b'{') {
         debug!("BTSP: detected JSON-line framing");
         FrameMode::JsonLine

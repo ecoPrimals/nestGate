@@ -25,7 +25,7 @@
 use base64::Engine;
 use chacha20poly1305::aead::{Aead, KeyInit, OsRng};
 use chacha20poly1305::{AeadCore, ChaCha20Poly1305, Nonce};
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::Value;
 use tracing::{debug, info, warn};
 
@@ -40,7 +40,7 @@ fn b64_encode(data: &[u8]) -> String {
 fn b64_decode(s: &str) -> Result<Vec<u8>> {
     base64::engine::general_purpose::STANDARD
         .decode(s)
-        .map_err(|e| NestGateError::api_error(format!("base64 decode: {e}")))
+        .api_ctx("base64 decode")
 }
 
 /// Native ChaCha20-Poly1305 encrypt-at-rest for storage data.
@@ -174,7 +174,7 @@ impl StorageEncryption {
             "alg": ENVELOPE_ALG,
         });
         serde_json::to_vec(&envelope)
-            .map_err(|e| NestGateError::io_error(format!("envelope serialize: {e}")))
+            .io_ctx("envelope serialize")
     }
 
     /// Decrypt an encrypted envelope, returning the original plaintext.
@@ -185,7 +185,7 @@ impl StorageEncryption {
     /// unsupported, or the AEAD decryption fails (wrong key, tampered data).
     pub fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
         let envelope: Value = serde_json::from_slice(data)
-            .map_err(|e| NestGateError::api_error(format!("envelope parse: {e}")))?;
+            .api_ctx("envelope parse")?;
 
         let v = envelope["v"]
             .as_u64()
@@ -266,7 +266,7 @@ fn hex_decode(s: &str) -> Result<Vec<u8>> {
         .step_by(2)
         .map(|i| {
             u8::from_str_radix(&s[i..i + 2], 16)
-                .map_err(|e| NestGateError::api_error(format!("hex decode: {e}")))
+                .api_ctx("hex decode")
         })
         .collect()
 }

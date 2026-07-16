@@ -10,6 +10,7 @@
 
 use nestgate_core::capability_discovery::CapabilityDiscovery;
 use nestgate_core::error::{NestGateError, Result};
+use nestgate_types::error::ErrorContextExt;
 use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -180,7 +181,7 @@ impl SecurityProviderClient {
             let probe = nestgate_types::TransportEndpoint::uds(&path);
             nestgate_core::rpc::connect_transport(&probe)
                 .await
-                .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
+                .net_ctx("Failed to connect")?;
             Ok(path)
         } else {
             Err(NestGateError::network_error("Socket does not exist"))
@@ -276,7 +277,7 @@ impl SecurityProviderClient {
 
         let response = self.send_request(&request).await?;
         String::from_utf8(response.data)
-            .map_err(|e| NestGateError::security_error(format!("Invalid token: {e}")))
+            .security_ctx("Invalid token")
     }
 
     /// Validate an authentication token.
@@ -307,22 +308,22 @@ impl SecurityProviderClient {
         let endpoint = nestgate_types::TransportEndpoint::uds(&self.socket_path);
         let mut stream = nestgate_core::rpc::connect_transport(&endpoint)
             .await
-            .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
+            .net_ctx("Failed to connect")?;
 
         // Serialize and send request
         let request_json = serde_json::to_vec(request)
-            .map_err(|e| NestGateError::api_error(format!("Failed to serialize request: {e}")))?;
+            .api_ctx("Failed to serialize request")?;
 
         stream
             .write_all(&request_json)
             .await
-            .map_err(|e| NestGateError::network_error(format!("Failed to send request: {e}")))?;
+            .net_ctx("Failed to send request")?;
 
         let mut buffer = vec![0u8; 65536];
         let n = stream
             .read(&mut buffer)
             .await
-            .map_err(|e| NestGateError::network_error(format!("Failed to read response: {e}")))?;
+            .net_ctx("Failed to read response")?;
 
         let response: SecurityProviderResponse =
             serde_json::from_slice(&buffer[..n]).map_err(|e| {

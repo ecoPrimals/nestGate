@@ -8,7 +8,7 @@
 //! On finalize, computes BLAKE3 and renames staging → final CAS path.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use std::time::Instant;
@@ -62,7 +62,7 @@ pub async fn content_store_stream_begin(
         if !final_path.exists() {
             tokio::fs::write(&final_path, [])
                 .await
-                .map_err(|e| NestGateError::io_error(format!("write empty content: {e}")))?;
+                .io_ctx("write empty content")?;
         }
         return Ok(json!({
             "stream_id": stream_id,
@@ -78,7 +78,7 @@ pub async fn content_store_stream_begin(
 
     tokio::fs::File::create(&temp_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("create content staging: {e}")))?;
+        .io_ctx("create content staging")?;
 
     let upload = StoreUpload {
         temp_path,
@@ -179,16 +179,16 @@ pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
         .write(true)
         .open(&temp_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("open content staging: {e}")))?;
+        .io_ctx("open content staging")?;
     file.seek(std::io::SeekFrom::Start(offset))
         .await
-        .map_err(|e| NestGateError::io_error(format!("seek: {e}")))?;
+        .io_ctx("seek")?;
     file.write_all(&decoded)
         .await
-        .map_err(|e| NestGateError::io_error(format!("write chunk: {e}")))?;
+        .io_ctx("write chunk")?;
     file.flush()
         .await
-        .map_err(|e| NestGateError::io_error(format!("flush: {e}")))?;
+        .io_ctx("flush")?;
     drop(file);
 
     upload.bytes_written = new_written;
@@ -212,7 +212,7 @@ pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
 
     let raw = tokio::fs::read(&upload.temp_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("read staging for hash: {e}")))?;
+        .io_ctx("read staging for hash")?;
     let blake3_hex = content_hash_hex(&raw);
     let final_path = content_cas_path(&family_id, &blake3_hex);
 
@@ -223,7 +223,7 @@ pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
         ensure_parent(&final_path).await?;
         tokio::fs::rename(&upload.temp_path, &final_path)
             .await
-            .map_err(|e| NestGateError::io_error(format!("rename to CAS: {e}")))?;
+            .io_ctx("rename to CAS")?;
     }
 
     Ok(json!({
@@ -274,7 +274,7 @@ pub async fn content_retrieve_stream_begin(
 
     let meta = tokio::fs::metadata(&path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("stat: {e}")))?;
+        .io_ctx("stat")?;
     let total_size = meta.len();
 
     let stream_id = Uuid::new_v4().to_string();
