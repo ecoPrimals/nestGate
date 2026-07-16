@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: Jul 16, 2026 (Wave 142b)
+**Last Updated**: Jul 16, 2026 (Wave 144a)
 
 ---
 
@@ -27,7 +27,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 {
   "primal": "nestgate",
   "version": "<semver>",
-  "capabilities": ["<77 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
+  "capabilities": ["<90 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
   "provided_capabilities": [
     {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external", "list_blobs", "blob_exists", "store_stream", "store_stream_chunk", "retrieve_stream", "retrieve_stream_chunk"]},
     {"type": "content", "methods": ["put", "get", "exists", "list", "publish", "resolve", "promote", "collections", "fetch_heads", "push", "replicate", "sync"]},
@@ -52,7 +52,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 }
 ```
 
-`capability_registry.toml` is the full **16**-domain inventory. The `capabilities.list` response groups **12** domains (storage, content, model through zfs, auth, btsp); health, identity, lifecycle, and discovery appear in the top-level `capabilities` array and related handlers.
+`capability_registry.toml` is the full **20**-domain inventory. The `capabilities.list` response groups **12** domains (storage, content, model through zfs, auth, btsp); health, identity, lifecycle, and discovery appear in the top-level `capabilities` array and related handlers.
 
 `identity.get` returns `{primal, version, domain: "storage", license: "AGPL-3.0-or-later", family_id}`.
 
@@ -521,4 +521,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: Jul 16, 2026 (Wave 142b)
+**Last Updated**: Jul 16, 2026 (Wave 144a)

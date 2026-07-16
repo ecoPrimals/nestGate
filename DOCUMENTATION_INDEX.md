@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jul 16, 2026 (Wave 142b)  
+**Last Updated**: Jul 16, 2026 (Wave 144a)  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of July 2026.
@@ -72,7 +72,7 @@ Crate-level benchmarks: `code/crates/nestgate-core/benches/`, `code/crates/nestg
 
 **Active Documents**: `DOCUMENT_NAME.md` in root  
 **Fossil Record**: `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`  
-**Handoffs**: `ecoPrimals/infra/wateringHole/handoffs/`
+**Handoffs**: `docs/handoffs/` (in-repo) and upstream `ecoPrimals/infra/wateringHole/handoffs/`
 
 ---
 

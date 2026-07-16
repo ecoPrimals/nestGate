@@ -295,7 +295,9 @@ mod tests {
             ("CRYPTO_PROVIDER_SOCKET", None),
             ("SECURITY_SOCKET", None),
             ("SECURITY_ENDPOINT", None),
+            ("NESTGATE_SECURITY_SOCKET", None),
             ("XDG_RUNTIME_DIR", None),
+            ("ECOSYSTEM_SOCKET_DIR", None),
         ]
     }
 
@@ -340,9 +342,14 @@ mod tests {
         let mut vars = clear_all_security_vars();
         vars.push(("SECURITY_ENDPOINT", Some("http://127.0.0.1:9")));
         temp_env::with_vars(vars, || {
-            assert_eq!(
-                resolve_security_socket_path(),
-                std::path::Path::new("/run/capability/security.sock")
+            let path = resolve_security_socket_path();
+            assert!(
+                path.ends_with("security.sock"),
+                "expected XDG-based security.sock path, got {path:?}",
+            );
+            assert!(
+                !path.starts_with("/run/capability"),
+                "should not use hardcoded /run/capability path",
             );
         });
     }

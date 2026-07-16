@@ -37,6 +37,7 @@
 | `XDG_DATA_HOME` | `~/.local/share` | XDG data directory (if set) |
 | `NESTGATE_STORAGE_BACKEND` | `filesystem` | Storage backend type |
 | `PROJECTS_PATH` | - | Override footPrint project storage root (composition wiring) |
+| `ECOPRIMALS_DEPOT_PATH` | - | Override ecosystem depot directory for coordination artifacts |
 
 ### **Database Configuration** (Optional external — not required for core operation)
 

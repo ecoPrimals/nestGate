@@ -2,7 +2,7 @@
 
 This file describes how **NestGate** materializes the ecoPrimals **scyBorg** provenance model per the wateringHole standard:
 
-`infra/wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md` (ecoPrimals infra).
+See the upstream [wateringHole repository](https://github.com/ecoPrimals/wateringHole) `SCYBORG_PROVENANCE_TRIO_GUIDANCE.md` for the full standard.
 
 It summarizes scope; the legal texts are in the license files named below.
 
