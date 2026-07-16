@@ -55,7 +55,7 @@ impl DynamicEndpointsConfig {
     pub fn new() -> Self {
         Self {
             endpoints: HashMap::new(),
-            hostname: String::from("localhost"),
+            hostname: "localhost".into(),
             port_base: 8000,
         }
     }
@@ -203,7 +203,7 @@ mod tests {
         let mut config = DynamicEndpointsConfig::new();
         assert_eq!(config.hostname(), "localhost");
 
-        config.set_hostname(String::from("production-host"));
+        config.set_hostname("production-host".into());
         assert_eq!(config.hostname(), "production-host");
     }
 

@@ -253,9 +253,9 @@ mod tests {
     #[test]
     fn test_registry_config_builder() {
         let config = RegistryConfig::new()
-            .with_registry_url(String::from("http://registry:8080"))
-            .with_service_mesh_endpoint(String::from("http://mesh:9090"))
-            .with_registry_entry("database", "endpoint", String::from("postgres://db:5432"))
+            .with_registry_url("http://registry:8080".into())
+            .with_service_mesh_endpoint("http://mesh:9090".into())
+            .with_registry_entry("database", "endpoint", "postgres://db:5432".into())
             .with_adapter_port("storage", 8000);
 
         assert_eq!(config.get_registry_url(), Some("http://registry:8080"));
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn test_registry_config_has_env_var() {
         let config =
-            RegistryConfig::new().with_service_mesh_endpoint(String::from("http://mesh:9090"));
+            RegistryConfig::new().with_service_mesh_endpoint("http://mesh:9090".into());
 
         assert!(config.has_env_var("NESTGATE_SERVICE_MESH_ENDPOINT"));
         assert!(!config.has_env_var("KUBERNETES_NAMESPACE"));
@@ -281,10 +281,10 @@ mod tests {
     async fn test_concurrent_registry_config_access() {
         // Create two different configurations
         let config1 = Arc::new(
-            RegistryConfig::new().with_registry_url(String::from("http://registry1:8080")),
+            RegistryConfig::new().with_registry_url("http://registry1:8080".into()),
         );
         let config2 = Arc::new(
-            RegistryConfig::new().with_registry_url(String::from("http://registry2:8080")),
+            RegistryConfig::new().with_registry_url("http://registry2:8080".into()),
         );
 
         // Spawn concurrent tasks accessing different configs
@@ -315,7 +315,7 @@ mod tests {
         let config = RegistryConfig::new().with_registry_entry(
             "my_service",
             "endpoint",
-            String::from("http://service:8080"),
+            "http://service:8080".into(),
         );
 
         // Should construct NESTGATE_REGISTRY_MY_SERVICE_ENDPOINT

@@ -287,7 +287,7 @@ mod tests {
 
         // Try to find a capability that doesn't exist (no backends configured)
         let result = registry
-            .find_by_capability(&PrimalCapability::Custom(String::from("nonexistent")))
+            .find_by_capability(&PrimalCapability::Custom("nonexistent".into()))
             .await;
 
         assert!(result.is_err());

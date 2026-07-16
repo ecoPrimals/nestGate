@@ -231,7 +231,7 @@ pub async fn cleanup_workspace(
                         .args(["destroy", snapshot_name])
                         .output()
                         .await;
-                    cleanup_actions.push(String::from("Removed temporary snapshot"));
+                    cleanup_actions.push("Removed temporary snapshot".into());
                     space_freed += 1024 * 1024; // Estimate 1MB freed per snapshot
                 }
             }
@@ -333,7 +333,7 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
                         "Monitoring compression ratio for optimization opportunities",
                     ));
                 } else {
-                    scale_actions.push(String::from("Storage utilization is healthy"));
+                    scale_actions.push("Storage utilization is healthy".into());
                 }
                 Ok(Json(json!({
                     "status": "success",

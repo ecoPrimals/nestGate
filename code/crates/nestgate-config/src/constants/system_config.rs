@@ -236,8 +236,8 @@ mod tests {
             .with_retry_attempts(5)
             .with_health_check_interval(60)
             .with_api_port(9000)
-            .with_bind_host(String::from("0.0.0.0"))
-            .with_api_url(String::from("http://example.com:9000"));
+            .with_bind_host("0.0.0.0".into())
+            .with_api_url("http://example.com:9000".into());
 
         assert_eq!(config.timeout_ms(), 10000);
         assert_eq!(config.max_connections(), 2000);
@@ -285,7 +285,7 @@ mod tests {
     #[test]
     fn test_api_url_construction() {
         let config = SystemConfig::new()
-            .with_bind_host(String::from("192.168.1.100"))
+            .with_bind_host("192.168.1.100".into())
             .with_api_port(7070);
 
         assert_eq!(config.api_url(), "http://192.168.1.100:7070");
@@ -294,9 +294,9 @@ mod tests {
     #[test]
     fn test_api_url_override() {
         let config = SystemConfig::new()
-            .with_bind_host(String::from("192.168.1.100"))
+            .with_bind_host("192.168.1.100".into())
             .with_api_port(7070)
-            .with_api_url(String::from("https://custom.example.com"));
+            .with_api_url("https://custom.example.com".into());
 
         assert_eq!(config.api_url(), "https://custom.example.com");
     }

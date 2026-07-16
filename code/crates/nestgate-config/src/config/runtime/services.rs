@@ -178,14 +178,14 @@ mod tests {
     fn test_capability_based_discovery() {
         let mut config = ServicesConfig::default();
         config.discovered_capabilities.insert(
-            String::from("security"),
-            String::from("http://security-provider:8080"),
+            "security".into(),
+            "http://security-provider:8080".into(),
         );
 
         assert!(config.has_capability("security"));
         assert_eq!(
             config.get_capability_url("security"),
-            Some(String::from("http://security-provider:8080"))
+            Some("http://security-provider:8080".into())
         );
     }
 
@@ -194,14 +194,14 @@ mod tests {
         let mut config = ServicesConfig::default();
         config
             .discovered_capabilities
-            .insert(String::from("security"), String::from("http://sec:8080"));
+            .insert("security".into(), "http://sec:8080".into());
         config
             .discovered_capabilities
-            .insert(String::from("ai"), String::from("http://ai:9000"));
+            .insert("ai".into(), "http://ai:9000".into());
 
         let caps = config.available_capabilities();
-        assert!(caps.contains(&String::from("security")));
-        assert!(caps.contains(&String::from("ai")));
+        assert!(caps.contains(&"security".into()));
+        assert!(caps.contains(&"ai".into()));
     }
 
     #[test]

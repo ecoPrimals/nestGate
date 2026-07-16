@@ -175,18 +175,18 @@ mod tests {
             &self,
             _request: Self::ServiceRequest,
         ) -> impl std::future::Future<Output = Result<Self::ServiceResponse>> + Send {
-            std::future::ready(Ok(String::from("response")))
+            std::future::ready(Ok("response".into()))
         }
         fn get_stats(
             &self,
         ) -> impl std::future::Future<Output = Result<Self::LoadBalancerStats>> + Send {
-            std::future::ready(Ok(String::from("stats")))
+            std::future::ready(Ok("stats".into()))
         }
         fn get_service_stats(
             &self,
             _service_id: &str,
         ) -> impl std::future::Future<Output = Result<Self::ServiceStats>> + Send {
-            std::future::ready(Ok(String::from("svc_stats")))
+            std::future::ready(Ok("svc_stats".into()))
         }
         fn health_check_all(
             &self,

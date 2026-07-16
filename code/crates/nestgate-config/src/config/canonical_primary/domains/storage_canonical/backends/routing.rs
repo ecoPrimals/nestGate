@@ -25,7 +25,7 @@ impl Default for StorageRoutingConfig {
     fn default() -> Self {
         Self {
             rules: Vec::new(),
-            default_backend: String::from("filesystem"),
+            default_backend: "filesystem".into(),
             content_based_routing: false,
         }
     }

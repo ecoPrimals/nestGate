@@ -447,7 +447,7 @@ mod tests {
         let health = result.unwrap();
         assert_eq!(
             health.get("registry_configured"),
-            Some(&String::from("false"))
+            Some(&"false".into())
         );
     }
 
@@ -492,7 +492,7 @@ mod tests {
         let summary = result.unwrap();
         assert_eq!(
             summary.get("registry_url"),
-            Some(&String::from("not_configured"))
+            Some(&"not_configured".into())
         );
     }
 

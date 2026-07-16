@@ -411,7 +411,7 @@ mod tests {
 
         let svc = DynZfsService::Native(NativeZfsService::new());
         let pool_cfg = PoolConfig {
-            name: String::from("noop_pool"),
+            name: "noop_pool".into(),
             devices: vec![],
             mountpoint: None,
             compression: false,
@@ -419,7 +419,7 @@ mod tests {
             properties: HashMap::new(),
         };
         let ds_cfg = DatasetConfig {
-            name: String::from("noop/ds"),
+            name: "noop/ds".into(),
             mountpoint: None,
             compression: false,
             quota: None,
@@ -427,8 +427,8 @@ mod tests {
             properties: HashMap::new(),
         };
         let snap_cfg = SnapshotConfig {
-            name: String::from("snap1"),
-            dataset: String::from("noop/ds"),
+            name: "snap1".into(),
+            dataset: "noop/ds".into(),
             properties: HashMap::new(),
         };
 
@@ -441,7 +441,7 @@ mod tests {
         let _ = svc.get_dataset("nope").await;
         let _ = svc.destroy_dataset("nope").await;
         let mut props = HashMap::new();
-        props.insert(String::from("compression"), String::from("lz4"));
+        props.insert("compression".into(), "lz4".into());
         let _ = svc.set_dataset_properties("noop/ds", &props).await;
         let _ = svc.get_dataset_properties("noop/ds").await;
         let _ = svc.list_snapshots().await;
@@ -465,7 +465,7 @@ mod tests {
 
         let svc = UniversalZfsServiceEnum::new_native();
         let ds_cfg = DatasetConfig {
-            name: String::from("t/d"),
+            name: "t/d".into(),
             mountpoint: None,
             compression: false,
             quota: None,
@@ -473,8 +473,8 @@ mod tests {
             properties: HashMap::new(),
         };
         let snap_cfg = SnapshotConfig {
-            name: String::from("s"),
-            dataset: String::from("t/d"),
+            name: "s".into(),
+            dataset: "t/d".into(),
             properties: HashMap::new(),
         };
 

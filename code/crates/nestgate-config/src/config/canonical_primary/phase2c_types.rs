@@ -187,7 +187,7 @@ impl Default for ConfigMetadata {
     fn default() -> Self {
         let now = std::time::SystemTime::now();
         Self {
-            version: String::from("2.0.0"),
+            version: "2.0.0".into(),
             created_at: now,
             modified_at: now,
             source: ConfigSource::Default,

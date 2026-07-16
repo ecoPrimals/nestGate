@@ -28,10 +28,10 @@ impl NetworkEnvironmentConfig {
     #[must_use]
     pub fn development_optimized() -> Self {
         let mut feature_flags = HashMap::new();
-        feature_flags.insert(String::from("debug_logging"), true);
+        feature_flags.insert("debug_logging".into(), true);
 
         Self {
-            environment_name: String::from("development"),
+            environment_name: "development".into(),
             overrides: HashMap::new(),
             feature_flags,
         }
@@ -43,11 +43,11 @@ impl NetworkEnvironmentConfig {
     #[must_use]
     pub fn production_hardened() -> Self {
         let mut feature_flags = HashMap::new();
-        feature_flags.insert(String::from("debug_logging"), false);
-        feature_flags.insert(String::from("strict_validation"), true);
+        feature_flags.insert("debug_logging".into(), false);
+        feature_flags.insert("strict_validation".into(), true);
 
         Self {
-            environment_name: String::from("production"),
+            environment_name: "production".into(),
             overrides: HashMap::new(),
             feature_flags,
         }

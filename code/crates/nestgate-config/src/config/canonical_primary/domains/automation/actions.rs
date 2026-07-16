@@ -53,7 +53,7 @@ impl ActionsConfig {
             script_execution: false,
             max_retries: 3,
             action_timeout: Duration::from_secs(60),
-            allowed_actions: vec![String::from("notify"), String::from("log")],
+            allowed_actions: vec!["notify".into(), "log".into()],
         }
     }
 
@@ -71,12 +71,12 @@ impl ActionsConfig {
             max_retries: 5,
             action_timeout: Duration::from_secs(300),
             allowed_actions: vec![
-                String::from("notify"),
-                String::from("log"),
-                String::from("move"),
-                String::from("copy"),
-                String::from("tier"),
-                String::from("execute_script"),
+                "notify".into(),
+                "log".into(),
+                "move".into(),
+                "copy".into(),
+                "tier".into(),
+                "execute_script".into(),
             ],
         }
     }

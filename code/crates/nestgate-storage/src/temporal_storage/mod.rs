@@ -117,7 +117,7 @@ mod tests {
                 height_mm: 70.0,
                 depth_mm: 7.0,
             },
-            supported_formats: vec![String::from("ext4"), String::from("xfs")],
+            supported_formats: vec!["ext4".into(), "xfs".into()],
             metadata: HashMap::new(),
         };
 
@@ -174,7 +174,7 @@ mod tests {
                 height_mm: 70.0,
                 depth_mm: 7.0,
             },
-            supported_formats: vec![String::from("ext4")],
+            supported_formats: vec!["ext4".into()],
             metadata: HashMap::new(),
         };
 
@@ -239,10 +239,10 @@ mod tests {
     #[test]
     fn test_data_descriptor_creation() {
         let descriptor = DataDescriptor::new(
-            String::from("test-id"),
+            "test-id".into(),
             DataType::Documents,
             1024,
-            String::from("/path/to/data"),
+            "/path/to/data".into(),
         );
 
         assert_eq!(descriptor.id, "test-id");
@@ -252,10 +252,10 @@ mod tests {
     #[test]
     fn test_data_descriptor_size_formatting() {
         let descriptor = DataDescriptor::new(
-            String::from("test"),
+            "test".into(),
             DataType::Documents,
             1024 * 1024 * 1024, // 1GB
-            String::from("/path"),
+            "/path".into(),
         );
 
         let size_str = descriptor.size_human_readable();
@@ -267,17 +267,17 @@ mod tests {
     #[test]
     fn test_ingested_data_creation() {
         let descriptor = DataDescriptor::new(
-            String::from("data-1"),
+            "data-1".into(),
             DataType::Documents,
             1024,
-            String::from("/path"),
+            "/path".into(),
         );
 
         let mut data = IngestedData::new(
-            String::from("ingest-1"),
+            "ingest-1".into(),
             descriptor,
             vec![1, 2, 3, 4],
-            String::from("checksum123"),
+            "checksum123".into(),
         );
 
         assert_eq!(data.content_size(), 4);
@@ -295,7 +295,7 @@ mod tests {
         assert!(status.is_acceptable());
         assert!(status.error_message().is_none());
 
-        let invalid = ValidationStatus::Invalid(String::from("error"));
+        let invalid = ValidationStatus::Invalid("error".into());
         assert!(!invalid.is_acceptable());
         assert!(invalid.error_message().is_some());
     }
@@ -314,7 +314,7 @@ mod tests {
                 height_mm: 70.0,
                 depth_mm: 7.0,
             },
-            supported_formats: vec![String::from("ext4")],
+            supported_formats: vec!["ext4".into()],
             metadata: HashMap::new(),
         };
 
@@ -353,7 +353,7 @@ mod tests {
                 height_mm: 1.0,
                 depth_mm: 1.0,
             },
-            supported_formats: vec![String::from("quantum")],
+            supported_formats: vec!["quantum".into()],
             metadata: HashMap::new(),
         };
 
@@ -407,7 +407,7 @@ mod tests {
                     height_mm: 70.0,
                     depth_mm: 7.0,
                 },
-                supported_formats: vec![String::from("format")],
+                supported_formats: vec!["format".into()],
                 metadata: HashMap::new(),
             };
             system.add_device(device);
@@ -434,10 +434,10 @@ mod tests {
     #[test]
     fn test_data_descriptor_zero_size() {
         let descriptor = DataDescriptor::new(
-            String::from("empty"),
+            "empty".into(),
             DataType::Documents,
             0, // Zero bytes
-            String::from("/path"),
+            "/path".into(),
         );
 
         assert_eq!(descriptor.size_bytes, 0);
@@ -448,10 +448,10 @@ mod tests {
     #[test]
     fn test_data_descriptor_huge_size() {
         let descriptor = DataDescriptor::new(
-            String::from("huge"),
+            "huge".into(),
             DataType::Documents,
             u64::MAX, // Maximum size
-            String::from("/path"),
+            "/path".into(),
         );
 
         assert_eq!(descriptor.size_bytes, u64::MAX);
@@ -460,17 +460,17 @@ mod tests {
     #[test]
     fn test_ingested_data_empty_content() {
         let descriptor = DataDescriptor::new(
-            String::from("empty"),
+            "empty".into(),
             DataType::Documents,
             0,
-            String::from("/path"),
+            "/path".into(),
         );
 
         let data = IngestedData::new(
-            String::from("ingest-empty"),
+            "ingest-empty".into(),
             descriptor,
             vec![], // Empty content
-            String::from("checksum"),
+            "checksum".into(),
         );
 
         assert_eq!(data.content_size(), 0);
@@ -508,7 +508,7 @@ mod tests {
                 height_mm: 70.0,
                 depth_mm: 7.0,
             },
-            supported_formats: vec![String::from("ext4")],
+            supported_formats: vec!["ext4".into()],
             metadata: HashMap::new(),
         };
 
@@ -532,7 +532,7 @@ mod tests {
                 height_mm: 1.0,
                 depth_mm: 1.0,
             },
-            supported_formats: vec![String::from("quantum")],
+            supported_formats: vec!["quantum".into()],
             metadata: HashMap::new(),
         };
 
@@ -554,11 +554,11 @@ mod tests {
         let unvalidated = ValidationStatus::Unvalidated;
         assert!(!unvalidated.is_acceptable());
 
-        let invalid = ValidationStatus::Invalid(String::from("test error"));
+        let invalid = ValidationStatus::Invalid("test error".into());
         assert!(!invalid.is_acceptable());
         assert_eq!(invalid.error_message(), Some("test error"));
 
-        let partial = ValidationStatus::PartiallyValid(vec![String::from("warning1")]);
+        let partial = ValidationStatus::PartiallyValid(vec!["warning1".into()]);
         assert!(partial.is_acceptable()); // Partially valid still acceptable
     }
 
@@ -580,17 +580,17 @@ mod tests {
     #[test]
     fn test_ingested_data_validation_lifecycle() {
         let descriptor = DataDescriptor::new(
-            String::from("lifecycle"),
+            "lifecycle".into(),
             DataType::Documents,
             100,
-            String::from("/path"),
+            "/path".into(),
         );
 
         let mut data = IngestedData::new(
-            String::from("ingest-lifecycle"),
+            "ingest-lifecycle".into(),
             descriptor,
             vec![1, 2, 3],
-            String::from("checksum"),
+            "checksum".into(),
         );
 
         // Initial state: not validated
@@ -603,7 +603,7 @@ mod tests {
         assert!(data.is_valid());
 
         // Mark as invalid
-        data.mark_invalid(String::from("test error"));
+        data.mark_invalid("test error".into());
         assert!(data.is_validated());
         assert!(!data.is_valid());
     }

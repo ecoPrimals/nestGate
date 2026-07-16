@@ -360,7 +360,7 @@ mod tests {
     fn create_test_request(method: &str, target: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::new_v4(),
-            source: String::from("test"),
+            source: "test".into(),
             target: target.to_string(),
             method: method.to_string(),
             _params: serde_json::json!({}),
@@ -497,7 +497,7 @@ mod tests {
     #[test]
     fn add_method_rule_takes_precedence() {
         let mut router = UnifiedRpcRouter::new();
-        router.add_method_rule(String::from("custom.method"), RpcConnectionType::JsonRpc);
+        router.add_method_rule("custom.method".into(), RpcConnectionType::JsonRpc);
         let request = create_test_request("custom.method", "security-encryption");
         let connection_type = router
             .route_request(&request)

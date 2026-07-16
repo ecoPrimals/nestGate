@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_create_workspace_template_rejects_invalid_id() {
-        let (status, _) = create_workspace_template(Path(String::from("../escape")));
+        let (status, _) = create_workspace_template(Path("../escape".into()));
         assert_eq!(status, StatusCode::BAD_REQUEST);
     }
 
@@ -157,7 +157,7 @@ mod tests {
         let path = dir.path().to_str().expect("utf8 path");
         let env = MapEnv::from([("NESTGATE_WORKSPACE_TEMPLATES_DIR", path)]);
         let (status, Json(body)) =
-            create_workspace_template_from_env_source(&env, Path(String::from("my-ws-01")));
+            create_workspace_template_from_env_source(&env, Path("my-ws-01".into()));
         assert_eq!(status, StatusCode::OK);
         assert_eq!(body["status"].as_str(), Some("created"));
         let p = PathBuf::from(path).join("my-ws-01.json");
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_apply_workspace_template_not_implemented() {
-        let (status, Json(body)) = apply_workspace_template(Path(String::from("test-workspace")));
+        let (status, Json(body)) = apply_workspace_template(Path("test-workspace".into()));
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
         assert_eq!(
             body["error"].as_str(),

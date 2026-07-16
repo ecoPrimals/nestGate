@@ -249,7 +249,7 @@ pub(super) async fn get_pool_capacity_info(pool_name: &str) -> (u64, u64, String
         }
     }
 
-    (0, 0, String::from("UNKNOWN"))
+    (0, 0, "UNKNOWN".into())
 }
 
 /// Parse ZFS size strings (e.g., "1.5T", "512G") to bytes

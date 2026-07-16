@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn test_should_transition_to_stage() {
         let lifecycle = DatasetLifecycle {
-            dataset_name: String::from("pool/ds"),
+            dataset_name: "pool/ds".into(),
             current_tier: StorageTier::Warm,
             created: SystemTime::now(),
             last_accessed: None,
@@ -232,7 +232,7 @@ mod tests {
     fn test_get_or_create_lifecycle_existing() {
         let mut tracker = HashMap::new();
         let existing = DatasetLifecycle {
-            dataset_name: String::from("pool/existing"),
+            dataset_name: "pool/existing".into(),
             current_tier: StorageTier::Hot,
             created: SystemTime::now(),
             last_accessed: None,
@@ -242,7 +242,7 @@ mod tests {
             lifecycle_stage: LifecycleStage::Active,
             automation_history: vec![],
         };
-        tracker.insert(String::from("pool/existing"), existing);
+        tracker.insert("pool/existing".into(), existing);
         let lifecycle = get_or_create_lifecycle("pool/existing", &tracker);
         assert_eq!(lifecycle.access_count, 10);
         assert!(matches!(lifecycle.lifecycle_stage, LifecycleStage::Active));
@@ -251,7 +251,7 @@ mod tests {
     #[test]
     fn test_evaluate_lifecycle_conditions_always() {
         let lifecycle = DatasetLifecycle {
-            dataset_name: String::from("pool/ds"),
+            dataset_name: "pool/ds".into(),
             current_tier: StorageTier::Warm,
             created: SystemTime::now(),
             last_accessed: None,
@@ -262,14 +262,14 @@ mod tests {
             automation_history: vec![],
         };
         let result =
-            evaluate_lifecycle_conditions("pool/ds", &lifecycle, &[String::from("always")]);
+            evaluate_lifecycle_conditions("pool/ds", &lifecycle, &["always".into()]);
         assert!(result.unwrap());
     }
 
     #[test]
     fn test_evaluate_lifecycle_conditions_never() {
         let lifecycle = DatasetLifecycle {
-            dataset_name: String::from("pool/ds"),
+            dataset_name: "pool/ds".into(),
             current_tier: StorageTier::Warm,
             created: SystemTime::now(),
             last_accessed: None,
@@ -279,7 +279,7 @@ mod tests {
             lifecycle_stage: LifecycleStage::Active,
             automation_history: vec![],
         };
-        let result = evaluate_lifecycle_conditions("pool/ds", &lifecycle, &[String::from("never")]);
+        let result = evaluate_lifecycle_conditions("pool/ds", &lifecycle, &["never".into()]);
         assert!(!result.unwrap());
     }
 }

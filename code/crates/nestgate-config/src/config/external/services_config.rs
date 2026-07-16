@@ -327,14 +327,14 @@ mod tests {
     #[test]
     fn test_services_config_builder() {
         let config = ServicesConfig::new()
-            .with_discovery_url(String::from("http://discovery:8080"))
+            .with_discovery_url("http://discovery:8080".into())
             .with_capability("orchestration", "http://test-orchestration:9000")
-            .with_external_service(String::from("custom"), String::from("http://custom:8000"));
+            .with_external_service("custom".into(), "http://custom:8000".into());
 
         assert_eq!(config.get_discovery_url(), "http://discovery:8080");
         assert_eq!(
             config.get_capability_url("orchestration"),
-            Some(String::from("http://test-orchestration:9000"))
+            Some("http://test-orchestration:9000".into())
         );
         assert_eq!(
             config.get_external_service("custom"),
@@ -345,9 +345,9 @@ mod tests {
     #[test]
     fn test_services_config_production_required() {
         let config = ServicesConfig::new()
-            .with_discovery_url(String::from("http://prod-discovery:8080"))
-            .with_adapter_url(String::from("http://prod-adapter:8080"))
-            .with_health_url(String::from("http://prod-health:8080"));
+            .with_discovery_url("http://prod-discovery:8080".into())
+            .with_adapter_url("http://prod-adapter:8080".into())
+            .with_health_url("http://prod-health:8080".into());
 
         assert!(config.get_discovery_url_required().is_some());
         assert!(config.get_adapter_url_required().is_some());
@@ -357,10 +357,10 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
     async fn test_concurrent_services_config_access() {
         let config1 = Arc::new(
-            ServicesConfig::new().with_discovery_url(String::from("http://discovery1:8080")),
+            ServicesConfig::new().with_discovery_url("http://discovery1:8080".into()),
         );
         let config2 = Arc::new(
-            ServicesConfig::new().with_discovery_url(String::from("http://discovery2:8080")),
+            ServicesConfig::new().with_discovery_url("http://discovery2:8080".into()),
         );
 
         let handle1 = {
@@ -389,12 +389,12 @@ mod tests {
     fn test_services_config_external_services() {
         let config = ServicesConfig::new()
             .with_external_service(
-                String::from("huggingface"),
-                String::from("https://api.huggingface.co"),
+                "huggingface".into(),
+                "https://api.huggingface.co".into(),
             )
             .with_external_service(
-                String::from("ncbi"),
-                String::from("https://eutils.ncbi.nlm.nih.gov"),
+                "ncbi".into(),
+                "https://eutils.ncbi.nlm.nih.gov".into(),
             );
 
         assert_eq!(
@@ -429,15 +429,15 @@ mod tests {
         let config = ServicesConfig::from_env_source(&env);
         assert_eq!(
             config.get_capability_url("orchestration"),
-            Some(String::from("http://orch-cap:9000"))
+            Some("http://orch-cap:9000".into())
         );
         assert_eq!(
             config.get_capability_url("security"),
-            Some(String::from("https://sec-cap:8443"))
+            Some("https://sec-cap:8443".into())
         );
         assert_eq!(
             config.get_capability_url("ai"),
-            Some(String::from("http://ai-cap:7000"))
+            Some("http://ai-cap:7000".into())
         );
         assert!(config.get_capability_url("unknown").is_none());
     }
@@ -453,19 +453,19 @@ mod tests {
         let config = ServicesConfig::from_env_source(&env);
         assert_eq!(
             config.get_capability_url("orchestration"),
-            Some(String::from("http://mirror-orch:1"))
+            Some("http://mirror-orch:1".into())
         );
         assert_eq!(
             config.get_capability_url("security"),
-            Some(String::from("http://mirror-sec:2"))
+            Some("http://mirror-sec:2".into())
         );
         assert_eq!(
             config.get_capability_url("compute"),
-            Some(String::from("http://mirror-comp:3"))
+            Some("http://mirror-comp:3".into())
         );
         assert_eq!(
             config.get_capability_url("ecosystem"),
-            Some(String::from("http://mirror-eco:4"))
+            Some("http://mirror-eco:4".into())
         );
     }
 
@@ -475,7 +475,7 @@ mod tests {
         let config = ServicesConfig::from_env_source(&env);
         assert_eq!(
             config.get_capability_url("storage"),
-            Some(String::from("http://store:5000"))
+            Some("http://store:5000".into())
         );
     }
 
@@ -503,7 +503,7 @@ mod tests {
         assert_eq!(config.get_discovery_url(), "http://explicit-discovery:1111");
         assert_eq!(
             config.get_capability_url("orchestration"),
-            Some(String::from("http://cap-only:2222"))
+            Some("http://cap-only:2222".into())
         );
     }
 
@@ -513,7 +513,7 @@ mod tests {
         let config = ServicesConfig::from_env_source(&env);
         assert_eq!(
             config.get_all_capabilities().get("foo"),
-            Some(&String::from("http://foo:1"))
+            Some(&"http://foo:1".into())
         );
     }
 }

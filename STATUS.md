@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 16, 2026 (Wave 142b — mock evolution, String::from R7, visibility tightening, deep debt sweep)  
+**Last Updated**: Jul 16, 2026 (Wave 143b — PROJECTS_PATH CAS wiring, String::from R8 sweep [2500+], deep debt)  
 **Version**: 0.5.0
 
 ---
@@ -53,6 +53,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 Per-session detail (Sessions 43–113) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
 
 Recent sessions:
+- **Session 114** (Wave 143b): PROJECTS_PATH CAS wiring (footPrint composition), String::from R8 sweep (2500+ across 382 files), deep debt continuation
 - **Session 113** (Wave 142b): Production mock evolution — ZFS defaults zeroed, tier utilization real, AI confidence computed, String::from R7 (21)
 - **Session 112** (Wave 142b): Visibility tightening — `btsp_client`/`btsp_phase3`/`primal_announce` → `pub(crate)`, infallible nonce, unwrap_or sweep (31)
 - **Session 111** (Wave 141b): Streaming clone elimination — 4 function signatures `Value` → `&Value`, cast safety fix, String::from R6 (55), cross-arch 14/14

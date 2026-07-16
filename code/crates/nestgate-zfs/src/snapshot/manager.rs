@@ -288,8 +288,8 @@ impl ZfsSnapshotManager {
         info!("Loading default snapshot policies");
 
         let hot_policy = SnapshotPolicy {
-            name: String::from("Hot Tier Snapshots"),
-            description: String::from("Frequent snapshots for hot tier data"),
+            name: "Hot Tier Snapshots".into(),
+            description: "Frequent snapshots for hot tier data".into(),
             enabled: true,
             frequency: ScheduleFrequency::Hours(1),
             retention: RetentionPolicy::Custom {
@@ -299,9 +299,9 @@ impl ZfsSnapshotManager {
                 monthly_months: 3,
                 yearly_years: 1,
             },
-            dataset_patterns: vec![String::from("*/hot/*")],
+            dataset_patterns: vec!["*/hot/*".into()],
             tiers: vec![StorageTier::Hot],
-            name_prefix: String::from("hot"),
+            name_prefix: "hot".into(),
             include_properties: true,
             recursive: true,
             max_snapshots_per_run: 10,
@@ -309,8 +309,8 @@ impl ZfsSnapshotManager {
         };
 
         let warm_policy = SnapshotPolicy {
-            name: String::from("Warm Tier Snapshots"),
-            description: String::from("Regular snapshots for warm tier data"),
+            name: "Warm Tier Snapshots".into(),
+            description: "Regular snapshots for warm tier data".into(),
             enabled: true,
             frequency: ScheduleFrequency::Daily(2),
             retention: RetentionPolicy::Custom {
@@ -320,9 +320,9 @@ impl ZfsSnapshotManager {
                 monthly_months: 6,
                 yearly_years: 2,
             },
-            dataset_patterns: vec![String::from("*/warm/*")],
+            dataset_patterns: vec!["*/warm/*".into()],
             tiers: vec![StorageTier::Warm],
-            name_prefix: String::from("warm"),
+            name_prefix: "warm".into(),
             include_properties: true,
             recursive: true,
             max_snapshots_per_run: 5,
@@ -330,8 +330,8 @@ impl ZfsSnapshotManager {
         };
 
         let cold_policy = SnapshotPolicy {
-            name: String::from("Cold Tier Snapshots"),
-            description: String::from("Infrequent snapshots for cold tier data"),
+            name: "Cold Tier Snapshots".into(),
+            description: "Infrequent snapshots for cold tier data".into(),
             enabled: true,
             frequency: ScheduleFrequency::Weekly { day: 0, hour: 3 },
             retention: RetentionPolicy::Custom {
@@ -341,9 +341,9 @@ impl ZfsSnapshotManager {
                 monthly_months: 12,
                 yearly_years: 5,
             },
-            dataset_patterns: vec![String::from("*/cold/*")],
+            dataset_patterns: vec!["*/cold/*".into()],
             tiers: vec![StorageTier::Cold],
-            name_prefix: String::from("cold"),
+            name_prefix: "cold".into(),
             include_properties: true,
             recursive: true,
             max_snapshots_per_run: 2,

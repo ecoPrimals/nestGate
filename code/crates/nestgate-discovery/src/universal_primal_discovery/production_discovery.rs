@@ -103,9 +103,9 @@ impl Default for ServiceDiscoveryConfig {
 
         // Add standard service endpoints
         services.insert(
-            String::from("api"),
+            "api".into(),
             ServiceEndpoint {
-                name: String::from("api"),
+                name: "api".into(),
                 host: defaults.default_host.clone(),
                 port: defaults.default_port,
                 bind_address: defaults.default_bind,
@@ -113,11 +113,11 @@ impl Default for ServiceDiscoveryConfig {
         );
 
         // Add default resource limits
-        resource_limits.insert(String::from("max_connections"), defaults.default_limit);
-        resource_limits.insert(String::from("max_retries"), 3);
+        resource_limits.insert("max_connections".into(), defaults.default_limit);
+        resource_limits.insert("max_retries".into(), 3);
 
         // Add default timeouts
-        operation_timeouts.insert(String::from("default"), defaults.default_timeout);
+        operation_timeouts.insert("default".into(), defaults.default_timeout);
 
         Self {
             services,
@@ -222,12 +222,12 @@ impl ServiceDiscoveryConfig {
     ) -> Result<()> {
         // Use API config as primary service
         let api_service = ServiceEndpoint {
-            name: String::from("api"),
+            name: "api".into(),
             host: nestgate_config::constants::canonical_defaults::network::LOCALHOST.to_string(), // Default host
             port: config.network.api.port,
             bind_address: IpAddr::V4(Ipv4Addr::UNSPECIFIED), // Bind to all by default
         };
-        services.insert(String::from("api"), api_service);
+        services.insert("api".into(), api_service);
 
         debug!("Discovered services from configuration");
         Ok(())

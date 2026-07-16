@@ -9,7 +9,7 @@ use super::*;
 #[must_use]
 pub fn production_defaults() -> NestGateCanonicalConfig {
     let mut config = NestGateCanonicalConfig::default();
-    config.system.environment = String::from("production");
+    config.system.environment = "production".into();
     config.system.debug_mode = false;
     config
 }
@@ -17,7 +17,7 @@ pub fn production_defaults() -> NestGateCanonicalConfig {
 #[must_use]
 pub fn development_defaults() -> NestGateCanonicalConfig {
     let mut config = NestGateCanonicalConfig::default();
-    config.system.environment = String::from("development");
+    config.system.environment = "development".into();
     config.system.debug_mode = true;
     config.development.enabled = true;
     config

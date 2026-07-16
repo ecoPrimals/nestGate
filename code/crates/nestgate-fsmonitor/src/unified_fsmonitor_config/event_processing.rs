@@ -235,7 +235,7 @@ impl Default for ErrorLoggingSettings {
     fn default() -> Self {
         Self {
             enabled: true,
-            log_level: String::from("error"),
+            log_level: "error".into(),
             structured_logging: true,
         }
     }

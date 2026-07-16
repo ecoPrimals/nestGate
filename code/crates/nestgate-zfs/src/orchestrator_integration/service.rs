@@ -125,7 +125,7 @@ impl ZfsService {
     pub fn create_registration(&self) -> ServiceRegistration {
         ServiceRegistration {
             service_id: self.node_id.clone(),
-            service_type: String::from("zfs-storage"),
+            service_type: "zfs-storage".into(),
             capabilities: self.config.capabilities.clone(),
             endpoints: self.endpoints(),
             metadata: self.config.metadata.clone(),
@@ -179,7 +179,7 @@ impl ZfsService {
         // not populated here until wired to live ZFS pool/dataset metrics.
         Ok(ZfsHealthStatus {
             node_id: self.node_id.clone(),
-            status: String::from("healthy"),
+            status: "healthy".into(),
             pools_healthy: true,
             datasets_healthy: true,
             system_healthy: true,
@@ -264,7 +264,7 @@ impl ZfsService {
     pub fn get_service_info(&self) -> ServiceInfo {
         ServiceInfo {
             service_id: self.node_id.clone(),
-            service_type: String::from("zfs-storage"),
+            service_type: "zfs-storage".into(),
             endpoints: self.endpoints(),
             capabilities: self.config.capabilities.clone(),
             metadata: self.config.metadata.clone(),
@@ -291,13 +291,13 @@ mod tests {
 
     fn sample_config() -> ZfsServiceConfig {
         ZfsServiceConfig {
-            service_name: String::from("test-zfs"),
-            bind_address: String::from("127.0.0.1"),
+            service_name: "test-zfs".into(),
+            bind_address: "127.0.0.1".into(),
             port: 9000,
-            orchestrator_endpoints: vec![String::from("http://127.0.0.1:1")],
+            orchestrator_endpoints: vec!["http://127.0.0.1:1".into()],
             health_check_interval: 10,
-            capabilities: vec![String::from("pool")],
-            metadata: HashMap::from([(String::from("k"), String::from("v"))]),
+            capabilities: vec!["pool".into()],
+            metadata: HashMap::from([("k".into(), "v".into())]),
         }
     }
 
@@ -320,10 +320,10 @@ mod tests {
     fn endpoints_and_capabilities_and_registration() {
         let s = ZfsService::new(sample_config());
         assert_eq!(s.endpoints(), vec!["127.0.0.1:9000"]);
-        assert_eq!(s.capabilities(), &[String::from("pool")]);
+        assert_eq!(s.capabilities(), &["pool".into()]);
         let reg = s.create_registration();
         assert_eq!(reg.service_type, "zfs-storage");
-        assert_eq!(reg.capabilities, vec![String::from("pool")]);
+        assert_eq!(reg.capabilities, vec!["pool".into()]);
         assert!(reg.endpoints.iter().any(|e| e.contains(':')));
     }
 
@@ -373,7 +373,7 @@ mod tests {
         let _ = s.health_check();
         let info = s.get_service_info();
         assert_eq!(info.service_type, "zfs-storage");
-        assert_eq!(info.metadata.get("k"), Some(&String::from("v")));
+        assert_eq!(info.metadata.get("k"), Some(&"v".into()));
         assert!(info.last_heartbeat.is_some());
     }
 

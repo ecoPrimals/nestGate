@@ -176,7 +176,7 @@ impl Default for CompatibilityChecker {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            _compatibility_rules: vec![String::from("Standard compatibility rules")],
+            _compatibility_rules: vec!["Standard compatibility rules".into()],
             validation_errors: Vec::new(),
         }
     }
@@ -241,7 +241,7 @@ impl Default for ModernizationEngine {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            _available_patterns: vec![String::from("Canonical patterns")],
+            _available_patterns: vec!["Canonical patterns".into()],
             _applied_patterns: HashMap::new(),
         }
     }
@@ -304,7 +304,7 @@ impl Default for CanonicalEvolutionSystem {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            system_version: String::from("1.0.0"),
+            system_version: "1.0.0".into(),
             _active_evolutions: HashMap::new(),
         }
     }

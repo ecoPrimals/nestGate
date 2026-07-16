@@ -64,8 +64,8 @@ pub fn snapshot_tuning_result() -> TuningResult {
     TuningResult {
         profile_name,
         optimizations_applied: vec![
-            String::from("observed_live_metrics_only"),
-            String::from("no_kernel_privilege_escalation"),
+            "observed_live_metrics_only".into(),
+            "no_kernel_privilege_escalation".into(),
         ],
         estimated_power_increase: 0.0,
         performance_improvement: 0.0,
@@ -95,7 +95,7 @@ pub fn snapshot_cpu_info() -> CpuInfo {
     let cores = linux_proc::logical_cpu_count()
         .map(|n| usize::try_from(n.max(1)).unwrap_or(1))
         .unwrap_or(1);
-    let model = linux_proc::cpu_model_best_effort().unwrap_or_else(|_| String::from("unknown"));
+    let model = linux_proc::cpu_model_best_effort().unwrap_or_else(|_| "unknown".into());
     CpuInfo { cores, model }
 }
 

@@ -51,7 +51,7 @@ impl OptimizationConfig {
             storage_optimization: false,
             performance_optimization: false,
             resource_balancing: false,
-            target: String::from("balance"),
+            target: "balance".into(),
             aggressiveness: 30,
         }
     }
@@ -68,7 +68,7 @@ impl OptimizationConfig {
             storage_optimization: true,
             performance_optimization: true,
             resource_balancing: true,
-            target: String::from("efficiency"),
+            target: "efficiency".into(),
             aggressiveness: 70,
         }
     }

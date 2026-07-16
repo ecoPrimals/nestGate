@@ -642,7 +642,7 @@ mod tests {
     #[test]
     fn zfs_backend_config_remote_roundtrip() {
         let b = ZfsBackendConfig::Remote {
-            endpoint: String::from("https://zfs.example/tarpc"),
+            endpoint: "https://zfs.example/tarpc".into(),
             timeout: Duration::from_secs(12),
         };
         let json = serde_json::to_string(&b).unwrap();
@@ -682,9 +682,9 @@ mod tests {
     #[test]
     fn custom_handler_config_roundtrip() {
         let mut settings = HashMap::new();
-        settings.insert(String::from("k"), serde_json::json!({"x": 1}));
+        settings.insert("k".into(), serde_json::json!({"x": 1}));
         let c = CustomHandlerConfig {
-            name: String::from("plugin"),
+            name: "plugin".into(),
             settings,
             timeout: Duration::from_millis(500),
             enable_metrics: false,

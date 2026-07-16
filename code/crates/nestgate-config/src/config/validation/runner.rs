@@ -111,11 +111,11 @@ mod tests {
     impl ConfigValidation for InvalidConfig {
         fn validate(&self) -> ValidationResult {
             ValidationResult::with_errors(vec![ValidationError {
-                field: String::from("port"),
-                message: String::from("port must be > 0"),
+                field: "port".into(),
+                message: "port must be > 0".into(),
                 error_type: ValidationErrorType::OutOfRange,
-                current_value: Some(String::from("0")),
-                expected_format: Some(String::from("1..65535")),
+                current_value: Some("0".into()),
+                expected_format: Some("1..65535".into()),
             }])
         }
         fn schema() -> ValidationSchema {
@@ -128,14 +128,14 @@ mod tests {
         fn validate(&self) -> ValidationResult {
             ValidationResult::success()
                 .with_warning(ValidationWarning {
-                    field: String::from("timeout"),
-                    message: String::from("timeout is very high"),
+                    field: "timeout".into(),
+                    message: "timeout is very high".into(),
                     severity: WarningSeverity::Medium,
                 })
                 .with_suggestion(ValidationSuggestion {
-                    field: String::from("timeout"),
-                    message: String::from("consider lowering timeout"),
-                    suggested_value: Some(String::from("30")),
+                    field: "timeout".into(),
+                    message: "consider lowering timeout".into(),
+                    suggested_value: Some("30".into()),
                 })
         }
         fn schema() -> ValidationSchema {

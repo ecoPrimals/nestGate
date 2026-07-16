@@ -79,7 +79,7 @@ mod round5_canonical_network_tests {
     #[test]
     fn round5_endpoint_serde_roundtrip() {
         let e = Endpoint {
-            host: String::from("10.0.0.1"),
+            host: "10.0.0.1".into(),
             port: 443,
             protocol: Protocol::Https,
         };

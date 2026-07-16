@@ -55,8 +55,8 @@ mod tests {
     async fn authenticate_returns_unauthorized() {
         let handler = ProductionAuthHandler::new();
         let credentials = AuthCredentials {
-            username: String::from("any_user"),
-            password: String::from("password123"),
+            username: "any_user".into(),
+            password: "password123".into(),
         };
 
         let result = authenticate(State(handler), Json(credentials)).await;
@@ -71,10 +71,10 @@ mod tests {
     async fn create_user_returns_not_implemented() {
         let handler = ProductionAuthHandler::new();
         let request = CreateUserRequest {
-            user_id: String::from("test_user"),
-            username: String::from("testuser"),
-            role: String::from("user"),
-            permissions: vec![String::from("read")],
+            user_id: "test_user".into(),
+            username: "testuser".into(),
+            role: "user".into(),
+            permissions: vec!["read".into()],
         };
 
         let result = create_user(State(handler), Json(request)).await;

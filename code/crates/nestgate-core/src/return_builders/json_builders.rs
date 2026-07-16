@@ -42,7 +42,7 @@ pub fn build_api_success_with_metadata_and_request_id<T>(
 ) -> crate::response::ApiResponse<T> {
     let mut final_metadata = metadata;
     if let Some(req_id) = request_id {
-        final_metadata.insert(String::from("request_id"), JsonValue::String(req_id));
+        final_metadata.insert("request_id".into(), JsonValue::String(req_id));
     }
     crate::response::ApiResponse {
         request_id: uuid::Uuid::new_v4().to_string(),
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn build_api_success_with_metadata_merges_custom_fields() {
         let mut meta = HashMap::new();
-        meta.insert(String::from("k"), json!("v"));
+        meta.insert("k".into(), json!("v"));
         let resp = build_api_success_with_metadata("x", meta.clone());
         assert_eq!(resp.metadata.as_ref().unwrap().get("k"), Some(&json!("v")));
     }
@@ -137,18 +137,18 @@ mod tests {
         let resp = build_api_success_with_metadata_and_request_id(
             1_u8,
             HashMap::new(),
-            Some(String::from("req-abc")),
+            Some("req-abc".into()),
         );
         assert_eq!(
             resp.metadata.as_ref().unwrap().get("request_id"),
-            Some(&JsonValue::String(String::from("req-abc")))
+            Some(&JsonValue::String("req-abc".into()))
         );
     }
 
     #[test]
     fn build_api_error_sets_message_and_optional_code() {
         let resp: crate::response::ApiResponse<()> =
-            build_api_error(String::from("bad"), Some(String::from("E1")));
+            build_api_error("bad".into(), Some("E1".into()));
         assert!(!resp.success);
         assert_eq!(resp.status, ResponseStatus::Error);
         assert_eq!(resp.error.as_deref(), Some("bad"));
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn build_json_response_success_includes_message_and_optional_data() {
-        let v = build_json_response(true, Some(String::from("ok")), Some(json!({"id": 7})));
+        let v = build_json_response(true, Some("ok".into()), Some(json!({"id": 7})));
         assert_eq!(v["success"], json!(true));
         assert_eq!(v["message"], json!("ok"));
         assert_eq!(v["data"], json!({"id": 7}));
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn build_json_response_failure_uses_error_field_not_message() {
-        let v = build_json_response(false, Some(String::from("nope")), None);
+        let v = build_json_response(false, Some("nope".into()), None);
         assert_eq!(v["success"], json!(false));
         assert_eq!(v["error"], json!("nope"));
         assert!(v.get("message").is_none());

@@ -121,10 +121,10 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("test-security"),
+            name: "test-security".into(),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
             endpoint: Endpoint {
-                host: String::from("localhost"),
+                host: "localhost".into(),
                 port: nestgate_config::constants::hardcoding::runtime_fallback_ports::https(),
                 protocol: Protocol::HTTPS,
                 tls: true,
@@ -148,9 +148,9 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![Capability::Security(SecurityCapability::Encryption)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -169,9 +169,9 @@ mod tests {
         let service_id = uuid::Uuid::new_v4();
         let service = ServiceDescriptor {
             id: service_id,
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -194,18 +194,18 @@ mod tests {
         // Register multiple services with the same capability
         let service1 = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("storage1"),
+            name: "storage1".into(),
             capabilities: vec![Capability::Storage(StorageCapability::ObjectStorage)],
-            endpoint: Endpoint::http(String::from("localhost"), 9001),
+            endpoint: Endpoint::http("localhost".into(), 9001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
 
         let service2 = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("storage2"),
+            name: "storage2".into(),
             capabilities: vec![Capability::Storage(StorageCapability::ObjectStorage)],
-            endpoint: Endpoint::http(String::from("localhost"), 9002),
+            endpoint: Endpoint::http("localhost".into(), 9002),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -229,12 +229,12 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("multi-cap"),
+            name: "multi-cap".into(),
             capabilities: vec![
                 Capability::Networking(NetworkingCapability::LoadBalancing),
                 Capability::Orchestration(OrchestrationCapability::ServiceScheduling),
             ],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -287,9 +287,9 @@ mod tests {
         // Register initial service
         let service1 = ServiceDescriptor {
             id: service_id,
-            name: String::from("ai-service"),
+            name: "ai-service".into(),
             capabilities: vec![Capability::AI(AICapability::Inference)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -301,9 +301,9 @@ mod tests {
 
         let service2 = ServiceDescriptor {
             id: service_id,
-            name: String::from("ai-service-v2"),
+            name: "ai-service-v2".into(),
             capabilities: vec![Capability::AI(AICapability::Training)],
-            endpoint: Endpoint::http(String::from("localhost"), 8081),
+            endpoint: Endpoint::http("localhost".into(), 8081),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -323,18 +323,18 @@ mod tests {
 
         let service1 = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("storage"),
+            name: "storage".into(),
             capabilities: vec![Capability::Storage(StorageCapability::Database)],
-            endpoint: Endpoint::http(String::from("localhost"), 5432),
+            endpoint: Endpoint::http("localhost".into(), 5432),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
 
         let service2 = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("ai"),
+            name: "ai".into(),
             capabilities: vec![Capability::AI(AICapability::ModelServing)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -353,9 +353,9 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -386,7 +386,7 @@ mod tests {
                 id: uuid::Uuid::new_v4(),
                 name: format!("service{}", i),
                 capabilities: vec![Capability::Networking(NetworkingCapability::HTTP)],
-                endpoint: Endpoint::http(String::from("localhost"), 8080 + i),
+                endpoint: Endpoint::http("localhost".into(), 8080 + i),
                 metadata: ServiceMetadata::default(),
                 health: ServiceHealth::Healthy,
             })
@@ -419,11 +419,11 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![Capability::Orchestration(
                 OrchestrationCapability::HealthMonitoring,
             )],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -466,18 +466,18 @@ mod tests {
 
         let service1 = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("security"),
+            name: "security".into(),
             capabilities: vec![Capability::Security(SecurityCapability::Encryption)],
-            endpoint: Endpoint::http(String::from("localhost"), 8001),
+            endpoint: Endpoint::http("localhost".into(), 8001),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
 
         let service2 = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("storage"),
+            name: "storage".into(),
             capabilities: vec![Capability::Storage(StorageCapability::Cache)],
-            endpoint: Endpoint::http(String::from("localhost"), 8002),
+            endpoint: Endpoint::http("localhost".into(), 8002),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -500,12 +500,12 @@ mod tests {
         let service_id = uuid::Uuid::new_v4();
         let service = ServiceDescriptor {
             id: service_id,
-            name: String::from("multi"),
+            name: "multi".into(),
             capabilities: vec![
                 Capability::AI(AICapability::ComputerVision),
                 Capability::Networking(NetworkingCapability::WebSocket),
             ],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -540,9 +540,9 @@ mod tests {
 
         let service = ServiceDescriptor {
             id: uuid::Uuid::new_v4(),
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![Capability::Security(SecurityCapability::AuditLogging)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -566,7 +566,7 @@ mod tests {
         let registry = CapabilityRegistry::new();
 
         // Query non-existent custom capability
-        let providers = registry.find_providers(&Capability::Custom(String::from("NonExistent")));
+        let providers = registry.find_providers(&Capability::Custom("NonExistent".into()));
         assert_eq!(providers.len(), 0);
     }
 }

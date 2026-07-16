@@ -245,7 +245,7 @@ impl CapabilityConfig {
         }
 
         // Otherwise, introspect what we have available
-        let mut capabilities = vec![String::from("storage")];
+        let mut capabilities = vec!["storage".into()];
 
         // Check if ZFS is available (runtime capability detection - universal!)
         // This works on ALL platforms with ZFS installed
@@ -256,7 +256,7 @@ impl CapabilityConfig {
             && output.status.success()
         {
             debug!("ZFS capability detected (universal runtime check)");
-            capabilities.push(String::from("zfs"));
+            capabilities.push("zfs".into());
         }
 
         Ok(capabilities)
@@ -271,10 +271,10 @@ impl CapabilityConfig {
         let api_addr = Self::resolve_address_from_env_source(env, "NESTGATE_API_HOST", "0.0.0.0")?;
 
         endpoints.push(ServiceEndpoint {
-            protocol: String::from("http"),
+            protocol: "http".into(),
             address: api_addr,
             port: api_port,
-            path: Some(String::from("/api/v1")),
+            path: Some("/api/v1".into()),
         });
 
         Ok(endpoints)
@@ -383,7 +383,7 @@ impl CapabilityConfig {
                 .with_context(|| format!("Invalid port in {port_var}"))?;
 
             return Ok(Some(ServiceEndpoint {
-                protocol: String::from("http"), // Could be from env too
+                protocol: "http".into(), // Could be from env too
                 address: host,
                 port,
                 path: None,

@@ -26,7 +26,7 @@
 //!
 //! // Create dataset with compression
 //! let options = DatasetCreateOptions {
-//!     compression: Some(String::from("lz4")),
+//!     compression: Some("lz4".into()),
 //!     ..Default::default()
 //! };
 //! manager.create_dataset("mypool/dataset", options).await?;

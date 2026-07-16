@@ -328,11 +328,11 @@ mod tests {
 
         let audit = ExecutionAudit {
             id: String::new(), // Will be auto-generated
-            execution_id: String::from("exec_123"),
-            graph_id: String::from("graph_456"),
-            template_id: Some(String::from("tmpl_789")),
-            user_id: String::from("user_abc"),
-            family_id: String::from("test_family"),
+            execution_id: "exec_123".into(),
+            graph_id: "graph_456".into(),
+            template_id: Some("tmpl_789".into()),
+            user_id: "user_abc".into(),
+            family_id: "test_family".into(),
             started_at: Utc::now(),
             completed_at: Some(Utc::now()),
             status: ExecutionStatus::Completed,
@@ -359,11 +359,11 @@ mod tests {
 
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: String::from("exec_123"),
-            graph_id: String::from("graph_456"),
+            execution_id: "exec_123".into(),
+            graph_id: "graph_456".into(),
             template_id: None,
-            user_id: String::from("user_abc"),
-            family_id: String::from("family_1"),
+            user_id: "user_abc".into(),
+            family_id: "family_1".into(),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,
@@ -391,24 +391,24 @@ mod tests {
             GraphModification {
                 timestamp: Utc::now(),
                 modification_type: ModificationType::AddNode,
-                node_id: Some(String::from("node_cache")),
+                node_id: Some("node_cache".into()),
                 data: json!({"type": "redis"}),
             },
             GraphModification {
                 timestamp: Utc::now(),
                 modification_type: ModificationType::ModifyNode,
-                node_id: Some(String::from("node_db")),
+                node_id: Some("node_db".into()),
                 data: json!({"pool_size": 20}),
             },
         ];
 
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: String::from("exec_with_mods"),
-            graph_id: String::from("graph_789"),
+            execution_id: "exec_with_mods".into(),
+            graph_id: "graph_789".into(),
             template_id: None,
-            user_id: String::from("user_xyz"),
-            family_id: String::from("test_family"),
+            user_id: "user_xyz".into(),
+            family_id: "test_family".into(),
             started_at: Utc::now(),
             completed_at: Some(Utc::now()),
             status: ExecutionStatus::Completed,
@@ -439,10 +439,10 @@ mod tests {
         let audit = ExecutionAudit {
             id: String::new(),
             execution_id: String::new(),
-            graph_id: String::from("graph_123"),
+            graph_id: "graph_123".into(),
             template_id: None,
-            user_id: String::from("user_abc"),
-            family_id: String::from("family"),
+            user_id: "user_abc".into(),
+            family_id: "family".into(),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,
@@ -460,11 +460,11 @@ mod tests {
         let storage = AuditStorage::new();
         let base = ExecutionAudit {
             id: String::new(),
-            execution_id: String::from("e1"),
-            graph_id: String::from("g"),
+            execution_id: "e1".into(),
+            graph_id: "g".into(),
             template_id: None,
-            user_id: String::from("alice"),
-            family_id: String::from("fam_list"),
+            user_id: "alice".into(),
+            family_id: "fam_list".into(),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,
@@ -473,8 +473,8 @@ mod tests {
             metadata: json!({}),
         };
         let mut second = base.clone();
-        second.execution_id = String::from("e2");
-        second.user_id = String::from("bob");
+        second.execution_id = "e2".into();
+        second.user_id = "bob".into();
         second.status = ExecutionStatus::Completed;
 
         storage.store_audit(base).await.unwrap();
@@ -532,10 +532,10 @@ mod tests {
         let storage = AuditStorage::new();
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: String::from("e"),
-            graph_id: String::from("g"),
+            execution_id: "e".into(),
+            graph_id: "g".into(),
             template_id: None,
-            user_id: String::from("u"),
+            user_id: "u".into(),
             family_id: String::new(),
             started_at: Utc::now(),
             completed_at: None,
@@ -552,11 +552,11 @@ mod tests {
         let storage = AuditStorage::new();
         let audit = ExecutionAudit {
             id: String::new(),
-            execution_id: String::from("e"),
-            graph_id: String::from("g"),
+            execution_id: "e".into(),
+            graph_id: "g".into(),
             template_id: None,
             user_id: String::new(),
-            family_id: String::from("fam"),
+            family_id: "fam".into(),
             started_at: Utc::now(),
             completed_at: None,
             status: ExecutionStatus::Running,

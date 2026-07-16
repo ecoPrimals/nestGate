@@ -261,7 +261,7 @@ mod tests {
         let mut c = ConsolidatedDomainConfigs::default();
         let mut overrides = HashMap::new();
         overrides.insert(
-            String::from("api"),
+            "api".into(),
             serde_json::json!({ "server": { "port": 9443 } }),
         );
         c.merge_domain_json_overrides(overrides);

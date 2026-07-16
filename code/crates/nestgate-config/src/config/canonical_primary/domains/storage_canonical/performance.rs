@@ -84,7 +84,7 @@ impl Default for StoragePerformanceConfig {
             io_optimization: IOOptimizationConfig { enabled: true },
             compression: CompressionConfig {
                 enabled: true,
-                algorithm: String::from("lz4"),
+                algorithm: "lz4".into(),
             },
             deduplication: DeduplicationConfig { enabled: false },
             tuning: TuningConfig { auto_tune: true },
@@ -187,7 +187,7 @@ mod tests {
         let other = StoragePerformanceConfig {
             compression: CompressionConfig {
                 enabled: false,
-                algorithm: String::from("zstd"),
+                algorithm: "zstd".into(),
             },
             ..StoragePerformanceConfig::default()
         };

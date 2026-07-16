@@ -180,7 +180,7 @@ mod tests {
             ProfilingMode::Cpu,
             ProfilingMode::Memory,
             ProfilingMode::Both,
-            ProfilingMode::Custom(String::from("x")),
+            ProfilingMode::Custom("x".into()),
         ] {
             serde_roundtrip(&m);
         }

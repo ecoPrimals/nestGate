@@ -46,9 +46,9 @@ impl Default for ServiceConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: String::from("nestgate-service"),
+            name: "nestgate-service".into(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-            service_name: String::from("nestgate-service"),
+            service_name: "nestgate-service".into(),
             enabled: true,
             service_type: ServiceType::Api,
             endpoint_config: ServiceEndpointConfig::default(),
@@ -228,7 +228,7 @@ impl Default for ServiceSecurityConfig {
             authentication_required: true,
             authorization_enabled: true,
             rate_limiting: true,
-            allowed_origins: vec![String::from("*")],
+            allowed_origins: vec!["*".into()],
         }
     }
 }

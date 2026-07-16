@@ -38,7 +38,7 @@ impl AuditSecurityConfig {
     pub fn development_optimized() -> Self {
         Self {
             enabled: false,
-            log_level: String::from("info"),
+            log_level: "info".into(),
             retention_days: 7,
         }
     }
@@ -51,7 +51,7 @@ impl AuditSecurityConfig {
     pub fn compliance_focused() -> Self {
         Self {
             enabled: true,
-            log_level: String::from("debug"),
+            log_level: "debug".into(),
             retention_days: 365,
         }
     }
@@ -64,7 +64,7 @@ impl AuditSecurityConfig {
     pub fn production_hardened() -> Self {
         Self {
             enabled: true,
-            log_level: String::from("trace"),
+            log_level: "trace".into(),
             retention_days: 2555, // 7 years
         }
     }
@@ -133,7 +133,7 @@ impl Default for AuditSecurityConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            log_level: String::from("INFO"),
+            log_level: "INFO".into(),
             retention_days: 90,
         }
     }
@@ -155,7 +155,7 @@ impl Default for AlertingConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            channels: vec![String::from("email"), String::from("slack")],
+            channels: vec!["email".into(), "slack".into()],
         }
     }
 }

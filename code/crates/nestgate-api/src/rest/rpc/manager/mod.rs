@@ -131,7 +131,7 @@ impl UnifiedRpcManager {
                     request_id: request.id,
                     success: false,
                     data: None,
-                    error: Some(String::from("Service execution failed")),
+                    error: Some("Service execution failed".into()),
                     _metadata: HashMap::new(),
                     timestamp: chrono::Utc::now(),
                     metrics: ResponseMetrics {

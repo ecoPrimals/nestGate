@@ -61,8 +61,8 @@ mod tests {
     async fn development_snapshot_config_roundtrip() {
         let service = create_development_zfs_service();
         let cfg = SnapshotConfig {
-            name: String::from("snap1"),
-            dataset: String::from("dev-pool/test"),
+            name: "snap1".into(),
+            dataset: "dev-pool/test".into(),
             properties: std::collections::HashMap::new(),
         };
         let s = service.create_snapshot(&cfg).await.expect("snap");

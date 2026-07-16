@@ -291,7 +291,7 @@ impl<
                 self.network
                     .api
                     .api_settings
-                    .insert(String::from("tls_enabled"), serde_json::json!(v));
+                    .insert("tls_enabled".into(), serde_json::json!(v));
             }
             if let Some(v) = sec.require_auth {
                 self.security.auth.enabled = v;
@@ -323,7 +323,7 @@ impl<
             {
                 self.performance
                     .performance_settings
-                    .insert(String::from("optimization_level"), v);
+                    .insert("optimization_level".into(), v);
             }
         }
 
@@ -349,14 +349,14 @@ impl<
 
                     // TLS validation moved to API config
                     if !self.network.security.firewall_enabled {
-                        warnings.push(String::from("Firewall should be enabled in production"));
+                        warnings.push("Firewall should be enabled in production".into());
                     }
                 }
             }
             Environment::Development => {
                 // More lenient validation for development
                 if self.security.auth.enabled {
-                    warnings.push(String::from("Authentication enabled in development mode"));
+                    warnings.push("Authentication enabled in development mode".into());
                 }
             }
             _ => {}
@@ -378,8 +378,8 @@ impl<
         if env == Environment::Production && self.network.api.port == 8080 {
             return Err(
                 nestgate_types::error::NestGateError::configuration_error_detailed(
-                    String::from("network.port"),
-                    String::from("Port 8080 not allowed in production"),
+                    "network.port",
+                    "Port 8080 not allowed in production",
                     Some("8080".into()),
                     Some("443 or custom secure port".into()),
                     true,
@@ -500,7 +500,7 @@ mod tests {
             domain_overrides: None,
             network_overrides: Some(NetworkOverrides {
                 api_port: Some(7443),
-                bind_address: Some(String::from("192.0.2.1")),
+                bind_address: Some("192.0.2.1".into()),
                 timeout_ms: Some(12_000),
                 workers: Some(8),
             }),
@@ -528,7 +528,7 @@ mod tests {
                 tls_enabled: Some(true),
                 require_auth: Some(true),
                 dev_mode_bypass: Some(true),
-                cert_path: Some(String::from("/tmp/nestgate-test.pem")),
+                cert_path: Some("/tmp/nestgate-test.pem".into()),
             }),
             performance_overrides: Some(PerformanceOverrides {
                 max_connections: Some(2048),

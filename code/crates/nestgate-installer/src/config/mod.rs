@@ -225,8 +225,8 @@ mod tests {
         // Component state verification is now handled through get_selected_components()
 
         let enabled = InstallerConfigUtils::get_selected_components(&config);
-        assert!(enabled.contains(&String::from("core")));
-        assert!(enabled.contains(&String::from("api")));
+        assert!(enabled.contains(&"core".into()));
+        assert!(enabled.contains(&"api".into()));
     }
 
     #[test]

@@ -175,7 +175,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 1.1,
             efficiency: 9.09,
-            algorithm: String::from("lz4"),
+            algorithm: "lz4".into(),
         };
 
         let recs = analytics.get_compression_recommendations();
@@ -187,7 +187,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 1.3,
             efficiency: 23.08,
-            algorithm: String::from("lz4"),
+            algorithm: "lz4".into(),
         };
 
         let recs = analytics.get_compression_recommendations();
@@ -199,7 +199,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 2.0,
             efficiency: 50.0,
-            algorithm: String::from("lz4"),
+            algorithm: "lz4".into(),
         };
 
         let recs = analytics.get_compression_recommendations();
@@ -240,7 +240,7 @@ mod tests {
         let analytics1 = CompressionAnalytics {
             compression_ratio: 1.5,
             efficiency: 33.33,
-            algorithm: String::from("lz4"),
+            algorithm: "lz4".into(),
         };
         let analytics2 = analytics1.clone();
 
@@ -252,7 +252,7 @@ mod tests {
         let analytics = CompressionAnalytics {
             compression_ratio: 1.5,
             efficiency: 33.33,
-            algorithm: String::from("lz4"),
+            algorithm: "lz4".into(),
         };
         let serialized = serde_json::to_string(&analytics).unwrap();
 

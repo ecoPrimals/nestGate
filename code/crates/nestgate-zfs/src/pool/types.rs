@@ -113,12 +113,12 @@ mod tests {
     #[test]
     fn pool_info_serde_and_enums() {
         let info = PoolInfo {
-            name: String::from("tank"),
+            name: "tank".into(),
             state: PoolState::Online,
             health: PoolHealth::Healthy,
             capacity: PoolCapacity::default(),
-            devices: vec![String::from("/dev/sda")],
-            properties: HashMap::from([(String::from("key"), String::from("v"))]),
+            devices: vec!["/dev/sda".into()],
+            properties: HashMap::from([("key".into(), "v".into())]),
         };
         let json = serde_json::to_string(&info).expect("serialize");
         let back: PoolInfo = serde_json::from_str(&json).expect("deserialize");

@@ -134,7 +134,7 @@ mod tests {
             &self,
             _request: Self::Request,
         ) -> impl std::future::Future<Output = Result<Self::Response>> + Send {
-            std::future::ready(Ok(String::from("ok")))
+            std::future::ready(Ok("ok".into()))
         }
         fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
             std::future::ready(Ok(true))

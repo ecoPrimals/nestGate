@@ -211,16 +211,16 @@ mod tests {
     #[test]
     fn test_discovery_config_builder() {
         let custom_discovery =
-            ServiceDiscoveryConfig::with_host_and_port(String::from("test"), 8000);
+            ServiceDiscoveryConfig::with_host_and_port("test".into(), 8000);
 
         let config = DiscoveryRuntimeConfig::new()
             .with_service_discovery(custom_discovery)
-            .with_security_endpoint(String::from("http://security:9000"));
+            .with_security_endpoint("http://security:9000".into());
 
         assert!(config.get_base_endpoint().contains("test:8000"));
         let base = config.get_base_endpoint();
         let security = config.get_security_endpoint(&base);
-        assert!(security.contains(&String::from("http://security:9000")));
+        assert!(security.contains(&"http://security:9000".into()));
     }
 
     #[test]
@@ -240,10 +240,10 @@ mod tests {
     async fn test_concurrent_discovery_config_access() {
         // Create two different configurations
         let config1 = Arc::new(DiscoveryRuntimeConfig::new().with_service_discovery(
-            ServiceDiscoveryConfig::with_host_and_port(String::from("config1"), 5000),
+            ServiceDiscoveryConfig::with_host_and_port("config1".into(), 5000),
         ));
         let config2 = Arc::new(DiscoveryRuntimeConfig::new().with_service_discovery(
-            ServiceDiscoveryConfig::with_host_and_port(String::from("config2"), 6000),
+            ServiceDiscoveryConfig::with_host_and_port("config2".into(), 6000),
         ));
 
         // Spawn concurrent tasks accessing different configs
@@ -272,8 +272,8 @@ mod tests {
     #[test]
     fn test_discovery_endpoints_custom() {
         let endpoints = vec![
-            String::from("http://a:8080/discovery"),
-            String::from("http://b:9090/discovery"),
+            "http://a:8080/discovery".into(),
+            "http://b:9090/discovery".into(),
         ];
         let discovery = ServiceDiscoveryConfig::with_endpoints(endpoints);
         let config = DiscoveryRuntimeConfig::new().with_service_discovery(discovery);
@@ -286,11 +286,11 @@ mod tests {
 
     #[test]
     fn test_capability_endpoints_with_custom() {
-        let discovery = ServiceDiscoveryConfig::with_host_and_port(String::from("mybase"), 8000);
+        let discovery = ServiceDiscoveryConfig::with_host_and_port("mybase".into(), 8000);
         let config = DiscoveryRuntimeConfig::new()
             .with_service_discovery(discovery)
-            .with_security_endpoint(String::from("http://sec:9000"))
-            .with_ai_endpoint(String::from("http://ai:9001"));
+            .with_security_endpoint("http://sec:9000".into())
+            .with_ai_endpoint("http://ai:9001".into());
 
         let base = config.get_base_endpoint();
         let security = config.get_security_endpoint(&base);

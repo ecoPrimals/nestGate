@@ -355,8 +355,8 @@ impl AIFirstError {
                 AIErrorCategory::Configuration,
                 RetryStrategy::None,
                 vec![
-                    String::from("Check configuration files"),
-                    String::from("Validate environment variables"),
+                    "Check configuration files".into(),
+                    "Validate environment variables".into(),
                 ],
             ),
             NestGateError::Network { .. } => (
@@ -366,32 +366,32 @@ impl AIFirstError {
                     max_retries: 3,
                 },
                 vec![
-                    String::from("Check network connectivity"),
-                    String::from("Retry with backoff"),
+                    "Check network connectivity".into(),
+                    "Retry with backoff".into(),
                 ],
             ),
             NestGateError::Security { .. } => (
                 AIErrorCategory::Security,
                 RetryStrategy::None,
                 vec![
-                    String::from("Check authentication credentials"),
-                    String::from("Verify permissions"),
+                    "Check authentication credentials".into(),
+                    "Verify permissions".into(),
                 ],
             ),
             NestGateError::Validation { .. } => (
                 AIErrorCategory::Validation,
                 RetryStrategy::None,
                 vec![
-                    String::from("Fix input validation errors"),
-                    String::from("Check required fields"),
+                    "Fix input validation errors".into(),
+                    "Check required fields".into(),
                 ],
             ),
             _ => (
                 AIErrorCategory::Internal,
                 RetryStrategy::Immediate,
                 vec![
-                    String::from("Check system logs"),
-                    String::from("Contact support if persistent"),
+                    "Check system logs".into(),
+                    "Contact support if persistent".into(),
                 ],
             ),
         };
@@ -515,7 +515,7 @@ mod tests {
     #[test]
     fn test_ai_first_response_success() {
         let id = Uuid::new_v4();
-        let resp: AIFirstResponse<String> = AIFirstResponse::success(String::from("data"), id, 100);
+        let resp: AIFirstResponse<String> = AIFirstResponse::success("data".into(), id, 100);
         assert!(resp.success);
         assert_eq!(resp.data, "data");
         assert!(resp.error.is_none());
@@ -550,12 +550,12 @@ mod tests {
         let resp: AIFirstResponse<()> = AIFirstResponse::success((), id, 50)
             .with_confidence(0.8)
             .with_suggested_actions(vec![SuggestedAction {
-                action_type: String::from("retry"),
-                description: String::from("Retry operation"),
+                action_type: "retry".into(),
+                description: "Retry operation".into(),
                 parameters: std::collections::HashMap::new(),
                 confidence: 0.9,
                 prerequisites: vec![],
-                expected_outcome: String::from("Success"),
+                expected_outcome: "Success".into(),
             }]);
         assert!((resp.confidence_score - 0.8).abs() < 1e-9);
         assert_eq!(resp.suggested_actions.len(), 1);

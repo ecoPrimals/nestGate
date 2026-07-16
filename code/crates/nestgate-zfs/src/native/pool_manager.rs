@@ -43,7 +43,7 @@ pub struct NativeZfsPoolManager {
 /// use nestgate_zfs::types::PoolHealth;
 ///
 /// let stats = PoolStats {
-///     name: String::from("tank"),
+///     name: "tank".into(),
 ///     size_bytes: 1_000_000_000,
 ///     allocated_bytes: 500_000_000,
 ///     free_bytes: 500_000_000,
@@ -386,7 +386,7 @@ mod tests {
     #[test]
     fn test_pool_stats_creation() {
         let stats = PoolStats {
-            name: String::from("testpool"),
+            name: "testpool".into(),
             size_bytes: 1_099_511_627_776,    // 1TB
             allocated_bytes: 549_755_813_888, // 512GB
             free_bytes: 549_755_813_888,      // 512GB
@@ -414,7 +414,7 @@ mod tests {
 
         for health in healths {
             let stats = PoolStats {
-                name: String::from("pool"),
+                name: "pool".into(),
                 size_bytes: 1_000_000_000,
                 allocated_bytes: 500_000_000,
                 free_bytes: 500_000_000,
@@ -431,7 +431,7 @@ mod tests {
     #[test]
     fn test_pool_stats_cloning() {
         let stats = PoolStats {
-            name: String::from("clone-test"),
+            name: "clone-test".into(),
             size_bytes: 2_000_000_000,
             allocated_bytes: 1_000_000_000,
             free_bytes: 1_000_000_000,
@@ -450,7 +450,7 @@ mod tests {
     #[test]
     fn test_pool_stats_serialization() {
         let stats = PoolStats {
-            name: String::from("serialize-test"),
+            name: "serialize-test".into(),
             size_bytes: 5_000_000_000,
             allocated_bytes: 2_500_000_000,
             free_bytes: 2_500_000_000,
@@ -482,7 +482,7 @@ mod tests {
 
         for (size, allocated, free, expected_pct) in test_cases {
             let stats = PoolStats {
-                name: String::from("capacity-test"),
+                name: "capacity-test".into(),
                 size_bytes: size,
                 allocated_bytes: allocated,
                 free_bytes: free,
@@ -503,7 +503,7 @@ mod tests {
 
         for ratio in ratios {
             let stats = PoolStats {
-                name: String::from("dedup-test"),
+                name: "dedup-test".into(),
                 size_bytes: 1_000_000_000,
                 allocated_bytes: 500_000_000,
                 free_bytes: 500_000_000,
@@ -523,7 +523,7 @@ mod tests {
 
         for ratio in ratios {
             let stats = PoolStats {
-                name: String::from("compression-test"),
+                name: "compression-test".into(),
                 size_bytes: 1_000_000_000,
                 allocated_bytes: 500_000_000,
                 free_bytes: 500_000_000,
@@ -548,7 +548,7 @@ mod tests {
 
         for size in sizes {
             let stats = PoolStats {
-                name: String::from("large-pool"),
+                name: "large-pool".into(),
                 size_bytes: size,
                 allocated_bytes: size / 2,
                 free_bytes: size / 2,
@@ -586,7 +586,7 @@ mod tests {
     #[test]
     fn test_pool_stats_degraded_health() {
         let stats = PoolStats {
-            name: String::from("degraded-pool"),
+            name: "degraded-pool".into(),
             size_bytes: 1_000_000_000,
             allocated_bytes: 800_000_000,
             free_bytes: 200_000_000,
@@ -603,7 +603,7 @@ mod tests {
     #[test]
     fn test_pool_stats_faulted_health() {
         let stats = PoolStats {
-            name: String::from("faulted-pool"),
+            name: "faulted-pool".into(),
             size_bytes: 1_000_000_000,
             allocated_bytes: 1_000_000_000,
             free_bytes: 0,
@@ -621,7 +621,7 @@ mod tests {
     #[test]
     fn test_pool_stats_combined_ratios() {
         let stats = PoolStats {
-            name: String::from("optimized-pool"),
+            name: "optimized-pool".into(),
             size_bytes: 10_000_000_000,
             allocated_bytes: 5_000_000_000,
             free_bytes: 5_000_000_000,
@@ -642,7 +642,7 @@ mod tests {
     #[test]
     fn test_pool_stats_zero_capacity() {
         let stats = PoolStats {
-            name: String::from("empty-pool"),
+            name: "empty-pool".into(),
             size_bytes: 1_000_000_000,
             allocated_bytes: 0,
             free_bytes: 1_000_000_000,
@@ -660,7 +660,7 @@ mod tests {
     #[test]
     fn test_pool_stats_full_capacity() {
         let stats = PoolStats {
-            name: String::from("full-pool"),
+            name: "full-pool".into(),
             size_bytes: 1_000_000_000,
             allocated_bytes: 1_000_000_000,
             free_bytes: 0,

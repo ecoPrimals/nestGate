@@ -81,7 +81,7 @@ impl DataCollector {
         Ok(MetricsSnapshot {
             system_metrics: metrics,
             collection_timestamp: std::time::SystemTime::now(),
-            collector_id: String::from("default"),
+            collector_id: "default".into(),
         })
     }
 }
@@ -212,7 +212,7 @@ mod tests {
         let snapshot = MetricsSnapshot {
             system_metrics: metrics,
             collection_timestamp: std::time::SystemTime::now(),
-            collector_id: String::from("test-collector"),
+            collector_id: "test-collector".into(),
         };
 
         assert_eq!(snapshot.collector_id, "test-collector");
@@ -287,17 +287,17 @@ mod tests {
             MetricsSnapshot {
                 system_metrics: metrics.clone(),
                 collection_timestamp: std::time::SystemTime::now(),
-                collector_id: String::from("collector-1"),
+                collector_id: "collector-1".into(),
             },
             MetricsSnapshot {
                 system_metrics: metrics.clone(),
                 collection_timestamp: std::time::SystemTime::now(),
-                collector_id: String::from("collector-2"),
+                collector_id: "collector-2".into(),
             },
             MetricsSnapshot {
                 system_metrics: metrics,
                 collection_timestamp: std::time::SystemTime::now(),
-                collector_id: String::from("collector-3"),
+                collector_id: "collector-3".into(),
             },
         ];
 

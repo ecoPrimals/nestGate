@@ -643,7 +643,7 @@ mod implementation_tests {
     #[expect(deprecated, reason = "testing backward-compatible deprecated remote ZFS API")]
     fn remote_zfs_service_exposes_metadata() {
         let cfg = RemoteConfig {
-            endpoint: String::from("http://127.0.0.1:65530"),
+            endpoint: "http://127.0.0.1:65530".into(),
             timeout: Duration::from_millis(500),
             auth: Some("token".into()),
         };

@@ -301,9 +301,9 @@ mod tests {
     #[test]
     fn test_storage_error_data_with_values() {
         let data = StorageErrorData {
-            pool_name: Some(String::from("test-pool")),
-            dataset_name: Some(String::from("test-dataset")),
-            operation_type: String::from("create"),
+            pool_name: Some("test-pool".into()),
+            dataset_name: Some("test-dataset".into()),
+            operation_type: "create".into(),
             available_space: Some(1024),
             required_space: Some(2048),
             error_code: Some(42),
@@ -311,8 +311,8 @@ mod tests {
             ..Default::default()
         };
 
-        assert_eq!(data.pool_name, Some(String::from("test-pool")));
-        assert_eq!(data.dataset_name, Some(String::from("test-dataset")));
+        assert_eq!(data.pool_name, Some("test-pool".into()));
+        assert_eq!(data.dataset_name, Some("test-dataset".into()));
         assert_eq!(data.operation_type, "create");
         assert_eq!(data.available_space, Some(1024));
         assert_eq!(data.required_space, Some(2048));
@@ -323,7 +323,7 @@ mod tests {
     #[test]
     fn test_storage_error_data_clone() {
         let data = StorageErrorData {
-            pool_name: Some(String::from("test-pool")),
+            pool_name: Some("test-pool".into()),
             ..Default::default()
         };
 
@@ -350,16 +350,16 @@ mod tests {
         /// Default HTTP port for this test (conventional HTTP; not NestGate’s API default).
         const HTTP_DEFAULT: u16 = 80;
         let data = NetworkErrorData {
-            endpoint: Some(String::from("http://example.com")),
+            endpoint: Some("http://example.com".into()),
             port: Some(HTTP_DEFAULT),
-            protocol: String::from("HTTPS"),
+            protocol: "HTTPS".into(),
             timeout_duration: Some(Duration::from_secs(30)),
             retry_count: 2,
             response_code: Some(404),
             ..Default::default()
         };
 
-        assert_eq!(data.endpoint, Some(String::from("http://example.com")));
+        assert_eq!(data.endpoint, Some("http://example.com".into()));
         assert_eq!(data.port, Some(HTTP_DEFAULT));
         assert_eq!(data.protocol, "HTTPS");
         assert_eq!(data.timeout_duration, Some(Duration::from_secs(30)));
@@ -370,7 +370,7 @@ mod tests {
     #[test]
     fn test_network_error_data_clone() {
         let data = NetworkErrorData {
-            endpoint: Some(String::from("http://test.com")),
+            endpoint: Some("http://test.com".into()),
             ..Default::default()
         };
 
@@ -395,27 +395,27 @@ mod tests {
     #[test]
     fn test_security_error_data_with_values() {
         let data = SecurityErrorData {
-            principal: Some(String::from("user@example.com")),
-            operation: String::from("read"),
-            resource: Some(String::from("/api/data")),
-            required_permissions: vec![String::from("read"), String::from("write")],
-            actual_permissions: vec![String::from("read")],
-            authentication_method: Some(String::from("jwt")),
+            principal: Some("user@example.com".into()),
+            operation: "read".into(),
+            resource: Some("/api/data".into()),
+            required_permissions: vec!["read".into(), "write".into()],
+            actual_permissions: vec!["read".into()],
+            authentication_method: Some("jwt".into()),
             ..Default::default()
         };
 
-        assert_eq!(data.principal, Some(String::from("user@example.com")));
+        assert_eq!(data.principal, Some("user@example.com".into()));
         assert_eq!(data.operation, "read");
-        assert_eq!(data.resource, Some(String::from("/api/data")));
+        assert_eq!(data.resource, Some("/api/data".into()));
         assert_eq!(data.required_permissions.len(), 2);
         assert_eq!(data.actual_permissions.len(), 1);
-        assert_eq!(data.authentication_method, Some(String::from("jwt")));
+        assert_eq!(data.authentication_method, Some("jwt".into()));
     }
 
     #[test]
     fn test_security_error_data_clone() {
         let data = SecurityErrorData {
-            principal: Some(String::from("test@example.com")),
+            principal: Some("test@example.com".into()),
             ..Default::default()
         };
 
@@ -467,29 +467,29 @@ mod tests {
     #[test]
     fn test_automation_error_data_with_values() {
         let mut context = std::collections::HashMap::new();
-        context.insert(String::from("key"), String::from("value"));
+        context.insert("key".into(), "value".into());
 
         let data = AutomationErrorData {
-            workflow_id: Some(String::from("workflow-123")),
-            step_name: Some(String::from("step-1")),
-            automation_type: String::from("deployment"),
+            workflow_id: Some("workflow-123".into()),
+            step_name: Some("step-1".into()),
+            automation_type: "deployment".into(),
             retry_count: 2,
             max_retries: 5,
             context,
         };
 
-        assert_eq!(data.workflow_id, Some(String::from("workflow-123")));
-        assert_eq!(data.step_name, Some(String::from("step-1")));
+        assert_eq!(data.workflow_id, Some("workflow-123".into()));
+        assert_eq!(data.step_name, Some("step-1".into()));
         assert_eq!(data.automation_type, "deployment");
         assert_eq!(data.retry_count, 2);
         assert_eq!(data.max_retries, 5);
-        assert_eq!(data.context.get("key"), Some(&String::from("value")));
+        assert_eq!(data.context.get("key"), Some(&"value".into()));
     }
 
     #[test]
     fn test_automation_error_data_clone() {
         let data = AutomationErrorData {
-            workflow_id: Some(String::from("test-workflow")),
+            workflow_id: Some("test-workflow".into()),
             ..Default::default()
         };
 
@@ -500,9 +500,9 @@ mod tests {
     #[test]
     fn test_automation_error_data_retry_logic() {
         let data = AutomationErrorData {
-            workflow_id: Some(String::from("test")),
+            workflow_id: Some("test".into()),
             step_name: None,
-            automation_type: String::from("test"),
+            automation_type: "test".into(),
             retry_count: 2,
             max_retries: 3,
             context: HashMap::new(),
@@ -516,19 +516,19 @@ mod tests {
     fn test_storage_error_context_usage() {
         let mut data = StorageErrorData::default();
         data.context
-            .insert(String::from("pool"), String::from("tank"));
+            .insert("pool".into(), "tank".into());
         data.context
-            .insert(String::from("operation"), String::from("snapshot"));
+            .insert("operation".into(), "snapshot".into());
 
         assert_eq!(data.context.len(), 2);
-        assert_eq!(data.context.get("pool"), Some(&String::from("tank")));
+        assert_eq!(data.context.get("pool"), Some(&"tank".into()));
     }
 
     #[test]
     fn test_network_error_context_usage() {
         let mut data = NetworkErrorData::default();
         data.context
-            .insert(String::from("request_id"), String::from("12345"));
+            .insert("request_id".into(), "12345".into());
 
         assert_eq!(data.context.len(), 1);
         assert!(data.context.contains_key("request_id"));
@@ -538,9 +538,9 @@ mod tests {
     fn test_security_error_context_usage() {
         let mut data = SecurityErrorData::default();
         data.context
-            .insert(String::from("ip"), String::from("192.168.1.1"));
+            .insert("ip".into(), "192.168.1.1".into());
         data.context
-            .insert(String::from("user_agent"), String::from("Mozilla"));
+            .insert("user_agent".into(), "Mozilla".into());
 
         assert_eq!(data.context.len(), 2);
     }

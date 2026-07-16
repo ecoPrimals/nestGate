@@ -300,7 +300,7 @@ mod tests {
     #[test]
     fn test_tunable_parameter_clone() {
         let param = TunableParameter {
-            name: String::from("cache_size"),
+            name: "cache_size".into(),
             current_value: 100.0,
             suggested_value: 150.0,
             adjustment_confidence: 0.9,
@@ -442,7 +442,7 @@ mod tests {
     #[test]
     fn test_tuning_action_creation() {
         let action = TuningAction {
-            parameter_name: String::from("thread_pool_size"),
+            parameter_name: "thread_pool_size".into(),
             old_value: 4.0,
             new_value: 8.0,
             timestamp: SystemTime::now(),
@@ -522,7 +522,7 @@ mod tests {
     #[test]
     fn test_tunable_parameter_adjustment() {
         let param = TunableParameter {
-            name: String::from("buffer_size"),
+            name: "buffer_size".into(),
             current_value: 1024.0,
             suggested_value: 2048.0,
             adjustment_confidence: 0.95,
@@ -535,13 +535,13 @@ mod tests {
     fn test_multiple_tunable_parameters() {
         let params = [
             TunableParameter {
-                name: String::from("param1"),
+                name: "param1".into(),
                 current_value: 10.0,
                 suggested_value: 15.0,
                 adjustment_confidence: 0.8,
             },
             TunableParameter {
-                name: String::from("param2"),
+                name: "param2".into(),
                 current_value: 20.0,
                 suggested_value: 25.0,
                 adjustment_confidence: 0.9,
@@ -555,7 +555,7 @@ mod tests {
     #[test]
     fn test_optimization_decision_with_parameters() {
         let params = [TunableParameter {
-            name: String::from("cache_size"),
+            name: "cache_size".into(),
             current_value: 100.0,
             suggested_value: 150.0,
             adjustment_confidence: 0.9,
@@ -621,7 +621,7 @@ mod tests {
     #[test]
     fn test_tuning_action_timestamp_is_recent() {
         let action = TuningAction {
-            parameter_name: String::from("test_param"),
+            parameter_name: "test_param".into(),
             old_value: 1.0,
             new_value: 2.0,
             timestamp: SystemTime::now(),

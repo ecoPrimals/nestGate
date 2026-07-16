@@ -383,7 +383,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_universal_pool_handler() {
-        let pool_name = String::from("testpool");
+        let pool_name = "testpool".into();
         let result = get_universal_pool(Path(pool_name)).await;
         
         // May fail if pool doesn't exist - that's expected
@@ -394,7 +394,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_pool_handler() {
-        let pool_name = String::from("nonexistent_pool");
+        let pool_name = "nonexistent_pool".into();
         let result = delete_pool(Path(pool_name)).await;
         
         // Should handle gracefully (success or error)
@@ -414,7 +414,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_dataset_handler() {
-        let dataset_name = String::from("testpool/testdataset");
+        let dataset_name = "testpool/testdataset".into();
         let result = get_dataset(Path(dataset_name)).await;
         
         // May fail if dataset doesn't exist
@@ -426,7 +426,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_dataset_handler() {
-        let dataset_name = String::from("nonexistent/dataset");
+        let dataset_name = "nonexistent/dataset".into();
         let result = delete_dataset(Path(dataset_name)).await;
         
         // Should handle gracefully

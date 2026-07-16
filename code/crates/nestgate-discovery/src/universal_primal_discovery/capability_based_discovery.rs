@@ -233,7 +233,7 @@ impl DiscoveryQuery {
             optional_capabilities: vec![],
             max_latency: None,
             min_health: HealthStatus::Degraded {
-                reason: String::from("acceptable"),
+                reason: "acceptable".into(),
             },
         }
     }
@@ -409,16 +409,16 @@ impl<
 
         // Runtime information
         if let Some(hostname) = env.get("HOSTNAME").or_else(|| env.get("HOST")) {
-            metadata.insert(String::from("hostname"), hostname);
+            metadata.insert("hostname".into(), hostname);
         }
 
-        metadata.insert(String::from("pid"), std::process::id().to_string());
+        metadata.insert("pid".into(), std::process::id().to_string());
 
         // Environment indicators (not hardcoded values!)
         if env.get("KUBERNETES_SERVICE_HOST").is_some() {
-            metadata.insert(String::from("platform"), String::from("kubernetes"));
+            metadata.insert("platform".into(), "kubernetes".into());
         } else if std::path::Path::new("/.dockerenv").exists() {
-            metadata.insert(String::from("platform"), String::from("docker"));
+            metadata.insert("platform".into(), "docker".into());
         }
 
         metadata

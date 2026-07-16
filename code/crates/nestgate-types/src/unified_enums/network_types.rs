@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_unified_protocol_type_custom() {
-        let pt = UnifiedProtocolType::Custom(String::from("mqtt"));
+        let pt = UnifiedProtocolType::Custom("mqtt".into());
         assert_eq!(pt.to_string(), "mqtt");
     }
 

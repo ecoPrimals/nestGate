@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 114: PROJECTS_PATH CAS wiring + String::from R8 sweep (Jul 16, 2026)
+
+- **footPrint PROJECTS_PATH wiring** (Wave 143b P2): `footprint_base_path()` now checks
+  `PROJECTS_PATH` env var first, falling back to standard CAS layout
+  (`{storage_base}/datasets/{family}/_footprint`). Three new tests validate override,
+  empty-string fallback, and unset fallback. Capability registry and env vars guide updated.
+- **`String::from` → `.into()` round 8**: 2,500+ conversions across 382 production files
+  workspace-wide. Files with ambiguous `impl Into<Cow<'static, str>>` targets reverted to
+  preserve compilation — those call sites need typed error helper infrastructure (P0 item).
+- **Cow-parameter cleanup**: 6 call sites to `configuration_error_detailed` and
+  `internal_error` fixed — bare `&str` literals passed directly instead of `.into()` since
+  `&str: Into<Cow<'static, str>>` trivially holds.
+
 ### Session 113: Deep debt sweep — production mock evolution, String::from round 7 (Jul 16, 2026)
 
 - **Production mock evolution**: ZFS performance `Default` impls (`PoolPerformanceMetrics`,

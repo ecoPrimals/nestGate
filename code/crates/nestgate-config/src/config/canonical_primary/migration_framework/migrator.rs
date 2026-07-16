@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn new_migrator_starts_at_source_validation() {
-        let m = ConfigMigrator::new(String::from("test"), default_options());
+        let m = ConfigMigrator::new("test".into(), default_options());
         assert_eq!(m.source_type, "test");
         assert!(matches!(
             m.progress.current_phase,
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn dry_run_returns_default_config() {
-        let m = ConfigMigrator::new(String::from("test"), dry_run_options());
+        let m = ConfigMigrator::new("test".into(), dry_run_options());
         let result = m.migrate();
         assert!(result.is_ok());
     }
@@ -399,13 +399,13 @@ mod tests {
 
     #[test]
     fn rollback_without_backup_errors() {
-        let m = ConfigMigrator::new(String::from("test"), default_options());
+        let m = ConfigMigrator::new("test".into(), default_options());
         assert!(m.rollback().is_err());
     }
 
     #[test]
     fn get_migration_report_reflects_state() {
-        let m = ConfigMigrator::new(String::from("test"), default_options());
+        let m = ConfigMigrator::new("test".into(), default_options());
         let report = m.get_migration_report();
         assert_eq!(report.source_type, "test");
         assert!(!report.backup_created);
@@ -459,7 +459,7 @@ mod tests {
 
     #[test]
     fn dry_run_report_has_completed_step() {
-        let mut m = ConfigMigrator::new(String::from("test"), dry_run_options());
+        let mut m = ConfigMigrator::new("test".into(), dry_run_options());
         let _ = m.dry_run_migration();
         let report = m.get_migration_report();
         assert!(report.completed_steps.iter().any(|s| s.contains("Dry run")));
@@ -472,31 +472,31 @@ mod tests {
             dry_run: true,
             ..MigrationOptions::default()
         };
-        let m = ConfigMigrator::new(String::from("test"), opts);
+        let m = ConfigMigrator::new("test".into(), opts);
         let _ = m.migrate();
     }
 
     #[test]
     fn validate_source_requires_source_type() {
-        let mut m = ConfigMigrator::new(String::from("valid"), default_options());
+        let mut m = ConfigMigrator::new("valid".into(), default_options());
         assert!(m.validate_source().is_ok());
     }
 
     #[test]
     fn analyze_source_requires_source_type() {
-        let mut m = ConfigMigrator::new(String::from("valid"), default_options());
+        let mut m = ConfigMigrator::new("valid".into(), default_options());
         assert!(m.analyze_source().is_ok());
     }
 
     #[test]
     fn map_configurations_not_implemented() {
-        let m = ConfigMigrator::new(String::from("test"), default_options());
+        let m = ConfigMigrator::new("test".into(), default_options());
         assert!(m.map_configurations().is_err());
     }
 
     #[test]
     fn perform_migration_not_implemented() {
-        let m = ConfigMigrator::new(String::from("test"), default_options());
+        let m = ConfigMigrator::new("test".into(), default_options());
         assert!(m.perform_migration().is_err());
     }
 }

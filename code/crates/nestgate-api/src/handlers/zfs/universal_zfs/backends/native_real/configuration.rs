@@ -18,7 +18,7 @@ pub fn optimize(
     _optimization_type: String,
 ) -> UniversalZfsResult<String> {
     Err(UniversalZfsError::ServiceUnavailable {
-        message: String::from("ZFS optimization not yet wired to real zfs set/get calls"),
+        message: "ZFS optimization not yet wired to real zfs set/get calls".into(),
     })
 }
 
@@ -29,7 +29,7 @@ pub fn get_optimization_analytics(
     _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     Err(UniversalZfsError::ServiceUnavailable {
-        message: String::from("ZFS optimization analytics not yet wired"),
+        message: "ZFS optimization analytics not yet wired".into(),
     })
 }
 
@@ -41,7 +41,7 @@ pub fn predict_tier(
     _dataset_name: &str,
 ) -> UniversalZfsResult<String> {
     Err(UniversalZfsError::ServiceUnavailable {
-        message: String::from("ZFS tier prediction not yet wired"),
+        message: "ZFS tier prediction not yet wired".into(),
     })
 }
 
@@ -51,12 +51,12 @@ pub fn get_configuration(
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     let mut config = HashMap::new();
     config.insert(
-        String::from("service_name"),
-        serde_json::Value::String(String::from("native-zfs")),
+        "service_name".into(),
+        serde_json::Value::String("native-zfs".into()),
     );
     config.insert(
-        String::from("version"),
-        serde_json::Value::String(String::from("1.0.0")),
+        "version".into(),
+        serde_json::Value::String("1.0.0".into()),
     );
     Ok(config)
 }
@@ -69,6 +69,6 @@ pub fn update_configuration(
     _config: HashMap<String, serde_json::Value>,
 ) -> UniversalZfsResult<()> {
     Err(UniversalZfsError::ServiceUnavailable {
-        message: String::from("ZFS configuration updates not yet wired"),
+        message: "ZFS configuration updates not yet wired".into(),
     })
 }

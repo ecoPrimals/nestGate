@@ -51,9 +51,9 @@ pub(super) async fn get_workspace_properties(
     }
 
     (
-        String::from("lz4"),
-        String::from("none"),
-        String::from("unknown"),
+        "lz4".into(),
+        "none".into(),
+        "unknown".into(),
     )
 }
 

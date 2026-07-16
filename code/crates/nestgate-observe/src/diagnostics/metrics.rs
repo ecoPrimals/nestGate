@@ -136,9 +136,9 @@ mod tests {
     #[test]
     fn disk_metrics_roundtrip() -> Result<()> {
         let d = DiskMetrics {
-            device: String::from("/dev/sda1"),
-            mount_point: String::from("/"),
-            filesystem: String::from("ext4"),
+            device: "/dev/sda1".into(),
+            mount_point: "/".into(),
+            filesystem: "ext4".into(),
             total_bytes: 1024,
             used_bytes: 512,
             available_bytes: 512,
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn network_metrics_roundtrip() -> Result<()> {
         let n = NetworkMetrics {
-            interface: String::from("eth0"),
+            interface: "eth0".into(),
             rx_bytes: 1,
             tx_bytes: 2,
             rx_packets: 3,
@@ -167,9 +167,9 @@ mod tests {
             tx_errors: 0,
             rx_drops: 0,
             tx_drops: 0,
-            status: String::from("up"),
+            status: "up".into(),
             speed_mbps: 1000,
-            duplex: String::from("full"),
+            duplex: "full".into(),
         };
         let j = serde_json::to_string(&n)?;
         let back: NetworkMetrics = serde_json::from_str(&j)?;
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn service_info_serializes_status() -> Result<()> {
         let s = ServiceInfo {
-            name: String::from("nestgate"),
+            name: "nestgate".into(),
             status: ServiceStatus::Running,
             pid: Some(42),
             cpu_percent: 1.5,

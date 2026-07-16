@@ -127,13 +127,13 @@ mod tests {
                 _workflow: Self::Workflow,
             ) -> impl std::future::Future<Output = Result<Self::ExecutionContext>> + Send
             {
-                std::future::ready(Ok(String::from("ctx")))
+                std::future::ready(Ok("ctx".into()))
             }
             fn get_status(
                 &self,
                 _execution_id: &str,
             ) -> impl std::future::Future<Output = Result<String>> + Send {
-                std::future::ready(Ok(String::from("running")))
+                std::future::ready(Ok("running".into()))
             }
         }
         assert_eq!(MockWorkflow::max_workflows(), 50);

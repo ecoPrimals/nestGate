@@ -54,7 +54,7 @@
 //! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! // Environment-driven: $NESTGATE_RPC_ADDR or default
 //! let rpc_addr = std::env::var("NESTGATE_RPC_ADDR")
-//!     .unwrap_or_else(|_| String::from("tarpc://localhost:8091"));
+//!     .unwrap_or_else(|_| "tarpc://localhost:8091".into());
 //! let client = NestGateRpcClient::new(&rpc_addr)?;
 //! let health = client.health().await?;
 //! println!("Service status: {}", health.status);

@@ -120,10 +120,10 @@ impl Default for JwtConfig {
     fn default() -> Self {
         Self {
             algorithm: JwtAlgorithm::HS256,
-            secret: String::from("change-me-in-production"),
+            secret: "change-me-in-production".into(),
             expiration: Duration::from_secs(15 * 60), // 15 minutes
             issuer: crate::constants::system::DEFAULT_SERVICE_NAME.to_string(),
-            audience: vec![String::from("nestgate-api")],
+            audience: vec!["nestgate-api".into()],
             custom_claims: HashMap::new(),
         }
     }
@@ -134,7 +134,7 @@ impl Default for ApiKeyConfig {
         Self {
             enabled: true,
             key_length: 32,
-            prefix: String::from("nk_"),
+            prefix: "nk_".into(),
             expiration: None,
             rate_limit: Some(RateLimitConfig::default()),
         }
@@ -166,8 +166,8 @@ impl Default for AccessTokenConfig {
     fn default() -> Self {
         Self {
             lifetime: Duration::from_secs(15 * 60), // 15 minutes
-            token_type: String::from("Bearer"),
-            scopes: vec![String::from("read"), String::from("write")],
+            token_type: "Bearer".into(),
+            scopes: vec!["read".into(), "write".into()],
         }
     }
 }

@@ -87,7 +87,7 @@ impl AdaptiveZfsBackend {
             if kernel_module_loaded || !cfg!(target_os = "linux") {
                 (
                     ZfsAvailability::SystemZfs,
-                    String::from("System ZFS fully available and functional"),
+                    "System ZFS fully available and functional".into(),
                 )
             } else {
                 (
@@ -223,7 +223,7 @@ impl AdaptiveZfsBackend {
                     has_zfs_command: false,
                     has_zpool_command: false,
                     kernel_module_loaded: false,
-                    status_reason: String::from("Invalid mode - will auto-detect"),
+                    status_reason: "Invalid mode - will auto-detect".into(),
                 }
             }
         }

@@ -212,10 +212,10 @@ mod tests {
 
     #[test]
     fn backend_type_custom_equality() {
-        let custom = StorageBackendType::Custom(String::from("mybackend"));
+        let custom = StorageBackendType::Custom("mybackend".into());
         assert_eq!(
             custom,
-            StorageBackendType::Custom(String::from("mybackend"))
+            StorageBackendType::Custom("mybackend".into())
         );
     }
 
@@ -352,7 +352,7 @@ mod tests {
         let mut bad_default = StorageBackendConfig::default();
         bad_default.default_backend = StorageBackendType::Zfs;
         bad_default.backends.insert(
-            String::from("other"),
+            "other".into(),
             sample_backend(
                 StorageBackendType::Filesystem,
                 StorageBackendSpecificConfig::Filesystem {
@@ -366,7 +366,7 @@ mod tests {
 
         let mut bad_rule = StorageBackendConfig::default();
         bad_rule.backends.insert(
-            String::from("filesystem"),
+            "filesystem".into(),
             sample_backend(
                 StorageBackendType::Filesystem,
                 StorageBackendSpecificConfig::Filesystem {
@@ -377,16 +377,16 @@ mod tests {
             ),
         );
         bad_rule.routing.rules.push(RoutingRule {
-            name: String::from("missing-target"),
-            condition: RoutingCondition::PathPrefix(String::from("/x")),
-            backend: String::from("nowhere"),
+            name: "missing-target".into(),
+            condition: RoutingCondition::PathPrefix("/x".into()),
+            backend: "nowhere".into(),
             priority: 1,
         });
         assert!(bad_rule.validate().is_err());
 
         let mut ok = StorageBackendConfig::default();
         ok.backends.insert(
-            String::from("filesystem"),
+            "filesystem".into(),
             sample_backend(
                 StorageBackendType::Filesystem,
                 StorageBackendSpecificConfig::Filesystem {
@@ -404,14 +404,14 @@ mod tests {
     #[test]
     fn full_serde_roundtrip() {
         let distributed_node = DistributedStorageNode {
-            id: String::from("n1"),
-            endpoint: String::from("10.0.0.1:9000"),
+            id: "n1".into(),
+            endpoint: "10.0.0.1:9000".into(),
             weight: 3,
-            availability_zone: Some(String::from("a")),
+            availability_zone: Some("a".into()),
         };
         let mut backends_map = HashMap::new();
         backends_map.insert(
-            String::from("filesystem"),
+            "filesystem".into(),
             sample_backend(
                 StorageBackendType::Filesystem,
                 StorageBackendSpecificConfig::Filesystem {
@@ -422,57 +422,57 @@ mod tests {
             ),
         );
         backends_map.insert(
-            String::from("zfs"),
+            "zfs".into(),
             sample_backend(
                 StorageBackendType::Zfs,
                 StorageBackendSpecificConfig::Zfs {
-                    pool_name: String::from("tank"),
-                    dataset_prefix: String::from("app"),
+                    pool_name: "tank".into(),
+                    dataset_prefix: "app".into(),
                     compression: ZfsCompression::Zstd,
                     deduplication: false,
                 },
             ),
         );
         backends_map.insert(
-            String::from("s3"),
+            "s3".into(),
             sample_backend(
                 StorageBackendType::S3Compatible,
                 StorageBackendSpecificConfig::S3Compatible {
-                    endpoint: String::from("https://s3.example.com"),
-                    region: String::from("us-east-1"),
-                    bucket: String::from("b"),
-                    access_key_id: String::from("k"),
-                    secret_access_key: String::from("s"),
+                    endpoint: "https://s3.example.com".into(),
+                    region: "us-east-1".into(),
+                    bucket: "b".into(),
+                    access_key_id: "k".into(),
+                    secret_access_key: "s".into(),
                     use_ssl: true,
                 },
             ),
         );
         backends_map.insert(
-            String::from("azure"),
+            "azure".into(),
             sample_backend(
                 StorageBackendType::Azure,
                 StorageBackendSpecificConfig::Azure {
-                    account_name: String::from("acct"),
-                    account_key: String::from("key"),
-                    container: String::from("c"),
-                    endpoint_suffix: Some(String::from("core.windows.net")),
+                    account_name: "acct".into(),
+                    account_key: "key".into(),
+                    container: "c".into(),
+                    endpoint_suffix: Some("core.windows.net".into()),
                 },
             ),
         );
         backends_map.insert(
-            String::from("gcs"),
+            "gcs".into(),
             sample_backend(
                 StorageBackendType::Gcs,
                 StorageBackendSpecificConfig::Gcs {
-                    project_id: String::from("p"),
-                    bucket: String::from("gb"),
+                    project_id: "p".into(),
+                    bucket: "gb".into(),
                     credentials_path: Some(PathBuf::from("/tmp/cred.json")),
                     service_account_key: None,
                 },
             ),
         );
         backends_map.insert(
-            String::from("memory"),
+            "memory".into(),
             sample_backend(
                 StorageBackendType::Memory,
                 StorageBackendSpecificConfig::Memory {
@@ -482,7 +482,7 @@ mod tests {
             ),
         );
         backends_map.insert(
-            String::from("distributed"),
+            "distributed".into(),
             sample_backend(
                 StorageBackendType::Distributed,
                 StorageBackendSpecificConfig::Distributed {
@@ -493,9 +493,9 @@ mod tests {
             ),
         );
         backends_map.insert(
-            String::from("custom"),
+            "custom".into(),
             sample_backend(
-                StorageBackendType::Custom(String::from("legacy")),
+                StorageBackendType::Custom("legacy".into()),
                 StorageBackendSpecificConfig::Custom {
                     config: serde_json::json!({ "k": 1 }),
                 },
@@ -508,40 +508,40 @@ mod tests {
             routing: StorageRoutingConfig {
                 rules: vec![
                     RoutingRule {
-                        name: String::from("p"),
-                        condition: RoutingCondition::PathPrefix(String::from("/a")),
-                        backend: String::from("filesystem"),
+                        name: "p".into(),
+                        condition: RoutingCondition::PathPrefix("/a".into()),
+                        backend: "filesystem".into(),
                         priority: 10,
                     },
                     RoutingRule {
-                        name: String::from("e"),
-                        condition: RoutingCondition::FileExtension(String::from("txt")),
-                        backend: String::from("zfs"),
+                        name: "e".into(),
+                        condition: RoutingCondition::FileExtension("txt".into()),
+                        backend: "zfs".into(),
                         priority: 5,
                     },
                     RoutingRule {
-                        name: String::from("fsz"),
+                        name: "fsz".into(),
                         condition: RoutingCondition::FileSize(FileSizeCondition {
                             operator: ComparisonOperator::GreaterThanOrEqual,
                             size: 100,
                         }),
-                        backend: String::from("s3"),
+                        backend: "s3".into(),
                         priority: 3,
                     },
                     RoutingRule {
-                        name: String::from("ct"),
-                        condition: RoutingCondition::ContentType(String::from("application/json")),
-                        backend: String::from("azure"),
+                        name: "ct".into(),
+                        condition: RoutingCondition::ContentType("application/json".into()),
+                        backend: "azure".into(),
                         priority: 2,
                     },
                     RoutingRule {
-                        name: String::from("c"),
-                        condition: RoutingCondition::Custom(String::from("x")),
-                        backend: String::from("gcs"),
+                        name: "c".into(),
+                        condition: RoutingCondition::Custom("x".into()),
+                        backend: "gcs".into(),
                         priority: 1,
                     },
                 ],
-                default_backend: String::from("filesystem"),
+                default_backend: "filesystem".into(),
                 content_based_routing: true,
             },
             failover: StorageFailoverConfig::default(),

@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn test_fs_event_type_other() {
-        let event_type = FsEventType::Other(String::from("custom"));
+        let event_type = FsEventType::Other("custom".into());
         assert!(matches!(event_type, FsEventType::Other(_)));
     }
 
@@ -422,8 +422,8 @@ mod tests {
 
     #[test]
     fn test_fs_event_type_other_custom_values() {
-        let custom1 = FsEventType::Other(String::from("symlink"));
-        let custom2 = FsEventType::Other(String::from("hardlink"));
+        let custom1 = FsEventType::Other("symlink".into());
+        let custom2 = FsEventType::Other("hardlink".into());
 
         if let FsEventType::Other(val) = custom1 {
             assert_eq!(val, "symlink");

@@ -97,15 +97,15 @@ pub async fn create_dataset(
     info!("Creating ZFS dataset: {}", request.name);
     if request.name.is_empty() {
         return Err(Json(DataError::new(
-            String::from("Dataset name cannot be empty"),
-            String::from("INVALID_NAME"),
+            "Dataset name cannot be empty".into(),
+            "INVALID_NAME".into(),
         )));
     }
 
     if state.zfs_engines.contains_key(&request.name) {
         return Err(Json(DataError::new(
             format!("Dataset '{}' already exists", request.name),
-            String::from("DATASET_EXISTS"),
+            "DATASET_EXISTS".into(),
         )));
     }
 
@@ -115,7 +115,7 @@ pub async fn create_dataset(
             error!("Failed to create storage backend: {}", e);
             return Err(Json(DataError::new(
                 format!("Failed to create storage backend: {}", request.name),
-                String::from("BACKEND_ERROR"),
+                "BACKEND_ERROR".into(),
             )));
         }
     };
@@ -180,7 +180,7 @@ pub async fn get_dataset(
         ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            String::from("DATASET_NOT_FOUND"),
+            "DATASET_NOT_FOUND".into(),
         ))),
     }
 }
@@ -206,7 +206,7 @@ pub async fn update_dataset(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            String::from("DATASET_NOT_FOUND"),
+            "DATASET_NOT_FOUND".into(),
         ))),
     }
 }
@@ -230,7 +230,7 @@ pub async fn delete_dataset(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            String::from("DATASET_NOT_FOUND"),
+            "DATASET_NOT_FOUND".into(),
         ))),
     }
 }
@@ -253,7 +253,7 @@ pub async fn get_dataset_properties(
         ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            String::from("DATASET_NOT_FOUND"),
+            "DATASET_NOT_FOUND".into(),
         ))),
     }
 }
@@ -278,7 +278,7 @@ pub async fn set_dataset_properties(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            String::from("DATASET_NOT_FOUND"),
+            "DATASET_NOT_FOUND".into(),
         ))),
     }
 }
@@ -302,7 +302,7 @@ pub async fn get_dataset_stats(
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
-            String::from("DATASET_NOT_FOUND"),
+            "DATASET_NOT_FOUND".into(),
         ))),
     }
 }

@@ -230,7 +230,7 @@ impl ApiConfig {
 
             // Metadata
             enabled: true,
-            version: String::from("v1"),
+            version: "v1".into(),
             api_settings: HashMap::new(),
 
             // Security (relaxed for development)
@@ -269,7 +269,7 @@ impl ApiConfig {
 
             // Metadata
             enabled: true,
-            version: String::from("v1"),
+            version: "v1".into(),
             api_settings: HashMap::new(),
 
             // Security (strict)
@@ -425,7 +425,7 @@ impl ApiSecurityConfig {
             auth_enabled: false,
             jwt_secret: None,
             api_key_enabled: false,
-            cors_origins: vec![String::from("*")],
+            cors_origins: vec!["*".into()],
             request_signing_enabled: false,
             audit_logging_enabled: true,
         }
@@ -515,9 +515,9 @@ impl ApiMonitoringConfig {
     pub fn development() -> Self {
         Self {
             metrics_enabled: true,
-            metrics_path: String::from("/api/v1/monitoring/metrics"),
+            metrics_path: "/api/v1/monitoring/metrics".into(),
             health_checks_enabled: true,
-            health_path: String::from("/health"),
+            health_path: "/health".into(),
             tracing_enabled: true,
             request_logging_enabled: true,
             profiling_enabled: true,
@@ -533,9 +533,9 @@ impl ApiMonitoringConfig {
     pub fn production() -> Self {
         Self {
             metrics_enabled: true,
-            metrics_path: String::from("/api/v1/monitoring/metrics"),
+            metrics_path: "/api/v1/monitoring/metrics".into(),
             health_checks_enabled: true,
-            health_path: String::from("/health"),
+            health_path: "/health".into(),
             tracing_enabled: true,
             request_logging_enabled: false, // Reduce overhead in production
             profiling_enabled: false,       // Disable unless debugging

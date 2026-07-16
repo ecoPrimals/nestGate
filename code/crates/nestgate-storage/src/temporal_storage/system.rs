@@ -82,7 +82,7 @@ impl TemporalStorageSystem {
 
         // Hot data -> Modern era (NVMe)
         mappings.insert(
-            String::from("hot"),
+            "hot".into(),
             EraMapping {
                 preferred_era: StorageEra::Modern,
                 fallback_eras: vec![StorageEra::Digital],
@@ -92,7 +92,7 @@ impl TemporalStorageSystem {
 
         // Archive data -> Biological era (DNA)
         mappings.insert(
-            String::from("archive"),
+            "archive".into(),
             EraMapping {
                 preferred_era: StorageEra::Biological,
                 fallback_eras: vec![StorageEra::Magnetic, StorageEra::Digital],
@@ -102,7 +102,7 @@ impl TemporalStorageSystem {
 
         // Cold data -> Magnetic era
         mappings.insert(
-            String::from("cold"),
+            "cold".into(),
             EraMapping {
                 preferred_era: StorageEra::Magnetic,
                 fallback_eras: vec![StorageEra::Digital],
@@ -271,7 +271,7 @@ mod tests {
                 height_mm: 3.5,
                 depth_mm: 80.0,
             },
-            supported_formats: vec![String::from("ext4")],
+            supported_formats: vec!["ext4".into()],
             metadata: HashMap::new(),
         };
         system.add_device(device);
@@ -293,7 +293,7 @@ mod tests {
     fn test_system_add_era_mapping() {
         let mut system = TemporalStorageSystem::new();
         let mapping = EraMapping::new(StorageEra::Digital);
-        system.add_era_mapping(String::from("custom"), mapping);
+        system.add_era_mapping("custom".into(), mapping);
         let retrieved = system.get_era_mapping("custom").unwrap();
         assert_eq!(&retrieved.preferred_era, &StorageEra::Digital);
     }

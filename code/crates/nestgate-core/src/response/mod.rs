@@ -344,7 +344,7 @@ mod tests {
 
     fn sample_api_response_invalid_success_missing_data() -> ApiResponse<i32> {
         ApiResponse {
-            request_id: String::from("rid"),
+            request_id: "rid".into(),
             status: crate::canonical_types::ResponseStatus::Success,
             success: true,
             data: None,
@@ -378,7 +378,7 @@ mod tests {
     fn utils_batch_response_partial_failure() {
         let resp = utils::batch_response(
             vec![serde_json::json!(true)],
-            vec![(String::from("id1"), String::from("boom"))],
+            vec![("id1".into(), "boom".into())],
         );
         assert!(!resp.success);
         assert!(
@@ -391,12 +391,12 @@ mod tests {
     #[test]
     fn utils_health_check_response_healthy_vs_unhealthy() {
         let mut ok = HashMap::new();
-        ok.insert(String::from("disk"), true);
+        ok.insert("disk".into(), true);
         let good = utils::health_check_response("svc", "up", ok);
         assert!(good.success);
 
         let mut bad = HashMap::new();
-        bad.insert(String::from("disk"), false);
+        bad.insert("disk".into(), false);
         let poor = utils::health_check_response("svc", "degraded", bad);
         assert!(!poor.success);
     }
@@ -404,7 +404,7 @@ mod tests {
     #[test]
     fn utils_validation_response_sets_context() {
         let mut fe = HashMap::new();
-        fe.insert(String::from("email"), vec![String::from("invalid")]);
+        fe.insert("email".into(), vec!["invalid".into()]);
         let u = utils::validation_response(fe);
         assert_eq!(u.code, "VALIDATION_ERROR");
         let details = u.details.expect("test: details");
@@ -430,7 +430,7 @@ mod tests {
         );
 
         let invalid_fail = ApiResponse::<()> {
-            request_id: String::from("r"),
+            request_id: "r".into(),
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
@@ -453,7 +453,7 @@ mod tests {
         validation::validate_api_response(&ok).expect("test: valid success");
 
         let mut conflict = ApiResponse::success(1_i32);
-        conflict.error = Some(String::from("oops"));
+        conflict.error = Some("oops".into());
         let e = validation::validate_api_response(&conflict);
         assert!(e.expect_err("test: conflict").contains("cannot have error"));
     }

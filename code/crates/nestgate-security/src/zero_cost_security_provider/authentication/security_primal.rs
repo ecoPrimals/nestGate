@@ -81,7 +81,7 @@ pub async fn call_security_primal(
             .unwrap_or(&format!("primal_{}", uuid::Uuid::new_v4()))
             .to_string();
         let roles: Vec<String> = result["roles"].as_array().map_or_else(
-            || vec![String::from("authenticated")],
+            || vec!["authenticated".into()],
             |arr| {
                 arr.iter()
                     .filter_map(|v| v.as_str().map(String::from))
@@ -121,7 +121,7 @@ mod tests {
             .unwrap_or_else(|| TEST_NON_SOCKET_SECURITY_ENDPOINT.to_string());
         let conn = PrimalConnection {
             capability: CapabilityDescriptor {
-                id: String::from("sec"),
+                id: "sec".into(),
                 capability_type: CapabilityType::Security,
                 endpoint: None,
                 metadata: HashMap::new(),
@@ -175,7 +175,7 @@ mod tests {
         let endpoint = sock_path.to_string_lossy().into_owned();
         let conn = PrimalConnection {
             capability: CapabilityDescriptor {
-                id: String::from("sec"),
+                id: "sec".into(),
                 capability_type: CapabilityType::Security,
                 endpoint: Some(endpoint.clone()),
                 metadata: HashMap::new(),

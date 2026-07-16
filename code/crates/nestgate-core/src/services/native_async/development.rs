@@ -64,7 +64,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         Ok(ServiceResponse {
             success: true,
             data: b"Development response".to_vec(),
-            request_id: Some(String::from("dev-request-123")),
+            request_id: Some("dev-request-123".into()),
             status: crate::canonical_types::ResponseStatus::Success,
             headers: HashMap::new(),
             payload: serde_json::json!({"status": "dev_success"}),
@@ -76,8 +76,8 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
             processing_time: 1,
             tags: HashMap::new(),
             error_details: None,
-            correlation_id: Some(String::from("dev-correlation")),
-            trace_id: Some(String::from("dev-trace")),
+            correlation_id: Some("dev-correlation".into()),
+            trace_id: Some("dev-trace".into()),
         })
     }
 
@@ -89,7 +89,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
             failed_requests: 5,
             average_response_time: 1.5,
             service_stats: HashMap::new(),
-            algorithm: String::from("dev_round_robin"),
+            algorithm: "dev_round_robin".into(),
             health_aware: false,
             uptime_seconds: 300,
         })
@@ -111,8 +111,8 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
     /// Health Check All
     async fn health_check_all(&self) -> Result<Vec<(String, bool)>> {
         Ok(vec![
-            (String::from("dev-service-1"), true),
-            (String::from("dev-service-2"), true),
+            ("dev-service-1".into(), true),
+            ("dev-service-2".into(), true),
         ])
     }
 
@@ -133,17 +133,17 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
             Ok(Some(ServiceInfo {
                 service_id: Uuid::new_v4(),
                 metadata: crate::service_discovery::types::ServiceMetadata {
-                    name: String::from("dev-service"),
+                    name: "dev-service".into(),
                     category: crate::service_discovery::types::ServiceCategory::Development,
-                    version: String::from("1.0.0"),
-                    description: String::from("Development service"),
-                    health_endpoint: Some(String::from("/health")),
-                    metrics_endpoint: Some(String::from("/metrics")),
+                    version: "1.0.0".into(),
+                    description: "Development service".into(),
+                    health_endpoint: Some("/health".into()),
+                    metrics_endpoint: Some("/metrics".into()),
                 },
                 capabilities: vec![crate::service_discovery::types::ServiceCapability::Custom {
                     namespace: DEFAULT_SERVICE_NAME.to_string(),
-                    capability: String::from("development"),
-                    version: String::from("1.0.0"),
+                    capability: "development".into(),
+                    version: "1.0.0".into(),
                 }],
                 endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
                     url: {
@@ -153,7 +153,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
                         config.network.api_base_url()
                     },
                     protocol: crate::service_discovery::types::CommunicationProtocol::Http,
-                    health_check: Some(String::from("/health")),
+                    health_check: Some("/health".into()),
                 }],
                 last_seen: SystemTime::now(),
             }))

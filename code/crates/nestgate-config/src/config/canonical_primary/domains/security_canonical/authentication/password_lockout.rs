@@ -59,7 +59,7 @@ impl Default for PasswordPolicyConfig {
             require_lowercase: true,
             require_numbers: true,
             require_special_chars: true,
-            allowed_special_chars: String::from("!@#$%^&*()_+-=[]{}|;:,.<>?"),
+            allowed_special_chars: "!@#$%^&*()_+-=[]{}|;:,.<>?".into(),
             history_count: 5,
             expiration: Some(Duration::from_secs(90 * 24 * 60 * 60)), // 90 days
             denylist: vec![],

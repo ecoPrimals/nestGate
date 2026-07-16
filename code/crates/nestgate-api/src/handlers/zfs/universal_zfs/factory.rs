@@ -244,11 +244,11 @@ impl ZfsServiceFactory {
 
         // Check native ZFS
         let native_available = Self::is_zfs_available().await;
-        health_status.push((String::from("native"), native_available));
+        health_status.push(("native".into(), native_available));
 
         // Check remote services
         let remote_available = Self::detect_remote_services().is_some();
-        health_status.push((String::from("remote"), remote_available));
+        health_status.push(("remote".into(), remote_available));
 
         // Note: Mock backend eliminated in canonical modernization
         // All backends now use real implementations
@@ -347,7 +347,7 @@ mod tests {
     async fn create_service_remote_backend_errors() {
         let config = ZfsServiceConfig {
             backend: ZfsBackend::Remote {
-                endpoint: String::from("http://example.invalid"),
+                endpoint: "http://example.invalid".into(),
                 timeout: Duration::from_secs(1),
             },
             ..Default::default()

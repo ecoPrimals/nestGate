@@ -290,7 +290,7 @@ impl HybridAuthenticationManager {
                     let token = ZeroCostAuthToken::new(
                         format!("local_{}", uuid::Uuid::new_v4()),
                         credentials.username.clone(),
-                        vec![String::from("authenticated")],
+                        vec!["authenticated".into()],
                         self.config.local_token_settings.token_expiry,
                     );
 

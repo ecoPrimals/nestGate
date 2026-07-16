@@ -115,21 +115,21 @@ impl Cli {
                 )
                 .await
                 .map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some(String::from("server")))
+                    BinErrorHelper::runtime_error(e.to_string(), Some("server".into()))
                 })?;
             }
 
             // UniBin: Status command
             Commands::Status => {
                 crate::commands::service::show_status().await.map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some(String::from("status")))
+                    BinErrorHelper::runtime_error(e.to_string(), Some("status".into()))
                 })?;
             }
 
             // UniBin: Health command
             Commands::Health => {
                 crate::commands::service::show_health().await.map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some(String::from("health")))
+                    BinErrorHelper::runtime_error(e.to_string(), Some("health".into()))
                 })?;
             }
 
@@ -138,7 +138,7 @@ impl Cli {
                 crate::commands::service::show_version()
                     .await
                     .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some(String::from("version")))
+                        BinErrorHelper::runtime_error(e.to_string(), Some("version".into()))
                     })?;
             }
 
@@ -147,14 +147,14 @@ impl Cli {
                 crate::commands::discover::execute(target)
                     .await
                     .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some(String::from("discover")))
+                        BinErrorHelper::runtime_error(e.to_string(), Some("discover".into()))
                     })?;
             }
 
             Commands::Zfs { command } => {
                 let mut zfs_handler = crate::commands::zfs::ZfsHandler::new();
                 zfs_handler.execute(command).await.map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some(String::from("zfs_command")))
+                    BinErrorHelper::runtime_error(e.to_string(), Some("zfs_command".into()))
                 })?;
             }
             Commands::Service { action } => {
@@ -162,7 +162,7 @@ impl Cli {
                 service_manager.execute(action).await.map_err(|e| {
                     BinErrorHelper::runtime_error(
                         e.to_string(),
-                        Some(String::from("service_command")),
+                        Some("service_command".into()),
                     )
                 })?;
             }
@@ -170,21 +170,21 @@ impl Cli {
                 crate::commands::doctor::execute(comprehensive, fix)
                     .await
                     .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some(String::from("doctor")))
+                        BinErrorHelper::runtime_error(e.to_string(), Some("doctor".into()))
                     })?;
             }
             Commands::Storage { action } => {
                 crate::commands::storage::execute(action)
                     .await
                     .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some(String::from("storage")))
+                        BinErrorHelper::runtime_error(e.to_string(), Some("storage".into()))
                     })?;
             }
             Commands::Config { action } => {
                 crate::commands::config::execute(action)
                     .await
                     .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some(String::from("config")))
+                        BinErrorHelper::runtime_error(e.to_string(), Some("config".into()))
                     })?;
             }
             Commands::Monitor {
@@ -195,7 +195,7 @@ impl Cli {
                 crate::commands::monitor::execute(interval, output, duration)
                     .await
                     .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some(String::from("monitor")))
+                        BinErrorHelper::runtime_error(e.to_string(), Some("monitor".into()))
                     })?;
             }
         }

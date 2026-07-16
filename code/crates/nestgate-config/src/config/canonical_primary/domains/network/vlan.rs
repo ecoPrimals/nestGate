@@ -41,7 +41,7 @@ impl NetworkVlanConfig {
         Self {
             enabled: true,
             vlan_id: 200,
-            trunk_ports: vec![String::from("eth0")],
+            trunk_ports: vec!["eth0".into()],
         }
     }
 

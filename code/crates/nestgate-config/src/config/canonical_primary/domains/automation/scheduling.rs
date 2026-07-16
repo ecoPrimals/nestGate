@@ -64,8 +64,8 @@ impl SchedulingConfig {
             check_interval: Duration::from_secs(30),
             cron_enabled: true,
             maintenance_windows: vec![
-                String::from("0 2 * * *"),  // 2 AM daily
-                String::from("0 14 * * 0"), // 2 PM Sundays
+                "0 2 * * *".into(),  // 2 AM daily
+                "0 14 * * 0".into(), // 2 PM Sundays
             ],
             distributed: true,
             max_scheduled_tasks: 500,

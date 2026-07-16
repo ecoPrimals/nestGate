@@ -136,24 +136,24 @@ impl ConfigBuilder {
 
         // Discover API endpoint
         if let Ok(endpoint) = self.discover_endpoint("api", env) {
-            config.endpoints.insert(String::from("api"), endpoint);
+            config.endpoints.insert("api".into(), endpoint);
         }
 
         // Discover storage endpoint
         if let Ok(endpoint) = self.discover_endpoint("storage", env) {
-            config.endpoints.insert(String::from("storage"), endpoint);
+            config.endpoints.insert("storage".into(), endpoint);
         }
 
         // Load ports
         config
             .ports
-            .insert(String::from("api"), self.discover_port("api", env)?);
+            .insert("api".into(), self.discover_port("api", env)?);
         config
             .ports
-            .insert(String::from("metrics"), self.discover_port("metrics", env)?);
+            .insert("metrics".into(), self.discover_port("metrics", env)?);
         config
             .ports
-            .insert(String::from("health"), self.discover_port("health", env)?);
+            .insert("health".into(), self.discover_port("health", env)?);
 
         Ok(config)
     }

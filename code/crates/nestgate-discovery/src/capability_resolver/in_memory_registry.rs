@@ -242,7 +242,7 @@ impl InMemoryRegistryAdapter<'_> {
             _ => ServiceCapability::Custom {
                 namespace: primal_namespace_from_env_source(env),
                 capability: capability.to_string(),
-                version: String::from("1.0"),
+                version: "1.0".into(),
             },
         }
     }

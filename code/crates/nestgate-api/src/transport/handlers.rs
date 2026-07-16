@@ -292,7 +292,7 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
     pub(crate) fn handle_identity(&self, _params: Value) -> Result<Value> {
         let family_id = std::env::var("NESTGATE_FAMILY_ID")
             .or_else(|_| std::env::var("FAMILY_ID"))
-            .unwrap_or_else(|_| String::from("default"));
+            .unwrap_or_else(|_| "default".into());
         let primal = self_primal_name();
 
         Ok(serde_json::json!({

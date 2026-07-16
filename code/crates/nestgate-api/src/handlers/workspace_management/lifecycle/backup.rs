@@ -160,11 +160,11 @@ mod tests {
 
     fn sample_config() -> BackupConfig {
         BackupConfig {
-            backup_name: String::from("unit"),
+            backup_name: "unit".into(),
             include_snapshots: false,
             compression_level: 0,
             encryption_enabled: false,
-            description: Some(String::from("test")),
+            description: Some("test".into()),
         }
     }
 
@@ -186,13 +186,13 @@ mod tests {
 
     #[tokio::test]
     async fn backup_workspace_rejects_slash_in_workspace_id() {
-        let r = backup_workspace(Path(String::from("a/b")), Json(sample_config())).await;
+        let r = backup_workspace(Path("a/b".into()), Json(sample_config())).await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
 
     #[tokio::test]
     async fn backup_workspace_rejects_space_in_workspace_id() {
-        let r = backup_workspace(Path(String::from("a b")), Json(sample_config())).await;
+        let r = backup_workspace(Path("a b".into()), Json(sample_config())).await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
 }

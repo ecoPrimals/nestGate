@@ -41,12 +41,12 @@ impl CapabilityCategory {
         use crate::universal_primal_discovery::capability_based_discovery::PrimalCapability;
         match self {
             Self::Storage => PrimalCapability::ZfsStorage,
-            Self::Orchestration => PrimalCapability::Custom(String::from("orchestration")),
-            Self::Compute => PrimalCapability::Custom(String::from("compute")),
+            Self::Orchestration => PrimalCapability::Custom("orchestration".into()),
+            Self::Compute => PrimalCapability::Custom("compute".into()),
             Self::Security => PrimalCapability::Authentication,
-            Self::Intelligence => PrimalCapability::Custom(String::from("intelligence")),
-            Self::Management => PrimalCapability::Custom(String::from("management")),
-            Self::Network => PrimalCapability::Custom(String::from("network")),
+            Self::Intelligence => PrimalCapability::Custom("intelligence".into()),
+            Self::Management => PrimalCapability::Custom("management".into()),
+            Self::Network => PrimalCapability::Custom("network".into()),
             Self::Data => PrimalCapability::DataSync,
         }
     }
@@ -83,10 +83,10 @@ impl ServiceCapability {
             category,
             operation: operation.to_string(),
             description: description.to_string(),
-            version: String::from("1.0.0"),
+            version: "1.0.0".into(),
             required_parameters: Vec::new(),
             optional_parameters: Vec::new(),
-            response_format: String::from("json"),
+            response_format: "json".into(),
         }
     }
 

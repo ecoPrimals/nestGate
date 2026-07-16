@@ -362,9 +362,9 @@ mod regression_tests {
             timestamp: SystemTime::UNIX_EPOCH,
             pool_metrics,
             dataset_metrics: HashMap::from([(
-                String::from("tank/d0"),
+                "tank/d0".into(),
                 ZfsDatasetMetrics {
-                    dataset_name: String::from("tank/d0"),
+                    dataset_name: "tank/d0".into(),
                     access_pattern: AccessPattern::Mixed,
                     dedup_ratio: 1.0,
                     record_size: 128 * 1024,

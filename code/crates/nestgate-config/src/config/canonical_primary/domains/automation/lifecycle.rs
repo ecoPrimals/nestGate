@@ -70,9 +70,9 @@ impl LifecycleConfig {
             archive_retention_days: 1825, // 5 years
             auto_tiering: true,
             transition_rules: vec![
-                String::from("hot_to_warm: age > 30d"),
-                String::from("warm_to_cold: age > 90d"),
-                String::from("cold_to_archive: age > 365d"),
+                "hot_to_warm: age > 30d".into(),
+                "warm_to_cold: age > 90d".into(),
+                "cold_to_archive: age > 365d".into(),
             ],
         }
     }

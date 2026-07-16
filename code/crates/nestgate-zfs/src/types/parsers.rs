@@ -132,7 +132,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
     let full_name = properties
         .get("name")
         .ok_or_else(|| ZfsError::DatasetError {
-            message: String::from("Missing dataset name in output"),
+            message: "Missing dataset name in output".into(),
         })?
         .clone();
 
@@ -175,9 +175,9 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
         available,
         mountpoint: mountpoint.clone(),
         mount_point: mountpoint,
-        dataset_type: String::from("filesystem"),
+        dataset_type: "filesystem".into(),
         compression,
-        checksum: String::from("sha256"),
+        checksum: "sha256".into(),
         referenced: used,
         compression_ratio: 1.0,
         tier: StorageTier::Warm,
@@ -190,12 +190,12 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
 #[must_use]
 pub fn parse_health_status(status: &str) -> String {
     match status.trim().to_uppercase().as_str() {
-        "ONLINE" => String::from("ONLINE"),
-        "DEGRADED" => String::from("DEGRADED"),
-        "FAULTED" => String::from("FAULTED"),
-        "OFFLINE" => String::from("OFFLINE"),
-        "UNAVAIL" => String::from("UNAVAIL"),
-        "REMOVED" => String::from("REMOVED"),
+        "ONLINE" => "ONLINE".into(),
+        "DEGRADED" => "DEGRADED".into(),
+        "FAULTED" => "FAULTED".into(),
+        "OFFLINE" => "OFFLINE".into(),
+        "UNAVAIL" => "UNAVAIL".into(),
+        "REMOVED" => "REMOVED".into(),
         _ => status.trim().to_string(),
     }
 }

@@ -205,14 +205,14 @@ fn dataset_properties_from_engine(
     let mut custom = HashMap::new();
     match engine {
         None => {
-            custom.insert(String::from("engine_metadata"), String::from("unavailable"));
+            custom.insert("engine_metadata".into(), "unavailable".into());
         }
         Some(value) => {
             let status_present = value
                 .get("status")
                 .is_some_and(|status| parse_dataset_status(status).is_some());
             if !status_present {
-                custom.insert(String::from("status"), String::from("unknown"));
+                custom.insert("status".into(), "unknown".into());
             }
         }
     }
@@ -568,12 +568,12 @@ mod tests {
     #[test]
     fn create_storage_backend_filesystem_succeeds() {
         let req = CreateDatasetRequest {
-            name: String::from("testpool/fs"),
+            name: "testpool/fs".into(),
             dataset_type: DatasetType::Filesystem,
             backend: StorageBackendType::Filesystem,
             properties: None,
             quota: None,
-            description: Some(String::from("/custom/path")),
+            description: Some("/custom/path".into()),
         };
         let result = create_storage_backend(&req).unwrap();
         assert_eq!(result["backend"], "filesystem");
@@ -583,7 +583,7 @@ mod tests {
     #[test]
     fn create_storage_backend_unsupported_returns_error() {
         let req = CreateDatasetRequest {
-            name: String::from("test"),
+            name: "test".into(),
             dataset_type: DatasetType::Filesystem,
             backend: StorageBackendType::Cloud,
             properties: None,
@@ -596,12 +596,12 @@ mod tests {
     #[test]
     fn engine_entry_json_for_create_includes_fields() {
         let req = CreateDatasetRequest {
-            name: String::from("testpool/new"),
+            name: "testpool/new".into(),
             dataset_type: DatasetType::Filesystem,
             backend: StorageBackendType::Filesystem,
             properties: None,
             quota: Some(1024),
-            description: Some(String::from("/mnt/data")),
+            description: Some("/mnt/data".into()),
         };
         let json_str = engine_entry_json_for_create(&req);
         let v: serde_json::Value = serde_json::from_str(&json_str).unwrap();

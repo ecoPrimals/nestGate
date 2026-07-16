@@ -352,11 +352,11 @@ mod tests {
 
         assert_eq!(knowledge.name, "nestgate");
         assert_eq!(knowledge.capabilities.len(), 2);
-        assert!(knowledge.capabilities.contains(&String::from("storage")));
+        assert!(knowledge.capabilities.contains(&"storage".into()));
         assert_eq!(knowledge.endpoints.len(), 1);
         assert_eq!(
             knowledge.metadata.get("version"),
-            Some(&String::from("1.0.0"))
+            Some(&"1.0.0".into())
         );
     }
 

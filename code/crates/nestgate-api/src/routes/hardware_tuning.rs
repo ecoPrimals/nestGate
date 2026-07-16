@@ -52,16 +52,16 @@ pub async fn auto_tune(
                 performance_improvement: Some(performance_gain),
                 external_access_status: ExternalAccessStatus {
                     access_granted: true,
-                    access_level: String::from("standard"),
+                    access_level: "standard".into(),
                     restrictions: vec![],
                     expires_at: None,
                 }
                 recommendations: TuningRecommendations {
                     cpu_recommendations: vec![
-                        String::from("Hardware tuning completed with live compute data"),
+                        "Hardware tuning completed with live compute data".into(),
                     ],
                     memory_recommendations: vec![
-                        String::from("Consider monitoring performance metrics"),
+                        "Consider monitoring performance metrics".into(),
                     ],
                     storage_recommendations: vec![],
                     network_recommendations: vec![],

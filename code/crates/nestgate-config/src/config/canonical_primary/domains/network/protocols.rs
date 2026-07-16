@@ -57,7 +57,7 @@ impl NetworkProtocolConfig {
         Self {
             http: HttpConfig {
                 enabled: true,
-                version: String::from("HTTP/1.1"),
+                version: "HTTP/1.1".into(),
             },
             websocket: WebSocketConfig {
                 enabled: true,
@@ -80,7 +80,7 @@ impl NetworkProtocolConfig {
         Self {
             http: HttpConfig {
                 enabled: true,
-                version: String::from("HTTP/2"),
+                version: "HTTP/2".into(),
             },
             websocket: WebSocketConfig {
                 enabled: true,

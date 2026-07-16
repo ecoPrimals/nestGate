@@ -199,7 +199,7 @@ impl Default for ThreadPoolConfig {
             max_size: std::thread::available_parallelism().map_or(4, std::num::NonZero::get) * 2,
             keep_alive: Duration::from_secs(60),
             queue_size: 1000,
-            thread_name_pattern: String::from("nestgate-worker-{}"),
+            thread_name_pattern: "nestgate-worker-{}".into(),
         }
     }
 }

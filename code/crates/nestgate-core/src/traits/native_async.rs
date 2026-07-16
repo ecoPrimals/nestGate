@@ -311,9 +311,9 @@ pub mod migration {
                 "Replace #[async_trait] with native async for {}",
                 trait_name
             ),
-            String::from("Change async fn to fn returning impl Future"),
-            String::from("Remove Arc<dyn> boxing for direct composition"),
-            String::from("Add const generics for compile-time configuration"),
+            "Change async fn to fn returning impl Future".into(),
+            "Remove Arc<dyn> boxing for direct composition".into(),
+            "Add const generics for compile-time configuration".into(),
         ]
     }
 }
@@ -418,13 +418,13 @@ mod tests {
     #[test]
     fn storage_metadata_clone_and_fields() {
         let mut m = HashMap::new();
-        m.insert(String::from("a"), String::from("b"));
+        m.insert("a".into(), "b".into());
         let sm = StorageMetadata {
             size: 42,
             created: std::time::SystemTime::UNIX_EPOCH,
             modified: std::time::SystemTime::UNIX_EPOCH,
-            content_type: String::from("application/octet-stream"),
-            checksum: String::from("abc"),
+            content_type: "application/octet-stream".into(),
+            checksum: "abc".into(),
             metadata: m,
         };
         let sm2 = sm;
@@ -467,15 +467,15 @@ mod tests {
     fn alert_and_dashboard_data_shapes() {
         let a = Alert {
             severity: AlertSeverity::Critical,
-            message: String::from("m"),
-            component: String::from("c"),
+            message: "m".into(),
+            component: "c".into(),
             timestamp: std::time::SystemTime::UNIX_EPOCH,
             metadata: HashMap::new(),
         };
         assert!(matches!(a.severity, AlertSeverity::Critical));
 
         let mut metrics = HashMap::new();
-        metrics.insert(String::from("cpu"), 0.5);
+        metrics.insert("cpu".into(), 0.5);
         let d = DashboardData {
             metrics,
             status: ServiceStatus::Healthy,

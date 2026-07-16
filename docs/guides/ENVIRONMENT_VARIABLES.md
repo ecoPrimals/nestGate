@@ -1,6 +1,6 @@
 # Environment Variables Reference
 
-**Last Updated**: June 28, 2026  
+**Last Updated**: Jul 16, 2026  
 **Status**: Comprehensive reference for all NestGate environment variables  
 **Default mode**: HTTP (`nestgate server`); use `--socket-only` for UDS-only operation
 
@@ -36,6 +36,7 @@
 | `NESTGATE_STORAGE_PATH` | (XDG) | Storage root directory |
 | `XDG_DATA_HOME` | `~/.local/share` | XDG data directory (if set) |
 | `NESTGATE_STORAGE_BACKEND` | `filesystem` | Storage backend type |
+| `PROJECTS_PATH` | - | Override footPrint project storage root (composition wiring) |
 
 ### **Database Configuration** (Optional external — not required for core operation)
 

@@ -128,8 +128,8 @@ impl PerformanceDashboard {
                 overall_trend: TrendDirection::Stable,
             },
             optimization_recommendations: vec![
-                String::from("Consider monitoring CPU usage trends"),
-                String::from("Review memory utilization patterns"),
+                "Consider monitoring CPU usage trends".into(),
+                "Review memory utilization patterns".into(),
             ],
             insights: vec![], // Simplified for now
             capacity_forecast: CapacityForecast {
@@ -140,7 +140,7 @@ impl PerformanceDashboard {
                 projected_usage_in_30_days: 65.0,
                 projected_usage_in_90_days: 75.0,
                 growth_points: vec![],
-                recommendations: vec![String::from("Monitor growth trends")],
+                recommendations: vec!["Monitor growth trends".into()],
             },
             alert_summary: AlertSummary {
                 critical_alerts: 0,

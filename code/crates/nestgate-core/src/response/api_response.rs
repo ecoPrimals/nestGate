@@ -95,7 +95,7 @@ impl<T> ApiResponse<T> {
             timestamp: chrono::Utc::now(),
             metadata: Some({
                 let mut meta = HashMap::new();
-                meta.insert(String::from("error_code"), serde_json::Value::String(code));
+                meta.insert("error_code".into(), serde_json::Value::String(code));
                 meta
             }),
             processing_time_ms: 0,
@@ -212,7 +212,7 @@ impl<T> Default for ApiResponse<T> {
             status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
-            error: Some(String::from("Unknown error")),
+            error: Some("Unknown error".into()),
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: None,

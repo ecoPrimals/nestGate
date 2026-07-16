@@ -50,7 +50,7 @@ impl Default for UnifiedCacheConfig {
             max_size: 1000,
             ttl_seconds: Some(3600), // 1 hour
             cache_dir: None,
-            eviction_policy: String::from("lru"),
+            eviction_policy: "lru".into(),
         }
     }
 }
@@ -484,7 +484,7 @@ mod tests {
             max_size: 2,
             ttl_seconds: Some(3600),
             cache_dir: None,
-            eviction_policy: String::from("lru"),
+            eviction_policy: "lru".into(),
         };
 
         let mut cache = CacheManager::new(config);
@@ -511,7 +511,7 @@ mod tests {
             max_size: 1000,
             ttl_seconds: Some(0), // Expire immediately
             cache_dir: None,
-            eviction_policy: String::from("lru"),
+            eviction_policy: "lru".into(),
         };
 
         let mut cache = CacheManager::new(config);
@@ -577,14 +577,14 @@ mod tests {
             max_size: 10,
             ttl_seconds: Some(3600),
             cache_dir: None,
-            eviction_policy: String::from("lru"),
+            eviction_policy: "lru".into(),
         };
         let mut cache = CacheManager::new(config);
         cache
             .put("warm_key", b"payload".to_vec())
             .expect("test: put");
         let warm_entry = cache.hot_tier.remove("warm_key").expect("test: take hot");
-        cache.warm_tier.insert(String::from("warm_key"), warm_entry);
+        cache.warm_tier.insert("warm_key".into(), warm_entry);
         let data = cache.get("warm_key").expect("test: promote warm to hot");
         assert_eq!(data, b"payload");
     }
@@ -595,12 +595,12 @@ mod tests {
             max_size: 10,
             ttl_seconds: Some(3600),
             cache_dir: None,
-            eviction_policy: String::from("lru"),
+            eviction_policy: "lru".into(),
         };
         let mut cache = CacheManager::new(config);
         cache.put("cold_key", b"c".to_vec()).expect("test: put");
         let entry = cache.hot_tier.remove("cold_key").expect("test: take hot");
-        cache.cold_tier.insert(String::from("cold_key"), entry);
+        cache.cold_tier.insert("cold_key".into(), entry);
         let data = cache.get("cold_key").expect("test: cold to warm");
         assert_eq!(data, b"c");
         let back = cache.get("cold_key").expect("test: warm to hot");

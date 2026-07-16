@@ -299,7 +299,7 @@ impl DevEnvironmentStorageService {
             total_size_bytes,
             total_used_bytes,
             available_bytes: total_size_bytes - total_used_bytes,
-            abstraction_type: String::from("Development Environment"),
+            abstraction_type: "Development Environment".into(),
         }
     }
 

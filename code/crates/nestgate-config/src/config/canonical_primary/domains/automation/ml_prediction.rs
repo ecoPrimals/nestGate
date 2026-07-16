@@ -44,7 +44,7 @@ impl MlPredictionConfig {
     pub fn development() -> Self {
         Self {
             enabled: false, // Disabled in dev by default
-            model_path: String::from("/opt/nestgate/models/default"),
+            model_path: "/opt/nestgate/models/default".into(),
             model_update_interval_hours: 24,
             training_data_size: 1000,
             auto_retrain: false,
@@ -60,7 +60,7 @@ impl MlPredictionConfig {
     pub fn production() -> Self {
         Self {
             enabled: true,
-            model_path: String::from("/opt/nestgate/models/production"),
+            model_path: "/opt/nestgate/models/production".into(),
             model_update_interval_hours: 168, // Weekly
             training_data_size: 10000,
             auto_retrain: true,

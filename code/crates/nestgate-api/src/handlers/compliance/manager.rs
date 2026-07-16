@@ -185,23 +185,23 @@ pub fn initialize_compliance_manager() -> ComplianceManager {
 
     // Add default GDPR framework
     let gdpr_framework = RegulatoryFramework {
-        id: String::from("gdpr"),
-        name: String::from("General Data Protection Regulation"),
+        id: "gdpr".into(),
+        name: "General Data Protection Regulation".into(),
         framework_type: RegulatoryType::GDPR,
         required_controls: vec![
             ComplianceControl {
-                id: String::from("gdpr-consent"),
-                name: String::from("Data Subject Consent"),
-                description: String::from("Ensure valid consent for data processing"),
+                id: "gdpr-consent".into(),
+                name: "Data Subject Consent".into(),
+                description: "Ensure valid consent for data processing".into(),
                 control_type: ControlType::Preventive,
                 implementation_status: ImplementationStatus::PartiallyImplemented,
                 last_assessment: None,
                 next_assessment_due: Some(Utc::now() + ChronoDuration::days(90)),
             },
             ComplianceControl {
-                id: String::from("gdpr-retention"),
-                name: String::from("Data Retention Limits"),
-                description: String::from("Implement data retention and deletion policies"),
+                id: "gdpr-retention".into(),
+                name: "Data Retention Limits".into(),
+                description: "Implement data retention and deletion policies".into(),
                 control_type: ControlType::Preventive,
                 implementation_status: ImplementationStatus::FullyImplemented,
                 last_assessment: Some(Utc::now() - ChronoDuration::days(30)),
@@ -217,14 +217,14 @@ pub fn initialize_compliance_manager() -> ComplianceManager {
 
     // Add default retention policy
     let default_retention = RetentionPolicy {
-        id: String::from("default-retention"),
-        name: String::from("Default Data Retention"),
+        id: "default-retention".into(),
+        name: "Default Data Retention".into(),
         data_classification: DataClassification::Internal,
         retention_days: 2555,           // 7 years
         archive_after_days: Some(1095), // 3 years
         auto_delete: false,
         legal_hold: false,
-        data_types: vec![String::from("general"), String::from("logs")],
+        data_types: vec!["general".into(), "logs".into()],
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };

@@ -48,8 +48,8 @@ mod tests {
     #[test]
     fn endpoint_url_without_path_suffix() {
         let endpoint = Endpoint {
-            protocol: String::from("https"),
-            address: String::from("10.0.0.1"),
+            protocol: "https".into(),
+            address: "10.0.0.1".into(),
             port: 443,
             path: None,
             health_path: None,
@@ -115,17 +115,17 @@ mod tests {
     #[tokio::test]
     async fn test_endpoint_url() {
         let endpoint = Endpoint {
-            protocol: String::from("http"),
-            address: String::from("localhost"),
+            protocol: "http".into(),
+            address: "localhost".into(),
             port: 8080,
-            path: Some(String::from("/api")),
-            health_path: Some(String::from("/health")),
+            path: Some("/api".into()),
+            health_path: Some("/health".into()),
         };
 
         assert_eq!(endpoint.url(), "http://localhost:8080/api");
         assert_eq!(
             endpoint.health_url(),
-            Some(String::from("http://localhost:8080/health"))
+            Some("http://localhost:8080/health".into())
         );
     }
 
@@ -133,20 +133,20 @@ mod tests {
     async fn test_discovered_primal_has_capability() {
         let discovered = DiscoveredPrimal {
             identity: PrimalIdentity {
-                id: String::from("test"),
-                primal_type: String::from("testprimal"),
-                version: String::from("1.0.0"),
+                id: "test".into(),
+                primal_type: "testprimal".into(),
+                version: "1.0.0".into(),
                 started_at: std::time::SystemTime::now(),
             },
             capabilities: vec![Capability {
-                name: String::from("storage"),
-                description: String::from("Storage"),
-                endpoint: String::from("/storage"),
+                name: "storage".into(),
+                description: "Storage".into(),
+                endpoint: "/storage".into(),
                 metadata: std::collections::HashMap::new(),
             }],
             primary_endpoint: Endpoint {
-                protocol: String::from("http"),
-                address: String::from("localhost"),
+                protocol: "http".into(),
+                address: "localhost".into(),
                 port: 8080,
                 path: None,
                 health_path: None,

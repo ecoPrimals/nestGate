@@ -77,7 +77,7 @@ impl Default for ZfsServiceConfig {
         let config = get_config();
 
         Self {
-            service_name: String::from("nestgate-zfs"),
+            service_name: "nestgate-zfs".into(),
             bind_address: if config.network.bind_all {
                 nestgate_core::constants::hardcoding::addresses::BIND_ALL_IPV4.to_string()
             } else {
@@ -87,10 +87,10 @@ impl Default for ZfsServiceConfig {
             orchestrator_endpoints: vec![],
             health_check_interval: 30,
             capabilities: vec![
-                String::from("zfs-pool-management"),
-                String::from("zfs-dataset-management"),
-                String::from("zfs-snapshot-management"),
-                String::from("tier-management"),
+                "zfs-pool-management".into(),
+                "zfs-dataset-management".into(),
+                "zfs-snapshot-management".into(),
+                "tier-management".into(),
             ],
             metadata: HashMap::new(),
         }

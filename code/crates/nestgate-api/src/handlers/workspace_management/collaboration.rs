@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn test_share_workspace_returns_not_implemented() {
-        let workspace_id = String::from("test-workspace");
+        let workspace_id = "test-workspace".into();
         let (status, Json(body)) = share_workspace(Path(workspace_id));
 
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn test_unshare_workspace_returns_not_implemented() {
-        let workspace_id = String::from("test-workspace");
+        let workspace_id = "test-workspace".into();
         let (status, Json(body)) = unshare_workspace(Path(workspace_id));
 
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);

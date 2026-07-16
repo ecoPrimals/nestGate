@@ -256,7 +256,7 @@ impl AiTierOptimizer {
             (TierType::Hot, TierType::Warm) => format!("Activity decreased: {ops} ops"),
             (TierType::Warm, TierType::Cold) => format!("Low activity: {ops} ops"),
             (TierType::Hot, TierType::Cold) => format!("Minimal usage: {ops} ops"),
-            _ => String::from("No change recommended"),
+            _ => "No change recommended".into(),
         }
     }
 }
@@ -361,7 +361,7 @@ mod tests {
         let mut optimizer = AiTierOptimizer::new(config);
 
         let metric = create_test_metric(100, 50, 50.0, AccessPattern::Sequential);
-        optimizer.add_metric(String::from("dataset1"), metric.clone());
+        optimizer.add_metric("dataset1".into(), metric.clone());
 
         assert_eq!(optimizer.performance_history.len(), 1);
         assert_eq!(
@@ -377,7 +377,7 @@ mod tests {
 
         for i in 0..5 {
             let metric = create_test_metric(100 + i, 50, 50.0, AccessPattern::Sequential);
-            optimizer.add_metric(String::from("dataset1"), metric);
+            optimizer.add_metric("dataset1".into(), metric);
         }
 
         assert_eq!(
@@ -426,11 +426,11 @@ mod tests {
     #[test]
     fn test_tier_optimization_recommendation_creation() {
         let recommendation = TierOptimizationRecommendation {
-            dataset: String::from("test_dataset"),
+            dataset: "test_dataset".into(),
             current_tier: TierType::Cold,
             recommended_tier: TierType::Hot,
             confidence: 0.85,
-            reason: String::from("High activity"),
+            reason: "High activity".into(),
         };
 
         assert_eq!(recommendation.dataset, "test_dataset");
@@ -556,11 +556,11 @@ mod tests {
         let mut optimizer = AiTierOptimizer::new(config);
 
         optimizer.add_metric(
-            String::from("dataset1"),
+            "dataset1".into(),
             create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
         );
         optimizer.add_metric(
-            String::from("dataset2"),
+            "dataset2".into(),
             create_test_metric(200, 100, 75.0, AccessPattern::Random),
         );
 
@@ -585,7 +585,7 @@ mod tests {
         // Add only 5 metrics when min_data_points is 10
         for _ in 0..5 {
             optimizer.add_metric(
-                String::from("dataset1"),
+                "dataset1".into(),
                 create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
             );
         }

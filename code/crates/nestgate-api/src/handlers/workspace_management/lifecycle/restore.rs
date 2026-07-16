@@ -192,7 +192,7 @@ mod tests {
 
     fn sample_restore_config() -> RestoreConfig {
         RestoreConfig {
-            backup_name: String::from("bk"),
+            backup_name: "bk".into(),
             target_workspace_id: None,
             restore_point: None,
             force: false,
@@ -208,14 +208,14 @@ mod tests {
     #[tokio::test]
     async fn restore_workspace_rejects_slash_in_workspace_id_with_bad_request() {
         let r =
-            restore_workspace(Path(String::from("bad/id")), Json(sample_restore_config())).await;
+            restore_workspace(Path("bad/id".into()), Json(sample_restore_config())).await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
 
     #[tokio::test]
     async fn restore_workspace_rejects_space_in_workspace_id_with_bad_request() {
         let r =
-            restore_workspace(Path(String::from("bad id")), Json(sample_restore_config())).await;
+            restore_workspace(Path("bad id".into()), Json(sample_restore_config())).await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
 
@@ -226,9 +226,9 @@ mod tests {
         let path = dir.path().to_string_lossy().into_owned();
         nestgate_core::env_process::set_var("NESTGATE_BACKUP_DIR", &path);
         let res = restore_workspace(
-            Path(String::from("ws_missing")),
+            Path("ws_missing".into()),
             Json(RestoreConfig {
-                backup_name: String::from("nope"),
+                backup_name: "nope".into(),
                 target_workspace_id: None,
                 restore_point: None,
                 force: false,
@@ -250,9 +250,9 @@ mod tests {
     #[test]
     fn restore_config_serde_round_trip() {
         let original = RestoreConfig {
-            backup_name: String::from("daily"),
-            target_workspace_id: Some(String::from("target-ws")),
-            restore_point: Some(String::from("snap1")),
+            backup_name: "daily".into(),
+            target_workspace_id: Some("target-ws".into()),
+            restore_point: Some("snap1".into()),
             force: true,
         };
         let json_str = serde_json::to_string(&original).expect("test: serialize");

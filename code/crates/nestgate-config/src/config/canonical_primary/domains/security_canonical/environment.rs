@@ -61,7 +61,7 @@ impl EnvironmentSecuritySettings {
     #[must_use]
     pub fn development() -> Self {
         Self {
-            security_level: String::from("low"),
+            security_level: "low".into(),
             deployment: DeploymentSecurityConfig {
                 secure_deployment: false,
                 image_scanning: false,
@@ -77,7 +77,7 @@ impl EnvironmentSecuritySettings {
     #[must_use]
     pub fn staging() -> Self {
         Self {
-            security_level: String::from("medium"),
+            security_level: "medium".into(),
             deployment: DeploymentSecurityConfig {
                 secure_deployment: true,
                 image_scanning: true,
@@ -93,7 +93,7 @@ impl EnvironmentSecuritySettings {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            security_level: String::from("high"),
+            security_level: "high".into(),
             deployment: DeploymentSecurityConfig {
                 secure_deployment: true,
                 image_scanning: true,

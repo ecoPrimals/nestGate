@@ -560,7 +560,7 @@ mod tests {
     #[test]
     fn list_pools_unknown_backend_returns_fallback_pool() {
         let mut bridge = UniversalStorageBridge::new().expect("bridge");
-        bridge.set_preferred_backend_for_test(Some(String::from("custom-backend")));
+        bridge.set_preferred_backend_for_test(Some("custom-backend".into()));
         let pools = bridge.list_pools().expect("pools");
         assert_eq!(pools.len(), 1);
         assert_eq!(pools[0].name, "root-filesystem");
@@ -576,9 +576,9 @@ mod tests {
     #[test]
     fn create_dataset_rejects_unknown_backend() {
         let mut bridge = UniversalStorageBridge::new().expect("bridge");
-        bridge.set_preferred_backend_for_test(Some(String::from("custom-backend")));
+        bridge.set_preferred_backend_for_test(Some("custom-backend".into()));
         let config = DatasetConfig {
-            name: String::from("/tmp/nestgate_unknown_backend_ds"),
+            name: "/tmp/nestgate_unknown_backend_ds".into(),
             mountpoint: None,
             compression: false,
             quota: None,

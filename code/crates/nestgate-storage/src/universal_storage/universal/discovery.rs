@@ -97,11 +97,11 @@ impl UniversalStorageDiscovery {
     /// Reserved for future I/O failures when probing local paths; currently always succeeds.
     pub fn discover_local() -> Result<Vec<DiscoveredStorage>> {
         let local = DiscoveredStorage {
-            name: String::from("local"),
-            endpoint: String::from("file://./storage"),
+            name: "local".into(),
+            endpoint: "file://./storage".into(),
             protocol: DiscoveredProtocol::new(
                 TransportProtocol::UnixSocket {
-                    path: String::from("./storage"),
+                    path: "./storage".into(),
                 },
                 StorageOperationPattern::FileSystem {
                     path_separator: '/',
@@ -246,9 +246,9 @@ impl UniversalStorageDiscovery {
                 key_id: access_key,
                 secret_key: SecretString::new(secret_key),
                 headers_to_sign: vec![
-                    String::from("host"),
-                    String::from("x-amz-date"),
-                    String::from("authorization"),
+                    "host".into(),
+                    "x-amz-date".into(),
+                    "authorization".into(),
                 ],
                 session_token,
             });
@@ -259,7 +259,7 @@ impl UniversalStorageDiscovery {
         if let Some(token) = env.get(&token_var) {
             return Some(AuthenticationPattern::BearerToken {
                 token: SecretString::new(token),
-                token_type: String::from("Bearer"),
+                token_type: "Bearer".into(),
             });
         }
 
@@ -269,7 +269,7 @@ impl UniversalStorageDiscovery {
             return Some(AuthenticationPattern::ApiKey {
                 key: SecretString::new(api_key),
                 location: ApiKeyLocation::Header {
-                    name: String::from("X-API-Key"),
+                    name: "X-API-Key".into(),
                 },
             });
         }
@@ -464,7 +464,7 @@ mod tests {
     #[tokio::test]
     async fn test_discover_operations_filesystem() {
         let transport = TransportProtocol::UnixSocket {
-            path: String::from("./storage"),
+            path: "./storage".into(),
         };
 
         let pattern =
@@ -568,8 +568,8 @@ mod tests {
     #[test]
     fn test_discovered_storage_creation() {
         let storage = DiscoveredStorage {
-            name: String::from("test"),
-            endpoint: String::from("https://example.com"),
+            name: "test".into(),
+            endpoint: "https://example.com".into(),
             protocol: DiscoveredProtocol::new(
                 TransportProtocol::Http {
                     version: HttpVersion::Http1_1,

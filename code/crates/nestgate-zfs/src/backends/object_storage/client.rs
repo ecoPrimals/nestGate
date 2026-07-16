@@ -66,8 +66,8 @@ mod tests {
     #[test]
     fn new_exposes_endpoint_region_and_path_style() {
         let c = ObjectStorageClient::new(
-            String::from("https://minio.local:9000"),
-            String::from("us-west-1"),
+            "https://minio.local:9000".into(),
+            "us-west-1".into(),
             ConfigSource::Environment,
             true,
         );

@@ -40,10 +40,10 @@ impl StorageConfig {
     pub fn from_environment() -> Result<Self> {
         Ok(Self {
             base_path: env::var("NESTGATE_STORAGE_PATH")
-                .unwrap_or_else(|_| String::from("./data"))
+                .unwrap_or_else(|_| "./data".into())
                 .into(),
             backend: env::var("NESTGATE_STORAGE_BACKEND")
-                .unwrap_or_else(|_| String::from("filesystem")),
+                .unwrap_or_else(|_| "filesystem".into()),
             quota_gb: env::var("NESTGATE_STORAGE_QUOTA_GB")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -60,7 +60,7 @@ impl Default for StorageConfig {
     fn default() -> Self {
         Self {
             base_path: PathBuf::from("./data"),
-            backend: String::from("filesystem"),
+            backend: "filesystem".into(),
             quota_gb: 100,
             retention_days: 30,
         }
@@ -141,7 +141,7 @@ mod tests {
     fn serde_roundtrip() {
         let cfg = StorageConfig {
             base_path: PathBuf::from("/custom/path"),
-            backend: String::from("zfs"),
+            backend: "zfs".into(),
             quota_gb: 200,
             retention_days: 60,
         };

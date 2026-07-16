@@ -347,18 +347,18 @@ mod tests {
         let h = JsonRpcHandler::new(EchoHandler);
         let ok = h
             .handle_request(JsonRpcRequest {
-                jsonrpc: String::from("2.0"),
-                method: String::from("echo"),
-                params: Value::String(String::from("hi")),
+                jsonrpc: "2.0".into(),
+                method: "echo".into(),
+                params: Value::String("hi".into()),
                 id: Value::from(1),
             })
             .await;
-        assert_eq!(ok.result, Some(Value::String(String::from("hi"))));
+        assert_eq!(ok.result, Some(Value::String("hi".into())));
 
         let bad = h
             .handle_request(JsonRpcRequest {
-                jsonrpc: String::from("2.0"),
-                method: String::from("missing"),
+                jsonrpc: "2.0".into(),
+                method: "missing".into(),
                 params: Value::Null,
                 id: Value::from(2),
             })
@@ -378,8 +378,8 @@ mod tests {
         let h = JsonRpcHandler::new(FailHandler);
         let r = h
             .handle_request(JsonRpcRequest {
-                jsonrpc: String::from("2.0"),
-                method: String::from("x"),
+                jsonrpc: "2.0".into(),
+                method: "x".into(),
                 params: Value::Null,
                 id: Value::Null,
             })

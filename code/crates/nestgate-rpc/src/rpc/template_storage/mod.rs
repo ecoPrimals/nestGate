@@ -236,7 +236,7 @@ mod tests {
             .await
             .unwrap();
 
-        let tags = vec![String::from("alpha")];
+        let tags = vec!["alpha".into()];
         let by_tag = ts
             .list_templates("fam_f", None, Some(&tags), None, None)
             .await

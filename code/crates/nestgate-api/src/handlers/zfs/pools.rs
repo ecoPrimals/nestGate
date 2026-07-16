@@ -517,7 +517,7 @@ mod tests {
     #[test]
     fn test_pool_response_creation() {
         let pool_info = PoolInfo {
-            name: String::from("testpool"),
+            name: "testpool".into(),
             health: PoolHealth::Healthy,
             capacity: Some(PoolCapacity {
                 total_bytes: 1_000_000_000_000, // 1TB
@@ -546,7 +546,7 @@ mod tests {
     #[test]
     fn test_zfs_confidence_enhancement() {
         let pool_info = PoolInfo {
-            name: String::from("testpool"),
+            name: "testpool".into(),
             health: PoolHealth::Healthy,
             capacity: None,
         };
@@ -555,7 +555,7 @@ mod tests {
         assert_eq!(confidence, 0.95); // Healthy pool should have high scrub confidence
         
         let degraded_pool = PoolInfo {
-            name: String::from("degraded"),
+            name: "degraded".into(),
             health: PoolHealth::Degraded,
             capacity: None,
         };

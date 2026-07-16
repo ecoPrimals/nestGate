@@ -14,14 +14,14 @@ impl ZfsMigrationGuide {
     #[must_use]
     pub fn migration_steps() -> Vec<String> {
         vec![
-            String::from("1. Replace Arc<dyn ZfsOperations> with generic parameters"),
-            String::from("2. Convert async_trait methods to native async"),
-            String::from("3. Add const generics for capacity limits and timeouts"),
-            String::from("4. Update method calls to use direct dispatch"),
-            String::from("5. Create type aliases for different deployment sizes"),
-            String::from("6. Add compile-time capacity checking"),
-            String::from("7. Implement memory caching for frequently accessed data"),
-            String::from("8. Test performance improvements with benchmarks"),
+            "1. Replace Arc<dyn ZfsOperations> with generic parameters".into(),
+            "2. Convert async_trait methods to native async".into(),
+            "3. Add const generics for capacity limits and timeouts".into(),
+            "4. Update method calls to use direct dispatch".into(),
+            "5. Create type aliases for different deployment sizes".into(),
+            "6. Add compile-time capacity checking".into(),
+            "7. Implement memory caching for frequently accessed data".into(),
+            "8. Test performance improvements with benchmarks".into(),
         ]
     }
 
@@ -99,11 +99,11 @@ mod tests {
     #[test]
     fn test_zero_cost_pool_info_creation() {
         let pool_info = ZeroCostPoolInfo {
-            name: String::from("test_pool"),
+            name: "test_pool".into(),
             size: 1000000,
             used: 500000,
             available: 500000,
-            health: String::from("ONLINE"),
+            health: "ONLINE".into(),
             properties: HashMap::new(),
             created_at: std::time::SystemTime::now(),
         };
@@ -116,11 +116,11 @@ mod tests {
     #[test]
     fn test_pool_info_serialization() {
         let pool_info = ZeroCostPoolInfo {
-            name: String::from("test_pool"),
+            name: "test_pool".into(),
             size: 1000000,
             used: 500000,
             available: 500000,
-            health: String::from("ONLINE"),
+            health: "ONLINE".into(),
             properties: HashMap::new(),
             created_at: std::time::SystemTime::now(),
         };
@@ -138,11 +138,11 @@ mod tests {
     #[test]
     fn test_pool_info_clone() {
         let pool_info = ZeroCostPoolInfo {
-            name: String::from("test_pool"),
+            name: "test_pool".into(),
             size: 1000000,
             used: 500000,
             available: 500000,
-            health: String::from("ONLINE"),
+            health: "ONLINE".into(),
             properties: HashMap::new(),
             created_at: std::time::SystemTime::now(),
         };
@@ -155,15 +155,15 @@ mod tests {
     #[test]
     fn test_pool_info_with_properties() {
         let mut properties = HashMap::new();
-        properties.insert(String::from("compression"), String::from("lz4"));
-        properties.insert(String::from("atime"), String::from("off"));
+        properties.insert("compression".into(), "lz4".into());
+        properties.insert("atime".into(), "off".into());
 
         let pool_info = ZeroCostPoolInfo {
-            name: String::from("test_pool"),
+            name: "test_pool".into(),
             size: 1000000,
             used: 500000,
             available: 500000,
-            health: String::from("ONLINE"),
+            health: "ONLINE".into(),
             properties: properties.clone(),
             created_at: std::time::SystemTime::now(),
         };
@@ -171,18 +171,18 @@ mod tests {
         assert_eq!(pool_info.properties.len(), 2);
         assert_eq!(
             pool_info.properties.get("compression"),
-            Some(&String::from("lz4"))
+            Some(&"lz4".into())
         );
     }
 
     #[test]
     fn test_pool_info_capacity_calculation() {
         let pool_info = ZeroCostPoolInfo {
-            name: String::from("test_pool"),
+            name: "test_pool".into(),
             size: 1000000,
             used: 300000,
             available: 700000,
-            health: String::from("ONLINE"),
+            health: "ONLINE".into(),
             properties: HashMap::new(),
             created_at: std::time::SystemTime::now(),
         };
@@ -197,8 +197,8 @@ mod tests {
     #[test]
     fn test_zero_cost_dataset_info_creation() {
         let dataset_info = ZeroCostDatasetInfo {
-            name: String::from("test_dataset"),
-            pool: String::from("test_pool"),
+            name: "test_dataset".into(),
+            pool: "test_pool".into(),
             tier: StorageTier::Hot,
             size: 100000,
             used: 50000,
@@ -225,7 +225,7 @@ mod tests {
         for (tier, name) in tiers {
             let dataset = ZeroCostDatasetInfo {
                 name: format!("dataset_{name}"),
-                pool: String::from("test_pool"),
+                pool: "test_pool".into(),
                 tier: tier.clone(),
                 size: 100000,
                 used: 0,
@@ -240,8 +240,8 @@ mod tests {
     #[test]
     fn test_dataset_info_serialization() {
         let dataset_info = ZeroCostDatasetInfo {
-            name: String::from("test_dataset"),
-            pool: String::from("test_pool"),
+            name: "test_dataset".into(),
+            pool: "test_pool".into(),
             tier: StorageTier::Warm,
             size: 100000,
             used: 50000,
@@ -261,8 +261,8 @@ mod tests {
     #[test]
     fn test_dataset_info_without_mount_point() {
         let dataset_info = ZeroCostDatasetInfo {
-            name: String::from("unmounted_dataset"),
-            pool: String::from("test_pool"),
+            name: "unmounted_dataset".into(),
+            pool: "test_pool".into(),
             tier: StorageTier::Archive,
             size: 100000,
             used: 0,
@@ -278,12 +278,12 @@ mod tests {
     #[test]
     fn test_dataset_info_with_properties() {
         let mut properties = HashMap::new();
-        properties.insert(String::from("recordsize"), String::from("128k"));
-        properties.insert(String::from("quota"), String::from("1T"));
+        properties.insert("recordsize".into(), "128k".into());
+        properties.insert("quota".into(), "1T".into());
 
         let dataset_info = ZeroCostDatasetInfo {
-            name: String::from("configured_dataset"),
-            pool: String::from("test_pool"),
+            name: "configured_dataset".into(),
+            pool: "test_pool".into(),
             tier: StorageTier::Hot,
             size: 1000000000,
             used: 0,
@@ -295,7 +295,7 @@ mod tests {
         assert_eq!(dataset_info.properties.len(), 2);
         assert_eq!(
             dataset_info.properties.get("recordsize"),
-            Some(&String::from("128k"))
+            Some(&"128k".into())
         );
     }
 
@@ -304,8 +304,8 @@ mod tests {
     #[test]
     fn test_zero_cost_snapshot_info_creation() {
         let snapshot_info = ZeroCostSnapshotInfo {
-            name: String::from("test_snapshot"),
-            dataset: String::from("test_dataset"),
+            name: "test_snapshot".into(),
+            dataset: "test_dataset".into(),
             size: 10000,
             created_at: std::time::SystemTime::now(),
             properties: HashMap::new(),
@@ -319,8 +319,8 @@ mod tests {
     #[test]
     fn test_snapshot_info_serialization() {
         let snapshot_info = ZeroCostSnapshotInfo {
-            name: String::from("test_snapshot"),
-            dataset: String::from("test_dataset"),
+            name: "test_snapshot".into(),
+            dataset: "test_dataset".into(),
             size: 10000,
             created_at: std::time::SystemTime::now(),
             properties: HashMap::new(),
@@ -338,8 +338,8 @@ mod tests {
     #[test]
     fn test_snapshot_info_clone() {
         let snapshot_info = ZeroCostSnapshotInfo {
-            name: String::from("test_snapshot"),
-            dataset: String::from("test_dataset"),
+            name: "test_snapshot".into(),
+            dataset: "test_dataset".into(),
             size: 10000,
             created_at: std::time::SystemTime::now(),
             properties: HashMap::new(),
@@ -353,12 +353,12 @@ mod tests {
     #[test]
     fn test_snapshot_info_with_properties() {
         let mut properties = HashMap::new();
-        properties.insert(String::from("used"), String::from("10M"));
-        properties.insert(String::from("referenced"), String::from("100M"));
+        properties.insert("used".into(), "10M".into());
+        properties.insert("referenced".into(), "100M".into());
 
         let snapshot_info = ZeroCostSnapshotInfo {
-            name: String::from("snapshot_with_props"),
-            dataset: String::from("test_dataset"),
+            name: "snapshot_with_props".into(),
+            dataset: "test_dataset".into(),
             size: 10485760,
             created_at: std::time::SystemTime::now(),
             properties: properties.clone(),
@@ -367,7 +367,7 @@ mod tests {
         assert_eq!(snapshot_info.properties.len(), 2);
         assert_eq!(
             snapshot_info.properties.get("used"),
-            Some(&String::from("10M"))
+            Some(&"10M".into())
         );
     }
 
@@ -375,8 +375,8 @@ mod tests {
     fn test_snapshot_info_time_tracking() {
         let before = std::time::SystemTime::now();
         let snapshot_info = ZeroCostSnapshotInfo {
-            name: String::from("timed_snapshot"),
-            dataset: String::from("test_dataset"),
+            name: "timed_snapshot".into(),
+            dataset: "test_dataset".into(),
             size: 10000,
             created_at: std::time::SystemTime::now(),
             properties: HashMap::new(),

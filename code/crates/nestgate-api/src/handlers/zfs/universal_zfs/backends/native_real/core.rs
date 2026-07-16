@@ -212,7 +212,7 @@ impl NativeZfsService {
         let latency_p99 = tracker.percentile(0.99);
 
         ServiceMetrics {
-            service_name: String::from("native_zfs"),
+            service_name: "native_zfs".into(),
             timestamp: SystemTime::now(),
             requests_total: requests,
             requests_failed: requests - successes,
@@ -276,12 +276,12 @@ impl UniversalZfsService for NativeZfsService {
                 ServiceStatus::Degraded
             },
             checks: vec![HealthCheck {
-                name: String::from("zfs_availability"),
+                name: "zfs_availability".into(),
                 passed: zfs_available,
                 message: Some(if zfs_available {
-                    String::from("ZFS modules loaded successfully")
+                    "ZFS modules loaded successfully".into()
                 } else {
-                    String::from("ZFS modules not available")
+                    "ZFS modules not available".into()
                 }),
             }],
             last_check: SystemTime::now(),
@@ -413,7 +413,7 @@ impl UniversalZfsService for NativeZfsService {
 
     /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
-        super::configuration::optimize(self, String::from("general"))
+        super::configuration::optimize(self, "general".into())
     }
 
     /// Gets Optimization Analytics

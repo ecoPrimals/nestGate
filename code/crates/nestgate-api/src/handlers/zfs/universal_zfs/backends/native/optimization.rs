@@ -149,20 +149,20 @@ pub async fn predict_tier(
 
             // Simple tier prediction logic
             if size_mb < 10 {
-                String::from("hot") // Small files go to hot tier
+                "hot".into() // Small files go to hot tier
             } else if size_mb < 1000 {
                 if access_time.is_some_and(|t| t < 7) {
-                    String::from("warm") // Recently accessed medium files go to warm
+                    "warm".into() // Recently accessed medium files go to warm
                 } else {
-                    String::from("cold") // Old medium files go to cold
+                    "cold".into() // Old medium files go to cold
                 }
             } else {
-                String::from("cold") // Large files go to cold tier
+                "cold".into() // Large files go to cold tier
             }
         }
         Err(_e) => {
             // If we can't stat the file, default to warm tier
-            String::from("warm")
+            "warm".into()
         }
     };
 

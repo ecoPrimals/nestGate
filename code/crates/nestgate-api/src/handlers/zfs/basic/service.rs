@@ -11,5 +11,5 @@ use std::sync::Arc;
 pub async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, String> {
     state
         .get_zfs_manager()
-        .ok_or_else(|| String::from("ZFS service not available"))
+        .ok_or_else(|| "ZFS service not available".into())
 }

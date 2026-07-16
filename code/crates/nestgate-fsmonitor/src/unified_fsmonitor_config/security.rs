@@ -330,7 +330,7 @@ mod tests {
     fn authorization_defaults_to_rbac() {
         let settings = AuthorizationSettings::default();
         assert_eq!(settings.model, "rbac");
-        assert!(settings.default_permissions.contains(&String::from("read")));
+        assert!(settings.default_permissions.contains(&"read".into()));
     }
 
     #[test]

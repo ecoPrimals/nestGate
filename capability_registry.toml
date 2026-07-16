@@ -319,7 +319,7 @@ methods = ["btsp.capabilities"]
 [capabilities.footprint]
 domain = "footprint"
 stability = "provisional"
-description = "CAS-backed project persistence — immutable revisions, BLAKE3 content-addressing, provenance-traced"
+description = "CAS-backed project persistence — immutable revisions, BLAKE3 content-addressing, provenance-traced. PROJECTS_PATH env overrides storage root."
 methods = [
     "footprint.save", "footprint.get", "footprint.list",
     "footprint.delete", "footprint.history",

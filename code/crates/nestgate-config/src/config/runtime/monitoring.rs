@@ -65,7 +65,7 @@ impl Default for MonitoringConfig {
         Self {
             metrics_enabled: true,
             metrics_port: 9090,
-            log_level: String::from("info"),
+            log_level: "info".into(),
             tracing_enabled: false,
         }
     }

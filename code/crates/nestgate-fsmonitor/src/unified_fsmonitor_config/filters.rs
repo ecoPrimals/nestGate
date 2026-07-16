@@ -76,26 +76,26 @@ impl Default for FilterSettings {
         Self {
             enabled: true,
             include_patterns: vec![FilePattern {
-                pattern: String::from("*"),
+                pattern: "*".into(),
                 case_sensitive: false,
                 enabled: true,
                 priority: 100,
             }],
             exclude_patterns: vec![
                 FilePattern {
-                    pattern: String::from("*.tmp"),
+                    pattern: "*.tmp".into(),
                     case_sensitive: false,
                     enabled: true,
                     priority: 10,
                 },
                 FilePattern {
-                    pattern: String::from("*.swp"),
+                    pattern: "*.swp".into(),
                     case_sensitive: false,
                     enabled: true,
                     priority: 10,
                 },
                 FilePattern {
-                    pattern: String::from(".git/*"),
+                    pattern: ".git/*".into(),
                     case_sensitive: false,
                     enabled: true,
                     priority: 5,

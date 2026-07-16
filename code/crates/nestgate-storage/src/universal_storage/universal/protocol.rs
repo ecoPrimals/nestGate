@@ -178,9 +178,9 @@ mod tests {
             .with_metadata("vendor", "example")
             .with_metadata("region", "us-east-1");
 
-        assert_eq!(info.specification, Some(String::from("REST")));
-        assert_eq!(info.version, Some(String::from("v1")));
-        assert_eq!(info.metadata.get("vendor"), Some(&String::from("example")));
+        assert_eq!(info.specification, Some("REST".into()));
+        assert_eq!(info.version, Some("v1".into()));
+        assert_eq!(info.metadata.get("vendor"), Some(&"example".into()));
     }
 
     #[test]

@@ -64,7 +64,7 @@ mod tests {
                 &self,
                 _def: Self::ServiceDefinition,
             ) -> impl std::future::Future<Output = Result<String>> + Send {
-                std::future::ready(Ok(String::from("id")))
+                std::future::ready(Ok("id".into()))
             }
             fn unregister_service(
                 &self,

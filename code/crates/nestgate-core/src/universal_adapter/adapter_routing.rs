@@ -31,7 +31,7 @@ impl UniversalAdapter {
 
         // Implementation would make actual HTTP request
         let response = CapabilityResponse {
-            status: String::from("success"),
+            status: "success".into(),
             result: serde_json::json!({
                 "method": request.method,
                 "category": capability,

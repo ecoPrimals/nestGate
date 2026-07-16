@@ -103,7 +103,7 @@ impl TransportConfig {
     pub fn new(family_id: impl Into<String>) -> Self {
         let family_id = family_id.into();
         let security_slug =
-            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| String::from("security"));
+            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "security".into());
         Self {
             socket_path: std::env::temp_dir().join(format!("nestgate-{family_id}.sock")),
             security_provider: std::env::temp_dir()

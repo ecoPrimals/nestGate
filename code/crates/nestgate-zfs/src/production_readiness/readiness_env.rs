@@ -31,7 +31,7 @@ impl ProductionReadinessValidator {
             .unwrap_or_default()
             .eq("true")
         {
-            mocks.push(String::from("NESTGATE_MOCK_MODE=true (explicit mock mode)"));
+            mocks.push("NESTGATE_MOCK_MODE=true (explicit mock mode)".into());
         }
 
         #[cfg(target_os = "linux")]
@@ -42,7 +42,7 @@ impl ProductionReadinessValidator {
                 ));
             }
             if !proc_meminfo_readable() {
-                mocks.push(String::from("/proc/meminfo unreadable (no memory signal)"));
+                mocks.push("/proc/meminfo unreadable (no memory signal)".into());
             }
         }
 

@@ -114,7 +114,7 @@ impl ReportGenerator {
         };
 
         reports.insert(
-            String::from("cpu"),
+            "cpu".into(),
             ComponentReport {
                 score: analysis.cpu_analysis.score,
                 status: analysis.cpu_analysis.status.clone(),
@@ -123,7 +123,7 @@ impl ReportGenerator {
         );
 
         reports.insert(
-            String::from("memory"),
+            "memory".into(),
             ComponentReport {
                 score: analysis.memory_analysis.score,
                 status: analysis.memory_analysis.status.clone(),
@@ -132,7 +132,7 @@ impl ReportGenerator {
         );
 
         reports.insert(
-            String::from("disk"),
+            "disk".into(),
             ComponentReport {
                 score: analysis.disk_analysis.score,
                 status: analysis.disk_analysis.status.clone(),
@@ -141,7 +141,7 @@ impl ReportGenerator {
         );
 
         reports.insert(
-            String::from("network"),
+            "network".into(),
             ComponentReport {
                 score: analysis.network_analysis.score,
                 status: analysis.network_analysis.status.clone(),

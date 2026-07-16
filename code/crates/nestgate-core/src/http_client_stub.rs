@@ -252,7 +252,7 @@ fn parse_url(url: &str) -> Result<(String, u16, String)> {
     })?;
 
     let (host_port, path) = stripped.split_once('/').map_or_else(
-        || (stripped, String::from("/")),
+        || (stripped, "/".into()),
         |(hp, p)| (hp, format!("/{p}")),
     );
 
@@ -473,7 +473,7 @@ mod tests {
                 HeaderName::from_str("X-Test").expect("infallible"),
                 HeaderValue::from_str("b").expect("infallible"),
             ),
-            Some(String::from("a"))
+            Some("a".into())
         );
     }
 

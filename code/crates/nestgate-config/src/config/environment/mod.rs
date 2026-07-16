@@ -246,7 +246,7 @@ impl FromStr for Port {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let port: u16 = s.parse::<u16>().map_err(|e| ConfigError::ParseError {
-            key: String::from("port"),
+            key: "port".into(),
             detail: e.to_string(),
         })?;
         Self::new(port)

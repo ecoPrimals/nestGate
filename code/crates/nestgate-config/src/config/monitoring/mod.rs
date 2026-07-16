@@ -53,7 +53,7 @@ impl Default for MonitoringConfig {
 
         Self {
             metrics_interval: 30,
-            log_level: String::from("info"),
+            log_level: "info".into(),
             log_file: LOG_FILE_DEFAULT.to_string(),
             log_rotation_size: env_config.log_rotation_size_bytes() as u64,
             log_retention_days: 30,

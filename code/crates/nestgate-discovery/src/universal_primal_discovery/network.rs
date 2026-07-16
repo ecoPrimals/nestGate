@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn test_interface_info_creation() {
         let interface = InterfaceInfo {
-            name: String::from("eth0"),
+            name: "eth0".into(),
             ip_endpoint: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100)),
             is_up: true,
             is_loopback: false,
@@ -464,7 +464,7 @@ mod tests {
     #[test]
     fn test_interface_info_clone() {
         let interface1 = InterfaceInfo {
-            name: String::from("lo"),
+            name: "lo".into(),
             ip_endpoint: IpAddr::V4(Ipv4Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,
@@ -479,7 +479,7 @@ mod tests {
     #[test]
     fn test_interface_info_debug() {
         let interface = InterfaceInfo {
-            name: String::from("wlan0"),
+            name: "wlan0".into(),
             ip_endpoint: IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)),
             is_up: true,
             is_loopback: false,
@@ -634,7 +634,7 @@ mod tests {
     #[test]
     fn test_interface_info_ipv6() {
         let interface = InterfaceInfo {
-            name: String::from("eth0"),
+            name: "eth0".into(),
             ip_endpoint: IpAddr::V6(Ipv6Addr::LOCALHOST),
             is_up: true,
             is_loopback: true,

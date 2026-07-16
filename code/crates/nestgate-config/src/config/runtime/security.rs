@@ -52,7 +52,7 @@ impl SecurityConfig {
                 .unwrap_or(true),
             jwt_secret: env.get("NESTGATE_JWT_SECRET").unwrap_or_else(|| {
                 // In production, this should be set explicitly
-                String::from("change-me-in-production")
+                "change-me-in-production".into()
             }),
             encryption_enabled: env
                 .get("NESTGATE_ENCRYPTION_ENABLED")
@@ -68,7 +68,7 @@ impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
             auth_enabled: true,
-            jwt_secret: String::from("change-me-in-production"),
+            jwt_secret: "change-me-in-production".into(),
             encryption_enabled: true,
             tls_cert_path: None,
             tls_key_path: None,

@@ -428,24 +428,24 @@ mod tests {
             cpu_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 90.0,
-                details: String::from("CPU usage: 10%"),
+                details: "CPU usage: 10%".into(),
             },
             memory_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 85.0,
-                details: String::from("Memory usage: 4GB"),
+                details: "Memory usage: 4GB".into(),
             },
             disk_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 80.0,
-                details: String::from("Disk I/O: Good"),
+                details: "Disk I/O: Good".into(),
             },
             network_analysis: ComponentAnalysis {
                 status: PerformanceStatus::Good,
                 score: 88.0,
-                details: String::from("Network: Good"),
+                details: "Network: Good".into(),
             },
-            recommendations: vec![String::from("All good")],
+            recommendations: vec!["All good".into()],
             timestamp: std::time::SystemTime::now(),
         };
 
@@ -479,7 +479,7 @@ mod tests {
         let analysis = ComponentAnalysis {
             status: PerformanceStatus::Warning,
             score: 65.5,
-            details: String::from("Test details"),
+            details: "Test details".into(),
         };
 
         let json = serde_json::to_string(&analysis).expect("Should serialize");

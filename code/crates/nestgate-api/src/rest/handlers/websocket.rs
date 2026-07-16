@@ -570,7 +570,7 @@ mod tests {
     fn test_websocket_query_debug() {
         let query = WebSocketQuery {
             interval: Some(5),
-            level: Some(String::from("info")),
+            level: Some("info".into()),
         };
         assert_eq!(query.interval, Some(5));
         assert_eq!(query.level.as_deref(), Some("info"));
@@ -580,10 +580,10 @@ mod tests {
     fn test_log_entry_serialization() {
         let entry = LogEntry {
             timestamp: chrono::Utc::now(),
-            level: String::from("INFO"),
-            message: String::from("Test message"),
-            module: String::from("nestgate::test"),
-            thread: String::from("worker-1"),
+            level: "INFO".into(),
+            message: "Test message".into(),
+            module: "nestgate::test".into(),
+            thread: "worker-1".into(),
         };
         let json = serde_json::to_string(&entry);
         assert!(json.is_ok());
@@ -595,12 +595,12 @@ mod tests {
     #[test]
     fn test_system_event_serialization() {
         let event = SystemEvent {
-            id: String::from("evt_1"),
+            id: "evt_1".into(),
             timestamp: chrono::Utc::now(),
-            event_type: String::from("dataset_created"),
-            description: String::from("Test event"),
+            event_type: "dataset_created".into(),
+            description: "Test event".into(),
             data: serde_json::json!({"key": "value"}),
-            severity: String::from("info"),
+            severity: "info".into(),
         };
         let json = serde_json::to_string(&event);
         assert!(json.is_ok());

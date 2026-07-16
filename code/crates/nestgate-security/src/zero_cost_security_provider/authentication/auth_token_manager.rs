@@ -85,7 +85,7 @@ mod tests {
     use super::*;
 
     fn manager() -> AuthTokenManager {
-        AuthTokenManager::new(String::from("test-signing-key"))
+        AuthTokenManager::new("test-signing-key".into())
     }
 
     #[test]
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn validate_token_rejects_wrong_key() {
         let mgr1 = manager();
-        let mgr2 = AuthTokenManager::new(String::from("different-key"));
+        let mgr2 = AuthTokenManager::new("different-key".into());
         let token = mgr1.create_token("eve", vec![], Duration::from_secs(60));
         assert!(!mgr2.validate_token_signature(&token.token));
     }

@@ -98,7 +98,7 @@ impl CacheConfig {
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
-            redis_host: String::from("localhost"),
+            redis_host: "localhost".into(),
             redis_port: 6379,
             ttl_seconds: 3600,
             max_size_mb: 100,
@@ -123,7 +123,7 @@ mod tests {
     #[test]
     fn test_cache_config_redis_url() {
         let config = CacheConfig {
-            redis_host: String::from("redis.example.com"),
+            redis_host: "redis.example.com".into(),
             redis_port: 6380,
             ttl_seconds: 7200,
             max_size_mb: 200,

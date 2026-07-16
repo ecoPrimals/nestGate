@@ -96,9 +96,9 @@ impl Default for ServiceInfo {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: String::from("unknown"),
-            version: String::from("0.0.0"),
-            status: String::from("unknown"),
+            name: "unknown".into(),
+            version: "0.0.0".into(),
+            status: "unknown".into(),
             start_time: None,
             pid: None,
             memory_bytes: None,

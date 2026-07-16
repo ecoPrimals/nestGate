@@ -169,12 +169,12 @@ impl DomainConfigValidation for ApiDomainConfig {
 
         // Validate bind address
         if self.server.bind_address.is_empty() {
-            warnings.push(String::from("Bind address is empty"));
+            warnings.push("Bind address is empty".into());
         }
 
         // Validate port
         if self.server.port == 0 {
-            warnings.push(String::from("Port is set to 0 (ephemeral port)"));
+            warnings.push("Port is set to 0 (ephemeral port)".into());
         }
 
         Ok(warnings)

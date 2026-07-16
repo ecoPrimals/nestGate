@@ -251,7 +251,7 @@ mod round5_pool_impl_tests {
     #[test]
     fn round5_pool_info_serde_roundtrip() {
         let p = PoolInfo {
-            name: String::from("tank"),
+            name: "tank".into(),
             ..Default::default()
         };
         let json = serde_json::to_string(&p).unwrap();

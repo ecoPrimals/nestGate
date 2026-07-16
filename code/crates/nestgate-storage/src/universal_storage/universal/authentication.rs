@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn test_secret_string_no_debug_leak() {
-        let secret = SecretString::new(String::from("super-secret-password"));
+        let secret = SecretString::new("super-secret-password".into());
         let debug_output = format!("{secret:?}");
 
         // Should not contain the actual secret
@@ -226,8 +226,8 @@ mod tests {
         assert_eq!(none.description(), "No authentication");
 
         let basic = AuthenticationPattern::HttpBasic {
-            username: String::from("user"),
-            password: SecretString::new(String::from("pass")),
+            username: "user".into(),
+            password: SecretString::new("pass".into()),
         };
         assert_eq!(basic.description(), "HTTP Basic");
     }
@@ -238,8 +238,8 @@ mod tests {
         assert!(!none.is_secure());
 
         let bearer = AuthenticationPattern::BearerToken {
-            token: SecretString::new(String::from("token")),
-            token_type: String::from("Bearer"),
+            token: SecretString::new("token".into()),
+            token_type: "Bearer".into(),
         };
         assert!(bearer.is_secure());
     }

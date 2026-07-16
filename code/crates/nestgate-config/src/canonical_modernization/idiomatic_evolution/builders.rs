@@ -281,7 +281,7 @@ impl<T> ModernizationBuilder<T> {
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::ModernizationBuilder;
     ///
     /// let builder: ModernizationBuilder<String> = ModernizationBuilder::new()
-    ///     .add_modernization_step(String::from("Apply zero-cost abstractions"));
+    ///     .add_modernization_step("Apply zero-cost abstractions".into());
     /// ```
     #[must_use]
     pub fn add_modernization_step(mut self, step: String) -> Self {
@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn modernization_builder_smoke() {
         let _b: ModernizationBuilder<u8> = ModernizationBuilder::new()
-            .add_modernization_step(String::from("step"))
+            .add_modernization_step("step".into())
             .enable_rollback(false);
     }
 }

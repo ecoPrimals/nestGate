@@ -462,9 +462,9 @@ mod tests {
         // Test with String
         let string_pool: SafeMemoryPool<String, 4> = SafeMemoryPool::new();
         let h1 = string_pool
-            .allocate(String::from("Hello"))
+            .allocate("Hello".into())
             .context("allocation failed")?;
-        assert_eq!(string_pool.deallocate(h1), Some(String::from("Hello")));
+        assert_eq!(string_pool.deallocate(h1), Some("Hello".into()));
 
         // Test with Vec
         let vec_pool: SafeMemoryPool<Vec<i32>, 4> = SafeMemoryPool::new();
@@ -477,7 +477,7 @@ mod tests {
         let struct_pool: SafeMemoryPool<CustomStruct, 4> = SafeMemoryPool::new();
         let custom = CustomStruct {
             id: 1,
-            name: String::from("Test"),
+            name: "Test".into(),
         };
         let h3 = struct_pool.allocate(custom).context("allocation failed")?;
         let retrieved = struct_pool

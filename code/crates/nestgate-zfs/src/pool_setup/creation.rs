@@ -140,7 +140,7 @@ impl PoolCreator {
         Ok(PoolSetupResult {
             pool_name: config.pool_name.clone(),
             success: true,
-            message: String::from("Pool created successfully"),
+            message: "Pool created successfully".into(),
             devices_used: config.devices.clone(),
             topology: config.topology.clone(),
         })
@@ -178,7 +178,7 @@ impl PoolCreator {
         Ok(PoolSetupResult {
             pool_name: config.pool_name.clone(),
             success: true,
-            message: String::from("Dry run completed successfully - pool would be created"),
+            message: "Dry run completed successfully - pool would be created".into(),
             devices_used: config.devices.clone(),
             topology: config.topology.clone(),
         })
@@ -206,7 +206,7 @@ impl PoolCreator {
             return Ok(PoolSetupResult {
                 pool_name: pool_name.to_string(),
                 success: true,
-                message: String::from("Dry run - pool would be imported"),
+                message: "Dry run - pool would be imported".into(),
                 devices_used: vec![],
                 topology: PoolTopology::Single, // Unknown topology
             });
@@ -235,7 +235,7 @@ impl PoolCreator {
         Ok(PoolSetupResult {
             pool_name: pool_name.to_string(),
             success: true,
-            message: String::from("Pool imported successfully"),
+            message: "Pool imported successfully".into(),
             devices_used: vec![], // Would need to query for actual devices
             topology: PoolTopology::Single, // Would need to query for actual topology
         })
@@ -322,8 +322,8 @@ mod tests {
     async fn test_dry_run_pool_creation() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: String::from("test-pool"),
-            devices: vec![String::from("/dev/sdb")],
+            pool_name: "test-pool".into(),
+            devices: vec!["/dev/sdb".into()],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),
@@ -345,7 +345,7 @@ mod tests {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
             pool_name: String::new(),
-            devices: vec![String::from("/dev/sdb")],
+            devices: vec!["/dev/sdb".into()],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),
@@ -362,7 +362,7 @@ mod tests {
     async fn test_no_devices() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: String::from("test-pool"),
+            pool_name: "test-pool".into(),
             devices: vec![],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
@@ -403,8 +403,8 @@ mod tests {
     async fn dry_run_mirror_topology_two_devices_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: String::from("mirror-pool"),
-            devices: vec![String::from("/dev/sda"), String::from("/dev/sdb")],
+            pool_name: "mirror-pool".into(),
+            devices: vec!["/dev/sda".into(), "/dev/sdb".into()],
             topology: PoolTopology::Mirror,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),
@@ -422,11 +422,11 @@ mod tests {
     async fn dry_run_raidz1_topology_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: String::from("raid-pool"),
+            pool_name: "raid-pool".into(),
             devices: vec![
-                String::from("/dev/sda"),
-                String::from("/dev/sdb"),
-                String::from("/dev/sdc"),
+                "/dev/sda".into(),
+                "/dev/sdb".into(),
+                "/dev/sdc".into(),
             ],
             topology: PoolTopology::RaidZ1,
             properties: HashMap::new(),
@@ -444,12 +444,12 @@ mod tests {
     async fn dry_run_raidz2_topology_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: String::from("raidz2-pool"),
+            pool_name: "raidz2-pool".into(),
             devices: vec![
-                String::from("/dev/sda"),
-                String::from("/dev/sdb"),
-                String::from("/dev/sdc"),
-                String::from("/dev/sdd"),
+                "/dev/sda".into(),
+                "/dev/sdb".into(),
+                "/dev/sdc".into(),
+                "/dev/sdd".into(),
             ],
             topology: PoolTopology::RaidZ2,
             properties: HashMap::new(),
@@ -467,13 +467,13 @@ mod tests {
     async fn dry_run_raidz3_topology_ok() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: String::from("raidz3-pool"),
+            pool_name: "raidz3-pool".into(),
             devices: vec![
-                String::from("/dev/sda"),
-                String::from("/dev/sdb"),
-                String::from("/dev/sdc"),
-                String::from("/dev/sdd"),
-                String::from("/dev/sde"),
+                "/dev/sda".into(),
+                "/dev/sdb".into(),
+                "/dev/sdc".into(),
+                "/dev/sdd".into(),
+                "/dev/sde".into(),
             ],
             topology: PoolTopology::RaidZ3,
             properties: HashMap::new(),
@@ -493,7 +493,7 @@ mod tests {
         let creator = PoolCreator::new_dry_run();
         let ghost = "/tmp/nestgate-no-such-block-device-000";
         let config = PoolSetupConfig {
-            pool_name: String::from("ghost-pool"),
+            pool_name: "ghost-pool".into(),
             devices: vec![ghost.to_string()],
             topology: PoolTopology::Single,
             properties: HashMap::new(),

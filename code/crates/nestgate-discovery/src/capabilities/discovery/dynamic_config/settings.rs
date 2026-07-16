@@ -198,7 +198,7 @@ impl Default for CacheDiscoverySettings {
 impl Default for CertificateDiscoverySettings {
     fn default() -> Self {
         let system_cert_dir = std::env::var("SSL_CERT_DIR")
-            .unwrap_or_else(|_| String::from("/etc/ssl/certs"));
+            .unwrap_or_else(|_| "/etc/ssl/certs".into());
         Self {
             enabled: false,
             cert_paths: vec![system_cert_dir],

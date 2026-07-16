@@ -89,10 +89,10 @@ impl Default for RecursiveWatchSettings {
             cross_filesystem: false,
             exclude_hidden: true,
             exclude_patterns: vec![
-                String::from(".git"),
-                String::from(".svn"),
-                String::from("node_modules"),
-                String::from("target"),
+                ".git".into(),
+                ".svn".into(),
+                "node_modules".into(),
+                "target".into(),
             ],
             max_directories: Some(10_000),
         }

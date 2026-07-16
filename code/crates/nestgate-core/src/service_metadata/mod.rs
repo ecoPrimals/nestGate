@@ -50,14 +50,14 @@
 //! let store = ServiceMetadataStore::new().await?;
 //! let now = SystemTime::now();
 //! let meta = ServiceMetadata {
-//!     name: String::from("example-crypto-provider"),
-//!     version: String::from("1.0.0"),
-//!     capabilities: vec![String::from("crypto"), String::from("btsp")],
-//!     virtual_endpoint: String::from("/capability/crypto-provider"),
+//!     name: "example-crypto-provider".into(),
+//!     version: "1.0.0".into(),
+//!     capabilities: vec!["crypto".into(), "btsp".into()],
+//!     virtual_endpoint: "/capability/crypto-provider".into(),
 //!     registered_at: now,
 //!     last_seen: now,
 //!     platform: std::env::consts::OS.to_string(),
-//!     native_endpoint: String::from("/tmp/example-crypto-provider.sock"),
+//!     native_endpoint: "/tmp/example-crypto-provider.sock".into(),
 //!     metadata: std::collections::HashMap::new(),
 //! };
 //! store.store_service(meta).await?;
@@ -302,14 +302,14 @@ mod tests {
         let store = ServiceMetadataStore::new().await.unwrap();
 
         let meta = ServiceMetadata {
-            name: String::from("example-primal"),
-            version: String::from("1.0.0"),
-            capabilities: vec![String::from("crypto"), String::from("btsp")],
-            virtual_endpoint: String::from("/primal/example-primal"),
+            name: "example-primal".into(),
+            version: "1.0.0".into(),
+            capabilities: vec!["crypto".into(), "btsp".into()],
+            virtual_endpoint: "/primal/example-primal".into(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
-            platform: String::from("linux"),
-            native_endpoint: String::from("/tmp/primal-example-primal.sock"),
+            platform: "linux".into(),
+            native_endpoint: "/tmp/primal-example-primal.sock".into(),
             metadata: std::collections::HashMap::new(),
         };
 
@@ -326,26 +326,26 @@ mod tests {
 
         // Store multiple services with overlapping capabilities
         let meta1 = ServiceMetadata {
-            name: String::from("example-primal"),
-            version: String::from("1.0.0"),
-            capabilities: vec![String::from("crypto"), String::from("btsp")],
-            virtual_endpoint: String::from("/primal/example-primal"),
+            name: "example-primal".into(),
+            version: "1.0.0".into(),
+            capabilities: vec!["crypto".into(), "btsp".into()],
+            virtual_endpoint: "/primal/example-primal".into(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
-            platform: String::from("linux"),
-            native_endpoint: String::from("/tmp/primal-example-primal.sock"),
+            platform: "linux".into(),
+            native_endpoint: "/tmp/primal-example-primal.sock".into(),
             metadata: std::collections::HashMap::new(),
         };
 
         let meta2 = ServiceMetadata {
-            name: String::from("example-storage"),
-            version: String::from("1.0.0"),
-            capabilities: vec![String::from("crypto"), String::from("storage")],
-            virtual_endpoint: String::from("/primal/example-storage"),
+            name: "example-storage".into(),
+            version: "1.0.0".into(),
+            capabilities: vec!["crypto".into(), "storage".into()],
+            virtual_endpoint: "/primal/example-storage".into(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
-            platform: String::from("linux"),
-            native_endpoint: String::from("/tmp/primal-example-storage.sock"),
+            platform: "linux".into(),
+            native_endpoint: "/tmp/primal-example-storage.sock".into(),
             metadata: std::collections::HashMap::new(),
         };
 
@@ -367,14 +367,14 @@ mod tests {
         let store = ServiceMetadataStore::new().await.unwrap();
 
         let meta = ServiceMetadata {
-            name: String::from("example-primal"),
-            version: String::from("1.0.0"),
-            capabilities: vec![String::from("crypto")],
-            virtual_endpoint: String::from("/primal/example-primal"),
+            name: "example-primal".into(),
+            version: "1.0.0".into(),
+            capabilities: vec!["crypto".into()],
+            virtual_endpoint: "/primal/example-primal".into(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
-            platform: String::from("linux"),
-            native_endpoint: String::from("/tmp/primal-example-primal.sock"),
+            platform: "linux".into(),
+            native_endpoint: "/tmp/primal-example-primal.sock".into(),
             metadata: std::collections::HashMap::new(),
         };
 
@@ -394,14 +394,14 @@ mod tests {
         let store = ServiceMetadataStore::new().await.unwrap();
 
         let meta = ServiceMetadata {
-            name: String::from("example-primal"),
-            version: String::from("1.0.0"),
-            capabilities: vec![String::from("crypto")],
-            virtual_endpoint: String::from("/primal/example-primal"),
+            name: "example-primal".into(),
+            version: "1.0.0".into(),
+            capabilities: vec!["crypto".into()],
+            virtual_endpoint: "/primal/example-primal".into(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
-            platform: String::from("linux"),
-            native_endpoint: String::from("/tmp/primal-example-primal.sock"),
+            platform: "linux".into(),
+            native_endpoint: "/tmp/primal-example-primal.sock".into(),
             metadata: std::collections::HashMap::new(),
         };
 

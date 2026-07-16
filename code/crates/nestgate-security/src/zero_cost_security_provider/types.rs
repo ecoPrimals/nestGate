@@ -363,7 +363,7 @@ mod tests {
     #[test]
     fn test_credentials_creation() {
         let creds =
-            ZeroCostCredentials::new_password(String::from("testuser"), String::from("testpass"));
+            ZeroCostCredentials::new_password("testuser".into(), "testpass".into());
 
         assert_eq!(creds.username, "testuser");
         assert_eq!(creds.password, "testpass");
@@ -374,9 +374,9 @@ mod tests {
     #[test]
     fn test_auth_token_expiration() {
         let token = ZeroCostAuthToken::new(
-            String::from("test-token"),
-            String::from("user123"),
-            vec![String::from("read")],
+            "test-token".into(),
+            "user123".into(),
+            vec!["read".into()],
             std::time::Duration::from_secs(3600),
         );
 
@@ -388,9 +388,9 @@ mod tests {
     #[test]
     fn test_signature_validation() {
         let sig = ZeroCostSignature::new(
-            String::from("ECDSA-P256"),
-            String::from("base64signature"),
-            String::from("key123"),
+            "ECDSA-P256".into(),
+            "base64signature".into(),
+            "key123".into(),
         );
 
         assert!(sig.is_valid());

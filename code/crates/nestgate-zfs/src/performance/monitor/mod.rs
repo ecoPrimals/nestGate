@@ -161,9 +161,9 @@ impl ZfsPerformanceMonitor {
         let default_conditions = vec![
             // High latency alert
             AlertCondition {
-                id: String::from("high-latency"),
-                name: String::from("High Latency"),
-                description: String::from("Average latency exceeds threshold"),
+                id: "high-latency".into(),
+                name: "High Latency".into(),
+                description: "Average latency exceeds threshold".into(),
                 metric: AlertMetric::Latency,
                 operator: AlertOperator::GreaterThan,
                 threshold: 100.0, // 100ms
@@ -177,9 +177,9 @@ impl ZfsPerformanceMonitor {
             },
             // High IOPS alert
             AlertCondition {
-                id: String::from("high-iops"),
-                name: String::from("High IOPS"),
-                description: String::from("IOPS exceeds safe threshold"),
+                id: "high-iops".into(),
+                name: "High IOPS".into(),
+                description: "IOPS exceeds safe threshold".into(),
                 metric: AlertMetric::Iops,
                 operator: AlertOperator::GreaterThan,
                 threshold: 10_000.0, // 10K IOPS
@@ -193,9 +193,9 @@ impl ZfsPerformanceMonitor {
             },
             // High utilization alert
             AlertCondition {
-                id: String::from("high-utilization"),
-                name: String::from("High Disk Utilization"),
-                description: String::from("Disk utilization exceeds safe threshold"),
+                id: "high-utilization".into(),
+                name: "High Disk Utilization".into(),
+                description: "Disk utilization exceeds safe threshold".into(),
                 metric: AlertMetric::Utilization,
                 operator: AlertOperator::GreaterThan,
                 threshold: 85.0, // 85% utilization
@@ -209,9 +209,9 @@ impl ZfsPerformanceMonitor {
             },
             // Low cache hit ratio alert
             AlertCondition {
-                id: String::from("low-cache-hit"),
-                name: String::from("Low Cache Hit Ratio"),
-                description: String::from("ZFS cache hit ratio is below optimal threshold"),
+                id: "low-cache-hit".into(),
+                name: "Low Cache Hit Ratio".into(),
+                description: "ZFS cache hit ratio is below optimal threshold".into(),
                 metric: AlertMetric::CacheHitRatio,
                 operator: AlertOperator::LessThan,
                 threshold: 80.0, // 80% cache hit ratio

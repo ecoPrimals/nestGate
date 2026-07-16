@@ -142,7 +142,7 @@ mod tests {
         }
 
         fn build(self) -> String {
-            String::from("built")
+            "built".into()
         }
     }
 

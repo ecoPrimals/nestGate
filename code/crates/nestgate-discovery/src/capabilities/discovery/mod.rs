@@ -138,21 +138,21 @@ mod tests {
 
     #[test]
     fn test_capability_error_detection_failed() {
-        let err = CapabilityError::DetectionFailed(String::from("Network timeout"));
+        let err = CapabilityError::DetectionFailed("Network timeout".into());
         assert!(err.to_string().contains("Service detection failed"));
         assert!(err.to_string().contains("Network timeout"));
     }
 
     #[test]
     fn test_capability_error_connection_failed() {
-        let err = CapabilityError::ConnectionFailed(String::from("Connection refused"));
+        let err = CapabilityError::ConnectionFailed("Connection refused".into());
         assert!(err.to_string().contains("Connection failed"));
         assert!(err.to_string().contains("Connection refused"));
     }
 
     #[test]
     fn test_capability_error_invalid_capability() {
-        let err = CapabilityError::InvalidCapability(String::from("Unknown capability"));
+        let err = CapabilityError::InvalidCapability("Unknown capability".into());
         assert!(err.to_string().contains("Invalid capability"));
         assert!(err.to_string().contains("Unknown capability"));
     }

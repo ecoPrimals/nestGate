@@ -164,7 +164,7 @@ impl ErrorResponseFactory {
     #[must_use]
     pub fn validation_error(field: &str, message: &str) -> UnifiedErrorResponse {
         let mut details = HashMap::new();
-        details.insert(String::from("field"), serde_json::json!(field));
+        details.insert("field".into(), serde_json::json!(field));
 
         UnifiedErrorResponse::with_status(
             &format!("Validation failed for {field}: {message}"),
@@ -192,7 +192,7 @@ impl ErrorResponseFactory {
         let mut details = HashMap::new();
         if let Some(retry_after) = retry_after {
             details.insert(
-                String::from("retry_after_seconds"),
+                "retry_after_seconds".into(),
                 serde_json::json!(retry_after),
             );
         }

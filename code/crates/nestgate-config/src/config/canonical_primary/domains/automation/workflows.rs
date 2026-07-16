@@ -48,7 +48,7 @@ impl WorkflowsConfig {
             max_concurrent_workflows: 5,
             workflow_timeout: Duration::from_secs(600),
             scheduling_enabled: false,
-            definitions_dir: String::from("./workflows"),
+            definitions_dir: "./workflows".into(),
             versioning_enabled: false,
         }
     }

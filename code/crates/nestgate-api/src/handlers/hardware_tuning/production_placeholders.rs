@@ -155,8 +155,8 @@ pub fn optimize_hardware_performance() -> std::result::Result<Json<TuningResult>
     Ok(Json(TuningResult {
         profile_name,
         optimizations_applied: vec![
-            String::from("observed_live_metrics_only"),
-            String::from("no_kernel_or_zfs_module_tuning_via_http"),
+            "observed_live_metrics_only".into(),
+            "no_kernel_or_zfs_module_tuning_via_http".into(),
         ],
         estimated_power_increase: 0.0,
         performance_improvement: 0.0,
@@ -216,7 +216,7 @@ pub fn run_hardware_benchmark() -> std::result::Result<Json<BenchmarkResult>, St
     let duration_ms = start_time.elapsed().as_millis() as u64;
     let score = proc_snapshot_score(&resources);
     Ok(Json(BenchmarkResult {
-        benchmark_type: String::from("proc_snapshot"),
+        benchmark_type: "proc_snapshot".into(),
         score,
         duration_ms,
         metrics,
@@ -361,7 +361,7 @@ mod tests {
 
     #[test]
     fn test_get_allocation_details_ok_or_error() {
-        let path = axum::extract::Path(String::from("test-allocation"));
+        let path = axum::extract::Path("test-allocation".into());
         let result = get_allocation_details(path);
         assert!(result.is_ok() || matches!(result, Err(StatusCode::INTERNAL_SERVER_ERROR)));
     }

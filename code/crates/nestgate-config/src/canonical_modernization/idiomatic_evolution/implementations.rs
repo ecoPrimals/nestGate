@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn smart_clone_primitives() {
-        assert_eq!(String::smart_clone(&String::from("a")), "a");
+        assert_eq!(String::smart_clone(&"a".into()), "a");
         assert_eq!(u32::smart_clone(&3), 3);
         assert_eq!(bool::smart_clone(&true), true);
     }

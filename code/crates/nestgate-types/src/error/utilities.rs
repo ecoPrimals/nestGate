@@ -59,7 +59,7 @@ pub fn safe_env_var_from_env_source(
     env.get(key).ok_or_else(|| {
         NestGateError::configuration_error(
             key.to_string(),
-            String::from("Environment variable not found"),
+            "Environment variable not found",
         )
     })
 }

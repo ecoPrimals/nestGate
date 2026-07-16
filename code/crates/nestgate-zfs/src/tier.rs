@@ -179,11 +179,11 @@ impl TierManager {
         };
 
         let health = if utilization > 90.0 {
-            String::from("Critical")
+            "Critical".into()
         } else if utilization > 75.0 {
-            String::from("Warning")
+            "Warning".into()
         } else {
-            String::from("Healthy")
+            "Healthy".into()
         };
 
         Ok(TierStatus {

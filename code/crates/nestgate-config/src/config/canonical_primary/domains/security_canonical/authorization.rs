@@ -212,12 +212,12 @@ mod tests {
         let original = AuthorizationConfig {
             access_control: AccessControlConfig::development_optimized(),
             roles: vec![RoleConfig {
-                name: String::from("admin"),
-                permissions: vec![String::from("*")],
+                name: "admin".into(),
+                permissions: vec!["*".into()],
             }],
             permissions: vec![PermissionConfig {
-                name: String::from("read"),
-                description: String::from("read access"),
+                name: "read".into(),
+                description: "read access".into(),
             }],
         };
         let json = serde_json::to_string(&original).expect("serialize");
@@ -233,12 +233,12 @@ mod tests {
     #[test]
     fn resource_and_policy_config_serde_roundtrip() {
         let r = ResourceConfig {
-            name: String::from("pool"),
-            type_name: String::from("zfs"),
+            name: "pool".into(),
+            type_name: "zfs".into(),
         };
         let p = PolicyConfig {
-            name: String::from("default"),
-            rules: vec![String::from("allow read")],
+            name: "default".into(),
+            rules: vec!["allow read".into()],
         };
         let jr = serde_json::to_string(&r).expect("serialize resource");
         let rr: ResourceConfig = serde_json::from_str(&jr).expect("deserialize resource");

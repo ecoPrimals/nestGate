@@ -100,9 +100,9 @@ impl Default for EvolutionMetadata {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            version: String::from("1.0.0"),
+            version: "1.0.0".into(),
             migration_path: None,
-            compatibility_notes: vec![String::from("Canonical modernization compatible")],
+            compatibility_notes: vec!["Canonical modernization compatible".into()],
             components: HashMap::new(),
         }
     }
@@ -113,14 +113,14 @@ impl EvolutionMetadata {
     #[must_use]
     pub fn production_optimized() -> Self {
         Self {
-            version: String::from("1.0.0-prod"),
+            version: "1.0.0-prod".into(),
             migration_path: Some(MigrationPath {
-                from_version: String::from("0.9.0"),
-                to_version: String::from("1.0.0"),
-                steps: vec![String::from("Apply canonical patterns")],
+                from_version: "0.9.0".into(),
+                to_version: "1.0.0".into(),
+                steps: vec!["Apply canonical patterns".into()],
                 can_rollback: true,
             }),
-            compatibility_notes: vec![String::from("Production-ready canonical modernization")],
+            compatibility_notes: vec!["Production-ready canonical modernization".into()],
             components: HashMap::new(),
         }
     }
@@ -129,9 +129,9 @@ impl EvolutionMetadata {
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
-            version: String::from("1.0.0-dev"),
+            version: "1.0.0-dev".into(),
             migration_path: None,
-            compatibility_notes: vec![String::from("Development-friendly modernization")],
+            compatibility_notes: vec!["Development-friendly modernization".into()],
             components: HashMap::new(),
         }
     }
@@ -206,28 +206,28 @@ mod tests {
     fn serde_roundtrip_structs() {
         serde_roundtrip(&EvolutionMetadata::default());
         serde_roundtrip(&MigrationPath {
-            from_version: String::from("0"),
-            to_version: String::from("1"),
-            steps: vec![String::from("s")],
+            from_version: "0".into(),
+            to_version: "1".into(),
+            steps: vec!["s".into()],
             can_rollback: false,
         });
         serde_roundtrip(&CompatibilityInfo {
-            compatible_versions: vec![String::from("1")],
+            compatible_versions: vec!["1".into()],
             breaking_changes: vec![],
             deprecations: vec![DeprecationInfo {
-                item: String::from("x"),
-                since_version: String::from("0"),
+                item: "x".into(),
+                since_version: "0".into(),
                 removal_version: None,
                 replacement: None,
             }],
         });
         serde_roundtrip(&ModernizationMetadata {
             status: ModernizationStatus::InProgress,
-            applied_patterns: vec![String::from("p")],
+            applied_patterns: vec!["p".into()],
             recommendations: vec![],
         });
         serde_roundtrip(&VersionInfo {
-            current: String::from("1"),
+            current: "1".into(),
             previous: None,
             next: None,
         });

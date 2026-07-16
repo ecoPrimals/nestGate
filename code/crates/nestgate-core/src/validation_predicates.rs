@@ -457,10 +457,10 @@ mod tests {
 
     #[test]
     fn test_permissions_any_of_or_logic() {
-        let user_perms = vec![String::from("read"), String::from("write")];
-        let required_read = vec![String::from("read")];
-        let required_admin = vec![String::from("admin")];
-        let required_multiple = vec![String::from("read"), String::from("admin")];
+        let user_perms = vec!["read".into(), "write".into()];
+        let required_read = vec!["read".into()];
+        let required_admin = vec!["admin".into()];
+        let required_multiple = vec!["read".into(), "admin".into()];
         let required_none: Vec<String> = vec![];
 
         // CATCHES OR LOGIC IN PERMISSION CHECKING (any required permission)

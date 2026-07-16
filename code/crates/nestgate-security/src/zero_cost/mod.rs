@@ -86,7 +86,7 @@ mod integration_tests {
         // Test that providers can be composed at compile-time
         let cache = ZeroCostMemoryCache::<128>::new();
         let security = ZeroCostJwtProvider::new([42u8; 32]);
-        let storage = ZeroCostFileStorage::new(String::from("/tmp/test"));
+        let storage = ZeroCostFileStorage::new("/tmp/test".into());
 
         let system = ZeroCostSystem::<_, _, _, 128, ZERO_COST_TEST_TIMEOUT_MS_2000>::new(
             cache, security, storage,

@@ -206,7 +206,7 @@ async fn login(
             token: Some(token.token),
             expires_at: Some(token.expires_at),
             permissions: Some(token.permissions),
-            message: String::from("Authentication successful"),
+            message: "Authentication successful".into(),
         })
         .into_response(),
         Err(e) => {
@@ -231,7 +231,7 @@ async fn set_mode(
         "standalone" => Json(SetModeResponse {
             success: true,
             mode: "standalone",
-            message: String::from("Authentication mode switched to standalone"),
+            message: "Authentication mode switched to standalone".into(),
         }),
         "security_primal" => {
             let auth_service = AuthService::new();
@@ -239,7 +239,7 @@ async fn set_mode(
                 Json(SetModeResponse {
                     success: true,
                     mode: "security_primal",
-                    message: String::from("Authentication mode switched to security primal"),
+                    message: "Authentication mode switched to security primal".into(),
                 })
             } else {
                 Json(SetModeResponse {
@@ -254,7 +254,7 @@ async fn set_mode(
         "hybrid" => Json(SetModeResponse {
             success: true,
             mode: "hybrid",
-            message: String::from("Authentication mode switched to hybrid"),
+            message: "Authentication mode switched to hybrid".into(),
         }),
         _ => {
             let auth_service = AuthService::new();
@@ -265,7 +265,7 @@ async fn set_mode(
                     AuthMode::Production => "production",
                     AuthMode::Testing => "testing",
                 },
-                message: String::from("Supported modes: standalone, security_primal, hybrid"),
+                message: "Supported modes: standalone, security_primal, hybrid".into(),
             })
         }
     }
@@ -439,8 +439,8 @@ mod tests {
         let service = AuthService::new();
 
         let credentials = nestgate_core::universal_traits::Credentials {
-            username: String::from("admin"),
-            password: String::from("nestgate"),
+            username: "admin".into(),
+            password: "nestgate".into(),
             mfa_token: None,
             client_info: None,
         };
@@ -463,8 +463,8 @@ mod tests {
         let service = AuthService::new();
 
         let credentials = nestgate_core::universal_traits::Credentials {
-            username: String::from("invalid"),
-            password: String::from("wrong"),
+            username: "invalid".into(),
+            password: "wrong".into(),
             mfa_token: None,
             client_info: None,
         };

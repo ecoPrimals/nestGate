@@ -123,7 +123,7 @@ impl ServiceManager {
         let addr: SocketAddr = format!("{host}:{p}").parse().map_err(|e| {
             NestGateBinError::service_init_error(
                 format!("Invalid TCP bind address: {e}"),
-                Some(String::from("tcp-addr")),
+                Some("tcp-addr".into()),
             )
         })?;
         Ok(Some(addr))
@@ -145,7 +145,7 @@ impl ServiceManager {
         let socket_config = SocketConfig::from_environment().map_err(|e| {
             crate::error::NestGateBinError::service_init_error(
                 format!("Failed to get socket configuration: {e}"),
-                Some(String::from("socket-config")),
+                Some("socket-config".into()),
             )
         })?;
 
@@ -182,7 +182,7 @@ impl ServiceManager {
             legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
                 crate::error::NestGateBinError::service_init_error(
                     format!("Failed to create JSON-RPC handler: {e}"),
-                    Some(String::from("unix-socket-handler")),
+                    Some("unix-socket-handler".into()),
                 )
             })?;
         let server = Arc::new(IsomorphicIpcServer::new(
@@ -209,7 +209,7 @@ impl ServiceManager {
         server.start().await.map_err(|e| {
             crate::error::NestGateBinError::runtime_error(
                 format!("Unix socket server error: {e}"),
-                Some(String::from("unix-socket-serve")),
+                Some("unix-socket-serve".into()),
             )
         })?;
 
@@ -261,7 +261,7 @@ impl ServiceManager {
             .map_err(|e| {
                 crate::error::NestGateBinError::service_init_error(
                     format!("Failed to bind to {bind_addr}: {e}"),
-                    Some(String::from("http-server")),
+                    Some("http-server".into()),
                 )
             })?;
 
@@ -272,7 +272,7 @@ impl ServiceManager {
                 format!("{bind_host}:{tarpc_port}").parse().map_err(|e| {
                     crate::error::NestGateBinError::service_init_error(
                         format!("Invalid tarpc bind address: {e}"),
-                        Some(String::from("tarpc-server")),
+                        Some("tarpc-server".into()),
                     )
                 })?;
 
@@ -302,7 +302,7 @@ impl ServiceManager {
 
         info!("Service started successfully");
         let display_host = if bind_host == bind_all_ipv4 {
-            String::from("localhost")
+            "localhost".into()
         } else {
             bind_host.clone()
         };
@@ -322,7 +322,7 @@ impl ServiceManager {
         axum::serve(listener, app).await.map_err(|e| {
             crate::error::NestGateBinError::runtime_error(
                 format!("Server error: {e}"),
-                Some(String::from("http-serve")),
+                Some("http-serve".into()),
             )
         })?;
 
@@ -513,7 +513,7 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
     let socket_config = SocketConfig::from_environment().map_err(|e| {
         crate::error::NestGateBinError::service_init_error(
             format!("Failed to get socket configuration: {e}"),
-            Some(String::from("socket-config")),
+            Some("socket-config".into()),
         )
     })?;
 
@@ -540,7 +540,7 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
         legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
             crate::error::NestGateBinError::service_init_error(
                 format!("Failed to create JSON-RPC handler: {e}"),
-                Some(String::from("unix-socket-handler")),
+                Some("unix-socket-handler".into()),
             )
         })?;
     let server = Arc::new(IsomorphicIpcServer::new(
@@ -575,7 +575,7 @@ async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResu
     server.start().await.map_err(|e| {
         crate::error::NestGateBinError::runtime_error(
             format!("Unix socket server error: {e}"),
-            Some(String::from("unix-socket-serve")),
+            Some("unix-socket-serve".into()),
         )
     })?;
 
@@ -680,7 +680,7 @@ mod service_manager_tests {
         let a = ServiceAction::Start {
             socket: Some(std::path::PathBuf::from("/run/membrane/nestgate.sock")),
             port: 8080,
-            bind: String::from("127.0.0.1"),
+            bind: "127.0.0.1".into(),
             listen: None,
             daemon: false,
         };

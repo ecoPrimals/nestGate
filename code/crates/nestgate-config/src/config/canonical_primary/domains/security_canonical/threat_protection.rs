@@ -74,7 +74,7 @@ impl Default for IntrusionDetectionConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            sensitivity: String::from("medium"),
+            sensitivity: "medium".into(),
         }
     }
 }
@@ -84,7 +84,7 @@ impl Default for FirewallConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            rules: vec![String::from("allow-http"), String::from("allow-https")],
+            rules: vec!["allow-http".into(), "allow-https".into()],
         }
     }
 }

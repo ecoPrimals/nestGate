@@ -578,7 +578,7 @@ mod tests {
     async fn connection_pool_manager_register() {
         let mgr = ConnectionPoolManager::new();
         let inner = UniversalConnectionPool::new(ConnectionPoolConfig::default(), || Ok(1i32));
-        mgr.register_pool(String::from("p"), inner).await;
+        mgr.register_pool("p".into(), inner).await;
         assert!(mgr.get_pool::<i32>("p").is_none());
     }
 

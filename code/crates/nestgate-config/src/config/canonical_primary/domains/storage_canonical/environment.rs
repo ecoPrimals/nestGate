@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn storage_environment_merge_keeps_self() {
         let mut other = StorageEnvironmentConfig::default();
-        other.development.backend_type = String::from("s3");
+        other.development.backend_type = "s3".into();
         let merged = StorageEnvironmentConfig::default().merge(other);
         assert_eq!(merged.development.backend_type, "filesystem");
     }
@@ -196,11 +196,11 @@ mod tests {
         original
             .deployment
             .resource_limits
-            .insert(String::from("cpu"), String::from("4"));
+            .insert("cpu".into(), "4".into());
         original
             .features
             .feature_flags
-            .insert(String::from("tiered"), true);
+            .insert("tiered".into(), true);
         let json = serde_json::to_string(&original).expect("serialize");
         let parsed: StorageEnvironmentConfig = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(

@@ -104,14 +104,14 @@ impl Default for SnapshotPolicy {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: String::from("default"),
-            description: String::from("Default snapshot policy"),
+            name: "default".into(),
+            description: "Default snapshot policy".into(),
             enabled: true,
             frequency: ScheduleFrequency::Hours(1),
             retention: RetentionPolicy::default(),
-            dataset_patterns: vec![String::from("*")],
+            dataset_patterns: vec!["*".into()],
             tiers: vec![StorageTier::Hot, StorageTier::Warm, StorageTier::Cold],
-            name_prefix: String::from("auto"),
+            name_prefix: "auto".into(),
             include_properties: true,
             recursive: true,
             max_snapshots_per_run: 100,
@@ -164,7 +164,7 @@ mod tests {
         let daily = ScheduleFrequency::Daily(12);
         let weekly = ScheduleFrequency::Weekly { day: 1, hour: 0 };
         let monthly = ScheduleFrequency::Monthly { day: 1, hour: 0 };
-        let custom = ScheduleFrequency::Custom(String::from("0 0 * * *"));
+        let custom = ScheduleFrequency::Custom("0 0 * * *".into());
 
         assert!(matches!(minutes, ScheduleFrequency::Minutes(15)));
         assert!(matches!(hours, ScheduleFrequency::Hours(6)));
@@ -200,14 +200,14 @@ mod tests {
     #[test]
     fn test_snapshot_policy_custom() {
         let policy = SnapshotPolicy {
-            name: String::from("custom"),
-            description: String::from("Custom policy"),
+            name: "custom".into(),
+            description: "Custom policy".into(),
             enabled: false,
             frequency: ScheduleFrequency::Daily(2),
             retention: RetentionPolicy::Count(50),
-            dataset_patterns: vec![String::from("tank/*")],
+            dataset_patterns: vec!["tank/*".into()],
             tiers: vec![StorageTier::Hot],
-            name_prefix: String::from("custom"),
+            name_prefix: "custom".into(),
             include_properties: false,
             recursive: false,
             max_snapshots_per_run: 50,

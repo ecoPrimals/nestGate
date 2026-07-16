@@ -86,10 +86,10 @@ pub struct ZfsPoolsConfig {
 impl Default for ZfsPoolsConfig {
     fn default() -> Self {
         Self {
-            default_pool: String::from("tank"),
+            default_pool: "tank".into(),
             pool_configs: HashMap::new(),
             auto_create: false,
-            scrub_schedule: Some(String::from("0 2 * * 0")), // Weekly at 2 AM Sunday
+            scrub_schedule: Some("0 2 * * 0".into()), // Weekly at 2 AM Sunday
         }
     }
 }
@@ -198,7 +198,7 @@ impl Default for ZfsSnapshotsConfig {
     fn default() -> Self {
         Self {
             retention: ZfsRetentionConfig::default(),
-            naming_pattern: String::from("%Y%m%d_%H%M%S"),
+            naming_pattern: "%Y%m%d_%H%M%S".into(),
             intervals: ZfsSnapshotIntervals::default(),
             cleanup: ZfsCleanupConfig::default(),
         }
@@ -283,7 +283,7 @@ impl DomainConfigValidation for ZfsDomainConfig {
 
         // Validate pool configuration
         if self.pools.default_pool.is_empty() {
-            warnings.push(String::from("Default pool name is empty"));
+            warnings.push("Default pool name is empty".into());
         }
 
         // Validate snapshot retention
@@ -291,7 +291,7 @@ impl DomainConfigValidation for ZfsDomainConfig {
             && self.snapshots.retention.weekly == 0
             && self.snapshots.retention.monthly == 0
         {
-            warnings.push(String::from("No snapshot retention configured"));
+            warnings.push("No snapshot retention configured".into());
         }
 
         Ok(warnings)

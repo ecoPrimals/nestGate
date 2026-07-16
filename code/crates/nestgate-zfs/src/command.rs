@@ -586,8 +586,8 @@ mod tests {
     fn command_result_helpers() {
         let result = CommandResult {
             success: true,
-            stdout: String::from("a\nb\n"),
-            stderr: String::from("e1\ne2"),
+            stdout: "a\nb\n".into(),
+            stderr: "e1\ne2".into(),
             exit_code: 0,
         };
         assert!(result.is_success());
@@ -599,22 +599,22 @@ mod tests {
     fn command_result_parse_properties_tab_and_space() {
         let tab = CommandResult {
             success: true,
-            stdout: String::from("k1\tv1\n# skip\nk2 v2"),
+            stdout: "k1\tv1\n# skip\nk2 v2".into(),
             stderr: String::new(),
             exit_code: 0,
         };
         let map = tab
             .parse_properties()
             .expect("test: parse tab-separated properties");
-        assert_eq!(map.get("k1"), Some(&String::from("v1")));
-        assert_eq!(map.get("k2"), Some(&String::from("v2")));
+        assert_eq!(map.get("k1"), Some(&"v1".into()));
+        assert_eq!(map.get("k2"), Some(&"v2".into()));
     }
 
     #[test]
     fn command_result_parse_table_rows_and_malformed_skip() {
         let result = CommandResult {
             success: true,
-            stdout: String::from("c1 c2\nv1 v2\nbad\nv3 v4 v5"),
+            stdout: "c1 c2\nv1 v2\nbad\nv3 v4 v5".into(),
             stderr: String::new(),
             exit_code: 0,
         };
@@ -669,7 +669,7 @@ mod tests {
     async fn command_result_parse_table_tab_separated() {
         let result = CommandResult {
             success: true,
-            stdout: String::from("name\tsize\talloc\npool1\t1T\t500G\npool2\t2T\t1T"),
+            stdout: "name\tsize\talloc\npool1\t1T\t500G\npool2\t2T\t1T".into(),
             stderr: String::new(),
             exit_code: 0,
         };

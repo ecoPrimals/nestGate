@@ -83,7 +83,7 @@ impl PoolSetupValidator {
 
         // Path validation
         if !device.device_path.starts_with("/dev/") {
-            result.add_error(String::from("Invalid device path: error details"));
+            result.add_error("Invalid device path: error details".into());
         }
 
         // Usage validation
@@ -113,12 +113,12 @@ impl PoolSetupValidator {
 
         // Pool name validation
         if config.pool_name.is_empty() {
-            issues.push(String::from("Pool name cannot be empty"));
+            issues.push("Pool name cannot be empty".into());
         }
 
         // Device validation
         if config.devices.is_empty() {
-            issues.push(String::from("No devices specified for pool creation"));
+            issues.push("No devices specified for pool creation".into());
         }
 
         // Check minimum device count for topology

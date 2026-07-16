@@ -146,13 +146,13 @@ mod tests {
     fn test_builder_pattern() {
         let config = NetworkEnvConfig::new()
             .with_host(
-                String::from("NESTGATE_API"),
-                String::from("api.example.com"),
+                "NESTGATE_API".into(),
+                "api.example.com".into(),
             )
-            .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::http())
+            .with_port("NESTGATE_API".into(), runtime_fallback_ports::http())
             .with_endpoint(
-                String::from("NESTGATE_DB"),
-                Some(String::from("db.example.com")),
+                "NESTGATE_DB".into(),
+                Some("db.example.com".into()),
                 Some(runtime_fallback_ports::postgres()),
             );
 
@@ -171,8 +171,8 @@ mod tests {
     #[test]
     fn test_has_methods() {
         let config = NetworkEnvConfig::new().with_host(
-            String::from("NESTGATE_API"),
-            String::from("api.example.com"),
+            "NESTGATE_API".into(),
+            "api.example.com".into(),
         );
 
         assert!(config.has_host("NESTGATE_API"));
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn test_partial_config() {
         let config = NetworkEnvConfig::new().with_port(
-            String::from("NESTGATE_REDIS"),
+            "NESTGATE_REDIS".into(),
             runtime_fallback_ports::redis(),
         );
 
@@ -200,13 +200,13 @@ mod tests {
         let config = Arc::new(
             NetworkEnvConfig::new()
                 .with_host(
-                    String::from("NESTGATE_API"),
-                    String::from("api.example.com"),
+                    "NESTGATE_API".into(),
+                    "api.example.com".into(),
                 )
-                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::http())
-                .with_host(String::from("NESTGATE_DB"), String::from("db.example.com"))
+                .with_port("NESTGATE_API".into(), runtime_fallback_ports::http())
+                .with_host("NESTGATE_DB".into(), "db.example.com".into())
                 .with_port(
-                    String::from("NESTGATE_DB"),
+                    "NESTGATE_DB".into(),
                     runtime_fallback_ports::postgres(),
                 ),
         );
@@ -234,19 +234,19 @@ mod tests {
         let config1 = Arc::new(
             NetworkEnvConfig::new()
                 .with_host(
-                    String::from("NESTGATE_API"),
-                    String::from("api1.example.com"),
+                    "NESTGATE_API".into(),
+                    "api1.example.com".into(),
                 )
-                .with_port(String::from("NESTGATE_API"), runtime_fallback_ports::http()),
+                .with_port("NESTGATE_API".into(), runtime_fallback_ports::http()),
         );
         let config2 = Arc::new(
             NetworkEnvConfig::new()
                 .with_host(
-                    String::from("NESTGATE_API"),
-                    String::from("api2.example.com"),
+                    "NESTGATE_API".into(),
+                    "api2.example.com".into(),
                 )
                 .with_port(
-                    String::from("NESTGATE_API"),
+                    "NESTGATE_API".into(),
                     runtime_fallback_ports::metrics(),
                 ),
         );
@@ -275,9 +275,9 @@ mod tests {
             .await
             .expect("Second task should complete successfully");
 
-        assert_eq!(host1, Some(String::from("api1.example.com")));
+        assert_eq!(host1, Some("api1.example.com".into()));
         assert_eq!(port1, Some(runtime_fallback_ports::http()));
-        assert_eq!(host2, Some(String::from("api2.example.com")));
+        assert_eq!(host2, Some("api2.example.com".into()));
         assert_eq!(port2, Some(runtime_fallback_ports::metrics()));
     }
 }

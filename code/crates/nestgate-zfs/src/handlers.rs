@@ -379,8 +379,8 @@ impl ZfsRequestHandler {
         let status = if available { "healthy" } else { "degraded" };
 
         let mut details = HashMap::new();
-        details.insert(String::from("zfs_available"), available.to_string());
-        details.insert(String::from("zfs_binary"), zfs_bin.clone());
+        details.insert("zfs_available".into(), available.to_string());
+        details.insert("zfs_binary".into(), zfs_bin.clone());
 
         Ok(ZfsResponse::Health {
             status: String::from(status),
@@ -401,7 +401,7 @@ mod tests {
     fn zfs_health_info_round_trips_json() {
         let t = std::time::SystemTime::UNIX_EPOCH;
         let h = ZfsHealthInfo {
-            status: String::from("healthy"),
+            status: "healthy".into(),
             pools_count: 2,
             datasets_count: 5,
             snapshots_count: 1,
@@ -416,13 +416,13 @@ mod tests {
     #[test]
     fn zfs_request_and_response_variants_serialize() {
         let req = ZfsRequest::PoolCreate {
-            name: String::from("p"),
-            devices: vec![String::from("/dev/sda")],
+            name: "p".into(),
+            devices: vec!["/dev/sda".into()],
         };
         let _ = serde_json::to_string(&req).expect("req json");
 
         let resp = ZfsResponse::Success {
-            message: String::from("ok"),
+            message: "ok".into(),
         };
         let _ = serde_json::to_string(&resp).expect("resp json");
     }
@@ -452,7 +452,7 @@ mod tests {
         let handler = ZfsRequestHandler::new(ZfsConfig::default());
         let result = handler
             .handle_zfs_request(ZfsRequest::PoolDestroy {
-                name: String::from("gone"),
+                name: "gone".into(),
             })
             .await;
         assert!(result.is_err(), "unimplemented mutations must return Err");

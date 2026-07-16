@@ -315,7 +315,7 @@ mod examples {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn standard_operation() -> Result<String> {
-        Ok(String::from("success"))
+        Ok("success".into())
     }
 
     /// Example function showing canonical Result usage

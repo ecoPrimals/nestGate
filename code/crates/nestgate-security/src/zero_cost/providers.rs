@@ -203,7 +203,7 @@ impl ZeroCostFileStorage {
     ///
     /// ```rust,ignore
     /// # use nestgate_core::zero_cost::providers::ZeroCostFileStorage;
-    /// let storage = ZeroCostFileStorage::new(String::from("/var/lib/nestgate"));
+    /// let storage = ZeroCostFileStorage::new("/var/lib/nestgate".into());
     /// ```
     #[must_use]
     pub const fn new(base_path: String) -> Self {
@@ -266,16 +266,16 @@ mod tests {
 
     #[test]
     fn test_file_storage_operations() {
-        let storage = ZeroCostFileStorage::new(String::from("/tmp"));
+        let storage = ZeroCostFileStorage::new("/tmp".into());
 
         assert_eq!(
-            storage.store(String::from("test_key"), vec![1, 2, 3]),
+            storage.store("test_key".into(), vec![1, 2, 3]),
             Err(ZeroCostError::DeprecatedStorage)
         );
 
-        assert!(storage.retrieve(&String::from("test_key")).is_none());
+        assert!(storage.retrieve(&"test_key".into()).is_none());
 
-        assert!(!storage.delete(&String::from("test_key")));
+        assert!(!storage.delete(&"test_key".into()));
     }
 
     #[test]
@@ -287,7 +287,7 @@ mod tests {
     #[test]
     fn test_jwt_provider_authentication() {
         let provider = ZeroCostJwtProvider::new([1u8; 32]);
-        let result = provider.authenticate(&String::from("testuser"));
+        let result = provider.authenticate(&"testuser".into());
         assert!(result.is_ok());
         let token = result.expect("auth should succeed");
         assert!(token.starts_with("jwt_token_testuser."));
@@ -298,18 +298,18 @@ mod tests {
     fn test_jwt_provider_validation() {
         let provider = ZeroCostJwtProvider::new([1u8; 32]);
         let token = provider
-            .authenticate(&String::from("testuser"))
+            .authenticate(&"testuser".into())
             .expect("auth");
         assert!(provider.validate(&token));
-        assert!(!provider.validate(&String::from("invalid_token")));
-        assert!(!provider.validate(&String::from("unsigned.payload")));
+        assert!(!provider.validate(&"invalid_token".into()));
+        assert!(!provider.validate(&"unsigned.payload".into()));
     }
 
     #[test]
     fn test_jwt_provider_rejects_wrong_key() {
         let p1 = ZeroCostJwtProvider::new([1u8; 32]);
         let p2 = ZeroCostJwtProvider::new([2u8; 32]);
-        let token = p1.authenticate(&String::from("alice")).expect("auth");
+        let token = p1.authenticate(&"alice".into()).expect("auth");
         assert!(!p2.validate(&token));
     }
 
@@ -317,7 +317,7 @@ mod tests {
     fn test_jwt_provider_refresh_signs_new_token() {
         let provider = ZeroCostJwtProvider::new([1u8; 32]);
         let token = provider
-            .authenticate(&String::from("testuser"))
+            .authenticate(&"testuser".into())
             .expect("auth");
         let refreshed = provider.refresh(&token).expect("refresh");
         assert_ne!(token, refreshed);
@@ -329,11 +329,11 @@ mod tests {
         let cache: ZeroCostMemoryCache<16> = ZeroCostMemoryCache::new();
 
         // Test set operation
-        let result = cache.set(String::from("key1"), vec![1, 2, 3]);
+        let result = cache.set("key1".into(), vec![1, 2, 3]);
         assert!(result.is_ok());
 
         // Test remove operation
-        let removed = cache.remove(&String::from("key1"));
+        let removed = cache.remove(&"key1".into());
         assert!(removed);
     }
 }

@@ -191,7 +191,7 @@ impl HealthCheckProvider for SystemHealthProvider {
 
         Ok(ComponentHealth {
             status,
-            message: String::from("System basic checks completed"),
+            message: "System basic checks completed".into(),
             last_success: Some(SystemTime::now()),
             last_failure: None,
             metadata: HashMap::new(),
@@ -218,7 +218,7 @@ mod tests {
         fn check_health(&self) -> Result<ComponentHealth> {
             Ok(ComponentHealth {
                 status: self.status.clone(),
-                message: String::from("Mock health check"),
+                message: "Mock health check".into(),
                 last_success: Some(SystemTime::now()),
                 last_failure: None,
                 metadata: HashMap::new(),
@@ -237,18 +237,18 @@ mod tests {
 
         // Add healthy component
         checker.register_provider(
-            String::from("test1"),
+            "test1".into(),
             Box::new(MockHealthProvider {
-                name: String::from("test1"),
+                name: "test1".into(),
                 status: HealthStatus::Healthy,
             }),
         );
 
         // Add unhealthy component
         checker.register_provider(
-            String::from("test2"),
+            "test2".into(),
             Box::new(MockHealthProvider {
-                name: String::from("test2"),
+                name: "test2".into(),
                 status: HealthStatus::Unhealthy,
             }),
         );

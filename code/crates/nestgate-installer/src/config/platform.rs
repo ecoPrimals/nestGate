@@ -300,9 +300,9 @@ impl Default for SystemIntegrationSettings {
     fn default() -> Self {
         Self {
             install_as_service: true,
-            service_name: String::from("nestgate"),
-            service_user: String::from("nestgate"),
-            service_group: String::from("nestgate"),
+            service_name: "nestgate".into(),
+            service_user: "nestgate".into(),
+            service_group: "nestgate".into(),
             enable_autostart: true,
             create_firewall_rules: false,
             add_to_path: true,
@@ -320,7 +320,7 @@ impl Default for PackageManagementSettings {
             dependencies: Vec::new(),
             optional_packages: Vec::new(),
             auto_updates: false,
-            update_channel: String::from("stable"),
+            update_channel: "stable".into(),
         }
     }
 }

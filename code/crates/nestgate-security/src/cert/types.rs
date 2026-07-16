@@ -224,15 +224,15 @@ mod tests {
     /// Creates  Test Certificate
     fn create_test_certificate() -> Certificate {
         Certificate {
-            id: String::from("cert-001"),
+            id: "cert-001".into(),
             cert_type: CertificateType::Server,
-            principal: String::from("CN=example.com"),
-            issuer: String::from("CN=Test CA"),
+            principal: "CN=example.com".into(),
+            issuer: "CN=Test CA".into(),
             data: vec![1, 2, 3, 4],
-            not_before: String::from("2024-01-01"),
-            not_after: String::from("9999999999"), // Far future
-            serial_number: String::from("123456"),
-            fingerprint: String::from("abcdef123456"),
+            not_before: "2024-01-01".into(),
+            not_after: "9999999999".into(), // Far future
+            serial_number: "123456".into(),
+            fingerprint: "abcdef123456".into(),
             metadata: HashMap::new(),
         }
     }
@@ -275,8 +275,8 @@ mod tests {
     #[test]
     fn test_cert_mode_custom() {
         let mut rules = HashMap::new();
-        rules.insert(String::from("check_expiry"), true);
-        rules.insert(String::from("check_revocation"), false);
+        rules.insert("check_expiry".into(), true);
+        rules.insert("check_revocation".into(), false);
 
         let mode = CertMode::Custom(rules.clone());
 
@@ -298,7 +298,7 @@ mod tests {
     #[test]
     fn test_certificate_is_expired() {
         let mut cert = create_test_certificate();
-        cert.not_after = String::from("1"); // Expired
+        cert.not_after = "1".into(); // Expired
         assert!(cert.is_expired());
         assert!(!cert.is_valid());
     }
@@ -306,7 +306,7 @@ mod tests {
     #[test]
     fn test_certificate_expired_by_name() {
         let mut cert = create_test_certificate();
-        cert.principal = String::from("CN=expired-cert");
+        cert.principal = "CN=expired-cert".into();
         assert!(cert.is_expired());
         assert!(!cert.is_valid());
     }
@@ -326,11 +326,11 @@ mod tests {
     #[test]
     fn test_certificate_info_serialization() {
         let info = CertificateInfo {
-            id: String::from("cert-001"),
-            principal: String::from("CN=example.com"),
-            issuer: String::from("CN=Test CA"),
-            valid_from: String::from("2024-01-01"),
-            valid_until: String::from("2025-01-01"),
+            id: "cert-001".into(),
+            principal: "CN=example.com".into(),
+            issuer: "CN=Test CA".into(),
+            valid_from: "2024-01-01".into(),
+            valid_until: "2025-01-01".into(),
             is_valid: true,
             cert_type: CertificateType::Server,
         };
@@ -356,8 +356,8 @@ mod tests {
     fn test_validation_result_with_errors() {
         let result = ValidationResult {
             valid: false,
-            errors: vec![String::from("Certificate expired")],
-            warnings: vec![String::from("Weak signature")],
+            errors: vec!["Certificate expired".into()],
+            warnings: vec!["Weak signature".into()],
         };
 
         assert!(!result.valid);
@@ -392,14 +392,14 @@ mod tests {
     #[test]
     fn test_cert_request() {
         let request = CertRequest {
-            common_name: String::from("example.com"),
+            common_name: "example.com".into(),
             subject_alt_names: vec![
-                String::from("www.example.com"),
-                String::from("api.example.com"),
+                "www.example.com".into(),
+                "api.example.com".into(),
             ],
             key_usage: vec![
-                String::from("digitalSignature"),
-                String::from("keyEncipherment"),
+                "digitalSignature".into(),
+                "keyEncipherment".into(),
             ],
             validity_days: 365,
         };
@@ -413,12 +413,12 @@ mod tests {
     #[test]
     fn test_cert_info() {
         let info = CertInfo {
-            principal: String::from("CN=example.com"),
-            issuer: String::from("CN=Test CA"),
-            serial_number: String::from("123456"),
-            not_before: String::from("2024-01-01"),
-            not_after: String::from("2025-01-01"),
-            fingerprint: String::from("abcdef"),
+            principal: "CN=example.com".into(),
+            issuer: "CN=Test CA".into(),
+            serial_number: "123456".into(),
+            not_before: "2024-01-01".into(),
+            not_after: "2025-01-01".into(),
+            fingerprint: "abcdef".into(),
         };
 
         assert_eq!(info.principal, "CN=example.com");
@@ -430,12 +430,12 @@ mod tests {
     #[test]
     fn test_integration_status() {
         let mut metadata = HashMap::new();
-        metadata.insert(String::from("provider"), String::from("acme"));
+        metadata.insert("provider".into(), "acme".into());
 
         let status = IntegrationStatus {
-            integration: String::from("SecurityCapability"),
+            integration: "SecurityCapability".into(),
             active: true,
-            last_validated: Some(String::from("2024-01-01")),
+            last_validated: Some("2024-01-01".into()),
             validation_result: Some(true),
             error_message: None,
             metadata,
@@ -451,11 +451,11 @@ mod tests {
     #[test]
     fn test_integration_status_with_error() {
         let status = IntegrationStatus {
-            integration: String::from("FailedIntegration"),
+            integration: "FailedIntegration".into(),
             active: false,
             last_validated: None,
             validation_result: Some(false),
-            error_message: Some(String::from("Connection timeout")),
+            error_message: Some("Connection timeout".into()),
             metadata: HashMap::new(),
         };
 
@@ -463,7 +463,7 @@ mod tests {
         assert_eq!(status.validation_result, Some(false));
         assert_eq!(
             status.error_message,
-            Some(String::from("Connection timeout"))
+            Some("Connection timeout".into())
         );
     }
 

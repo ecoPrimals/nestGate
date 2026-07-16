@@ -298,7 +298,7 @@ impl Default for ZfsPoolConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            name: String::from("default-pool"),
+            name: "default-pool".into(),
             devices: Vec::new(),
             redundancy: ZfsRedundancy::None,
             properties: HashMap::new(),
@@ -344,7 +344,7 @@ impl Default for ZfsSnapshotConfig {
             retention: 24,                       // 24 snapshots
             auto_snapshot: true,
             retention_policy: RetentionPolicy::default(),
-            naming_convention: String::from("auto-%Y%m%d-%H%M%S"),
+            naming_convention: "auto-%Y%m%d-%H%M%S".into(),
         }
     }
 }

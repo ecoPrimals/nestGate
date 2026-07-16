@@ -80,7 +80,7 @@ impl AuthenticationConfig {
                 require_lowercase: true,
                 require_numbers: true,
                 require_special_chars: true,
-                allowed_special_chars: String::from("!@#$%^&*()_+-=[]{}|;:,.<>?"),
+                allowed_special_chars: "!@#$%^&*()_+-=[]{}|;:,.<>?".into(),
                 history_count: 10,
                 expiration: Some(Duration::from_secs(60 * 24 * 60 * 60)), // 60 days
                 denylist: vec![], // Would be populated from external source
@@ -115,7 +115,7 @@ impl AuthenticationConfig {
                 require_lowercase: false,
                 require_numbers: false,
                 require_special_chars: false,
-                allowed_special_chars: String::from("!@#$%^&*()_+-=[]{}|;:,.<>?"),
+                allowed_special_chars: "!@#$%^&*()_+-=[]{}|;:,.<>?".into(),
                 history_count: 1,
                 expiration: None,
                 denylist: vec![],
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn authentication_method_variants() {
-        let custom = AuthenticationMethod::Custom(String::from("biometric_v2"));
+        let custom = AuthenticationMethod::Custom("biometric_v2".into());
         assert!(matches!(custom, AuthenticationMethod::Custom(_)));
     }
 

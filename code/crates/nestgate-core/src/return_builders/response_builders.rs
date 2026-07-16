@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn build_success_response_matches_request_and_payload() {
-        let r = build_success_response(String::from("rid-1"), json!({"a": 1}));
+        let r = build_success_response("rid-1".into(), json!({"a": 1}));
         assert_eq!(r.request_id, "rid-1");
         assert!(r.success);
         assert_eq!(r.status, ResponseStatus::Success);
@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn build_error_response_carries_message() {
-        let r = build_error_response(String::from("rid-2"), String::from("failed"));
+        let r = build_error_response("rid-2".into(), "failed".into());
         assert_eq!(r.request_id, "rid-2");
         assert!(!r.success);
         assert_eq!(r.status, ResponseStatus::Error);

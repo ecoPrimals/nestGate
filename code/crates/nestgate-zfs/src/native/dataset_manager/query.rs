@@ -77,7 +77,7 @@ impl NativeZfsDatasetManager {
             } else {
                 Some(std::path::PathBuf::from(mount_point))
             },
-            dataset_type: String::from("filesystem"),
+            dataset_type: "filesystem".into(),
             compression: compression_ratio.map_or_else(|| "lz4".into(), |r| r.to_string()),
             checksum: "sha256".into(), // Default checksum
             referenced: used_bytes,    // Approximation

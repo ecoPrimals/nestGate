@@ -414,7 +414,7 @@ mod tests {
     fn health_check_response_serde_roundtrip() {
         let r = HealthCheckResponse {
             status: HealthStatus::Healthy,
-            version: String::from("0.2.0"),
+            version: "0.2.0".into(),
             uptime_seconds: 42,
             active_connections: 3,
             metadata: Some(json!({"role": "test"})),

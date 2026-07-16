@@ -26,44 +26,44 @@ impl NativeZfsDatasetManager {
 
         // Set compression
         if let Some(compression) = &options.compression {
-            properties.insert(String::from("compression"), compression.clone());
+            properties.insert("compression".into(), compression.clone());
         }
 
         // Set deduplication
         if let Some(dedup) = options.deduplication {
             properties.insert(
-                String::from("dedup"),
+                "dedup".into(),
                 if dedup {
-                    String::from("on")
+                    "on".into()
                 } else {
-                    String::from("off")
+                    "off".into()
                 },
             );
         }
 
         // Set encryption
         if let Some(encryption) = &options.encryption {
-            properties.insert(String::from("encryption"), encryption.clone());
+            properties.insert("encryption".into(), encryption.clone());
         }
 
         // Set mount point
         if let Some(mount_point) = &options.mount_point {
-            properties.insert(String::from("mountpoint"), mount_point.clone());
+            properties.insert("mountpoint".into(), mount_point.clone());
         }
 
         // Set quota
         if let Some(quota) = options.quota {
-            properties.insert(String::from("quota"), quota.to_string());
+            properties.insert("quota".into(), quota.to_string());
         }
 
         // Set reservation
         if let Some(reservation) = options.reservation {
-            properties.insert(String::from("reservation"), reservation.to_string());
+            properties.insert("reservation".into(), reservation.to_string());
         }
 
         // Set record size
         if let Some(record_size) = &options.record_size {
-            properties.insert(String::from("recordsize"), record_size.clone());
+            properties.insert("recordsize".into(), record_size.clone());
         }
 
         // Create the dataset

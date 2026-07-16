@@ -269,14 +269,14 @@ pub mod modern {
             id: format!("cert-{service_name}"),
             cert_type: crate::cert::types::CertificateType::Server,
             principal: format!("CN={service_name}, O=NestGate, OU=Security, C=US"),
-            issuer: String::from("CN=NestGate-CA, O=NestGate, C=US"),
+            issuer: "CN=NestGate-CA, O=NestGate, C=US".into(),
             data: b"-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----".to_vec(),
             not_before: format_system_time(std::time::SystemTime::now()),
             not_after: format_system_time(
                 std::time::SystemTime::now() + std::time::Duration::from_secs(365 * 24 * 3600),
             ),
-            serial_number: String::from("1"),
-            fingerprint: String::from("sha256:abcdef123456"),
+            serial_number: "1".into(),
+            fingerprint: "sha256:abcdef123456".into(),
             metadata: std::collections::HashMap::new(),
         })
     }

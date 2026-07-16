@@ -70,7 +70,7 @@ pub fn build_mock_resource_allocation(
     ResourceAllocation {
         id: Uuid::new_v4().to_string(),
         resource_type: format!("compute-{cpu_cores}-{memory_gb}-{storage_gb}-{network_mbps}"),
-        status: String::from("active"),
+        status: "active".into(),
         allocated_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()

@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn test_connection_failed_error() {
         let err = HttpClientError::ConnectionFailed {
-            message: String::from("Connection refused"),
+            message: "Connection refused".into(),
         };
         assert_eq!(err.to_string(), "Connection failed: Connection refused");
     }
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test_invalid_response_error() {
         let err = HttpClientError::InvalidResponse {
-            message: String::from("Malformed JSON"),
+            message: "Malformed JSON".into(),
         };
         assert_eq!(err.to_string(), "Invalid response: Malformed JSON");
     }
@@ -123,7 +123,7 @@ mod tests {
     #[test]
     fn test_error_conversion() {
         let client_err = HttpClientError::ConnectionFailed {
-            message: String::from("Test"),
+            message: "Test".into(),
         };
         let _nestgate_err: NestGateError = client_err.into();
         // Conversion should succeed

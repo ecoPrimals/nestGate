@@ -219,7 +219,7 @@ impl CapabilityDiscovery {
         // Discover networking capability
         if let Some(endpoint) = config.networking_endpoint() {
             self.register(
-                String::from("networking-env"),
+                "networking-env".into(),
                 CapabilityProvider {
                     endpoint: endpoint.to_string(),
                     capabilities: vec![
@@ -237,7 +237,7 @@ impl CapabilityDiscovery {
         // Discover security capability
         if let Some(endpoint) = config.security_endpoint() {
             self.register(
-                String::from("security-env"),
+                "security-env".into(),
                 CapabilityProvider {
                     endpoint: endpoint.to_string(),
                     capabilities: vec![
@@ -291,7 +291,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider)
+            .register("provider-1".into(), provider)
             .await
             .expect("Failed to register provider");
 
@@ -336,11 +336,11 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider1)
+            .register("provider-1".into(), provider1)
             .await
             .expect("Failed to register provider 1");
         discovery
-            .register(String::from("provider-2"), provider2)
+            .register("provider-2".into(), provider2)
             .await
             .expect("Failed to register provider 2");
 
@@ -381,7 +381,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider)
+            .register("provider-1".into(), provider)
             .await
             .expect("Failed to register provider");
 
@@ -418,7 +418,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider)
+            .register("provider-1".into(), provider)
             .await
             .expect("Failed to register provider");
 
@@ -435,8 +435,8 @@ mod tests {
         let discovery = CapabilityDiscovery::new();
 
         let mut metadata = HashMap::new();
-        metadata.insert(String::from("version"), String::from("1.0.0"));
-        metadata.insert(String::from("region"), String::from("us-west"));
+        metadata.insert("version".into(), "1.0.0".into());
+        metadata.insert("region".into(), "us-west".into());
 
         let provider = CapabilityProvider {
             endpoint: test_endpoint(8080),
@@ -446,7 +446,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider)
+            .register("provider-1".into(), provider)
             .await
             .expect("Failed to register provider");
 
@@ -478,11 +478,11 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider1)
+            .register("provider-1".into(), provider1)
             .await
             .expect("Failed to register provider 1");
         discovery
-            .register(String::from("provider-2"), provider2)
+            .register("provider-2".into(), provider2)
             .await
             .expect("Failed to register provider 2");
 
@@ -543,7 +543,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider)
+            .register("provider-1".into(), provider)
             .await
             .expect("Failed to register provider");
 
@@ -568,7 +568,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider1)
+            .register("provider-1".into(), provider1)
             .await
             .expect("Failed to register first provider");
 
@@ -581,7 +581,7 @@ mod tests {
         };
 
         discovery
-            .register(String::from("provider-1"), provider2)
+            .register("provider-1".into(), provider2)
             .await
             .expect("Failed to register second provider");
 

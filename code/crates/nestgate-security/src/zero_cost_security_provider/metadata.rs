@@ -34,32 +34,32 @@ impl Default for ZeroCostSecurityMetadata {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            provider_type: String::from("zero-cost-security-provider"),
+            provider_type: "zero-cost-security-provider".into(),
             supported_auth_methods: vec![
-                String::from("password"),
-                String::from("token"),
-                String::from("certificate"),
-                String::from("multi_factor"),
+                "password".into(),
+                "token".into(),
+                "certificate".into(),
+                "multi_factor".into(),
             ],
             supported_encryption: vec![
-                String::from("AES-256-GCM"),
-                String::from("ChaCha20-Poly1305"),
-                String::from("AES-128-GCM"),
+                "AES-256-GCM".into(),
+                "ChaCha20-Poly1305".into(),
+                "AES-128-GCM".into(),
             ],
             supported_signing: vec![
-                String::from("ECDSA-P256"),
-                String::from("ECDSA-P384"),
-                String::from("RSA-PSS-2048"),
-                String::from("Ed25519"),
+                "ECDSA-P256".into(),
+                "ECDSA-P384".into(),
+                "RSA-PSS-2048".into(),
+                "Ed25519".into(),
             ],
-            compliance_level: String::from("enterprise"),
-            version: String::from("2.0.0-zero-cost"),
+            compliance_level: "enterprise".into(),
+            version: "2.0.0-zero-cost".into(),
             capabilities: SecurityCapabilities::default(),
             performance: PerformanceCharacteristics::default(),
             certifications: vec![
-                String::from("FIPS-140-2"),
-                String::from("Common Criteria"),
-                String::from("SOC 2"),
+                "FIPS-140-2".into(),
+                "Common Criteria".into(),
+                "SOC 2".into(),
             ],
         }
     }
@@ -181,7 +181,7 @@ impl Default for SecurityProviderHealth {
             last_authentication: None,
             security_events: 0,
             key_rotation_count: 0,
-            status: String::from("healthy"),
+            status: "healthy".into(),
         }
     }
 }

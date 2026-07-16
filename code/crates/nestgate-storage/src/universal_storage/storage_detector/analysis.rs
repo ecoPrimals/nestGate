@@ -274,7 +274,7 @@ impl StorageAnalyzer {
 
         if local_count > 3 {
             suggestions.push(
-                String::from("Consider consolidating multiple local storage devices using software RAID or ZFS pools for better management.")
+                "Consider consolidating multiple local storage devices using software RAID or ZFS pools for better management.".into()
             );
         }
 
@@ -285,7 +285,7 @@ impl StorageAnalyzer {
 
         if has_cloud {
             suggestions.push(
-                String::from("Consider implementing tiered storage: frequently accessed data on fast local storage, archives on cloud storage.")
+                "Consider implementing tiered storage: frequently accessed data on fast local storage, archives on cloud storage.".into()
             );
         }
 

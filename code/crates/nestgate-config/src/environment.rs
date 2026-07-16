@@ -94,7 +94,7 @@ impl Environment {
         let config = EnvironmentConfig::from_env();
 
         let mut metadata = std::collections::HashMap::new();
-        metadata.insert(String::from("environment"), config.environment());
+        metadata.insert("environment".into(), config.environment());
 
         ServiceConfig {
             name: config.service_name(),

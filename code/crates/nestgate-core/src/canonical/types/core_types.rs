@@ -241,10 +241,10 @@ impl Default for Alert {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            alert_id: String::from("default"),
-            rule_id: String::from("default"),
-            message: String::from("Default alert"),
-            severity: String::from("info"),
+            alert_id: "default".into(),
+            rule_id: "default".into(),
+            message: "Default alert".into(),
+            severity: "info".into(),
             timestamp: std::time::SystemTime::now(),
             resolved: false,
         }
@@ -267,9 +267,9 @@ impl Default for SuppressionRule {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            rule_id: String::from("default"),
-            name: String::from("Default Suppression"),
-            pattern: String::from(".*"),
+            rule_id: "default".into(),
+            name: "Default Suppression".into(),
+            pattern: ".*".into(),
             duration_seconds: 300,
             enabled: false,
         }
@@ -306,17 +306,17 @@ mod tests {
 
     #[test]
     fn test_service_info_custom() {
-        let capabilities = vec![String::from("storage"), String::from("zfs")];
+        let capabilities = vec!["storage".into(), "zfs".into()];
 
         let mut metadata = HashMap::new();
-        metadata.insert(String::from("region"), String::from("us-west"));
+        metadata.insert("region".into(), "us-west".into());
 
         let info = ServiceInfo {
-            service_id: String::from("svc-123"),
-            service_type: String::from("storage"),
+            service_id: "svc-123".into(),
+            service_type: "storage".into(),
             capabilities,
-            endpoint: String::from("http://localhost:9000"),
-            health_status: String::from("healthy"),
+            endpoint: "http://localhost:9000".into(),
+            health_status: "healthy".into(),
             metadata,
         };
 
@@ -339,9 +339,9 @@ mod tests {
     #[test]
     fn test_event_handler_custom() {
         let handler = EventHandler {
-            handler_id: String::from("handler-001"),
-            event_type: String::from("storage.created"),
-            handler_function: String::from("handle_storage_created"),
+            handler_id: "handler-001".into(),
+            event_type: "storage.created".into(),
+            handler_function: "handle_storage_created".into(),
         };
 
         assert_eq!(handler.handler_id, "handler-001");
@@ -362,10 +362,10 @@ mod tests {
     #[test]
     fn test_alert_rule_custom() {
         let rule = AlertRule {
-            rule_id: String::from("rule-001"),
-            name: String::from("High CPU Alert"),
-            condition: String::from("cpu_usage > 80"),
-            severity: String::from("warning"),
+            rule_id: "rule-001".into(),
+            name: "High CPU Alert".into(),
+            condition: "cpu_usage > 80".into(),
+            severity: "warning".into(),
             enabled: true,
         };
 
@@ -389,10 +389,10 @@ mod tests {
     #[test]
     fn test_alert_custom() {
         let alert = Alert {
-            alert_id: String::from("alert-001"),
-            rule_id: String::from("rule-001"),
-            message: String::from("CPU usage exceeded threshold"),
-            severity: String::from("critical"),
+            alert_id: "alert-001".into(),
+            rule_id: "rule-001".into(),
+            message: "CPU usage exceeded threshold".into(),
+            severity: "critical".into(),
             timestamp: std::time::SystemTime::now(),
             resolved: false,
         };
@@ -432,8 +432,8 @@ mod tests {
         };
 
         let channel = AlertChannel {
-            channel_id: String::from("slack-001"),
-            channel_type: String::from("slack"),
+            channel_id: "slack-001".into(),
+            channel_type: "slack".into(),
             endpoint,
             enabled: true,
         };
@@ -457,9 +457,9 @@ mod tests {
     #[test]
     fn test_suppression_rule_custom() {
         let rule = SuppressionRule {
-            rule_id: String::from("suppress-001"),
-            name: String::from("Maintenance Window"),
-            pattern: String::from("maintenance.*"),
+            rule_id: "suppress-001".into(),
+            name: "Maintenance Window".into(),
+            pattern: "maintenance.*".into(),
             duration_seconds: 3600,
             enabled: true,
         };
@@ -485,9 +485,9 @@ mod tests {
     #[test]
     fn test_health_check_custom() {
         let check = HealthCheck {
-            check_id: String::from("check-001"),
-            name: String::from("Database Health"),
-            component: String::from("database"),
+            check_id: "check-001".into(),
+            name: "Database Health".into(),
+            component: "database".into(),
             interval_seconds: 60,
             timeout_seconds: 10,
             enabled: true,
@@ -505,7 +505,7 @@ mod tests {
     fn test_provider_registry_creation() {
         let registry: ProviderRegistry = Arc::new(RwLock::new(HashMap::new()));
         let mut map = registry.write().expect("Failed to acquire write lock");
-        map.insert(String::from("storage"), String::from("zfs-provider"));
+        map.insert("storage".into(), "zfs-provider".into());
 
         assert_eq!(map.get("storage").unwrap(), "zfs-provider");
     }
@@ -515,9 +515,9 @@ mod tests {
         let index: CapabilityIndexMap = Arc::new(RwLock::new(HashMap::new()));
         let mut map = index.write().expect("Failed to acquire write lock");
 
-        let providers = vec![String::from("provider1"), String::from("provider2")];
+        let providers = vec!["provider1".into(), "provider2".into()];
 
-        map.insert(String::from("compute"), providers);
+        map.insert("compute".into(), providers);
 
         let compute_providers = map.get("compute").unwrap();
         assert_eq!(compute_providers.len(), 2);
@@ -530,15 +530,15 @@ mod tests {
         let mut map = registry.write().expect("Failed to acquire write lock");
 
         let service_info = ServiceInfo {
-            service_id: String::from("svc-001"),
-            service_type: String::from("api"),
-            capabilities: vec![String::from("rest")],
-            endpoint: String::from("http://localhost:18080"),
-            health_status: String::from("healthy"),
+            service_id: "svc-001".into(),
+            service_type: "api".into(),
+            capabilities: vec!["rest".into()],
+            endpoint: "http://localhost:18080".into(),
+            health_status: "healthy".into(),
             metadata: HashMap::new(),
         };
 
-        map.insert(String::from("api-service"), service_info);
+        map.insert("api-service".into(), service_info);
 
         assert!(map.contains_key("api-service"));
         assert_eq!(map.get("api-service").unwrap().service_id, "svc-001");
@@ -547,9 +547,9 @@ mod tests {
     #[test]
     fn test_event_handler_clone() {
         let handler = EventHandler {
-            handler_id: String::from("handler-001"),
-            event_type: String::from("test.event"),
-            handler_function: String::from("handle_test"),
+            handler_id: "handler-001".into(),
+            event_type: "test.event".into(),
+            handler_function: "handle_test".into(),
         };
 
         let cloned = handler.clone();

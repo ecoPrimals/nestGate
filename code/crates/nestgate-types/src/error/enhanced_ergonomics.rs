@@ -131,7 +131,7 @@ pub fn safe_mutex_lock<'a, T>(
         tracing::warn!("Mutex poisoned in {context}, recovering gracefully");
         NestGateError::internal_error(
             format!("Mutex poisoned in {context}"),
-            String::from("enhanced_ergonomics"),
+            "enhanced_ergonomics",
         )
     })
 }
@@ -149,7 +149,7 @@ pub fn safe_rwlock_read<'a, T>(
         tracing::warn!("RwLock poisoned in {context}, recovering gracefully");
         NestGateError::internal_error(
             format!("RwLock poisoned in {context}"),
-            String::from("enhanced_ergonomics"),
+            "enhanced_ergonomics",
         )
     })
 }
@@ -167,7 +167,7 @@ pub fn safe_rwlock_write<'a, T>(
         tracing::warn!("RwLock write poisoned in {context}, recovering gracefully");
         NestGateError::internal_error(
             format!("RwLock write poisoned in {context}"),
-            String::from("enhanced_ergonomics"),
+            "enhanced_ergonomics",
         )
     })
 }

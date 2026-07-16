@@ -321,7 +321,7 @@ mod tests {
     #[test]
     fn test_api_custom_config() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("0.0.0.0"))
+            .with_api_host("0.0.0.0".into())
             .with_api_port(9000);
 
         assert_eq!(config.api_host(), "0.0.0.0");
@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn test_metrics_bind_custom() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("0.0.0.0"))
+            .with_api_host("0.0.0.0".into())
             .with_metrics_port(9091);
         let bind = config.metrics_bind_address();
         assert!(bind.contains("9091"));
@@ -444,7 +444,7 @@ mod tests {
     #[test]
     fn test_websocket_bind_custom() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("0.0.0.0"))
+            .with_api_host("0.0.0.0".into())
             .with_websocket_port(8082);
         assert!(config.websocket_bind_address().contains("8082"));
     }
@@ -452,7 +452,7 @@ mod tests {
     #[test]
     fn test_health_bind_custom() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("0.0.0.0"))
+            .with_api_host("0.0.0.0".into())
             .with_health_port(8083);
         assert!(config.health_bind_address().contains("8083"));
     }
@@ -460,7 +460,7 @@ mod tests {
     #[test]
     fn test_storage_bind_custom() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("0.0.0.0"))
+            .with_api_host("0.0.0.0".into())
             .with_storage_port(5001);
         assert!(config.storage_bind_address().contains("5001"));
     }
@@ -501,7 +501,7 @@ mod tests {
     fn test_sovereignty_compliance_no_hardcoded_values() {
         // This test validates sovereignty: all values must be overridable
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("custom.host"))
+            .with_api_host("custom.host".into())
             .with_api_port(12345)
             .with_metrics_port(54321);
 
@@ -513,7 +513,7 @@ mod tests {
     #[test]
     fn test_api_bind_respects_full_override() {
         let config = NetworkDefaultsV2Config::new()
-            .with_api_host(String::from("192.168.1.100"))
+            .with_api_host("192.168.1.100".into())
             .with_api_port(9999);
         assert_eq!(config.api_bind_address(), "192.168.1.100:9999");
     }

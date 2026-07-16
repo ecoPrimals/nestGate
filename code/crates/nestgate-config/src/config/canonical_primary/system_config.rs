@@ -134,9 +134,9 @@ mod tests {
     #[test]
     fn test_system_config_effective_values_without_override() {
         let config = SystemConfig::<1000, 65536> {
-            instance_id: String::from("test"),
-            instance_name: String::from("Test"),
-            version: String::from("1.0.0"),
+            instance_id: "test".into(),
+            instance_name: "Test".into(),
+            version: "1.0.0".into(),
             environment: DeploymentEnvironment::Development,
             log_level: LogLevel::Info,
             debug_mode: false,
@@ -159,9 +159,9 @@ mod tests {
     #[test]
     fn test_system_config_effective_values_with_override() {
         let config = SystemConfig::<1000, 65536> {
-            instance_id: String::from("test"),
-            instance_name: String::from("Test"),
-            version: String::from("1.0.0"),
+            instance_id: "test".into(),
+            instance_name: "Test".into(),
+            version: "1.0.0".into(),
             environment: DeploymentEnvironment::Production,
             log_level: LogLevel::Warn,
             debug_mode: false,
@@ -219,9 +219,9 @@ mod tests {
     #[test]
     fn test_system_config_production_settings() {
         let config = SystemConfig::<5000, 262_144> {
-            instance_id: String::from("prod-001"),
-            instance_name: String::from("Production Instance 1"),
-            version: String::from("2.0.0"),
+            instance_id: "prod-001".into(),
+            instance_name: "Production Instance 1".into(),
+            version: "2.0.0".into(),
             environment: DeploymentEnvironment::Production,
             log_level: LogLevel::Warn,
             debug_mode: false,
@@ -245,9 +245,9 @@ mod tests {
     #[test]
     fn test_system_config_timeouts() {
         let config = SystemConfig::<1000, 65536> {
-            instance_id: String::from("test"),
-            instance_name: String::from("Test"),
-            version: String::from("1.0.0"),
+            instance_id: "test".into(),
+            instance_name: "Test".into(),
+            version: "1.0.0".into(),
             environment: DeploymentEnvironment::Development,
             log_level: LogLevel::Info,
             debug_mode: false,

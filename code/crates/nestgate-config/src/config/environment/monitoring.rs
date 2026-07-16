@@ -55,7 +55,7 @@ impl MonitoringConfig {
         Ok(Self {
             metrics_port: Self::env_var_or(prefix, "METRICS_PORT", Port::new(9090)?, env)?,
             detailed_metrics: Self::env_var_or(prefix, "DETAILED_METRICS", true, env)?,
-            log_level: Self::env_var_or(prefix, "LOG_LEVEL", String::from("info"), env)?,
+            log_level: Self::env_var_or(prefix, "LOG_LEVEL", "info".into(), env)?,
             tracing_enabled: Self::env_var_or(prefix, "TRACING_ENABLED", true, env)?,
             trace_sample_rate: Self::env_var_or(prefix, "TRACE_SAMPLE_RATE", 0.1, env)?,
         })
@@ -88,7 +88,7 @@ impl Default for MonitoringConfig {
             // 9090 is within the validated Port range (1024–65535).
             metrics_port: Port::new_unchecked(9090),
             detailed_metrics: true,
-            log_level: String::from("info"),
+            log_level: "info".into(),
             tracing_enabled: true,
             trace_sample_rate: 0.1,
         }

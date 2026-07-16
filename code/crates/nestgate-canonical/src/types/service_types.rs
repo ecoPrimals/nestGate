@@ -135,9 +135,9 @@ mod tests {
     #[test]
     fn test_capability_id_creation() {
         let cap_id = CapabilityId::new(
-            String::from("storage"),
-            String::from("zfs"),
-            String::from("1.0.0"),
+            "storage".into(),
+            "zfs".into(),
+            "1.0.0".into(),
         );
 
         assert_eq!(cap_id.domain(), "storage");
@@ -148,9 +148,9 @@ mod tests {
     #[test]
     fn test_capability_id_getters() {
         let cap_id = CapabilityId {
-            domain: String::from("network"),
-            capability: String::from("routing"),
-            version: String::from("2.1.0"),
+            domain: "network".into(),
+            capability: "routing".into(),
+            version: "2.1.0".into(),
         };
 
         assert_eq!(cap_id.domain(), "network");
@@ -161,21 +161,21 @@ mod tests {
     #[test]
     fn test_capability_id_equality() {
         let cap_id1 = CapabilityId::new(
-            String::from("storage"),
-            String::from("zfs"),
-            String::from("1.0.0"),
+            "storage".into(),
+            "zfs".into(),
+            "1.0.0".into(),
         );
 
         let cap_id2 = CapabilityId::new(
-            String::from("storage"),
-            String::from("zfs"),
-            String::from("1.0.0"),
+            "storage".into(),
+            "zfs".into(),
+            "1.0.0".into(),
         );
 
         let cap_id3 = CapabilityId::new(
-            String::from("network"),
-            String::from("routing"),
-            String::from("1.0.0"),
+            "network".into(),
+            "routing".into(),
+            "1.0.0".into(),
         );
 
         assert_eq!(cap_id1, cap_id2);
@@ -185,9 +185,9 @@ mod tests {
     #[test]
     fn test_capability_id_serialization() {
         let cap_id = CapabilityId::new(
-            String::from("security"),
-            String::from("authentication"),
-            String::from("3.0.0"),
+            "security".into(),
+            "authentication".into(),
+            "3.0.0".into(),
         );
 
         let json = serde_json::to_string(&cap_id).expect("Failed to serialize");
@@ -203,9 +203,9 @@ mod tests {
     #[test]
     fn test_capability_id_clone() {
         let cap_id = CapabilityId::new(
-            String::from("compute"),
-            String::from("processing"),
-            String::from("1.5.0"),
+            "compute".into(),
+            "processing".into(),
+            "1.5.0".into(),
         );
 
         let cloned = cap_id.clone();
@@ -215,9 +215,9 @@ mod tests {
     #[test]
     fn test_capability_id_debug() {
         let cap_id = CapabilityId::new(
-            String::from("intelligence"),
-            String::from("ml"),
-            String::from("0.9.0"),
+            "intelligence".into(),
+            "ml".into(),
+            "0.9.0".into(),
         );
 
         let debug_str = format!("{:?}", cap_id);

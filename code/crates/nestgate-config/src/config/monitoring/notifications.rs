@@ -92,12 +92,12 @@ impl Default for EmailConfig {
             .ok()
             .filter(|s| !s.is_empty());
         Self {
-            smtp_server: String::from("smtp.example.com"),
+            smtp_server: "smtp.example.com".into(),
             smtp_port: 587,
-            username: String::from("user@example.com"),
+            username: "user@example.com".into(),
             password,
-            from_endpoint: String::from("noreply@example.com"),
-            to_addresses: vec![String::from("admin@example.com")],
+            from_endpoint: "noreply@example.com".into(),
+            to_addresses: vec!["admin@example.com".into()],
             enable_tls: true,
         }
     }

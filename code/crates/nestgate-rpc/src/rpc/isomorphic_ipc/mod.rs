@@ -84,7 +84,7 @@
 //! # async fn example() -> anyhow::Result<()> {
 //! // Create server
 //! let server = Arc::new(IsomorphicIpcServer::new(
-//!     String::from("nestgate"),
+//!     "nestgate".into(),
 //!     Arc::new(MyHandler),
 //! ));
 //!

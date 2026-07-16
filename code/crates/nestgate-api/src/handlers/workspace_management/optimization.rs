@@ -109,7 +109,7 @@ fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
     }
 
     StoragePattern {
-        file_size_distribution: String::from("unknown"),
+        file_size_distribution: "unknown".into(),
         file_type_distribution: file_types,
         duplicate_ratio,
         sequential_vs_random: 0.5,
@@ -211,7 +211,7 @@ fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -> Opti
                 "Cache settings optimized: primary={primarycache}, secondary={secondarycache}"
             ))
         }
-        _ => Some(String::from("Cache optimization partially failed")),
+        _ => Some("Cache optimization partially failed".into()),
     }
 }
 

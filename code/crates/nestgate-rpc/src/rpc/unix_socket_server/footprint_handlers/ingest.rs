@@ -24,7 +24,19 @@ use super::super::StorageState;
 use super::super::storage_paths::{content_cas_path, content_hash_hex, resolve_family_id};
 use super::types::{FootPrintManifest, FootPrintProject, ProjectRevision};
 
+/// Resolve the footprint storage root for a given family.
+///
+/// Priority:
+/// 1. `PROJECTS_PATH` env var (footPrint composition wiring)
+/// 2. Standard CAS layout: `{storage_base}/datasets/{family}/_footprint`
 fn footprint_base_path(family_id: &str) -> std::path::PathBuf {
+    if let Ok(projects_path) = std::env::var("PROJECTS_PATH") {
+        if !projects_path.is_empty() {
+            return std::path::PathBuf::from(projects_path)
+                .join(family_id)
+                .join("_footprint");
+        }
+    }
     get_storage_base_path()
         .join("datasets")
         .join(family_id)
@@ -267,12 +279,46 @@ pub async fn footprint_delete(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn footprint_base_path_layout() {
         let path = footprint_base_path("test-fam");
         assert!(path.ends_with("_footprint"));
         assert!(path.to_string_lossy().contains("test-fam"));
+    }
+
+    #[test]
+    #[serial]
+    fn footprint_base_path_respects_projects_path_env() {
+        temp_env::with_vars([("PROJECTS_PATH", Some("/custom/projects"))], || {
+            let path = footprint_base_path("my-family");
+            assert_eq!(
+                path,
+                std::path::PathBuf::from("/custom/projects/my-family/_footprint")
+            );
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn footprint_base_path_ignores_empty_projects_path() {
+        temp_env::with_vars([("PROJECTS_PATH", Some(""))], || {
+            let path = footprint_base_path("fam");
+            assert!(!path.starts_with("/_footprint"));
+            assert!(path.to_string_lossy().contains("datasets"));
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn footprint_base_path_falls_back_when_projects_path_unset() {
+        temp_env::with_vars([("PROJECTS_PATH", None::<&str>)], || {
+            let path = footprint_base_path("fam");
+            assert!(path.to_string_lossy().contains("datasets"));
+            assert!(path.to_string_lossy().contains("fam"));
+            assert!(path.ends_with("_footprint"));
+        });
     }
 
     #[test]

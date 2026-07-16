@@ -111,13 +111,13 @@ impl StorageCapabilityDiscovery {
         // Dynamic ZFS discovery - replaces hardcoded ZFS endpoints
         Ok(StorageCapabilityInfo {
             capability_type: StorageCapabilityType::ZfsPool,
-            endpoint: String::from("zfs://pool-management"),
-            version: String::from("1.0.0"),
+            endpoint: "zfs://pool-management".into(),
+            version: "1.0.0".into(),
             supported_operations: vec![
-                String::from("create_pool"),
-                String::from("destroy_pool"),
-                String::from("list_pools"),
-                String::from("pool_status"),
+                "create_pool".into(),
+                "destroy_pool".into(),
+                "list_pools".into(),
+                "pool_status".into(),
             ],
             metadata: HashMap::new(),
         })
@@ -128,13 +128,13 @@ impl StorageCapabilityDiscovery {
         // Dynamic dataset discovery - replaces hardcoded dataset endpoints
         Ok(StorageCapabilityInfo {
             capability_type: StorageCapabilityType::Dataset,
-            endpoint: String::from("zfs://dataset-management"),
-            version: String::from("1.0.0"),
+            endpoint: "zfs://dataset-management".into(),
+            version: "1.0.0".into(),
             supported_operations: vec![
-                String::from("create_dataset"),
-                String::from("destroy_dataset"),
-                String::from("list_datasets"),
-                String::from("dataset_properties"),
+                "create_dataset".into(),
+                "destroy_dataset".into(),
+                "list_datasets".into(),
+                "dataset_properties".into(),
             ],
             metadata: HashMap::new(),
         })
@@ -162,5 +162,5 @@ pub async fn get_zfs_endpoint(
     }
 
     // Default ZFS endpoint if discovery fails
-    Ok(String::from("zfs://pool-management"))
+    Ok("zfs://pool-management".into())
 }

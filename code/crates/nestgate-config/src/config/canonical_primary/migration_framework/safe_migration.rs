@@ -32,13 +32,13 @@ impl SafeConfigMigration {
             backup: None,
             validation_rules: vec![
                 ValidationRule {
-                    name: String::from("required_fields"),
-                    description: String::from("Validate required fields are present"),
+                    name: "required_fields".into(),
+                    description: "Validate required fields are present".into(),
                     validator: Self::validate_required_fields,
                 },
                 ValidationRule {
-                    name: String::from("value_ranges"),
-                    description: String::from("Validate values are within acceptable ranges"),
+                    name: "value_ranges".into(),
+                    description: "Validate values are within acceptable ranges".into(),
                     validator: Self::validate_value_ranges,
                 },
             ],
@@ -66,8 +66,8 @@ impl SafeConfigMigration {
             Ok(())
         } else {
             Err(NestGateError::configuration_error_detailed(
-                String::from("backup"),
-                String::from("No backup available for rollback"),
+                "backup",
+                "No backup available for rollback",
                 None,
                 Some("Valid backup".into()),
                 false,
@@ -97,14 +97,14 @@ impl SafeConfigMigration {
         }
 
         Ok(MigrationReport {
-            source_type: String::from("Unknown"),
+            source_type: "Unknown".into(),
             started_at: SystemTime::now(),
             current_phase: if errors.is_empty() {
                 MigrationPhase::Completed
             } else {
                 MigrationPhase::Failed
             },
-            completed_steps: vec![String::from("Validation completed")],
+            completed_steps: vec!["Validation completed".into()],
             failed_steps: errors,
             warnings,
             progress_percentage: 100,

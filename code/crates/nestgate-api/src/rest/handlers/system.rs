@@ -129,14 +129,14 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
     };
 
     let health = HealthStatus {
-        status: String::from("healthy"),
+        status: "healthy".into(),
         uptime_seconds: get_system_uptime(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         services: ServiceStatus {
             zfs_engine: zfs_status.to_string(),
             storage_detector: storage_detector_status.to_string(),
             auto_configurator: auto_configurator_status.to_string(),
-            metrics_collector: String::from("online"),
+            metrics_collector: "online".into(),
         },
         timestamp: chrono::Utc::now(),
     };
@@ -249,9 +249,9 @@ fn get_target_triple() -> String {
 /// Get build profile
 fn get_build_profile() -> String {
     if cfg!(debug_assertions) {
-        String::from("debug")
+        "debug".into()
     } else {
-        String::from("release")
+        "release".into()
     }
 }
 /// Current resource usage from `/proc` and root [`statvfs`](nestgate_core::linux_proc::statvfs_space) (Linux).
@@ -343,7 +343,7 @@ mod tests {
         // Add a test engine
         state
             .zfs_engines
-            .insert(String::from("test-engine"), String::from("engine-data"));
+            .insert("test-engine".into(), "engine-data".into());
 
         let result = health_check(State(state)).await;
 
@@ -401,13 +401,13 @@ mod tests {
         // Add test datasets
         state
             .zfs_engines
-            .insert(String::from("dataset1"), String::from("data1"));
+            .insert("dataset1".into(), "data1".into());
         state
             .zfs_engines
-            .insert(String::from("dataset2"), String::from("data2"));
+            .insert("dataset2".into(), "data2".into());
         state
             .zfs_engines
-            .insert(String::from("dataset3"), String::from("data3"));
+            .insert("dataset3".into(), "data3".into());
 
         let result = system_status(State(state)).await;
 
@@ -523,10 +523,10 @@ mod tests {
     #[test]
     fn test_service_status_serialization() {
         let service_status = ServiceStatus {
-            zfs_engine: String::from("online"),
-            storage_detector: String::from("online"),
-            auto_configurator: String::from("online"),
-            metrics_collector: String::from("online"),
+            zfs_engine: "online".into(),
+            storage_detector: "online".into(),
+            auto_configurator: "online".into(),
+            metrics_collector: "online".into(),
         };
 
         // Should be serializable
@@ -537,14 +537,14 @@ mod tests {
     #[test]
     fn test_health_status_serialization() {
         let health = HealthStatus {
-            status: String::from("healthy"),
+            status: "healthy".into(),
             uptime_seconds: 12345,
-            version: String::from("0.1.0"),
+            version: "0.1.0".into(),
             services: ServiceStatus {
-                zfs_engine: String::from("online"),
-                storage_detector: String::from("online"),
-                auto_configurator: String::from("online"),
-                metrics_collector: String::from("online"),
+                zfs_engine: "online".into(),
+                storage_detector: "online".into(),
+                auto_configurator: "online".into(),
+                metrics_collector: "online".into(),
             },
             timestamp: chrono::Utc::now(),
         };
@@ -557,12 +557,12 @@ mod tests {
     #[test]
     fn test_version_info_serialization() {
         let version = VersionInfo {
-            version: String::from("0.1.0"),
-            build_date: String::from("2025-01-30"),
-            git_hash: String::from("abc123"),
-            rust_version: String::from("1.75.0"),
-            target: String::from("x86_64-linux"),
-            profile: String::from("release"),
+            version: "0.1.0".into(),
+            build_date: "2025-01-30".into(),
+            git_hash: "abc123".into(),
+            rust_version: "1.75.0".into(),
+            target: "x86_64-linux".into(),
+            profile: "release".into(),
         };
 
         // Should be serializable

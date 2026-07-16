@@ -57,7 +57,7 @@ impl SubstrateTiers {
         }
 
         let base =
-            env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| String::from("/mnt/nestgate"));
+            env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| "/mnt/nestgate".into());
         let base = PathBuf::from(base);
 
         let mut warm_mounts = Vec::new();
@@ -82,7 +82,7 @@ impl SubstrateTiers {
         if warm_mounts.is_empty() {
             warm_mounts.push(SubstrateMount {
                 path: get_storage_paths().storage_base_path(),
-                fs_type: String::from("auto"),
+                fs_type: "auto".into(),
                 rotational: false,
                 capacity_bytes: 0,
             });
@@ -154,7 +154,7 @@ impl SubstrateMount {
     #[cfg(not(target_os = "linux"))]
     fn probe_mount(path: &Path) -> (String, bool, u64) {
         let _ = path;
-        (String::from("unknown"), false, 0)
+        ("unknown".into(), false, 0)
     }
 
     #[cfg(target_os = "linux")]

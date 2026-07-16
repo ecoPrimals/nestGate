@@ -109,12 +109,12 @@ impl ObjectStorageBackend {
                 .unwrap_or_else(|| "nestgate".into());
 
             return Ok(DiscoveredStorageConfig {
-                service_id: String::from("env-configured"),
+                service_id: "env-configured".into(),
                 endpoint,
                 region,
                 bucket_prefix,
                 capability: StorageCapability::S3Compatible {
-                    version: String::from("2006-03-01"),
+                    version: "2006-03-01".into(),
                 },
                 path_style: false, // Default to virtual-hosted style
             });

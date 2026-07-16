@@ -220,37 +220,37 @@ pub fn suggest_recovery_strategy(error: &NestGateError) -> Vec<String> {
     match error {
         NestGateError::Configuration(details) => {
             vec![
-                String::from("Check configuration file syntax"),
+                "Check configuration file syntax".into(),
                 format!("Verify '{}' field is properly set", details.field),
-                String::from("Consult configuration documentation"),
+                "Consult configuration documentation".into(),
             ]
         }
         NestGateError::Network(_) => {
             vec![
-                String::from("Check network connectivity"),
-                String::from("Verify service endpoints are accessible"),
-                String::from("Check firewall and security group settings"),
+                "Check network connectivity".into(),
+                "Verify service endpoints are accessible".into(),
+                "Check firewall and security group settings".into(),
             ]
         }
         NestGateError::Storage(_) => {
             vec![
-                String::from("Check disk space availability"),
-                String::from("Verify file permissions"),
-                String::from("Check storage backend health"),
+                "Check disk space availability".into(),
+                "Verify file permissions".into(),
+                "Check storage backend health".into(),
             ]
         }
         NestGateError::Security(_) => {
             vec![
-                String::from("Verify authentication credentials"),
-                String::from("Check authorization permissions"),
-                String::from("Review security configuration"),
+                "Verify authentication credentials".into(),
+                "Check authorization permissions".into(),
+                "Review security configuration".into(),
             ]
         }
         _ => {
             vec![
-                String::from("Check system logs for details"),
-                String::from("Retry the operation"),
-                String::from("Contact system administrator if problem persists"),
+                "Check system logs for details".into(),
+                "Retry the operation".into(),
+                "Contact system administrator if problem persists".into(),
             ]
         }
     }
@@ -558,11 +558,11 @@ mod error_path_tests {
 
     #[test]
     fn test_to_canonical_success() {
-        let result: std::result::Result<String, &str> = Ok(String::from("success"));
+        let result: std::result::Result<String, &str> = Ok("success".into());
         let canonical: Result<String> = to_canonical(result.map_err(|_| internal_error!("Failed")));
 
         assert!(canonical.is_ok());
-        assert_eq!(canonical.ok(), Some(String::from("success")));
+        assert_eq!(canonical.ok(), Some("success".into()));
     }
 
     #[test]

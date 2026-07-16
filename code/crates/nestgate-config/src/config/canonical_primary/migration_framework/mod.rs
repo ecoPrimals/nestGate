@@ -44,7 +44,7 @@ mod tests {
     #[test]
     fn test_config_migrator_creation() {
         let options = MigrationOptions::default();
-        let migrator = ConfigMigrator::new(String::from("test"), options);
+        let migrator = ConfigMigrator::new("test".into(), options);
         assert_eq!(migrator.source_type, "test");
         let report = migrator.get_migration_report();
         assert_eq!(report.progress_percentage, 0);
@@ -57,10 +57,10 @@ mod tests {
     #[test]
     fn test_migration_report_success() {
         let report = MigrationReport {
-            source_type: String::from("test"),
+            source_type: "test".into(),
             started_at: SystemTime::now(),
             current_phase: MigrationPhase::Completed,
-            completed_steps: vec![String::from("step1")],
+            completed_steps: vec!["step1".into()],
             failed_steps: vec![],
             warnings: vec![],
             progress_percentage: 100,
@@ -72,16 +72,16 @@ mod tests {
     #[test]
     fn test_migration_report_failed_with_critical() {
         let report = MigrationReport {
-            source_type: String::from("test"),
+            source_type: "test".into(),
             started_at: SystemTime::now(),
             current_phase: MigrationPhase::Failed,
             completed_steps: vec![],
             failed_steps: vec![MigrationError {
-                message: String::from("Critical error"),
+                message: "Critical error".into(),
                 severity: ErrorSeverity::Critical,
                 source_field: None,
                 target_field: None,
-                error_code: String::from("ERR"),
+                error_code: "ERR".into(),
                 suggested_resolution: None,
             }],
             warnings: vec![],
@@ -94,19 +94,19 @@ mod tests {
     #[test]
     fn test_migration_report_with_warnings_only() {
         let report = MigrationReport {
-            source_type: String::from("test"),
+            source_type: "test".into(),
             started_at: SystemTime::now(),
             current_phase: MigrationPhase::Completed,
-            completed_steps: vec![String::from("step1")],
+            completed_steps: vec!["step1".into()],
             failed_steps: vec![MigrationError {
-                message: String::from("Minor warning"),
+                message: "Minor warning".into(),
                 severity: ErrorSeverity::Warning,
                 source_field: None,
                 target_field: None,
-                error_code: String::from("WARN"),
+                error_code: "WARN".into(),
                 suggested_resolution: None,
             }],
-            warnings: vec![String::from("warning1")],
+            warnings: vec!["warning1".into()],
             progress_percentage: 100,
             backup_created: true,
         };
@@ -116,12 +116,12 @@ mod tests {
     #[test]
     fn test_migration_report_get_summary() {
         let report = MigrationReport {
-            source_type: String::from("primary"),
+            source_type: "primary".into(),
             started_at: SystemTime::now(),
             current_phase: MigrationPhase::Completed,
-            completed_steps: vec![String::from("a"), String::from("b")],
+            completed_steps: vec!["a".into(), "b".into()],
             failed_steps: vec![],
-            warnings: vec![String::from("w1")],
+            warnings: vec!["w1".into()],
             progress_percentage: 100,
             backup_created: true,
         };
@@ -200,7 +200,7 @@ mod tests {
             create_backup: false,
             ..Default::default()
         };
-        let migrator = ConfigMigrator::new(String::from("test"), options);
+        let migrator = ConfigMigrator::new("test".into(), options);
         let result = migrator.rollback();
         assert!(result.is_err());
     }
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn test_get_migration_report() {
         let migrator =
-            ConfigMigrator::new(String::from("test_source"), MigrationOptions::default());
+            ConfigMigrator::new("test_source".into(), MigrationOptions::default());
         let report = migrator.get_migration_report();
         assert_eq!(report.source_type, "test_source");
         assert_eq!(report.progress_percentage, 0);
@@ -248,7 +248,7 @@ mod tests {
         assert!(
             report
                 .completed_steps
-                .contains(&String::from("Validation completed"))
+                .contains(&"Validation completed".into())
         );
     }
 
@@ -301,8 +301,8 @@ mod tests {
             Ok(())
         }
         let rule = ValidationRule {
-            name: String::from("test"),
-            description: String::from("Test rule"),
+            name: "test".into(),
+            description: "Test rule".into(),
             validator: dummy_validator,
         };
         assert_eq!(rule.name, "test");

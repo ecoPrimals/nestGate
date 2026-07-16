@@ -344,7 +344,7 @@ impl CapabilityDiscovery {
                     "Orchestration TCP bootstrap: ORCHESTRATION_HOST, NESTGATE_DEV_HOST, \
                      and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`."
                 );
-                String::from("localhost")
+                "localhost".into()
             });
         let port = env
             .get("ORCHESTRATION_PORT")

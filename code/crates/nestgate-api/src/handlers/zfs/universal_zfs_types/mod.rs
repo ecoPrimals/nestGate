@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn test_pool_info_creation() {
         let pool = PoolInfo {
-            name: String::from("tank"),
+            name: "tank".into(),
             health: PoolHealth::Online,
             state: PoolState::Active,
             capacity: PoolCapacity {
@@ -87,12 +87,12 @@ mod tests {
     #[test]
     fn test_dataset_info_creation() {
         let dataset = DatasetInfo {
-            name: String::from("tank/data"),
+            name: "tank/data".into(),
             dataset_type: DatasetType::Filesystem,
             used: 100,
             available: 900,
             referenced: 100,
-            mountpoint: Some(String::from("/mnt/data")),
+            mountpoint: Some("/mnt/data".into()),
             properties: HashMap::new(),
         };
         assert_eq!(dataset.name, "tank/data");
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn test_snapshot_info_creation() {
         let snapshot = SnapshotInfo {
-            name: String::from("tank/data@snap1"),
+            name: "tank/data@snap1".into(),
             creation_time: 1_234_567_890,
             used: 50,
             referenced: 100,
@@ -115,8 +115,8 @@ mod tests {
     #[test]
     fn test_dataset_config_creation() {
         let config = DatasetConfig {
-            name: String::from("tank/data"),
-            mountpoint: Some(String::from("/mnt/data")),
+            name: "tank/data".into(),
+            mountpoint: Some("/mnt/data".into()),
             compression: true,
             quota: Some(1_000_000),
             reservation: None,
@@ -129,8 +129,8 @@ mod tests {
     #[test]
     fn test_snapshot_config_creation() {
         let config = SnapshotConfig {
-            name: String::from("tank/data@snap1"),
-            dataset: String::from("tank/data"),
+            name: "tank/data@snap1".into(),
+            dataset: "tank/data".into(),
             properties: HashMap::new(),
         };
         assert_eq!(config.name, "tank/data@snap1");
@@ -139,10 +139,10 @@ mod tests {
     #[test]
     fn test_health_status_creation() {
         let health = HealthStatus {
-            service_name: String::from("zfs-backend"),
+            service_name: "zfs-backend".into(),
             status: ServiceStatus::Healthy,
             checks: vec![HealthCheck {
-                name: String::from("pool_health"),
+                name: "pool_health".into(),
                 passed: true,
                 message: None,
             }],
@@ -177,7 +177,7 @@ mod tests {
         metrics.error_rate = 5.0;
         metrics
             .custom_metrics
-            .insert(String::from("latency_p95"), 125.5);
+            .insert("latency_p95".into(), 125.5);
 
         assert_eq!(metrics.service_name, "zfs-backend");
         assert_eq!(metrics.requests_total, 1000);

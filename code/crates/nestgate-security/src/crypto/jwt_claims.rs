@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn claims_new_sets_fields() {
-        let claims = JwtClaims::new(String::from("user123"), 3600).unwrap();
+        let claims = JwtClaims::new("user123".into(), 3600).unwrap();
         assert_eq!(claims.sub, "user123");
         assert!(!claims.is_expired());
         assert!(claims.iss.is_some());
@@ -83,14 +83,14 @@ mod tests {
 
     #[test]
     fn expired_claims_detected() {
-        let mut claims = JwtClaims::new(String::from("user789"), -10).unwrap();
+        let mut claims = JwtClaims::new("user789".into(), -10).unwrap();
         claims.exp -= 100;
         assert!(claims.is_expired());
     }
 
     #[test]
     fn claims_serde_roundtrip() {
-        let claims = JwtClaims::new(String::from("user456"), 3600).unwrap();
+        let claims = JwtClaims::new("user456".into(), 3600).unwrap();
         let json = serde_json::to_string(&claims).unwrap();
         let back: JwtClaims = serde_json::from_str(&json).unwrap();
         assert_eq!(back.sub, "user456");

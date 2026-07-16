@@ -256,7 +256,7 @@ mod tests {
     #[test]
     fn test_config_builders() {
         let config = DefaultsV2Config::new()
-            .with_hostname(String::from("example.com"))
+            .with_hostname("example.com".into())
             .with_api_port(9000)
             .with_ws_port(9001)
             .with_health_port(9002);
@@ -282,7 +282,7 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             DefaultsV2Config::new()
-                .with_hostname(String::from("test.local"))
+                .with_hostname("test.local".into())
                 .with_api_port(7070),
         );
 

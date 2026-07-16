@@ -250,16 +250,16 @@ impl EnvironmentConfig {
 
         if orchestration_mode {
             if let Some(url) = &self.orchestration_url {
-                services.insert(String::from("orchestration"), url.clone());
+                services.insert("orchestration".into(), url.clone());
             }
             if let Some(url) = &self.security_url {
-                services.insert(String::from("security"), url.clone());
+                services.insert("security".into(), url.clone());
             }
             if let Some(url) = &self.ai_url {
-                services.insert(String::from("ai"), url.clone());
+                services.insert("ai".into(), url.clone());
             }
             if let Some(url) = &self.compute_url {
-                services.insert(String::from("compute"), url.clone());
+                services.insert("compute".into(), url.clone());
             }
         }
 
@@ -402,8 +402,8 @@ mod tests {
     fn test_config_builders() {
         use crate::constants::hardcoding::runtime_fallback_ports;
         let config = EnvironmentConfig::new()
-            .with_environment(String::from("production"))
-            .with_service_name(String::from("my-service"))
+            .with_environment("production".into())
+            .with_service_name("my-service".into())
             .with_port(9000)
             .with_discovery_standalone(true)
             .with_ai_url(Some(format!(
@@ -435,9 +435,9 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             EnvironmentConfig::new()
-                .with_environment(String::from("test"))
+                .with_environment("test".into())
                 .with_port(7070)
-                .with_orchestration_url(Some(String::from("http://orch:8888"))),
+                .with_orchestration_url(Some("http://orch:8888".into())),
         );
 
         let mut handles = vec![];

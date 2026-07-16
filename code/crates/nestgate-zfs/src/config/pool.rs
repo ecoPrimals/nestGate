@@ -42,9 +42,9 @@ impl Default for PoolDiscoveryConfig {
     fn default() -> Self {
         Self {
             auto_discovery: true,
-            default_pool: String::from("zfspool"),
+            default_pool: "zfspool".into(),
             include_pools: vec![],
-            exclude_pools: vec![String::from("rpool")], // Exclude system pool by default
+            exclude_pools: vec!["rpool".into()], // Exclude system pool by default
             discovery_interval_seconds: 300,
             validate_health: true,
         }
@@ -57,9 +57,9 @@ impl PoolDiscoveryConfig {
     pub fn production() -> Self {
         Self {
             auto_discovery: true,
-            default_pool: String::from("zfspool"),
+            default_pool: "zfspool".into(),
             include_pools: vec![],
-            exclude_pools: vec![String::from("rpool")], // Exclude system pool by default
+            exclude_pools: vec!["rpool".into()], // Exclude system pool by default
             discovery_interval_seconds: 30,
             validate_health: true,
         }

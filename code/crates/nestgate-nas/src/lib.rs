@@ -207,13 +207,13 @@ mod tests {
 
     #[test]
     fn test_nas_status_error() {
-        let status = NasStatus::Error(String::from("test error"));
+        let status = NasStatus::Error("test error".into());
         assert!(matches!(status, NasStatus::Error(_)));
     }
 
     #[test]
     fn test_nas_status_clone() {
-        let status = NasStatus::Error(String::from("e"));
+        let status = NasStatus::Error("e".into());
         let cloned = status.clone();
         assert!(matches!(&cloned, NasStatus::Error(_)));
         assert_eq!(cloned, status);
@@ -264,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_nas_error_configuration() {
-        let err = NasError::Configuration(String::from("invalid port"));
+        let err = NasError::Configuration("invalid port".into());
         let msg = err.to_string();
         assert!(msg.contains("Configuration error"));
         assert!(msg.contains("invalid port"));
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_nas_error_network() {
-        let err = NasError::Network(String::from("timeout"));
+        let err = NasError::Network("timeout".into());
         let msg = err.to_string();
         assert!(msg.contains("Network error"));
         assert!(msg.contains("timeout"));
@@ -280,7 +280,7 @@ mod tests {
 
     #[test]
     fn test_nas_error_storage() {
-        let err = NasError::Storage(String::from("disk full"));
+        let err = NasError::Storage("disk full".into());
         let msg = err.to_string();
         assert!(msg.contains("Storage error"));
         assert!(msg.contains("disk full"));
@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_nas_error_permission() {
-        let err = NasError::Permission(String::from("access denied"));
+        let err = NasError::Permission("access denied".into());
         let msg = err.to_string();
         assert!(msg.contains("Permission error"));
         assert!(msg.contains("access denied"));
@@ -296,20 +296,20 @@ mod tests {
 
     #[test]
     fn test_nas_error_debug() {
-        let err = NasError::Configuration(String::from("test"));
+        let err = NasError::Configuration("test".into());
         let debug = format!("{:?}", err);
         assert!(debug.contains("Configuration"));
     }
 
     #[test]
     fn test_nas_error_trait() {
-        let err = NasError::Network(String::from("test"));
+        let err = NasError::Network("test".into());
         let _: &dyn std::error::Error = &err;
     }
 
     #[test]
     fn test_nas_error_source() {
-        let err = NasError::Configuration(String::from("test"));
+        let err = NasError::Configuration("test".into());
         assert!(err.source().is_none());
     }
 
@@ -403,10 +403,10 @@ mod tests {
     #[test]
     fn test_error_variants_distinct() {
         let errors = [
-            NasError::Configuration(String::from("msg")),
-            NasError::Network(String::from("msg")),
-            NasError::Storage(String::from("msg")),
-            NasError::Permission(String::from("msg")),
+            NasError::Configuration("msg".into()),
+            NasError::Network("msg".into()),
+            NasError::Storage("msg".into()),
+            NasError::Permission("msg".into()),
         ];
 
         let messages: Vec<String> = errors.iter().map(ToString::to_string).collect();
@@ -421,7 +421,7 @@ mod tests {
         let statuses = [
             NasStatus::Running,
             NasStatus::Stopped,
-            NasStatus::Error(String::from("msg")),
+            NasStatus::Error("msg".into()),
         ];
 
         assert!(matches!(statuses[0], NasStatus::Running));

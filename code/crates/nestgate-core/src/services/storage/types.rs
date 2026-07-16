@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_storage_pool_creation() {
-        let pool = StoragePool::new(String::from("test-pool"), StoragePoolType::Zfs);
+        let pool = StoragePool::new("test-pool".into(), StoragePoolType::Zfs);
         assert_eq!(pool.name, "test-pool");
         assert_eq!(pool.pool_type, StoragePoolType::Zfs);
         assert!(pool.is_healthy());
@@ -379,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_storage_quota_limits() {
-        let mut quota = StorageQuota::new(String::from("/test/path"));
+        let mut quota = StorageQuota::new("/test/path".into());
         quota.hard_limit = Some(1000);
         quota.current_usage = 800;
 
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn storage_pool_usage_percentage_zero_total() {
-        let mut pool = StoragePool::new(String::from("p"), StoragePoolType::Filesystem);
+        let mut pool = StoragePool::new("p".into(), StoragePoolType::Filesystem);
         pool.total_size = 0;
         pool.used_size = 0;
         assert_eq!(pool.usage_percentage(), 0.0);
@@ -399,7 +399,7 @@ mod tests {
 
     #[test]
     fn storage_pool_update_stats_sets_available() {
-        let mut pool = StoragePool::new(String::from("p"), StoragePoolType::Zfs);
+        let mut pool = StoragePool::new("p".into(), StoragePoolType::Zfs);
         pool.update_stats(1000, 250);
         assert_eq!(pool.total_size, 1000);
         assert_eq!(pool.used_size, 250);
@@ -408,14 +408,14 @@ mod tests {
 
     #[test]
     fn storage_pool_is_healthy_false_when_not_online() {
-        let mut pool = StoragePool::new(String::from("p"), StoragePoolType::Zfs);
+        let mut pool = StoragePool::new("p".into(), StoragePoolType::Zfs);
         pool.health = PoolHealth::Degraded;
         assert!(!pool.is_healthy());
     }
 
     #[test]
     fn storage_quota_soft_limit_helpers_and_usage_percentage() {
-        let mut q = StorageQuota::new(String::from("/a"));
+        let mut q = StorageQuota::new("/a".into());
         q.soft_limit = Some(10);
         q.hard_limit = Some(100);
         q.current_usage = 10;
@@ -432,7 +432,7 @@ mod tests {
     fn storage_operation_result_helpers() {
         let ok = StorageOperationResult::success(StorageOperationType::Read, Some(10));
         assert!(ok.success);
-        let bad = StorageOperationResult::failure(StorageOperationType::Write, String::from("e"));
+        let bad = StorageOperationResult::failure(StorageOperationType::Write, "e".into());
         assert!(!bad.success);
         assert_eq!(bad.error_message.as_deref(), Some("e"));
     }
@@ -448,7 +448,7 @@ mod tests {
         }
 
         let cache = TestCacheConfig {
-            cache_directory: String::from("/tmp/test-cache"),
+            cache_directory: "/tmp/test-cache".into(),
             cache_size_bytes: 1000 * 1024 * 1024, // 1000 MB in bytes
             max_entries: 10000,
             _cold_tier_unlimited: false,

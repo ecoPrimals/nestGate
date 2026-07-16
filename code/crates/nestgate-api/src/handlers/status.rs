@@ -58,7 +58,7 @@ pub fn get_status() -> Json<SystemStatus> {
         .as_secs();
 
     Json(SystemStatus {
-        status: String::from("healthy"),
+        status: "healthy".into(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         uptime,
         timestamp,
@@ -72,8 +72,8 @@ mod tests {
     #[test]
     fn test_system_status_structure() {
         let status = SystemStatus {
-            status: String::from("healthy"),
-            version: String::from("1.0.0"),
+            status: "healthy".into(),
+            version: "1.0.0".into(),
             uptime: 3600,
             timestamp: 1_234_567_890,
         };
@@ -87,8 +87,8 @@ mod tests {
     #[test]
     fn test_system_status_serialization() {
         let status = SystemStatus {
-            status: String::from("healthy"),
-            version: String::from("1.0.0"),
+            status: "healthy".into(),
+            version: "1.0.0".into(),
             uptime: 3600,
             timestamp: 1_234_567_890,
         };

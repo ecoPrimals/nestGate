@@ -159,8 +159,8 @@ mod tests {
     #[test]
     fn test_load_test_history_entry_serialization() {
         let entry = LoadTestHistoryEntry {
-            test_id: String::from("test_123"),
-            test_name: String::from("Test"),
+            test_id: "test_123".into(),
+            test_name: "Test".into(),
             executed_at: std::time::SystemTime::now(),
             duration_seconds: 60,
             result: TestResult {
@@ -180,8 +180,8 @@ mod tests {
     #[test]
     fn test_performance_baseline_serialization() {
         let baseline = PerformanceBaseline {
-            baseline_id: String::from("test_baseline"),
-            name: String::from("Test Baseline"),
+            baseline_id: "test_baseline".into(),
+            name: "Test Baseline".into(),
             expected_response_time_ms: 100.0,
             expected_throughput_rps: 500.0,
             max_error_rate_percent: 1.0,

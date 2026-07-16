@@ -52,10 +52,10 @@ impl Default for DatasetAutomationConfig {
             enabled: true,
             scan_interval_seconds: 300, // 5 minutes
             learning_period_days: 7,
-            default_policy: String::from("balanced_performance"),
+            default_policy: "balanced_performance".into(),
             ai_settings: AiAutomationSettings {
                 ai_enabled: false,
-                model_config: String::from("default"),
+                model_config: "default".into(),
                 monitoring_interval_seconds: 300, // 5 minutes
                 confidence_threshold: 0.8,
             },
@@ -68,7 +68,7 @@ impl Default for AiAutomationSettings {
     fn default() -> Self {
         Self {
             ai_enabled: false,
-            model_config: String::from("default"),
+            model_config: "default".into(),
             monitoring_interval_seconds: 300, // 5 minutes
             confidence_threshold: 0.8,
         }
@@ -81,7 +81,7 @@ impl AiAutomationSettings {
     pub fn production() -> Self {
         Self {
             ai_enabled: true,
-            model_config: String::from("production-optimized"),
+            model_config: "production-optimized".into(),
             monitoring_interval_seconds: 120, // 2 minutes
             confidence_threshold: 0.9,
         }

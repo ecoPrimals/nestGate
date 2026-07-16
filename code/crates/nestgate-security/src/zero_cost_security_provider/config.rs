@@ -40,12 +40,12 @@ impl Default for ZeroCostSecurityConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            provider_id: String::from("zero-cost-security-provider"),
+            provider_id: "zero-cost-security-provider".into(),
             token_expiry_seconds: 3600,
             max_concurrent_auth: 1000,
             enable_detailed_logging: false,
-            preferred_encryption: String::from("AES-256-GCM"),
-            preferred_signing: String::from("ECDSA-P256"),
+            preferred_encryption: "AES-256-GCM".into(),
+            preferred_signing: "ECDSA-P256".into(),
             rate_limit_per_minute: 100,
             auth_timeout_seconds: 30,
             key_rotation_days: 90,
@@ -227,11 +227,11 @@ impl Default for EncryptionConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            default_algorithm: String::from("AES-256-GCM"),
+            default_algorithm: "AES-256-GCM".into(),
             supported_algorithms: vec![
-                String::from("AES-256-GCM"),
-                String::from("AES-128-GCM"),
-                String::from("ChaCha20-Poly1305"),
+                "AES-256-GCM".into(),
+                "AES-128-GCM".into(),
+                "ChaCha20-Poly1305".into(),
             ],
             symmetric_key_size: 256,
             asymmetric_key_size: 2048,
@@ -260,12 +260,12 @@ impl Default for SigningConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            default_algorithm: String::from("ECDSA-P256"),
+            default_algorithm: "ECDSA-P256".into(),
             supported_algorithms: vec![
-                String::from("ECDSA-P256"),
-                String::from("ECDSA-P384"),
-                String::from("RSA-PSS-2048"),
-                String::from("Ed25519"),
+                "ECDSA-P256".into(),
+                "ECDSA-P384".into(),
+                "RSA-PSS-2048".into(),
+                "Ed25519".into(),
             ],
             key_size: 256,
             enable_verification: true,

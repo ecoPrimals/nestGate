@@ -47,12 +47,12 @@ mod humantime_serde {
 ///
 /// let service = ServiceDescriptor {
 ///     id: Uuid::new_v4(),
-///     name: String::from("security-service-1"),
+///     name: "security-service-1".into(),
 ///     capabilities: vec![
 ///         Capability::Security(SecurityCapability::Authentication),
 ///         Capability::Security(SecurityCapability::Encryption),
 ///     ],
-///     endpoint: Endpoint::https(String::from("10.0.1.5"), 8443),
+///     endpoint: Endpoint::https("10.0.1.5".into(), 8443),
 ///     metadata: ServiceMetadata::default(),
 ///     health: ServiceHealth::Healthy,
 /// };
@@ -147,7 +147,7 @@ pub struct ServiceMetadata {
 impl Default for ServiceMetadata {
     fn default() -> Self {
         Self {
-            version: String::from("unknown"),
+            version: "unknown".into(),
             uptime: Duration::from_secs(0),
             load: 0.0,
             latency_ms: None,
@@ -237,9 +237,9 @@ mod tests {
     fn test_service_has_capability() {
         let service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: String::from("test-service"),
+            name: "test-service".into(),
             capabilities: vec![Capability::Security(SecurityCapability::Authentication)],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -252,9 +252,9 @@ mod tests {
     fn test_service_health_checks() {
         let mut service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![],
-            endpoint: Endpoint::http(String::from("localhost"), 8080),
+            endpoint: Endpoint::http("localhost".into(), 8080),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -275,9 +275,9 @@ mod tests {
     fn test_service_url() {
         let service = ServiceDescriptor {
             id: Uuid::new_v4(),
-            name: String::from("test"),
+            name: "test".into(),
             capabilities: vec![],
-            endpoint: Endpoint::https(String::from("example.com"), 443),
+            endpoint: Endpoint::https("example.com".into(), 443),
             metadata: ServiceMetadata::default(),
             health: ServiceHealth::Healthy,
         };
@@ -287,11 +287,11 @@ mod tests {
 
     #[test]
     fn test_endpoint_constructors() {
-        let http = Endpoint::http(String::from("localhost"), 8080);
+        let http = Endpoint::http("localhost".into(), 8080);
         assert_eq!(http.protocol, Protocol::HTTP);
         assert!(!http.tls);
 
-        let https = Endpoint::https(String::from("localhost"), 443);
+        let https = Endpoint::https("localhost".into(), 443);
         assert_eq!(https.protocol, Protocol::HTTPS);
         assert!(https.tls);
     }

@@ -447,9 +447,9 @@ mod tests {
         let system: InfantDiscoverySystem<16> = InfantDiscoverySystem::new();
 
         let compliant_capability = CapabilityDescriptor {
-            id: String::from("test_capability"),
+            id: "test_capability".into(),
             capability_type: CapabilityType::Storage,
-            endpoint: Some(String::from("test://endpoint")),
+            endpoint: Some("test://endpoint".into()),
             metadata: HashMap::new(),
             sovereignty_compliant: true,
         };
@@ -461,10 +461,10 @@ mod tests {
         );
 
         let non_compliant_capability = CapabilityDescriptor {
-            id: String::from("surveillance_capability"),
+            id: "surveillance_capability".into(),
             capability_type: CapabilityType::Unknown,
-            endpoint: Some(String::from("surveillance://endpoint")),
-            metadata: HashMap::from([(String::from("surveillance"), String::from("enabled"))]),
+            endpoint: Some("surveillance://endpoint".into()),
+            metadata: HashMap::from([("surveillance".into(), "enabled".into())]),
             sovereignty_compliant: false,
         };
 

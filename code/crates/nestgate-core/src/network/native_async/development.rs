@@ -59,16 +59,16 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         // Mock discovery for development
         if service_name == "test_service" {
             Ok(vec![ServiceInfo {
-                name: String::from("test_service"),
-                version: String::from("1.0.0"),
-                status: String::from("running"),
+                name: "test_service".into(),
+                version: "1.0.0".into(),
+                status: "running".into(),
                 pid: Some(std::process::id()),
                 cpu_percent: Some(0.0),
                 memory_bytes: Some(0),
                 start_time: Some(std::time::SystemTime::now()),
-                description: Some(String::from("Test service for development")),
+                description: Some("Test service for development".into()),
                 dependencies: None,
-                command_line: Some(String::from("nestgate-test")),
+                command_line: Some("nestgate-test".into()),
             }])
         } else {
             Ok(vec![])
@@ -105,16 +105,16 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
     async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
         if service_id == "test_service" {
             Ok(Some(ServiceInfo {
-                name: String::from("test_service"),
-                version: String::from("1.0.0"),
-                status: String::from("running"),
+                name: "test_service".into(),
+                version: "1.0.0".into(),
+                status: "running".into(),
                 pid: Some(std::process::id()),
                 cpu_percent: Some(0.0),
                 memory_bytes: Some(0),
                 start_time: Some(std::time::SystemTime::now()),
-                description: Some(String::from("Test service for development")),
+                description: Some("Test service for development".into()),
                 dependencies: None,
-                command_line: Some(String::from("nestgate-test")),
+                command_line: Some("nestgate-test".into()),
             }))
         } else {
             Ok(None)

@@ -176,11 +176,11 @@ pub fn create_production_config() -> canonical_primary::NestGateCanonicalConfig 
     config
         .features
         .custom_flags
-        .insert(String::from("enable_auto_scaling"), true);
+        .insert("enable_auto_scaling".into(), true);
     config
         .features
         .custom_flags
-        .insert(String::from("enable_load_balancing"), true);
+        .insert("enable_load_balancing".into(), true);
     config
 }
 
@@ -209,11 +209,11 @@ pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
     config
         .features
         .custom_flags
-        .insert(String::from("enable_metrics"), false);
+        .insert("enable_metrics".into(), false);
     config
         .features
         .custom_flags
-        .insert(String::from("enable_tracing"), false);
+        .insert("enable_tracing".into(), false);
     config
 }
 // ==================== SECTION ====================

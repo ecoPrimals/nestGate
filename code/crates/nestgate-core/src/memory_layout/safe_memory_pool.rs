@@ -21,7 +21,7 @@
 //!
 //! let pool = SafeMemoryPool::<String, 32>::new();
 //!
-//! let handle = pool.allocate(String::from("Hello")).expect("pool has capacity");
+//! let handle = pool.allocate("Hello".into()).expect("pool has capacity");
 //!
 //! println!("Value: {}", handle.value());
 //!
@@ -289,7 +289,7 @@ mod tests {
         let pool = SafeMemoryPool::<String, 16>::new();
 
         let handle = pool
-            .allocate(String::from("Hello"))
+            .allocate("Hello".into())
             .expect("Allocation failed");
         assert_eq!(handle.value().as_str(), "Hello");
         assert_eq!(pool.available(), 15);
@@ -331,7 +331,7 @@ mod tests {
         let pool = SafeMemoryPool::<String, 8>::new();
 
         let handle = pool
-            .allocate(String::from("Test"))
+            .allocate("Test".into())
             .expect("Allocation failed");
         assert_eq!(pool.available(), 7);
 

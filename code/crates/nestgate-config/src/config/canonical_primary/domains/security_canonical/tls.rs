@@ -142,8 +142,8 @@ impl Default for SslConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            min_version: String::from("TLSv1.2"),
-            cipher_suites: vec![String::from("ECDHE-RSA-AES256-GCM-SHA384")],
+            min_version: "TLSv1.2".into(),
+            cipher_suites: vec!["ECDHE-RSA-AES256-GCM-SHA384".into()],
         }
     }
 }

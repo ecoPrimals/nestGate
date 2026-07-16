@@ -48,7 +48,7 @@ impl Default for CanonicalResponse {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            request_id: String::from("unknown"),
+            request_id: "unknown".into(),
             success: false,
             payload: None,
             error: None,
@@ -72,12 +72,12 @@ mod tests {
     #[test]
     fn canonical_request_and_response_serde_roundtrip() {
         let req = CanonicalRequest {
-            id: String::from("1"),
+            id: "1".into(),
             service_type: UnifiedServiceType::Storage,
             capability: CapabilityId {
-                domain: String::from("d"),
-                capability: String::from("c"),
-                version: String::from("v1"),
+                domain: "d".into(),
+                capability: "c".into(),
+                version: "v1".into(),
             },
             payload: HashMap::new(),
             timeout: Some(Duration::from_secs(5)),
@@ -86,7 +86,7 @@ mod tests {
         let _: CanonicalRequest = serde_json::from_str(&js).expect("req de");
 
         let res = CanonicalResponse {
-            request_id: String::from("1"),
+            request_id: "1".into(),
             success: true,
             payload: Some(serde_json::json!({ "k": 1 })),
             error: None,

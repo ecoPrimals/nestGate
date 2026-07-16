@@ -380,7 +380,7 @@ impl ZeroCostZfsOperations for GcsBackend {
             custom: {
                 let mut map = HashMap::new();
                 map.insert(
-                    String::from("config_source"),
+                    "config_source".into(),
                     cloud_helpers::config_source_custom_value(&self.client.config_source),
                 );
                 map
