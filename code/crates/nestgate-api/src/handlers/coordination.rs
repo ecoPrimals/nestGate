@@ -309,10 +309,16 @@ pub async fn coord_depot(
     let scan_path = if depot_path.exists() {
         depot_path
     } else {
-        let alt = std::env::var("ECOPRIMALS_DEPOT_PATH").map_or_else(
-            |_| std::path::PathBuf::from("/opt/ecoPrimals/depot"),
-            std::path::PathBuf::from,
-        );
+        let Some(alt) = std::env::var("ECOPRIMALS_DEPOT_PATH")
+            .ok()
+            .filter(|s| !s.is_empty())
+            .map(std::path::PathBuf::from)
+        else {
+            return Ok(Json(json!({
+                "status": "no_depot",
+                "message": "No depot directory found (set ECOPRIMALS_DEPOT_PATH)"
+            })));
+        };
         if alt.exists() {
             alt
         } else {

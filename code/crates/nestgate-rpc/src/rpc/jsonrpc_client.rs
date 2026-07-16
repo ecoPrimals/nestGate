@@ -62,7 +62,6 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::borrow::Cow;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -102,17 +101,8 @@ pub struct JsonRpcResponse {
     pub id: u64,
 }
 
-/// JSON-RPC 2.0 error object
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct JsonRpcError {
-    /// Error code
-    pub code: i64,
-    /// Error message
-    pub message: Cow<'static, str>,
-    /// Optional additional data
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<Value>,
-}
+/// JSON-RPC 2.0 error object — canonical type from `nestgate-types`.
+pub type JsonRpcError = nestgate_types::transport::jsonrpc::JsonRpcError;
 
 /// JSON-RPC client for calling external services.
 ///

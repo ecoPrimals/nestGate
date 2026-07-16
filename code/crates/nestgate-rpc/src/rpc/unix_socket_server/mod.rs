@@ -111,7 +111,6 @@ use dispatch::handle_request;
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::borrow::Cow;
 use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
@@ -142,14 +141,8 @@ struct JsonRpcResponse {
     id: Option<Value>,
 }
 
-/// JSON-RPC 2.0 Error
-#[derive(Debug, Serialize)]
-struct JsonRpcError {
-    code: i32,
-    message: Cow<'static, str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<Value>,
-}
+/// JSON-RPC 2.0 Error — re-exports the canonical type from `nestgate-types`.
+use nestgate_types::transport::jsonrpc::JsonRpcError;
 
 /// Storage service state
 #[derive(Clone)]
@@ -364,26 +357,29 @@ impl crate::rpc::isomorphic_ipc::RpcHandler for LegacyUnixJsonRpcHandler {
     fn handle_request(&self, request: Value) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
         let state = Arc::clone(&self.state);
         Box::pin(async move {
-            match serde_json::from_value::<JsonRpcRequest>(request) {
-                Ok(req) => {
-                    let resp = handle_request(req, &state).await;
-                    serde_json::to_value(resp).unwrap_or_else(|_| {
-                        json!({
-                            "jsonrpc": "2.0",
-                            "error": { "code": -32603, "message": "Internal error" },
-                            "id": null
+            {
+                use nestgate_types::JsonRpcErrorCode;
+                match serde_json::from_value::<JsonRpcRequest>(request) {
+                    Ok(req) => {
+                        let resp = handle_request(req, &state).await;
+                        serde_json::to_value(resp).unwrap_or_else(|_| {
+                            json!({
+                                "jsonrpc": "2.0",
+                                "error": { "code": JsonRpcErrorCode::InternalError.code(), "message": JsonRpcErrorCode::InternalError.default_message() },
+                                "id": null
+                            })
                         })
-                    })
+                    }
+                    Err(e) => json!({
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": JsonRpcErrorCode::ParseError.code(),
+                            "message": JsonRpcErrorCode::ParseError.default_message(),
+                            "data": { "error": e.to_string() }
+                        },
+                        "id": null
+                    }),
                 }
-                Err(e) => json!({
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32700,
-                        "message": "Parse error",
-                        "data": { "error": e.to_string() }
-                    },
-                    "id": null
-                }),
             }
         })
     }

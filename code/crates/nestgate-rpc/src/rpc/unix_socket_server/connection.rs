@@ -10,7 +10,6 @@
 
 use bytes::Bytes;
 use serde_json::{Value, json};
-use std::borrow::Cow;
 use std::sync::Arc;
 use tokio::io::BufReader;
 #[cfg(unix)]
@@ -147,16 +146,17 @@ where
 
 /// Dispatch a pre-parsed JSON-RPC Value through the handler, returning a Value response.
 async fn dispatch_value_request(request: Value, state: &StorageState) -> Value {
+    use nestgate_types::JsonRpcErrorCode;
     match serde_json::from_value::<JsonRpcRequest>(request) {
         Ok(req) => {
             let resp = handle_request(req, state).await;
             serde_json::to_value(resp).unwrap_or_else(|_| {
-                json!({"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error"}, "id": null})
+                json!({"jsonrpc": "2.0", "error": {"code": JsonRpcErrorCode::InternalError.code(), "message": JsonRpcErrorCode::InternalError.default_message()}, "id": null})
             })
         }
         Err(e) => json!({
             "jsonrpc": "2.0",
-            "error": {"code": -32700, "message": "Parse error", "data": {"error": e.to_string()}},
+            "error": {"code": JsonRpcErrorCode::ParseError.code(), "message": JsonRpcErrorCode::ParseError.default_message(), "data": {"error": e.to_string()}},
             "id": null
         }),
     }
@@ -164,16 +164,17 @@ async fn dispatch_value_request(request: Value, state: &StorageState) -> Value {
 
 /// Dispatch a pre-parsed JSON-RPC Value through the handler (alias for non-negotiate first message).
 async fn dispatch_parsed_request(request: &Value, state: &StorageState) -> Value {
+    use nestgate_types::JsonRpcErrorCode;
     match serde_json::from_value::<JsonRpcRequest>(request.clone()) {
         Ok(req) => {
             let resp = handle_request(req, state).await;
             serde_json::to_value(resp).unwrap_or_else(|_| {
-                json!({"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error"}, "id": null})
+                json!({"jsonrpc": "2.0", "error": {"code": JsonRpcErrorCode::InternalError.code(), "message": JsonRpcErrorCode::InternalError.default_message()}, "id": null})
             })
         }
         Err(e) => json!({
             "jsonrpc": "2.0",
-            "error": {"code": -32700, "message": "Parse error", "data": {"error": e.to_string()}},
+            "error": {"code": JsonRpcErrorCode::ParseError.code(), "message": JsonRpcErrorCode::ParseError.default_message(), "data": {"error": e.to_string()}},
             "id": null
         }),
     }
@@ -198,11 +199,11 @@ async fn dispatch_or_reject_unauth(
     JsonRpcResponse {
         jsonrpc: Arc::from("2.0"),
         result: None,
-        error: Some(JsonRpcError {
-            code: -32604,
-            message: Cow::Borrowed("BTSP authentication required"),
-            data: Some(json!({"method": request.method})),
-        }),
+        error: Some(JsonRpcError::with_data(
+            nestgate_types::JsonRpcErrorCode::AuthRequired,
+            "BTSP authentication required",
+            json!({"method": request.method}),
+        )),
         id: request.id,
     }
 }
@@ -265,11 +266,11 @@ where
                                 JsonRpcResponse {
                                     jsonrpc: Arc::from("2.0"),
                                     result: None,
-                                    error: Some(JsonRpcError {
-                                        code: -32700,
-                                        message: Cow::Borrowed("Parse error"),
-                                        data: Some(json!({"error": e.to_string()})),
-                                    }),
+                                    error: Some(JsonRpcError::with_data(
+                                        nestgate_types::JsonRpcErrorCode::ParseError,
+                                        "Parse error",
+                                        json!({"error": e.to_string()}),
+                                    )),
                                     id: None,
                                 }
                             }

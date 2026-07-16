@@ -29,6 +29,7 @@ pub use error::{
     RetryInfo, TestResult,
 };
 pub use result_types::{ConnectionFactory, HealthCheckFn, ValidatorFn, VoidResult};
+pub use transport::jsonrpc::{JsonRpcError, JsonRpcErrorCode};
 pub use transport::{TransportEndpoint, TransportEndpointError};
 pub use unified_enums::UnifiedEnum;
 

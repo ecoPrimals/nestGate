@@ -241,15 +241,18 @@ impl TcpFallbackServer {
                                 Ok(request) => self.handler.handle_request(request).await,
                                 Err(e) => {
                                     warn!("Invalid JSON-RPC request: {}", e);
-                                    serde_json::json!({
-                                        "jsonrpc": "2.0",
-                                        "error": {
-                                            "code": -32700,
-                                            "message": "Parse error",
-                                            "data": { "error": e.to_string() }
-                                        },
-                                        "id": null
-                                    })
+                                    {
+                                        use nestgate_types::JsonRpcErrorCode;
+                                        serde_json::json!({
+                                            "jsonrpc": "2.0",
+                                            "error": {
+                                                "code": JsonRpcErrorCode::ParseError.code(),
+                                                "message": JsonRpcErrorCode::ParseError.default_message(),
+                                                "data": { "error": e.to_string() }
+                                            },
+                                            "id": null
+                                        })
+                                    }
                                 }
                             };
 

@@ -9,6 +9,7 @@ use nestgate_core::error::Result;
 use nestgate_types::error::ErrorContextExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::borrow::Cow;
 use std::future::Future;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
@@ -55,63 +56,8 @@ pub struct JsonRpcResponse {
     pub id: Value,
 }
 
-/// **JSON-RPC ERROR**
-///
-/// Standard JSON-RPC error format.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct JsonRpcError {
-    /// Error code
-    pub code: i32,
-
-    /// Error message
-    pub message: String,
-
-    /// Additional error data
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<Value>,
-}
-
-impl JsonRpcError {
-    /// Parse error (-32700)
-    #[must_use]
-    pub fn parse_error() -> Self {
-        Self {
-            code: -32700,
-            message: "Parse error".into(),
-            data: None,
-        }
-    }
-
-    /// Invalid request (-32600)
-    #[must_use]
-    pub fn invalid_request() -> Self {
-        Self {
-            code: -32600,
-            message: "Invalid Request".into(),
-            data: None,
-        }
-    }
-
-    /// Method not found (-32601)
-    #[must_use]
-    pub fn method_not_found() -> Self {
-        Self {
-            code: -32601,
-            message: "Method not found".into(),
-            data: None,
-        }
-    }
-
-    /// Internal error (-32603)
-    #[must_use]
-    pub fn internal_error() -> Self {
-        Self {
-            code: -32603,
-            message: "Internal error".into(),
-            data: None,
-        }
-    }
-}
+/// JSON-RPC 2.0 Error — canonical type from `nestgate-types`.
+pub type JsonRpcError = nestgate_types::transport::jsonrpc::JsonRpcError;
 
 impl JsonRpcResponse {
     /// Create success response
@@ -139,12 +85,13 @@ impl JsonRpcResponse {
     /// Create error response with code and message
     #[must_use]
     pub fn error_with_code(id: impl Into<Value>, code: i32, message: impl Into<String>) -> Self {
+        let msg: String = message.into();
         Self {
             jsonrpc: "2.0".into(),
             result: None,
             error: Some(JsonRpcError {
                 code,
-                message: message.into(),
+                message: Cow::Owned(msg),
                 data: None,
             }),
             id: id.into(),

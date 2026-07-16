@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 116: Typed JSON-RPC errors, visibility tightening, hardcoded path elimination (Jul 16, 2026)
+
+- **Canonical `JsonRpcErrorCode` enum**: New `nestgate_types::transport::jsonrpc` module — single
+  source of truth for JSON-RPC 2.0 error codes (`ParseError`, `InvalidRequest`, `MethodNotFound`,
+  `InvalidParams`, `InternalError`, `AuthRequired`) with `code()`, `default_message()`, and
+  `Display` impl.
+- **Canonical `JsonRpcError` struct**: Replaces 6 independent `JsonRpcError` definitions scattered
+  across `nestgate-api` (2), `nestgate-rpc` (3), and `nestgate-rpc::jsonrpc_client` (1). Unified
+  on `Cow<'static, str>` message, with factory methods (`parse_error()`, `invalid_params(detail)`,
+  `internal(detail)`, `auth_required()`, `with_data(code, msg, json)`).
+- **~97 stringly-typed JSON-RPC error sites → typed**: All production `json!({ "code": -326xx })`
+  and `JsonRpcError { code: -326xx, message: Cow::Borrowed("...") }` patterns now use
+  `JsonRpcErrorCode::*.code()` and `JsonRpcErrorCode::*.default_message()`. Zero raw `-326xx`
+  literals remain in production code.
+- **`pub(crate)` visibility tightening**: 10 handler modules in `nestgate-api` narrowed from
+  `pub mod` to `pub(crate) mod` (`linux_proc`, `stub_helpers`, `auth_production`, `content_serve`,
+  `coordination`, `health`, `performance_analytics`, `workspace_management`,
+  `zero_cost_api_handlers`, `rest`). `models.rs` and deprecated `rest` module also tightened.
+  Revealed 283 dead code items for future cleanup.
+- **Hardcoded path elimination**: Removed `/opt/ecoPrimals/depot` fallback (2 sites in
+  `coordination.rs` and `coord_handlers/query.rs`) — now requires `ECOPRIMALS_DEPOT_PATH` env var.
+  Evolved security socket tier-6 fallback from hardcoded `/run/capability/security.sock` to
+  XDG-based construction (`$XDG_RUNTIME_DIR/{ecosystem}/security.sock`).
+- **Dependency audit**: CLEAN — zero C/native crypto. Pure Rust sovereign stack confirmed:
+  `rustls-rustcrypto`, vendored `rustls-webpki`, `blake3[pure]`, `chacha20poly1305`.
+- **File size audit**: CLEAN — zero files >800 lines in production code (max 760L).
+- **11 new tests**: 10 for `JsonRpcErrorCode`/`JsonRpcError` (serde roundtrip, code values,
+  factory methods, Display), 1 for `internal_error()` no-arg convenience.
+
 ### Session 115: ErrorContextExt trait — map_err(format!()) P0 evolution (Jul 16, 2026)
 
 - **`ErrorContextExt` trait**: New domain-specific `Result` extension trait in `nestgate-types`

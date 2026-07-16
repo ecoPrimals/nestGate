@@ -39,13 +39,7 @@ struct JsonRpcResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<JsonRpcError>,
 }
-#[derive(Debug, Serialize, Deserialize)]
-struct JsonRpcError {
-    code: i32,
-    message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<serde_json::Value>,
-}
+type JsonRpcError = nestgate_types::transport::jsonrpc::JsonRpcError;
 #[derive(Debug, Clone)]
 struct StreamHandle {
     stream_id: Uuid,

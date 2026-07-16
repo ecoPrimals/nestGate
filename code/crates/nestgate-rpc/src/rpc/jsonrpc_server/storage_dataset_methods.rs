@@ -50,7 +50,7 @@ pub(super) fn register_dataset_methods<S: StorageBackend + 'static>(
             let result = service_clone
                 .create_dataset(tarpc::context::current(), Arc::from(p.name), dataset_params)
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))?;
 
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "name": result.name,
@@ -74,7 +74,7 @@ pub(super) fn register_dataset_methods<S: StorageBackend + 'static>(
             let datasets = service_clone
                 .list_datasets(tarpc::context::current())
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))?;
 
             let results: Vec<serde_json::Value> = datasets
                 .into_iter()
@@ -106,7 +106,7 @@ pub(super) fn register_dataset_methods<S: StorageBackend + 'static>(
             let dataset = service_clone
                 .get_dataset(tarpc::context::current(), Arc::from(name))
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))?;
 
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "name": dataset.name,
@@ -131,7 +131,7 @@ pub(super) fn register_dataset_methods<S: StorageBackend + 'static>(
             let result = service_clone
                 .delete_dataset(tarpc::context::current(), Arc::from(name))
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))?;
 
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "success": result.success,

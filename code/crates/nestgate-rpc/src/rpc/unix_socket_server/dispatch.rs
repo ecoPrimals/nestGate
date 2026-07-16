@@ -39,11 +39,11 @@ pub(super) async fn handle_request(
         return JsonRpcResponse {
             jsonrpc: Arc::from("2.0"),
             result: None,
-            error: Some(JsonRpcError {
-                code: -32600,
-                message: Cow::Borrowed("Invalid Request"),
-                data: Some(json!({"error": "Only JSON-RPC 2.0 is supported"})),
-            }),
+            error: Some(JsonRpcError::with_data(
+                nestgate_types::JsonRpcErrorCode::InvalidRequest,
+                "Invalid Request",
+                json!({"error": "Only JSON-RPC 2.0 is supported"}),
+            )),
             id: request.id,
         };
     }
@@ -364,11 +364,11 @@ pub(super) async fn handle_request(
             return JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),
                 result: None,
-                error: Some(JsonRpcError {
-                    code: -32601,
-                    message: Cow::Borrowed("Method not found"),
-                    data: Some(json!({"method": request.method})),
-                }),
+                error: Some(JsonRpcError::with_data(
+                    nestgate_types::JsonRpcErrorCode::MethodNotFound,
+                    "Method not found",
+                    json!({"method": request.method}),
+                )),
                 id: request.id,
             };
         }
@@ -384,11 +384,11 @@ pub(super) async fn handle_request(
         Err(e) => JsonRpcResponse {
             jsonrpc: Arc::from("2.0"),
             result: None,
-            error: Some(JsonRpcError {
-                code: -32603,
-                message: Cow::Borrowed("Internal error"),
-                data: Some(json!({"error": e.to_string()})),
-            }),
+            error: Some(JsonRpcError::with_data(
+                nestgate_types::JsonRpcErrorCode::InternalError,
+                "Internal error",
+                json!({"error": e.to_string()}),
+            )),
             id: request.id,
         },
     }

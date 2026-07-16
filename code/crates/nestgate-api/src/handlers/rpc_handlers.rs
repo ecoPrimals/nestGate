@@ -14,7 +14,6 @@ use nestgate_core::constants::capability_port_discovery::{
 };
 use nestgate_core::constants::system::DEFAULT_SERVICE_NAME;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info};
@@ -50,17 +49,8 @@ pub struct JsonRpcResponse {
     pub error: Option<JsonRpcError>,
 }
 
-/// JSON-RPC 2.0 Error
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct JsonRpcError {
-    /// Error code
-    pub code: i32,
-    /// Error message
-    pub message: Cow<'static, str>,
-    /// Additional error data
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<serde_json::Value>,
-}
+/// JSON-RPC 2.0 Error — canonical type from `nestgate-types`.
+pub type JsonRpcError = nestgate_types::transport::jsonrpc::JsonRpcError;
 
 /// Protocol information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -120,11 +110,10 @@ pub async fn handle_jsonrpc(
             jsonrpc: Arc::from("2.0"),
             id: request.id,
             result: None,
-            error: Some(JsonRpcError {
-                code: -32600,
-                message: Cow::Borrowed("Invalid Request - jsonrpc must be '2.0'"),
-                data: None,
-            }),
+            error: Some(JsonRpcError::with_message(
+                nestgate_types::JsonRpcErrorCode::InvalidRequest,
+                "Invalid Request - jsonrpc must be '2.0'",
+            )),
         };
         return Err((StatusCode::BAD_REQUEST, Json(error_response)));
     }
@@ -148,11 +137,7 @@ pub async fn handle_jsonrpc(
                 jsonrpc: Arc::from("2.0"),
                 id: request.id,
                 result: None,
-                error: Some(JsonRpcError {
-                    code: -32603,
-                    message: Cow::Owned(format!("Internal error: {err}")),
-                    data: None,
-                }),
+                error: Some(JsonRpcError::internal(format!("Internal error: {err}"))),
             };
             Err((StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)))
         }

@@ -67,7 +67,7 @@ pub mod auth;
 /// **PRODUCTION AUTH HANDLERS**
 ///
 /// Production authentication using `nestgate-core` security (`AuthManager`).
-pub mod auth_production;
+pub(crate) mod auth_production;
 #[cfg(test)]
 mod auth_production_tests;
 
@@ -85,7 +85,7 @@ mod ai_first_handler_tests;
 ///
 /// Direct HTTP content serving — `GET /content/:hash` for raw BLAKE3-addressed
 /// blobs with immutable caching. Powers `nestgate.io/<hash>` via Caddy reverse proxy.
-pub mod content_serve;
+pub(crate) mod content_serve;
 
 /// **COMPLIANCE MODULE**
 ///
@@ -98,7 +98,7 @@ pub mod compliance;
 /// gate heads, and provenance trails from the coordination CAS. The live,
 /// queryable surface over wateringHole artifacts. Powered by rootPulse
 /// provenance trio when NUCLEUS composition is active.
-pub mod coordination;
+pub(crate) mod coordination;
 
 /// **DASHBOARD TYPES MODULE**
 ///
@@ -115,7 +115,7 @@ pub mod hardware_tuning;
 /// **HEALTH MODULE**
 ///
 /// System health monitoring and status reporting.
-pub mod health;
+pub(crate) mod health;
 
 /// **LOAD TESTING MODULE**
 ///
@@ -136,7 +136,7 @@ mod metrics_collector_unit_tests;
 /// **PERFORMANCE ANALYTICS MODULE**
 ///
 /// Advanced performance analysis and optimization recommendations.
-pub mod performance_analytics;
+pub(crate) mod performance_analytics;
 #[cfg(test)]
 mod performance_analytics_comprehensive_tests;
 #[cfg(test)]
@@ -178,7 +178,7 @@ mod storage_unit_tests;
 /// **WORKSPACE MANAGEMENT MODULE**
 ///
 /// Workspace creation, management, and collaboration features.
-pub mod workspace_management;
+pub(crate) mod workspace_management;
 
 #[cfg(test)]
 mod api_error_path_tests; // Dec 10, 2025 - Comprehensive API error path tests
@@ -189,7 +189,7 @@ mod mod_tests;
 /// **ZERO-COST API HANDLERS MODULE**
 ///
 /// High-performance zero-cost abstraction API handlers.
-pub mod zero_cost_api_handlers;
+pub(crate) mod zero_cost_api_handlers;
 #[cfg(test)]
 mod zero_cost_api_handlers_tests;
 

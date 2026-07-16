@@ -183,7 +183,7 @@ fn test_jsonrpc_response_error() {
         2,
         JsonRpcError {
             code: -32601,
-            message: "Method not found".to_string(),
+            message: "Method not found".into(),
             data: None,
         },
     );

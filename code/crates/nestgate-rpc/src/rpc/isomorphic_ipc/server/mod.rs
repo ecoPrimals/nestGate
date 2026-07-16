@@ -544,15 +544,18 @@ impl IsomorphicIpcServer {
                                 }
                                 Err(e) => {
                                     warn!("Invalid JSON-RPC request: {}", e);
-                                    serde_json::json!({
-                                        "jsonrpc": "2.0",
-                                        "error": {
-                                            "code": -32700,
-                                            "message": "Parse error",
-                                            "data": { "error": e.to_string() }
-                                        },
-                                        "id": null
-                                    })
+                                    {
+                                        use nestgate_types::JsonRpcErrorCode;
+                                        serde_json::json!({
+                                            "jsonrpc": "2.0",
+                                            "error": {
+                                                "code": JsonRpcErrorCode::ParseError.code(),
+                                                "message": JsonRpcErrorCode::ParseError.default_message(),
+                                                "data": { "error": e.to_string() }
+                                            },
+                                            "id": null
+                                        })
+                                    }
                                 }
                             };
                             let response_bytes: Bytes =
@@ -611,15 +614,18 @@ impl IsomorphicIpcServer {
             method = method_raw,
             "Rejecting unauthenticated call to BTSP-gated method"
         );
-        serde_json::json!({
-            "jsonrpc": "2.0",
-            "error": {
-                "code": -32604,
-                "message": "BTSP authentication required",
-                "data": { "method": method_raw }
-            },
-            "id": id
-        })
+        {
+            use nestgate_types::JsonRpcErrorCode;
+            serde_json::json!({
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": JsonRpcErrorCode::AuthRequired.code(),
+                    "message": JsonRpcErrorCode::AuthRequired.default_message(),
+                    "data": { "method": method_raw }
+                },
+                "id": id
+            })
+        }
     }
 
     /// Get socket path — checks `NESTGATE_SOCKET` first, then XDG, then temp dir.

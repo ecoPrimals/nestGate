@@ -106,7 +106,7 @@ pub async fn try_phase3_negotiate<W: AsyncWriteExt + Unpin>(
     let Some(p) = first_message.get("params").cloned() else {
         let err = serde_json::json!({
             "jsonrpc": "2.0",
-            "error": {"code": -32602, "message": "Invalid params: btsp.negotiate requires params"},
+            "error": {"code": nestgate_types::JsonRpcErrorCode::InvalidParams.code(), "message": "Invalid params: btsp.negotiate requires params"},
             "id": request_id
         });
         write_negotiate_response(writer, &err, use_jsonline).await?;
@@ -242,7 +242,7 @@ where
             Err(e) => {
                 let err_response = serde_json::json!({
                     "jsonrpc": "2.0",
-                    "error": {"code": -32700, "message": "Parse error", "data": {"error": e.to_string()}},
+                    "error": {"code": nestgate_types::JsonRpcErrorCode::ParseError.code(), "message": nestgate_types::JsonRpcErrorCode::ParseError.default_message(), "data": {"error": e.to_string()}},
                     "id": null
                 });
                 encrypt_and_write(writer, session_keys, &err_response).await?;

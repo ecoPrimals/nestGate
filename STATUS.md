@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 16, 2026 (Wave 144a — ErrorContextExt trait [152 sites], deep debt P0 map_err evolution)  
+**Last Updated**: Jul 16, 2026 (Wave 144a — Session 116: typed JSON-RPC errors, visibility tightening, hardcoded path elimination)  
 **Version**: 0.5.0
 
 ---
@@ -27,7 +27,7 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only,
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
 Auth mode:          NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider
-Discovery:          Environment variables + capability IPC; 6-tier security socket discovery
+Discovery:          Environment variables + capability IPC; 6-tier security socket discovery (XDG-based, zero hardcoded FHS paths)
 Env aliases:        Legacy BEARDOG_* aliases REMOVED — canonical SECURITY_PROVIDER_SOCKET / FAMILY_SEED only
 IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 90 methods
 IPC routes (HTTP):  Aligned with UDS namespace (storage.store not storage.object.store); legacy aliases warn
@@ -53,6 +53,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 Per-session detail (Sessions 43–113) lives in [`CHANGELOG.md`](CHANGELOG.md) and `infra/wateringHole/handoffs/`.
 
 Recent sessions:
+- **Session 116** (Wave 144a): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types`, replaced 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules, `models.rs`, `rest`); removed `/opt/ecoPrimals/depot` hardcoded fallback, security socket tier-6 → XDG-based
 - **Session 115** (Wave 144a): ErrorContextExt trait — 152 map_err(format!()) sites → .io_ctx/.net_ctx/.internal_ctx/.api_ctx/.validation_ctx/.security_ctx, 42 remaining (runtime-interpolated)
 - **Session 114** (Wave 143b): PROJECTS_PATH CAS wiring (footPrint composition), String::from R8 sweep (2500+ across 382 files), deep debt continuation
 - **Session 113** (Wave 142b): Production mock evolution — ZFS defaults zeroed, tier utilization real, AI confidence computed, String::from R7 (21)

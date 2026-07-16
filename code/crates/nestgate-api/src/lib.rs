@@ -93,12 +93,12 @@ pub mod handlers;
 ///
 /// Data models and structures used throughout the API for requests, responses,
 /// and internal data representation.
-pub mod models;
+pub(crate) mod models;
 
 /// **REST MODULE**
 ///
 /// REST API implementation including routing, middleware, and HTTP handlers.
-pub mod rest;
+pub(crate) mod rest;
 
 /// **ROUTES MODULE**
 ///

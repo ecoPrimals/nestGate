@@ -50,13 +50,7 @@ struct JsonRpcResponse {
     id: Option<Value>,
 }
 
-#[derive(Debug, Serialize)]
-struct JsonRpcError {
-    code: i32,
-    message: Cow<'static, str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<Value>,
-}
+use nestgate_types::transport::jsonrpc::JsonRpcError;
 
 /// Match `nestgate_core::nat_traversal::BEACON_DATASET` when core is linked.
 const BEACON_DATASET: &str = "_known_beacons";
@@ -129,7 +123,7 @@ impl StorageState {
             || name.starts_with('.')
         {
             return Err((
-                -32602,
+                nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
                 Cow::Owned(format!("Invalid {field}: must be a simple name")),
             ));
         }
@@ -307,7 +301,7 @@ impl UnixSocketRpcHandler {
                 let gate = crate::rpc::method_gate::MethodGate::from_env();
                 let caller = crate::rpc::method_gate::CallerContext::unix();
                 crate::rpc::method_gate::auth_introspection(m, &gate, &caller)
-                    .ok_or((-32601, Cow::Borrowed("Method not found")))
+                    .ok_or((nestgate_types::JsonRpcErrorCode::MethodNotFound.code(), Cow::Borrowed("Method not found")))
             }
             "btsp.capabilities" => Ok(json!({
                 "protocol": "btsp-v1",
@@ -320,7 +314,7 @@ impl UnixSocketRpcHandler {
             })),
 
             _ => Err((
-                -32601,
+                nestgate_types::JsonRpcErrorCode::MethodNotFound.code(),
                 Cow::Owned(format!("Method not found: {}", request.method)),
             )),
         };
@@ -335,11 +329,7 @@ impl UnixSocketRpcHandler {
             Err((code, message)) => JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),
                 result: None,
-                error: Some(JsonRpcError {
-                    code,
-                    message,
-                    data: None,
-                }),
+                error: Some(JsonRpcError { code, message, data: None }),
                 id,
             },
         }
@@ -352,11 +342,12 @@ impl RpcHandler for UnixSocketRpcHandler {
             match serde_json::from_value::<JsonRpcRequest>(request) {
                 Ok(rpc_request) => {
                     let response = self.handle_rpc_request(rpc_request).await;
+                    use nestgate_types::JsonRpcErrorCode;
                     serde_json::to_value(response).unwrap_or_else(|e| {
                         json!({
                             "jsonrpc": "2.0",
                             "error": {
-                                "code": -32603,
+                                "code": JsonRpcErrorCode::InternalError.code(),
                                 "message": format!("Internal error: {}", e)
                             },
                             "id": null
@@ -364,10 +355,11 @@ impl RpcHandler for UnixSocketRpcHandler {
                     })
                 }
                 Err(e) => {
+                    use nestgate_types::JsonRpcErrorCode;
                     json!({
                         "jsonrpc": "2.0",
                         "error": {
-                            "code": -32700,
+                            "code": JsonRpcErrorCode::ParseError.code(),
                             "message": format!("Parse error: {}", e)
                         },
                         "id": null

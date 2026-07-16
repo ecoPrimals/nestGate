@@ -21,11 +21,19 @@ use nestgate_types::error::{NestGateError, Result};
 /// tiers (env vars and `$XDG_RUNTIME_DIR/biomeos/` discovery).
 ///
 /// Overridable via `NESTGATE_SECURITY_SOCKET` environment variable.
+/// Constructs from `$XDG_RUNTIME_DIR` or `/run/user/{uid}` — never hardcodes
+/// a fixed FHS path.
 pub fn default_security_socket_path() -> PathBuf {
-    std::env::var("NESTGATE_SECURITY_SOCKET").map_or_else(
-        |_| PathBuf::from("/run/capability/security.sock"),
-        PathBuf::from,
-    )
+    if let Ok(p) = std::env::var("NESTGATE_SECURITY_SOCKET") {
+        if !p.is_empty() {
+            return PathBuf::from(p);
+        }
+    }
+    let socket_dir = std::env::var("ECOSYSTEM_SOCKET_DIR")
+        .unwrap_or_else(|_| nestgate_config::constants::system::ecosystem_path_segment());
+    let runtime_base = std::env::var("XDG_RUNTIME_DIR")
+        .unwrap_or_else(|_| format!("/run/user/{}", rustix::process::getuid().as_raw()));
+    PathBuf::from(runtime_base).join(socket_dir).join("security.sock")
 }
 
 /// Session lifecycle as reported by the security capability provider.
