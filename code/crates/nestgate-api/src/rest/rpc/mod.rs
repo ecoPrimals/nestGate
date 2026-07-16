@@ -23,12 +23,7 @@ pub mod tarpc_service;
 pub mod types;
 
 // Re-export all public items
-pub use bidirectional_streams::BidirectionalStreamManager;
-pub use config::*;
-pub use json_rpc_service::JsonRpcService;
 pub use manager::*;
-pub use rpc_router::UnifiedRpcRouter;
-pub use tarpc_service::TarpcRpcService;
 pub use types::*;
 
 #[cfg(test)]

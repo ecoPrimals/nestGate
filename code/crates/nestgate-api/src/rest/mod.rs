@@ -9,6 +9,7 @@
 
 pub mod handlers;
 pub mod models;
+#[expect(dead_code, reason = "Deprecated REST RPC layer maintained for backward compatibility")]
 pub mod rpc;
 /// **WEBSOCKET MODULE**
 ///
@@ -35,7 +36,7 @@ use crate::rest::handlers::{
 };
 
 // Re-export commonly used types (removed glob exports to avoid ambiguity)
-pub use rpc::{RpcError, RpcStreamEvent, UnifiedRpcManager, UnifiedRpcRequest, UnifiedRpcResponse};
+pub use rpc::{UnifiedRpcManager, UnifiedRpcRequest, UnifiedRpcResponse};
 
 // Re-export API router function (remove duplicate export)
 
@@ -64,6 +65,10 @@ impl ApiState {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn new() -> Result<Self> {
         let storage_detector = StorageDetector::new();
 
@@ -83,6 +88,10 @@ impl ApiState {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn init_rpc_connections(&self) -> Result<()> {
         self.rpc_manager.get_or_init(|| {
             let rpc_manager = UnifiedRpcManager::new();
@@ -123,6 +132,10 @@ impl ApiState {
 
     /// Get RPC manager
     #[must_use]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn get_rpc_manager(&self) -> Option<Arc<OnceLock<UnifiedRpcManager>>> {
         Some(Arc::clone(&self.rpc_manager))
     }

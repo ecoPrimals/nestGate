@@ -42,18 +42,13 @@ pub mod storage;
 
 // Re-export all types for backward compatibility
 pub use datasets::*;
-pub use hardware::*;
 pub use snapshots::*;
-pub use storage::*;
 pub use types::{
-    Alert, AlertCondition, AlertSeverity, AlertStatus, AlertType, ChecksumType,
-    CircuitBreakerConfig, ComparisonOperator, CompressionType, DashboardAlert, DatasetStatus,
-    DatasetType, DiskIoMetrics, NetworkIoMetrics, RetryPolicy, SnapshotStatus, StorageBackendType,
-    StorageMetrics, SystemMetrics, TimeoutConfig, ValidationContext,
+    Alert, AlertCondition, AlertSeverity, AlertStatus, ChecksumType, ComparisonOperator, CompressionType, DatasetStatus,
+    DatasetType, DiskIoMetrics, NetworkIoMetrics, StorageBackendType, SystemMetrics,
 };
 // Note: ZfsMetrics from types module excluded to avoid conflict
-pub use validation::*;
-pub use zfs::*; // This includes ZfsMetrics from zfs module
+ // This includes ZfsMetrics from zfs module
 
 // ==================== UTILITY TYPES ====================
 

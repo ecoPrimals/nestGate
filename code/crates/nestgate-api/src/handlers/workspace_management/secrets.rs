@@ -14,6 +14,10 @@ use serde_json::{Value, json};
 use tracing::{info, warn};
 
 /// Create workspace secret (SECURITY FEATURE - DELEGATE TO SECURITY MODULE)
+#[expect(
+    clippy::unused_async,
+    reason = "Stub API; async needed when capability is wired"
+)]
 pub async fn create_workspace_secret(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {

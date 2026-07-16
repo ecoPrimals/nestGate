@@ -10,10 +10,6 @@ use std::sync::Arc;
 /// **ZERO-COST API HANDLER TRAIT**
 ///
 /// High-performance API handler trait with zero-cost abstractions.
-#[expect(
-    async_fn_in_trait,
-    reason = "Internal API trait; async methods are intentional"
-)]
 pub trait ZeroCostApiHandler<T> {
     /// Error type for handler failures
     type Error: std::error::Error + Send + Sync + 'static;
@@ -94,10 +90,6 @@ pub enum ApiStatus {
 /// **ZERO-COST DATASET MANAGER TRAIT**
 ///
 /// High-performance dataset management trait.
-#[expect(
-    async_fn_in_trait,
-    reason = "Internal dataset trait; async methods are intentional"
-)]
 pub trait ZeroCostDatasetManager {
     /// Dataset type managed by this implementation
     type Dataset: Send + Sync + Clone;

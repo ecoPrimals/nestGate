@@ -58,10 +58,8 @@ pub mod templates;
 pub use crud::{
     create_workspace, delete_workspace, get_workspace, get_workspaces, update_workspace_config,
 };
-pub use teams::{create_team, get_teams};
 
 // Team management
-pub use secrets::create_workspace_secret;
 
 // Collaboration and template exports removed until those modules are implemented.
 

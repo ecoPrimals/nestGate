@@ -158,13 +158,13 @@ impl CapabilityConfig {
     /// This performs runtime discovery - no hardcoded addresses!
     pub async fn discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
         // Check cache first (lock-free)
-        if let Some(service) = self.discovered_services.get(&capability) {
+        if let Some(service) = self.discovered_services.get(&capability)
+            && Self::is_service_healthy(&service)
+        {
             // Validate cached service is still alive (respects primal sovereignty)
-            if Self::is_service_healthy(&service) {
-                return Ok(service.clone());
-            }
-            // Service is stale - evict from cache and rediscover
+            return Ok(service.clone());
         }
+        // Service is stale - evict from cache and rediscover
 
         // Perform discovery with retries
         for attempt in 0..self.retry_attempts {

@@ -14,8 +14,8 @@ mod crud_list;
 #[path = "crud_properties.rs"]
 mod crud_properties;
 
-pub(crate) use crud_helpers::parse_size;
-pub use crud_list::{get_workspaces, get_workspaces_from_env_source};
+use crud_helpers::parse_size;
+pub use crud_list::get_workspaces;
 
 use axum::{
     extract::{Json, Path},

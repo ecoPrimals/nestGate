@@ -264,6 +264,10 @@ pub struct LoadTestingParams {
 /// Provides granular cost analysis broken down by different
 /// cost categories for detailed financial planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[expect(
+    clippy::struct_field_names,
+    reason = "Deprecated REST RPC types"
+)]
 /// Costbreakdown
 pub struct CostBreakdown {
     /// Hardware acquisition and setup costs

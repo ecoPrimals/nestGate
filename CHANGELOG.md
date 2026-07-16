@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 118: Deep Debt Sweep — Dead Code Cleanup, Let-Chains, Clippy Zero (Jul 16, 2026)
+
+- **292 dead code warnings → 0**: Removed 32 stale import/re-export lines via `cargo fix`;
+  gated 7 stub handler modules (`auth_production`, `hardware_tuning`, `workspace_management`,
+  `zero_cost_api_handlers`, `rest`, `rest::rpc`) with justified `#[expect(dead_code, reason = "...")]`;
+  removed dead `AnalysisConfigCanonical` type alias; fixed 4 unfulfilled lint expectations.
+- **8 let-chain modernizations**: Collapsed nested `if let ... { if ... }` to Rust 2024
+  `if let ... && ...` syntax across `nestgate-config` (1), `nestgate-discovery` (3),
+  `nestgate-platform` (1), `nestgate-rpc` (3).
+- **30 clippy errors → 0**: Fixed empty-line-after-doc, redundant `pub(crate)` in private modules,
+  struct field naming (3 deprecated REST types), unnecessary wraps (7 functions), unused async (4 stubs),
+  needless pass-by-ref-mut (3), unfulfilled lint expects (2).
+- **Removed unfulfilled `async_fn_in_trait` expects**: `ZeroCostApiHandler` and `ZeroCostDatasetManager`
+  traits no longer need this lint gate (stabilized in Rust 2024).
+- **Unused `BTreeMap` import removed** from `nestgate-rpc` footprint query tests.
+- **1710 tests pass, 0 failures** across full workspace.
+
 ### Session 117: Phase 2 Transport — TransportStream + TransportListener (Jul 16, 2026)
 
 - **`TransportStream` enum**: Canonical ecosystem-standard stream type (UDS | TCP) with

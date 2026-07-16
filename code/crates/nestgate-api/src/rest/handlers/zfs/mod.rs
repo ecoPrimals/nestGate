@@ -7,7 +7,7 @@
 //! providing clean data access for management and other management systems.
 
 mod dataset_handlers;
-pub(crate) mod helpers;
+pub(super) mod helpers;
 mod snapshot_handlers;
 
 // Re-export all public handlers for backward compatibility

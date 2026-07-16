@@ -16,6 +16,10 @@ use tracing::info;
 /// (e.g. security capability provider or an external identity provider via capability IPC).
 /// Until wired, returns `UNAUTHORIZED` — callers should not assume
 /// any request is authenticated.
+#[expect(
+    clippy::unused_async,
+    reason = "Stub API; async needed when capability is wired"
+)]
 pub async fn authenticate(
     State(_handler): State<ProductionAuthHandler>,
     Json(credentials): Json<AuthCredentials>,
@@ -34,6 +38,10 @@ pub async fn authenticate(
 ///
 /// User provisioning requires an identity-provider capability (e.g.
 /// BTSP-backed user store). Until wired, returns `501 NOT IMPLEMENTED`.
+#[expect(
+    clippy::unused_async,
+    reason = "Stub API; async needed when capability is wired"
+)]
 pub async fn create_user(
     State(_handler): State<ProductionAuthHandler>,
     Json(request): Json<CreateUserRequest>,

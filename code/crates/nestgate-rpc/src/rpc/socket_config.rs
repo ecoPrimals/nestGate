@@ -444,21 +444,21 @@ impl SocketConfig {
     /// file, or checking writability fails.
     pub fn prepare_socket_path(&self) -> Result<()> {
         // Create parent directories if needed
+        if let Some(parent) = self.socket_path.parent() && !parent.exists() {
+            std::fs::create_dir_all(parent).map_err(|e| {
+                NestGateError::configuration_error(
+                    "socket_directory",
+                    format!(
+                        "Failed to create socket directory {}: {e}",
+                        parent.display()
+                    ),
+                )
+            })?;
+
+            info!("Created socket directory: {:?}", parent);
+        }
+
         if let Some(parent) = self.socket_path.parent() {
-            if !parent.exists() {
-                std::fs::create_dir_all(parent).map_err(|e| {
-                    NestGateError::configuration_error(
-                        "socket_directory",
-                        format!(
-                            "Failed to create socket directory {}: {e}",
-                            parent.display()
-                        ),
-                    )
-                })?;
-
-                info!("Created socket directory: {:?}", parent);
-            }
-
             // Verify directory is writable
             if parent.exists() && std::fs::metadata(parent).is_ok() {
                 debug!("Socket directory exists and is accessible: {:?}", parent);

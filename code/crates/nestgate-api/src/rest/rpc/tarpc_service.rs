@@ -59,6 +59,10 @@ impl TarpcRpcService {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn start_stream(
         &self,
         request: super::UnifiedRpcRequest,
@@ -95,6 +99,10 @@ impl TarpcRpcService {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub const fn health_check(&self) -> Result<bool, super::RpcError> {
         Ok(true)
     }

@@ -123,6 +123,10 @@ impl UniversalSecurityLayer {
     /// # Errors
     ///
     /// Returns `RpcError` if validation fails (currently always succeeds).
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub const fn validate_request(&self, _request: &UnifiedRpcRequest) -> Result<(), RpcError> {
         Ok(())
     }
@@ -132,6 +136,10 @@ impl UniversalSecurityLayer {
     /// # Errors
     ///
     /// Returns `RpcError` if rate limit exceeded (currently always succeeds).
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub const fn check_rate_limit(&self, _source: &str) -> Result<(), RpcError> {
         Ok(())
     }

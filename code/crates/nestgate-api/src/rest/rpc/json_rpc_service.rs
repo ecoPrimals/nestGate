@@ -69,6 +69,11 @@ impl JsonRpcService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unnecessary_wraps,
+        clippy::needless_pass_by_ref_mut,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn disconnect(&mut self) -> Result<(), RpcError> {
         info!("Disconnecting from orchestration");
         // Simplified - just log the disconnection

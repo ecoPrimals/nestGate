@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,797+ tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 144b (Phase 2 transport: TransportStream + TransportListener, typed JSON-RPC errors, ErrorContextExt, visibility tightening, hardcoded path elimination), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 3,797+ tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 144b (deep debt sweep: 292 dead code → 0, let-chains, clippy zero; Phase 2 transport, typed JSON-RPC errors, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
 date = 2026-07-16
 
 [taxonomies]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **3,797+ tests** (all passing, 73+ ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 118 Deep debt sweep** (Wave 144b): 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead type alias, unfulfilled lint expects; 1710 tests pass
 - **Session 117 Phase 2 Transport** (Wave 144b): `TransportStream` + `TransportListener` enum types, unified `serve_listener()` accept loop, `JsonRpcClient` connect consolidation, `IpcStream` → type alias, `AsyncStream` trait removed, 7 new tests
 - **Session 116 Deep debt sweep** (Wave 144b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types` replaces 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules); removed `/opt/ecoPrimals/depot` hardcoded fallback; security socket tier-6 → XDG-based
 - **Session 115 Deep debt sweep** (Wave 144b): `ErrorContextExt` trait — 152 `map_err(format!())` sites → `.io_ctx`/`.net_ctx`/`.internal_ctx`/`.api_ctx`/`.validation_ctx`/`.security_ctx`

@@ -66,12 +66,13 @@ pub async fn get_workspaces_from_env_source(
                     let creation = fields[5];
 
                     // Extract workspace ID from dataset name (e.g., "zfspool/workspaces/ws-123" -> "ws-123")
-                    if let Some(workspace_id) = full_name.split('/').next_back() {
-                        // Skip the parent dataset itself
-                        if workspace_id == "workspaces" {
-                            continue;
-                        }
+                    if let Some(workspace_id) = full_name.split('/').next_back()
+                        && workspace_id == "workspaces"
+                    {
+                        continue;
+                    }
 
+                    if let Some(workspace_id) = full_name.split('/').next_back() {
                         // Get additional properties
                         let (compression, quota, status) =
                             get_workspace_properties(&zfs_bin, full_name).await;

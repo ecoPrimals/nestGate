@@ -67,6 +67,7 @@ pub mod auth;
 /// **PRODUCTION AUTH HANDLERS**
 ///
 /// Production authentication using `nestgate-core` security (`AuthManager`).
+#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
 pub(crate) mod auth_production;
 #[cfg(test)]
 mod auth_production_tests;
@@ -110,6 +111,7 @@ mod dashboard_types_tests;
 /// **HARDWARE TUNING MODULE**
 ///
 /// Hardware performance tuning and optimization.
+#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
 pub mod hardware_tuning;
 
 /// **HEALTH MODULE**
@@ -178,6 +180,7 @@ mod storage_unit_tests;
 /// **WORKSPACE MANAGEMENT MODULE**
 ///
 /// Workspace creation, management, and collaboration features.
+#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
 pub(crate) mod workspace_management;
 
 #[cfg(test)]
@@ -189,6 +192,7 @@ mod mod_tests;
 /// **ZERO-COST API HANDLERS MODULE**
 ///
 /// High-performance zero-cost abstraction API handlers.
+#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
 pub(crate) mod zero_cost_api_handlers;
 #[cfg(test)]
 mod zero_cost_api_handlers_tests;

@@ -13,6 +13,10 @@ use tracing::info;
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
+#[expect(
+    clippy::unused_async,
+    reason = "Stub API; async needed when capability is wired"
+)]
 pub async fn get_auth_status() -> std::result::Result<Json<serde_json::Value>, StatusCode> {
     info!("Fetching auth status");
 

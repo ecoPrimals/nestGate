@@ -158,6 +158,10 @@ impl UnifiedRpcRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn route_request(
         &self,
         request: &UnifiedRpcRequest,

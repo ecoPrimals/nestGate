@@ -192,7 +192,6 @@ pub async fn footprint_history(
 #[cfg(test)]
 mod tests {
     use super::super::types::{FootPrintManifest, FootPrintProject, ProjectRevision};
-    use std::collections::BTreeMap;
 
     #[test]
     fn project_with_revisions_serializes() {

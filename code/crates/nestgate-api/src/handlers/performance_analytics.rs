@@ -103,10 +103,6 @@ pub async fn get_performance_recommendations()
     Err(not_implemented("performance recommendations"))
 }
 
-/// Type alias to canonical network configuration.
-pub type AnalysisConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
 #[cfg(test)]
 mod tests {
     use super::*;

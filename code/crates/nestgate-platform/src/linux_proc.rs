@@ -86,10 +86,10 @@ fn physical_cpu_count_from_proc_cpuinfo() -> Option<usize> {
             }
             physical_id = None;
             core_id = None;
-        } else if let Some(rest) = line.strip_prefix("physical id") {
-            if rest.trim_start().starts_with(':') {
-                physical_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
-            }
+        } else if let Some(rest) = line.strip_prefix("physical id")
+            && rest.trim_start().starts_with(':')
+        {
+            physical_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
         } else if let Some(rest) = line.strip_prefix("core id")
             && rest.trim_start().starts_with(':')
         {

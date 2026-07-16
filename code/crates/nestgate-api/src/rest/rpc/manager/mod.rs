@@ -83,6 +83,10 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns error if the operation fails (currently always succeeds).
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn init_security_capability(&self, _endpoint: &str) -> Result<(), NestGateError> {
         tracing::info!(
             "Security capability initialization deferred \
@@ -175,6 +179,10 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if shutdown fails.
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn shutdown(&mut self) -> Result<(), RpcError> {
         if let Some(shutdown_tx) = self.shutdown_tx.take() {
             let _ = shutdown_tx.send(());
@@ -187,6 +195,10 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if stream creation fails.
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn start_bidirectional_stream(
         &self,
         _request: UnifiedRpcRequest,
@@ -200,6 +212,10 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if health check fails.
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Deprecated REST layer; signature preserved for compatibility"
+    )]
     pub fn get_health_status(&self) -> Result<serde_json::Value, RpcError> {
         Ok(serde_json::json!({
             "status": "healthy",
@@ -213,6 +229,10 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if endpoint is invalid.
+    #[expect(
+        clippy::needless_pass_by_ref_mut,
+        reason = "Deprecated REST RPC; signature preserved for compatibility"
+    )]
     pub fn init_tarpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         info!("Initializing tarpc service connection to: {}", endpoint);
         if endpoint.is_empty() || !endpoint.contains(':') {
@@ -229,6 +249,10 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if endpoint is invalid.
+    #[expect(
+        clippy::needless_pass_by_ref_mut,
+        reason = "Deprecated REST RPC; signature preserved for compatibility"
+    )]
     pub fn init_json_rpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         info!("Initializing JSON-RPC service connection to: {}", endpoint);
         if endpoint.is_empty() {

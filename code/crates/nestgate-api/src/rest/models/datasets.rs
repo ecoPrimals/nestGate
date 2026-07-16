@@ -126,6 +126,10 @@ pub struct DatasetStats {
 
 /// Complete dataset information including properties and statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[expect(
+    clippy::struct_field_names,
+    reason = "Deprecated REST RPC types"
+)]
 /// Dataset
 pub struct Dataset {
     /// Unique name of the dataset

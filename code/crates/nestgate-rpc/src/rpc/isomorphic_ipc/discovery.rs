@@ -133,11 +133,13 @@ pub fn discover_ipc_endpoint_from_env(
 
     // 1. Try Unix socket first (optimal)
     debug!("   Trying Unix socket discovery...");
+    if let Ok(socket_path) = discover_unix_socket_from_env(env, service_name)
+        && socket_path.exists()
+    {
+        info!("Discovered Unix socket: {}", socket_path.display());
+        return Ok(IpcEndpoint::UnixSocket(socket_path));
+    }
     if let Ok(socket_path) = discover_unix_socket_from_env(env, service_name) {
-        if socket_path.exists() {
-            info!("Discovered Unix socket: {}", socket_path.display());
-            return Ok(IpcEndpoint::UnixSocket(socket_path));
-        }
         debug!(
             "   Unix socket path does not exist: {}",
             socket_path.display()

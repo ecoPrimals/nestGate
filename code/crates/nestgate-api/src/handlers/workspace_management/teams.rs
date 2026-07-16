@@ -69,6 +69,10 @@ pub async fn create_team(
 /// **GET TEAMS HANDLER**
 ///
 /// Retrieve all teams.
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub API; Result preserved for future error handling"
+)]
 pub fn get_teams() -> Result<Json<Vec<TeamInfo>>, StatusCode> {
     let teams = vec![
         TeamInfo {

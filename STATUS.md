@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 16, 2026 (Wave 144b — Session 116: typed JSON-RPC errors, visibility tightening, hardcoded path elimination)  
+**Last Updated**: Jul 16, 2026 (Wave 144b — Session 118: deep debt sweep — dead code cleanup, let-chains, clippy zero)
 **Version**: 0.5.0
 
 ---
@@ -19,7 +19,7 @@ Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 20 crate roots (zero exceptions)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
-Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
+Dead code:          ZERO #[allow(dead_code)]; stub modules use #[expect(dead_code, reason=...)] per ecosystem standard
 Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
 Mocks in prod:      ZERO fabricated metrics — 11 ZFS handlers evolved to honest not_implemented; system memory from /proc/meminfo (was hardcoded); ARC fallback 0.0 (was 0.85); dev_environment gated behind `dev-stubs` feature
@@ -50,9 +50,11 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–117) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–118) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 118** (Wave 144b): Deep debt sweep — 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead `AnalysisConfigCanonical` alias, unfulfilled `async_fn_in_trait` expects; unused `BTreeMap` import
+- **Session 117** (Wave 144b): Phase 2 Transport — `TransportStream`/`TransportListener` types, server accept loop unified, client connect consolidated
 - **Session 116** (Wave 144b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types`, replaced 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules, `models.rs`, `rest`); removed `/opt/ecoPrimals/depot` hardcoded fallback, security socket tier-6 → XDG-based
 - **Session 115** (Wave 144b): ErrorContextExt trait — 152 map_err(format!()) sites → .io_ctx/.net_ctx/.internal_ctx/.api_ctx/.validation_ctx/.security_ctx, 42 remaining (runtime-interpolated)
 - **Session 114** (Wave 143b): PROJECTS_PATH CAS wiring (footPrint composition), String::from R8 sweep (2500+ across 382 files), deep debt continuation

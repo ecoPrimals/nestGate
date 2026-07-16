@@ -15,8 +15,6 @@ mod query;
 
 pub use health::get_alerts;
 pub use metrics::{get_metrics, get_metrics_history};
-pub use prometheus::calculate_real_zfs_cache_hit_ratio;
-pub use query::MetricsHistoryQuery;
 
 #[cfg(test)]
 mod tests;
