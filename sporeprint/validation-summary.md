@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 1,710 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 150b (99 dep bumps, socket ecosystem segment GAP-036, scorecard audit; dimensional audit, GAP-038 PID liveness, deep debt sweep, Phase 2 transport, typed JSON-RPC errors, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 1,710 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 150d (prod unwrap audit: 0 unwrap / 10 expect confirmed; 99 dep bumps, socket ecosystem segment GAP-036, scorecard audit; dimensional audit, GAP-038 PID liveness, deep debt sweep, Phase 2 transport, typed JSON-RPC errors, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
 date = 2026-07-18
 
 [taxonomies]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **1,710 tests** (1,630 passing, 80 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 121 Prod unwrap audit** (Wave 150d): Full 14-crate audit confirmed 0 `.unwrap()`, 10 `.expect()` in production (all annotated invariant guards/lazy-init); wave stamps → 150d
 - **Session 120 Dep bumps + GAP-036** (Wave 150b): 99 dependency patch bumps; socket path ecosystem segment (discovery, launcher, server fallback → `$XDG_RUNTIME_DIR/<ecosystem>/`); dimensional scorecard audit confirmed; wave stamps → 150b
 - **Session 119 Dimensional audit** (Wave 149b): `cargo fmt` (133 files); GAP-038 PID sidecar liveness check (socket conflict detection); btsp re-export → `#[cfg(test)]`; wave stamps 149b; PROJECTS_PATH verified complete; 1,630+ tests pass
 - **Session 118 Deep debt sweep** (Wave 149b): 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead type alias, unfulfilled lint expects; 1710 tests pass

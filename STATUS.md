@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 18, 2026 (Wave 150b — Session 120: 99 dep patch bumps, socket path ecosystem segment, dimensional scorecard audit)
+**Last Updated**: Jul 18, 2026 (Wave 150d — Session 121: prod unwrap deep audit confirmed 10, wave stamps 150d)
 **Version**: 0.5.0
 
 ---
@@ -15,7 +15,7 @@ Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --
 Tests:              1,630 passed, 80 ignored — cargo test --workspace (1,710 total)
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
 Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
-Unwrap/Expect:      10 documented .expect() in production (OnceLock init + invariant guards + const timestamp)
+Unwrap/Expect:      0 .unwrap(), 10 .expect() in production — AUDITED across all 14 crates (OnceLock init ×5, pool invariant ×4, const timestamp ×1; all #[expect(clippy::expect_used)] annotated)
 Inline markers:     none in committed production `.rs` (wateringHole policy)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 20 crate roots (zero exceptions)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
@@ -50,9 +50,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–120) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–121) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 121** (Wave 150d): Prod unwrap deep audit — full 14-crate scan confirmed 0 `.unwrap()`, 10 `.expect()` in production (all justified, annotated with `#[expect(clippy::expect_used)]`); wave stamps → 150d
 - **Session 120** (Wave 150b): 99 dependency patch bumps (all semver-compatible); socket path ecosystem segment — legacy `$XDG_RUNTIME_DIR/{service}.sock` → `$XDG_RUNTIME_DIR/<ecosystem>/{service}.sock` across discovery, launcher, and server fallback paths (GAP-036 alignment); dimensional scorecard audit (1,710 tests / 0 clippy / 0 fmt / 0 unsafe / 0 >800L); wave stamps → 150b
 - **Session 119** (Wave 149b): `cargo fmt` (133 files); GAP-038 PID sidecar liveness check (socket conflict detection before unlink); btsp `is_btsp_required` → `#[cfg(test)]`; dimensional audit aligned with ecosystem scorecard; wave stamps → 149b
 - **Session 118** (Wave 149b): Deep debt sweep — 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead `AnalysisConfigCanonical` alias, unfulfilled `async_fn_in_trait` expects; unused `BTreeMap` import

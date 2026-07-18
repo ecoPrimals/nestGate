@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Jul 16, 2026 (Wave 150b)
+**Last Updated**: Jul 16, 2026 (Wave 150d)
 
 ## What This Is
 

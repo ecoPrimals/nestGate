@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 121: Prod Unwrap Deep Audit (Jul 18, 2026)
+
+- **Full 14-crate production unwrap/expect audit**: Scanned all `.rs` files across all 14 crates,
+  excluding `#[cfg(test)]` blocks, test-only modules, and test files. Result: **0 `.unwrap()`**
+  and **10 `.expect()`** in production code. All 10 are justified invariant guards or lazy-init
+  patterns, annotated with `#[expect(clippy::expect_used, reason = "...")]` and documented with
+  `# Panics` sections:
+  - `nestgate-rpc` (5): `OnceLock<StorageState>` / `OnceLock<ContentState>` initialization
+  - `nestgate-core` (4): `PoolHandle` / `PoolBlockGuard` structural invariant enforcement
+  - `nestgate-api` (1): `chrono::DateTime::from_timestamp(0, 0)` in deprecated REST `const fn`
+  - All other 11 crates: **0** production unwrap/expect
+- **Wave stamps → 150d**: All root docs updated from 150b. Three-domain model (`nestgate.io`
+  as data service point) noted from ecosystem blurb.
+
 ### Session 120: Dependency Bumps, Socket Ecosystem Segment, Scorecard Audit (Jul 18, 2026)
 
 - **99 dependency patch bumps**: All semver-compatible updates applied — blake3 1.8.5, bytes 1.12.1,
