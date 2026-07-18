@@ -264,8 +264,8 @@ pub async fn is_nestgate_running() -> bool {
 ///
 /// ## XDG Compliance
 ///
-/// Follows XDG Base Directory Specification:
-/// 1. `$XDG_RUNTIME_DIR/nestgate.sock` (preferred)
+/// Follows XDG Base Directory Specification with ecosystem segment:
+/// 1. `$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock` (preferred)
 /// 2. `$HOME/.local/share/nestgate/nestgate.sock` (fallback)
 /// 3. `temp_dir()/nestgate-{uid}.sock` (last resort)
 ///
@@ -297,9 +297,13 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
 pub fn get_nestgate_socket_path_from_env_source(
     env: &(impl EnvSource + ?Sized),
 ) -> Result<PathBuf> {
-    // Priority 1: XDG_RUNTIME_DIR (session-specific, auto-cleaned)
+    let eco = nestgate_config::constants::system::ecosystem_path_segment();
+
+    // Priority 1: XDG_RUNTIME_DIR/<ecosystem>/ (session-specific, auto-cleaned)
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
-        let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}.sock"));
+        let path = PathBuf::from(runtime_dir)
+            .join(&eco)
+            .join(format!("{NESTGATE_SERVICE_NAME}.sock"));
         return Ok(path);
     }
 
@@ -476,7 +480,8 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let env = MapEnv::from([("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref())]);
         let p = get_nestgate_socket_path_from_env_source(&env).expect("path");
-        assert_eq!(p, dir.path().join("nestgate.sock"));
+        let eco = nestgate_config::constants::system::ecosystem_path_segment();
+        assert_eq!(p, dir.path().join(&eco).join("nestgate.sock"));
     }
 
     #[test]

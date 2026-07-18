@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-07-16, Wave 149b)**  
+**Verification (as of 2026-07-16, Wave 150b)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
 - **Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific)  
@@ -160,7 +160,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-16 (Wave 149b).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-16 (Wave 150b).
 
 | Area | Status |
 |------|--------|
@@ -315,4 +315,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: July 2026 (Wave 149b)
+**Latest**: July 2026 (Wave 150b)

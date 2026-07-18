@@ -158,10 +158,10 @@ pub fn discover_ipc_endpoint_from_env(
     ))
 }
 
-/// Discover Unix socket path (XDG-compliant)
+/// Discover Unix socket path (XDG-compliant with ecosystem segment)
 ///
 /// **Tries** (in order):
-/// 1. `$XDG_RUNTIME_DIR/{service}.sock` (preferred)
+/// 1. `$XDG_RUNTIME_DIR/<ecosystem>/{service}.sock` (preferred)
 /// 2. `temp_dir()/{service}.sock` (fallback)
 ///
 /// # Arguments
@@ -176,9 +176,13 @@ fn discover_unix_socket_from_env(
     env: &(impl EnvSource + ?Sized),
     service_name: &str,
 ) -> Result<PathBuf> {
-    // Try XDG_RUNTIME_DIR first (preferred)
+    let eco = nestgate_config::constants::system::ecosystem_path_segment();
+
+    // Try XDG_RUNTIME_DIR/<ecosystem>/ first (preferred)
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
-        let socket_path = PathBuf::from(format!("{runtime_dir}/{service_name}.sock"));
+        let socket_path = PathBuf::from(runtime_dir)
+            .join(&eco)
+            .join(format!("{service_name}.sock"));
         debug!("   Unix socket candidate: {}", socket_path.display());
         return Ok(socket_path);
     }
@@ -325,7 +329,10 @@ mod tests {
     #[test]
     fn discover_ipc_endpoint_prefers_existing_unix_socket() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let sock = dir.path().join("disc_mysvc.sock");
+        let eco = nestgate_config::constants::system::ecosystem_path_segment();
+        let eco_dir = dir.path().join(&eco);
+        std::fs::create_dir_all(&eco_dir).unwrap();
+        let sock = eco_dir.join("disc_mysvc.sock");
         std::fs::write(&sock, b"x").unwrap();
         let rt = dir.path().to_string_lossy();
         let env = MapEnv::from([("XDG_RUNTIME_DIR", rt.as_ref())]);

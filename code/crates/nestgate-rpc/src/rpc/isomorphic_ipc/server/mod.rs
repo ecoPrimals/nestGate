@@ -655,20 +655,24 @@ impl IsomorphicIpcServer {
         }
     }
 
-    /// Get socket path — checks `NESTGATE_SOCKET` first, then XDG, then temp dir.
+    /// Fallback socket path when `SocketConfig` is unavailable.
+    ///
+    /// Mirrors the canonical layout (`$XDG_RUNTIME_DIR/<ecosystem>/<service>.sock`)
+    /// but without family scoping or capability symlinks.
     fn get_socket_path(&self) -> Result<std::path::PathBuf> {
         if let Ok(explicit) = std::env::var("NESTGATE_SOCKET") {
             return Ok(std::path::PathBuf::from(explicit));
         }
 
+        let eco = nestgate_config::constants::system::ecosystem_path_segment();
+
         if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-            return Ok(std::path::PathBuf::from(format!(
-                "{}/{}.sock",
-                runtime_dir, self.service_name
-            )));
+            return Ok(std::path::PathBuf::from(runtime_dir)
+                .join(&eco)
+                .join(format!("{}.sock", self.service_name)));
         }
 
-        Ok(std::env::temp_dir().join(format!("{}.sock", self.service_name)))
+        Ok(std::env::temp_dir().join(format!("{}-{}.sock", self.service_name, eco)))
     }
 
     /// Prepare socket path (create dirs, remove old socket).

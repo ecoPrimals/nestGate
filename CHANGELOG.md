@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 120: Dependency Bumps, Socket Ecosystem Segment, Scorecard Audit (Jul 18, 2026)
+
+- **99 dependency patch bumps**: All semver-compatible updates applied — blake3 1.8.5, bytes 1.12.1,
+  chrono 0.4.45, clap 4.6.2, dashmap 6.2.1, futures 0.3.33, tokio-util 0.7.16, zeroize 1.9.0,
+  and 91 others. Full test suite passes (1,630 tests, 0 failures).
+- **Socket path ecosystem segment (GAP-036 alignment)**: Legacy flat socket paths
+  (`$XDG_RUNTIME_DIR/{service}.sock`) evolved to include the ecosystem path segment
+  (`$XDG_RUNTIME_DIR/<ecosystem>/{service}.sock`). Fixed in discovery (`discover_unix_socket_from_env`),
+  launcher (`get_nestgate_socket_path_from_env_source`), and server fallback (`get_socket_path`).
+  Tests updated to verify new layout. Converges legacy paths toward `SocketConfig` canonical layout.
+- **Dimensional scorecard audit**: 1,710 tests (1,630 pass + 80 ignored), 0 clippy warnings,
+  0 fmt drift, 0 debt markers, 0 unsafe code, 0 files >800L. Confirmed for ecosystem report.
+- **Wave stamps → 150b**: All root docs updated from 149b.
+
 ### Session 119: Dimensional Audit, cargo fmt, GAP-038 Socket Liveness (Jul 18, 2026)
 
 - **`cargo fmt --all`**: Reformatted 133 files to resolve format drift detected during

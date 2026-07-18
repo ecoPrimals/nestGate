@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 18, 2026 (Wave 149b — Session 119: cargo fmt, GAP-038 PID liveness check, dimensional audit)
+**Last Updated**: Jul 18, 2026 (Wave 150b — Session 120: 99 dep patch bumps, socket path ecosystem segment, dimensional scorecard audit)
 **Version**: 0.5.0
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings in nestgate crates)
 Format:             CLEAN (cargo fmt --all -- --check passes)
 Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features (zero errors/warnings)
-Tests:              3,790 passed, 73 ignored (1 pre-existing env-specific) — cargo test --workspace
+Tests:              1,630 passed, 80 ignored — cargo test --workspace (1,710 total)
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
 Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
 Unwrap/Expect:      10 documented .expect() in production (OnceLock init + invariant guards + const timestamp)
@@ -27,7 +27,7 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only,
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
 Auth mode:          NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider
-Discovery:          Environment variables + capability IPC; 6-tier security socket discovery (XDG-based, zero hardcoded FHS paths)
+Discovery:          Environment variables + capability IPC; 6-tier security socket discovery (XDG-based + ecosystem path segment, zero hardcoded FHS paths)
 Env aliases:        Legacy BEARDOG_* aliases REMOVED — canonical SECURITY_PROVIDER_SOCKET / FAMILY_SEED only
 IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 90 methods
 IPC routes (HTTP):  Aligned with UDS namespace (storage.store not storage.object.store); legacy aliases warn
@@ -50,9 +50,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–119) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–120) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 120** (Wave 150b): 99 dependency patch bumps (all semver-compatible); socket path ecosystem segment — legacy `$XDG_RUNTIME_DIR/{service}.sock` → `$XDG_RUNTIME_DIR/<ecosystem>/{service}.sock` across discovery, launcher, and server fallback paths (GAP-036 alignment); dimensional scorecard audit (1,710 tests / 0 clippy / 0 fmt / 0 unsafe / 0 >800L); wave stamps → 150b
 - **Session 119** (Wave 149b): `cargo fmt` (133 files); GAP-038 PID sidecar liveness check (socket conflict detection before unlink); btsp `is_btsp_required` → `#[cfg(test)]`; dimensional audit aligned with ecosystem scorecard; wave stamps → 149b
 - **Session 118** (Wave 149b): Deep debt sweep — 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead `AnalysisConfigCanonical` alias, unfulfilled `async_fn_in_trait` expects; unused `BTreeMap` import
 - **Session 117** (Wave 149b): Phase 2 Transport — `TransportStream`/`TransportListener` types, server accept loop unified, client connect consolidated
