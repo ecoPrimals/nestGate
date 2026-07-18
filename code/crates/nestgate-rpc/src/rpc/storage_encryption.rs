@@ -173,8 +173,7 @@ impl StorageEncryption {
             "n": b64_encode(nonce.as_slice()),
             "alg": ENVELOPE_ALG,
         });
-        serde_json::to_vec(&envelope)
-            .io_ctx("envelope serialize")
+        serde_json::to_vec(&envelope).io_ctx("envelope serialize")
     }
 
     /// Decrypt an encrypted envelope, returning the original plaintext.
@@ -184,8 +183,7 @@ impl StorageEncryption {
     /// Returns an error if the envelope is malformed, the version/algorithm is
     /// unsupported, or the AEAD decryption fails (wrong key, tampered data).
     pub fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
-        let envelope: Value = serde_json::from_slice(data)
-            .api_ctx("envelope parse")?;
+        let envelope: Value = serde_json::from_slice(data).api_ctx("envelope parse")?;
 
         let v = envelope["v"]
             .as_u64()
@@ -264,10 +262,7 @@ fn resolve_security_provider_socket() -> Option<String> {
 fn hex_decode(s: &str) -> Result<Vec<u8>> {
     (0..s.len())
         .step_by(2)
-        .map(|i| {
-            u8::from_str_radix(&s[i..i + 2], 16)
-                .api_ctx("hex decode")
-        })
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).api_ctx("hex decode"))
         .collect()
 }
 

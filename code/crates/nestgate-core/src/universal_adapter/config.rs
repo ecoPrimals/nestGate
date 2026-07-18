@@ -280,8 +280,7 @@ mod tests {
 
     #[test]
     fn test_adapter_config_builder_add_endpoint() {
-        let config =
-            AdapterConfig::new().add_endpoint("http://custom:9000/discovery".into());
+        let config = AdapterConfig::new().add_endpoint("http://custom:9000/discovery".into());
 
         // ServiceDiscoveryConfig generates 3 endpoints + 1 custom = 4
         assert_eq!(config.endpoints.len(), 4);

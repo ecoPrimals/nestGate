@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 119: Dimensional Audit, cargo fmt, GAP-038 Socket Liveness (Jul 18, 2026)
+
+- **`cargo fmt --all`**: Reformatted 133 files to resolve format drift detected during
+  ecosystem-wide dimensional review (Wave 149b).
+- **GAP-038: PID sidecar liveness check**: `is_socket_owned_by_live_process()` reads the
+  `{socket}.pid` sidecar and probes with `kill(pid, 0)` via `rustix::process::test_kill_process`.
+  Both `SocketConfig::prepare_socket_path()` and `IsomorphicIpcServer::prepare_socket_path()`
+  now refuse to unlink a socket owned by a live process (returns error instead of stealing).
+  EPERM treated as "process exists" (handles cross-user probing). 5 new tests: stale PID,
+  missing sidecar, own PID, live PID (init), non-numeric PID.
+- **`is_btsp_required` re-export → `#[cfg(test)]`**: Production-dead re-export in
+  `btsp_client.rs` gated to test-only (was masked by unfulfilled `#[expect(dead_code)]`).
+- **Wave stamps → 149b**: All root docs, sporeprint, guides updated from 144b to 149b.
+- **Dimensional audit aligned**: nestGate scorecard vs ecosystem review — 0 clippy warnings,
+  0 fmt drift, 0 debt markers, 0 unsafe, 0 files >800L, 10 documented production `.expect()`,
+  0 `panic!`/`todo!`/`unimplemented!`, 1,630+ tests pass.
+- **PROJECTS_PATH CAS wiring verified**: Blurb lists as "Open" but confirmed complete since
+  Session 114 (Wave 143b). Implementation in `footprint_base_path()` with 3 tests.
+
 ### Session 118: Deep Debt Sweep — Dead Code Cleanup, Let-Chains, Clippy Zero (Jul 16, 2026)
 
 - **292 dead code warnings → 0**: Removed 32 stale import/re-export lines via `cargo fix`;

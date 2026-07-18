@@ -96,5 +96,4 @@ impl CoordManifest {
             ..Default::default()
         }
     }
-
 }

@@ -371,8 +371,7 @@ mod tests {
 
     #[test]
     fn error_context_ext_io_ctx() {
-        let r: std::result::Result<(), std::io::Error> =
-            Err(std::io::Error::other("disk full"));
+        let r: std::result::Result<(), std::io::Error> = Err(std::io::Error::other("disk full"));
         let err = r.io_ctx("write staging").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("write staging"), "missing context in: {msg}");
@@ -381,8 +380,7 @@ mod tests {
 
     #[test]
     fn error_context_ext_net_ctx() {
-        let r: std::result::Result<(), std::io::Error> =
-            Err(std::io::Error::other("refused"));
+        let r: std::result::Result<(), std::io::Error> = Err(std::io::Error::other("refused"));
         let err = r.net_ctx("connect").unwrap_err();
         assert!(err.to_string().contains("connect"));
         assert!(matches!(err, NestGateError::Network(_)));

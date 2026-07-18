@@ -48,6 +48,5 @@ pub async fn safe_create_dir_all<P: AsRef<Path>>(path: P) -> Result<()> {
 
 /// Safe temporary directory creation
 pub fn safe_create_temp_dir(_context: &str) -> Result<tempfile::TempDir> {
-    tempfile::TempDir::new()
-        .io_ctx("Failed to create temporary directory")
+    tempfile::TempDir::new().io_ctx("Failed to create temporary directory")
 }

@@ -134,11 +134,7 @@ mod tests {
 
     #[test]
     fn test_capability_id_creation() {
-        let cap_id = CapabilityId::new(
-            "storage".into(),
-            "zfs".into(),
-            "1.0.0".into(),
-        );
+        let cap_id = CapabilityId::new("storage".into(), "zfs".into(), "1.0.0".into());
 
         assert_eq!(cap_id.domain(), "storage");
         assert_eq!(cap_id.capability(), "zfs");
@@ -160,23 +156,11 @@ mod tests {
 
     #[test]
     fn test_capability_id_equality() {
-        let cap_id1 = CapabilityId::new(
-            "storage".into(),
-            "zfs".into(),
-            "1.0.0".into(),
-        );
+        let cap_id1 = CapabilityId::new("storage".into(), "zfs".into(), "1.0.0".into());
 
-        let cap_id2 = CapabilityId::new(
-            "storage".into(),
-            "zfs".into(),
-            "1.0.0".into(),
-        );
+        let cap_id2 = CapabilityId::new("storage".into(), "zfs".into(), "1.0.0".into());
 
-        let cap_id3 = CapabilityId::new(
-            "network".into(),
-            "routing".into(),
-            "1.0.0".into(),
-        );
+        let cap_id3 = CapabilityId::new("network".into(), "routing".into(), "1.0.0".into());
 
         assert_eq!(cap_id1, cap_id2);
         assert_ne!(cap_id1, cap_id3);
@@ -184,11 +168,7 @@ mod tests {
 
     #[test]
     fn test_capability_id_serialization() {
-        let cap_id = CapabilityId::new(
-            "security".into(),
-            "authentication".into(),
-            "3.0.0".into(),
-        );
+        let cap_id = CapabilityId::new("security".into(), "authentication".into(), "3.0.0".into());
 
         let json = serde_json::to_string(&cap_id).expect("Failed to serialize");
         let deserialized: CapabilityId =
@@ -202,11 +182,7 @@ mod tests {
 
     #[test]
     fn test_capability_id_clone() {
-        let cap_id = CapabilityId::new(
-            "compute".into(),
-            "processing".into(),
-            "1.5.0".into(),
-        );
+        let cap_id = CapabilityId::new("compute".into(), "processing".into(), "1.5.0".into());
 
         let cloned = cap_id.clone();
         assert_eq!(cap_id, cloned);
@@ -214,11 +190,7 @@ mod tests {
 
     #[test]
     fn test_capability_id_debug() {
-        let cap_id = CapabilityId::new(
-            "intelligence".into(),
-            "ml".into(),
-            "0.9.0".into(),
-        );
+        let cap_id = CapabilityId::new("intelligence".into(), "ml".into(), "0.9.0".into());
 
         let debug_str = format!("{:?}", cap_id);
         assert!(debug_str.contains("intelligence"));

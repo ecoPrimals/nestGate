@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 16, 2026 (Wave 144b — Session 118: deep debt sweep — dead code cleanup, let-chains, clippy zero)
+**Last Updated**: Jul 18, 2026 (Wave 149b — Session 119: cargo fmt, GAP-038 PID liveness check, dimensional audit)
 **Version**: 0.5.0
 
 ---
@@ -15,7 +15,7 @@ Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --
 Tests:              3,790 passed, 73 ignored (1 pre-existing env-specific) — cargo test --workspace
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
 Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
-Unwrap/Expect:      ZERO in production library code
+Unwrap/Expect:      10 documented .expect() in production (OnceLock init + invariant guards + const timestamp)
 Inline markers:     none in committed production `.rs` (wateringHole policy)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 20 crate roots (zero exceptions)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
@@ -50,13 +50,14 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–118) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–119) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
-- **Session 118** (Wave 144b): Deep debt sweep — 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead `AnalysisConfigCanonical` alias, unfulfilled `async_fn_in_trait` expects; unused `BTreeMap` import
-- **Session 117** (Wave 144b): Phase 2 Transport — `TransportStream`/`TransportListener` types, server accept loop unified, client connect consolidated
-- **Session 116** (Wave 144b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types`, replaced 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules, `models.rs`, `rest`); removed `/opt/ecoPrimals/depot` hardcoded fallback, security socket tier-6 → XDG-based
-- **Session 115** (Wave 144b): ErrorContextExt trait — 152 map_err(format!()) sites → .io_ctx/.net_ctx/.internal_ctx/.api_ctx/.validation_ctx/.security_ctx, 42 remaining (runtime-interpolated)
+- **Session 119** (Wave 149b): `cargo fmt` (133 files); GAP-038 PID sidecar liveness check (socket conflict detection before unlink); btsp `is_btsp_required` → `#[cfg(test)]`; dimensional audit aligned with ecosystem scorecard; wave stamps → 149b
+- **Session 118** (Wave 149b): Deep debt sweep — 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead `AnalysisConfigCanonical` alias, unfulfilled `async_fn_in_trait` expects; unused `BTreeMap` import
+- **Session 117** (Wave 149b): Phase 2 Transport — `TransportStream`/`TransportListener` types, server accept loop unified, client connect consolidated
+- **Session 116** (Wave 149b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types`, replaced 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules, `models.rs`, `rest`); removed `/opt/ecoPrimals/depot` hardcoded fallback, security socket tier-6 → XDG-based
+- **Session 115** (Wave 149b): ErrorContextExt trait — 152 map_err(format!()) sites → .io_ctx/.net_ctx/.internal_ctx/.api_ctx/.validation_ctx/.security_ctx, 42 remaining (runtime-interpolated)
 - **Session 114** (Wave 143b): PROJECTS_PATH CAS wiring (footPrint composition), String::from R8 sweep (2500+ across 382 files), deep debt continuation
 - **Session 113** (Wave 142b): Production mock evolution — ZFS defaults zeroed, tier utilization real, AI confidence computed, String::from R7 (21)
 - **Session 112** (Wave 142b): Visibility tightening — `btsp_client`/`btsp_phase3`/`primal_announce` → `pub(crate)`, infallible nonce, unwrap_or sweep (31)

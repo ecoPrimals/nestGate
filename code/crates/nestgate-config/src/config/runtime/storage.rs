@@ -42,8 +42,7 @@ impl StorageConfig {
             base_path: env::var("NESTGATE_STORAGE_PATH")
                 .unwrap_or_else(|_| "./data".into())
                 .into(),
-            backend: env::var("NESTGATE_STORAGE_BACKEND")
-                .unwrap_or_else(|_| "filesystem".into()),
+            backend: env::var("NESTGATE_STORAGE_BACKEND").unwrap_or_else(|_| "filesystem".into()),
             quota_gb: env::var("NESTGATE_STORAGE_QUOTA_GB")
                 .ok()
                 .and_then(|s| s.parse().ok())

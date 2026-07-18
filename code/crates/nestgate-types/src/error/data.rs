@@ -515,10 +515,8 @@ mod tests {
     #[test]
     fn test_storage_error_context_usage() {
         let mut data = StorageErrorData::default();
-        data.context
-            .insert("pool".into(), "tank".into());
-        data.context
-            .insert("operation".into(), "snapshot".into());
+        data.context.insert("pool".into(), "tank".into());
+        data.context.insert("operation".into(), "snapshot".into());
 
         assert_eq!(data.context.len(), 2);
         assert_eq!(data.context.get("pool"), Some(&"tank".into()));
@@ -527,8 +525,7 @@ mod tests {
     #[test]
     fn test_network_error_context_usage() {
         let mut data = NetworkErrorData::default();
-        data.context
-            .insert("request_id".into(), "12345".into());
+        data.context.insert("request_id".into(), "12345".into());
 
         assert_eq!(data.context.len(), 1);
         assert!(data.context.contains_key("request_id"));
@@ -537,10 +534,8 @@ mod tests {
     #[test]
     fn test_security_error_context_usage() {
         let mut data = SecurityErrorData::default();
-        data.context
-            .insert("ip".into(), "192.168.1.1".into());
-        data.context
-            .insert("user_agent".into(), "Mozilla".into());
+        data.context.insert("ip".into(), "192.168.1.1".into());
+        data.context.insert("user_agent".into(), "Mozilla".into());
 
         assert_eq!(data.context.len(), 2);
     }

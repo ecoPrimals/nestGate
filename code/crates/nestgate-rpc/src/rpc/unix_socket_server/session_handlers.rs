@@ -46,8 +46,7 @@ pub(super) async fn session_save(params: Option<&Value>, state: &StorageState) -
 
     let family_id = resolve_family_id(params, state)?;
 
-    let bytes = serde_json::to_vec_pretty(data)
-        .io_ctx("Failed to serialize session")?;
+    let bytes = serde_json::to_vec_pretty(data).io_ctx("Failed to serialize session")?;
 
     debug!(
         "session.save: family_id='{}', session_id='{}', size={} bytes",

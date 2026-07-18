@@ -83,9 +83,7 @@ impl UniversalStorageBridge {
         let output = std::process::Command::new("zpool")
             .args(["list", "-H", "-o", "name,size,alloc,free,health"])
             .output()
-            .map_err(|_e| {
-                UniversalZfsError::internal("Failed to execute ZFS command")
-            })?;
+            .map_err(|_e| UniversalZfsError::internal("Failed to execute ZFS command"))?;
 
         if !output.status.success() {
             return Err(UniversalZfsError::internal("zpool list command failed"));
@@ -352,9 +350,8 @@ impl UniversalStorageBridge {
         );
         let path = std::path::Path::new(&config.name);
 
-        std::fs::create_dir_all(path).map_err(|_e| {
-            UniversalZfsError::internal("Failed to create directory")
-        })?;
+        std::fs::create_dir_all(path)
+            .map_err(|_e| UniversalZfsError::internal("Failed to create directory"))?;
 
         info!("Created filesystem dataset at: {:?}", path);
 

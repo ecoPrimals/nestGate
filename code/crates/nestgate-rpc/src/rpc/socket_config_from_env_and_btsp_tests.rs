@@ -276,10 +276,7 @@ fn nestgate_family_id_takes_precedence_over_generic() {
 
 #[test]
 fn empty_nestgate_socket_env_skips_tier1() {
-    let env = MapEnv::from([
-        ("NESTGATE_SOCKET", ""),
-        ("NESTGATE_FAMILY_ID", "test-fam"),
-    ]);
+    let env = MapEnv::from([("NESTGATE_SOCKET", ""), ("NESTGATE_FAMILY_ID", "test-fam")]);
     let config = SocketConfig::from_env_source(&env).expect("resolve");
     assert_ne!(
         config.socket_path,

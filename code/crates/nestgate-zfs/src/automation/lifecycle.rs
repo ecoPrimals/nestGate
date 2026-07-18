@@ -261,8 +261,7 @@ mod tests {
             lifecycle_stage: LifecycleStage::Active,
             automation_history: vec![],
         };
-        let result =
-            evaluate_lifecycle_conditions("pool/ds", &lifecycle, &["always".into()]);
+        let result = evaluate_lifecycle_conditions("pool/ds", &lifecycle, &["always".into()]);
         assert!(result.unwrap());
     }
 

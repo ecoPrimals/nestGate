@@ -5,7 +5,10 @@ use axum::response::IntoResponse;
 
 /// Health check handler
 #[must_use]
-#[expect(dead_code, reason = "Superseded by routes::handlers::health_check; kept for tests")]
+#[expect(
+    dead_code,
+    reason = "Superseded by routes::handlers::health_check; kept for tests"
+)]
 pub fn health_check() -> impl IntoResponse {
     "OK"
 }

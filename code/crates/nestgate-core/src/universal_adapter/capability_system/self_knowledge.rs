@@ -39,10 +39,7 @@ impl NestGateSelfKnowledge {
         ];
 
         let mut metadata = HashMap::new();
-        metadata.insert(
-            "service_name".into(),
-            DEFAULT_SERVICE_NAME.to_string(),
-        );
+        metadata.insert("service_name".into(), DEFAULT_SERVICE_NAME.to_string());
         metadata.insert("version".into(), "1.0.0".into());
         metadata.insert("primary_capability".into(), "storage".into());
 

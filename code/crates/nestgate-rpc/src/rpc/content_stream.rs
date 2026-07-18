@@ -183,12 +183,8 @@ pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
     file.seek(std::io::SeekFrom::Start(offset))
         .await
         .io_ctx("seek")?;
-    file.write_all(&decoded)
-        .await
-        .io_ctx("write chunk")?;
-    file.flush()
-        .await
-        .io_ctx("flush")?;
+    file.write_all(&decoded).await.io_ctx("write chunk")?;
+    file.flush().await.io_ctx("flush")?;
     drop(file);
 
     upload.bytes_written = new_written;
@@ -272,9 +268,7 @@ pub async fn content_retrieve_stream_begin(
         )));
     }
 
-    let meta = tokio::fs::metadata(&path)
-        .await
-        .io_ctx("stat")?;
+    let meta = tokio::fs::metadata(&path).await.io_ctx("stat")?;
     let total_size = meta.len();
 
     let stream_id = Uuid::new_v4().to_string();

@@ -190,11 +190,7 @@ async fn collect_objects(
             .await
             .io_ctx("Failed to read directory")?;
 
-        while let Some(entry) = entries
-            .next_entry()
-            .await
-            .io_ctx("Failed to read entry")?
-        {
+        while let Some(entry) = entries.next_entry().await.io_ctx("Failed to read entry")? {
             if let Some(lim) = limit
                 && results.len() >= lim
             {
@@ -216,12 +212,8 @@ async fn collect_objects(
                     continue;
                 }
 
-                let metadata = tokio::fs::metadata(&path)
-                    .await
-                    .io_ctx("metadata")?;
-                let modified = metadata
-                    .modified()
-                    .io_ctx("mod time")?;
+                let metadata = tokio::fs::metadata(&path).await.io_ctx("metadata")?;
+                let modified = metadata.modified().io_ctx("mod time")?;
                 let ts = unix_secs(modified);
 
                 results.push(crate::rpc::tarpc_types::ObjectInfo {
@@ -262,9 +254,7 @@ pub async fn get_object_metadata(
             NestGateError::io_error(format!("Failed to read metadata for {dataset}/{key}: {e}"))
         }
     })?;
-    let modified = metadata
-        .modified()
-        .io_ctx("mod time")?;
+    let modified = metadata.modified().io_ctx("mod time")?;
     let ts = unix_secs(modified);
 
     Ok(crate::rpc::tarpc_types::ObjectInfo {

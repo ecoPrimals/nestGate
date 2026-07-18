@@ -41,16 +41,12 @@ fn load_artifact_content(family_id: &str, hash: &str) -> Result<String> {
             format!("artifact {hash} not found"),
         ));
     }
-    std::fs::read_to_string(&artifact_path).map_err(|e| {
-        NestGateError::io_error(format!("failed to read artifact {hash}: {e}"))
-    })
+    std::fs::read_to_string(&artifact_path)
+        .map_err(|e| NestGateError::io_error(format!("failed to read artifact {hash}: {e}")))
 }
 
 /// `coord.blurbs.current` — return the current wave blurb.
-pub async fn coord_blurbs_current(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_blurbs_current(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -74,10 +70,7 @@ pub async fn coord_blurbs_current(
 }
 
 /// `coord.blurbs.list` — list all ingested blurbs (newest first).
-pub async fn coord_blurbs_list(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_blurbs_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -95,10 +88,7 @@ pub async fn coord_blurbs_list(
 }
 
 /// `coord.blurbs.get` — retrieve a specific blurb by hash or wave number.
-pub async fn coord_blurbs_get(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_blurbs_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
@@ -133,10 +123,7 @@ pub async fn coord_blurbs_get(
 }
 
 /// `coord.fragos.list` — list all FRAGOs and AARs (newest first).
-pub async fn coord_fragos_list(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_fragos_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -153,10 +140,7 @@ pub async fn coord_fragos_list(
 }
 
 /// `coord.fragos.get` — retrieve a specific FRAGO/AAR by hash.
-pub async fn coord_fragos_get(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_fragos_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
@@ -176,10 +160,7 @@ pub async fn coord_fragos_get(
 }
 
 /// `coord.waves.current` — return the current wave state.
-pub async fn coord_waves_current(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_waves_current(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -206,10 +187,7 @@ pub async fn coord_waves_current(
 /// Full provenance history requires loamSpine IPC (`entry.list` on the
 /// coordination spine). When loamSpine is unavailable, falls back to the
 /// local manifest's blurb history as a wave timeline.
-pub async fn coord_waves_history(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_waves_history(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -240,10 +218,7 @@ pub async fn coord_waves_history(
 }
 
 /// `coord.heads.get` — return a specific gate's HEAD state.
-pub async fn coord_heads_get(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_heads_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
@@ -272,10 +247,7 @@ pub async fn coord_heads_get(
 }
 
 /// `coord.heads.all` — return all gate HEAD states.
-pub async fn coord_heads_all(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_heads_all(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -300,10 +272,7 @@ pub async fn coord_heads_all(
 }
 
 /// `coord.topology` — return mesh topology from gate heads + static config.
-pub async fn coord_topology(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_topology(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let manifest = load_manifest(family_id)?;
@@ -321,10 +290,7 @@ pub async fn coord_topology(
 }
 
 /// `coord.depot.status` — return depot staleness and binary info.
-pub async fn coord_depot_status(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_depot_status(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
     let depot_path = get_storage_base_path()
@@ -389,10 +355,7 @@ fn scan_depot(depot_path: &std::path::Path) -> Result<Value> {
 ///
 /// Full provenance requires `loamSpine` + `sweetGrass` IPC. Returns what is
 /// available from the local manifest (`spine_index`, `braid_id`).
-pub async fn coord_provenance(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_provenance(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
@@ -423,8 +386,8 @@ pub async fn coord_provenance(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::types::CoordManifest;
+    use super::*;
 
     #[test]
     fn empty_manifest_returns_no_blurb() {
@@ -435,11 +398,23 @@ mod tests {
 
     #[test]
     fn artifact_kind_from_filename() {
-        assert_eq!(ArtifactKind::from_filename("ECOSYSTEM_BLURB.md"), ArtifactKind::Blurb);
-        assert_eq!(ArtifactKind::from_filename("AAR_FLOCKGATE.md"), ArtifactKind::Aar);
+        assert_eq!(
+            ArtifactKind::from_filename("ECOSYSTEM_BLURB.md"),
+            ArtifactKind::Blurb
+        );
+        assert_eq!(
+            ArtifactKind::from_filename("AAR_FLOCKGATE.md"),
+            ArtifactKind::Aar
+        );
         assert_eq!(ArtifactKind::from_filename("wave.toml"), ArtifactKind::Wave);
-        assert_eq!(ArtifactKind::from_filename("eastGate.toml"), ArtifactKind::Head);
-        assert_eq!(ArtifactKind::from_filename("POSTMORTEM_134h.md"), ArtifactKind::Aar);
+        assert_eq!(
+            ArtifactKind::from_filename("eastGate.toml"),
+            ArtifactKind::Head
+        );
+        assert_eq!(
+            ArtifactKind::from_filename("POSTMORTEM_134h.md"),
+            ArtifactKind::Aar
+        );
     }
 
     #[test]

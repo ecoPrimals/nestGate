@@ -168,11 +168,7 @@ mod tests {
     #[test]
     fn test_multiple_targets() {
         let perf = create_test_performance(50.0, 1.5);
-        let targets = vec![
-            "target1".into(),
-            "target2".into(),
-            "target3".into(),
-        ];
+        let targets = vec!["target1".into(), "target2".into(), "target3".into()];
         let analytics =
             ReplicationAnalytics::analyze_replication("source", &targets, &perf).unwrap();
 

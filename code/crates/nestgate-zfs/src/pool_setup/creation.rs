@@ -423,11 +423,7 @@ mod tests {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
             pool_name: "raid-pool".into(),
-            devices: vec![
-                "/dev/sda".into(),
-                "/dev/sdb".into(),
-                "/dev/sdc".into(),
-            ],
+            devices: vec!["/dev/sda".into(), "/dev/sdb".into(), "/dev/sdc".into()],
             topology: PoolTopology::RaidZ1,
             properties: HashMap::new(),
             tier_mappings: HashMap::new(),

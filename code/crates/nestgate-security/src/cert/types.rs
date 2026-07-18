@@ -393,14 +393,8 @@ mod tests {
     fn test_cert_request() {
         let request = CertRequest {
             common_name: "example.com".into(),
-            subject_alt_names: vec![
-                "www.example.com".into(),
-                "api.example.com".into(),
-            ],
-            key_usage: vec![
-                "digitalSignature".into(),
-                "keyEncipherment".into(),
-            ],
+            subject_alt_names: vec!["www.example.com".into(), "api.example.com".into()],
+            key_usage: vec!["digitalSignature".into(), "keyEncipherment".into()],
             validity_days: 365,
         };
 
@@ -461,10 +455,7 @@ mod tests {
 
         assert!(!status.active);
         assert_eq!(status.validation_result, Some(false));
-        assert_eq!(
-            status.error_message,
-            Some("Connection timeout".into())
-        );
+        assert_eq!(status.error_message, Some("Connection timeout".into()));
     }
 
     #[test]

@@ -174,8 +174,14 @@ mod tests {
 
     #[test]
     fn error_code_default_messages() {
-        assert_eq!(JsonRpcErrorCode::ParseError.default_message(), "Parse error");
-        assert_eq!(JsonRpcErrorCode::MethodNotFound.default_message(), "Method not found");
+        assert_eq!(
+            JsonRpcErrorCode::ParseError.default_message(),
+            "Parse error"
+        );
+        assert_eq!(
+            JsonRpcErrorCode::MethodNotFound.default_message(),
+            "Method not found"
+        );
     }
 
     #[test]

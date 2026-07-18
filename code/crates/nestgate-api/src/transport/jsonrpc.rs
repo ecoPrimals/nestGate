@@ -129,10 +129,7 @@ where
 
         loop {
             // Read request
-            stream
-                .readable()
-                .await
-                .net_ctx("Socket not readable")?;
+            stream.readable().await.net_ctx("Socket not readable")?;
 
             let n = match stream.try_read(&mut buffer) {
                 Ok(0) => {
@@ -202,15 +199,12 @@ where
         stream: &mut UnixStream,
         response: &JsonRpcResponse,
     ) -> Result<()> {
-        let response_str = serde_json::to_string(response)
-            .api_ctx("Failed to serialize response")?;
+        let response_str =
+            serde_json::to_string(response).api_ctx("Failed to serialize response")?;
 
         trace!("Sending response: {}", response_str);
 
-        stream
-            .writable()
-            .await
-            .net_ctx("Socket not writable")?;
+        stream.writable().await.net_ctx("Socket not writable")?;
 
         stream
             .write_all(response_str.as_bytes())

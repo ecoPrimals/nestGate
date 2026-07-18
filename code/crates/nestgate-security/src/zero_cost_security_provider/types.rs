@@ -362,8 +362,7 @@ mod tests {
 
     #[test]
     fn test_credentials_creation() {
-        let creds =
-            ZeroCostCredentials::new_password("testuser".into(), "testpass".into());
+        let creds = ZeroCostCredentials::new_password("testuser".into(), "testpass".into());
 
         assert_eq!(creds.username, "testuser");
         assert_eq!(creds.password, "testpass");

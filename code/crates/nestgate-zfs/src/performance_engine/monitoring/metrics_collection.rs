@@ -176,9 +176,17 @@ async fn read_proc_meminfo() -> SystemMemoryUsage {
     let mut available_kb = 0u64;
     for line in content.lines() {
         if let Some(rest) = line.strip_prefix("MemTotal:") {
-            total_kb = rest.split_whitespace().next().and_then(|s| s.parse().ok()).unwrap_or(0);
+            total_kb = rest
+                .split_whitespace()
+                .next()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0);
         } else if let Some(rest) = line.strip_prefix("MemAvailable:") {
-            available_kb = rest.split_whitespace().next().and_then(|s| s.parse().ok()).unwrap_or(0);
+            available_kb = rest
+                .split_whitespace()
+                .next()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0);
         }
     }
     let total = total_kb * 1024;

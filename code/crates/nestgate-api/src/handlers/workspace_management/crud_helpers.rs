@@ -50,11 +50,7 @@ pub(super) async fn get_workspace_properties(
         }
     }
 
-    (
-        "lz4".into(),
-        "none".into(),
-        "unknown".into(),
-    )
+    ("lz4".into(), "none".into(), "unknown".into())
 }
 
 /// Get workspace details for a specific workspace ID

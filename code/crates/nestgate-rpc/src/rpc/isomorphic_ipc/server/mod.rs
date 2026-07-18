@@ -671,15 +671,24 @@ impl IsomorphicIpcServer {
         Ok(std::env::temp_dir().join(format!("{}.sock", self.service_name)))
     }
 
-    /// Prepare socket path (create dirs, remove old socket)
+    /// Prepare socket path (create dirs, remove old socket).
+    ///
+    /// GAP-038: Checks PID sidecar before unlinking — refuses to steal
+    /// a live peer's socket.
     fn prepare_socket_path(socket_path: &std::path::Path) -> Result<()> {
-        // Create parent directory if needed
         if let Some(parent) = socket_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
 
-        // Remove old socket if exists
         if socket_path.exists() {
+            #[cfg(unix)]
+            if crate::rpc::socket_config::is_socket_owned_by_live_process(socket_path) {
+                anyhow::bail!(
+                    "Socket {} is owned by a live process (see PID sidecar). \
+                     Refusing to start — stop the existing instance first.",
+                    socket_path.display()
+                );
+            }
             std::fs::remove_file(socket_path)?;
         }
 

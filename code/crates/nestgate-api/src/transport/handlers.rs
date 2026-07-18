@@ -210,8 +210,7 @@ impl<S: StorageBackend + 'static> RpcMethodHandler for NestGateRpcHandler<S> {
 impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
     /// Handle storage.store request
     pub(crate) async fn handle_store(&self, params: Value) -> Result<Value> {
-        let request: StoreRequest = serde_json::from_value(params)
-            .api_ctx("Invalid params")?;
+        let request: StoreRequest = serde_json::from_value(params).api_ctx("Invalid params")?;
 
         if let Some(storage) = &self.storage {
             storage.store(&request.key, &request.value).await?;
@@ -223,8 +222,7 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
 
     /// Handle storage.retrieve request
     pub(crate) async fn handle_retrieve(&self, params: Value) -> Result<Value> {
-        let request: RetrieveRequest = serde_json::from_value(params)
-            .api_ctx("Invalid params")?;
+        let request: RetrieveRequest = serde_json::from_value(params).api_ctx("Invalid params")?;
 
         if let Some(storage) = &self.storage {
             let value = storage.retrieve(&request.key).await?;
@@ -236,8 +234,7 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
 
     /// Handle storage.delete request
     pub(crate) async fn handle_delete(&self, params: Value) -> Result<Value> {
-        let request: DeleteRequest = serde_json::from_value(params)
-            .api_ctx("Invalid params")?;
+        let request: DeleteRequest = serde_json::from_value(params).api_ctx("Invalid params")?;
 
         if let Some(storage) = &self.storage {
             storage.delete(&request.key).await?;
@@ -249,8 +246,7 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
 
     /// Handle storage.list request
     pub(crate) async fn handle_list(&self, params: Value) -> Result<Value> {
-        let request: ListRequest = serde_json::from_value(params)
-            .api_ctx("Invalid params")?;
+        let request: ListRequest = serde_json::from_value(params).api_ctx("Invalid params")?;
 
         if let Some(storage) = &self.storage {
             let keys = storage.list(&request.prefix).await?;

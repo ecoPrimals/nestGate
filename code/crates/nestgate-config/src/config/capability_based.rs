@@ -536,10 +536,7 @@ mod tests {
             .await
             .expect("local fallback with default port");
         assert_eq!(svc.endpoint.port(), 8080);
-        assert_eq!(
-            svc.metadata.get("mode"),
-            Some(&"local_fallback".into())
-        );
+        assert_eq!(svc.metadata.get("mode"), Some(&"local_fallback".into()));
     }
 
     #[tokio::test]

@@ -30,7 +30,13 @@ pub(super) fn register_stream_methods<S: StorageBackend + 'static>(
             debug!("JSON-RPC: storage.store_stream");
             storage_stream::storage_store_stream_begin(p, None)
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))
+                .map_err(|e| {
+                    ErrorObjectOwned::owned(
+                        nestgate_types::JsonRpcErrorCode::InternalError.code(),
+                        e.to_string(),
+                        None::<()>,
+                    )
+                })
         },
     ))?;
 
@@ -41,7 +47,13 @@ pub(super) fn register_stream_methods<S: StorageBackend + 'static>(
             debug!("JSON-RPC: storage.store_stream_chunk");
             storage_stream::storage_store_stream_chunk(p)
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))
+                .map_err(|e| {
+                    ErrorObjectOwned::owned(
+                        nestgate_types::JsonRpcErrorCode::InternalError.code(),
+                        e.to_string(),
+                        None::<()>,
+                    )
+                })
         },
     ))?;
 
@@ -52,7 +64,13 @@ pub(super) fn register_stream_methods<S: StorageBackend + 'static>(
             debug!("JSON-RPC: storage.retrieve_stream");
             storage_stream::storage_retrieve_stream_begin(p, None)
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))
+                .map_err(|e| {
+                    ErrorObjectOwned::owned(
+                        nestgate_types::JsonRpcErrorCode::InternalError.code(),
+                        e.to_string(),
+                        None::<()>,
+                    )
+                })
         },
     ))?;
 
@@ -63,7 +81,13 @@ pub(super) fn register_stream_methods<S: StorageBackend + 'static>(
             debug!("JSON-RPC: storage.retrieve_stream_chunk");
             storage_stream::storage_retrieve_stream_chunk(&p)
                 .await
-                .map_err(|e| ErrorObjectOwned::owned(nestgate_types::JsonRpcErrorCode::InternalError.code(), e.to_string(), None::<()>))
+                .map_err(|e| {
+                    ErrorObjectOwned::owned(
+                        nestgate_types::JsonRpcErrorCode::InternalError.code(),
+                        e.to_string(),
+                        None::<()>,
+                    )
+                })
         },
     ))?;
 

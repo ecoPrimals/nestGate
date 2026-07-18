@@ -113,10 +113,7 @@ where
             .write_all(b"\n")
             .await
             .io_ctx("Failed to write newline")?;
-        writer
-            .flush()
-            .await
-            .io_ctx("Failed to flush")?;
+        writer.flush().await.io_ctx("Failed to flush")?;
         return json_rpc_loop(reader, writer, state, true).await;
     }
 

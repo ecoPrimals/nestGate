@@ -169,12 +169,9 @@ mod tests {
             readonly: false,
             custom: HashMap::new(),
         };
-        let result = set_dataset_properties(
-            State(state),
-            Path("nonexistent".into()),
-            axum::Json(props),
-        )
-        .await;
+        let result =
+            set_dataset_properties(State(state), Path("nonexistent".into()), axum::Json(props))
+                .await;
         assert!(result.is_err());
     }
 
@@ -220,25 +217,18 @@ mod tests {
             properties: HashMap::new(),
             tags: None,
         };
-        let response = create_snapshot(
-            State(state),
-            Path("tank/data".into()),
-            axum::Json(request),
-        )
-        .await
-        .into_response();
+        let response = create_snapshot(State(state), Path("tank/data".into()), axum::Json(request))
+            .await
+            .into_response();
         assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
     async fn test_delete_snapshot() {
         let state = create_test_state_with_dataset("tank/data").await;
-        let response = delete_snapshot(
-            State(state),
-            Path(("tank/data".into(), "snap1".into())),
-        )
-        .await
-        .into_response();
+        let response = delete_snapshot(State(state), Path(("tank/data".into(), "snap1".into())))
+            .await
+            .into_response();
         assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 

@@ -200,7 +200,10 @@ fn attach_coordination_routes(router: Router<AppState>) -> Router<AppState> {
     use crate::handlers::coordination;
     router
         .route("/coord/blurbs", get(coordination::coord_blurbs))
-        .route("/coord/blurbs/:wave", get(coordination::coord_blurb_by_wave))
+        .route(
+            "/coord/blurbs/:wave",
+            get(coordination::coord_blurb_by_wave),
+        )
         .route("/coord/fragos", get(coordination::coord_fragos))
         .route("/coord/fragos/:id", get(coordination::coord_frago_by_id))
         .route("/coord/waves", get(coordination::coord_waves))

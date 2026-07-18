@@ -191,10 +191,7 @@ impl UniversalPrimalDiscovery {
         status.insert("network_discovery".into(), "active".into());
 
         // Performance discovery status
-        status.insert(
-            "performance_discovery".into(),
-            "active".into(),
-        );
+        status.insert("performance_discovery".into(), "active".into());
 
         // Registry client status
         status.insert("registry_client".into(), "active".into());

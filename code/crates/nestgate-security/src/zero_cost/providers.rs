@@ -297,9 +297,7 @@ mod tests {
     #[test]
     fn test_jwt_provider_validation() {
         let provider = ZeroCostJwtProvider::new([1u8; 32]);
-        let token = provider
-            .authenticate(&"testuser".into())
-            .expect("auth");
+        let token = provider.authenticate(&"testuser".into()).expect("auth");
         assert!(provider.validate(&token));
         assert!(!provider.validate(&"invalid_token".into()));
         assert!(!provider.validate(&"unsigned.payload".into()));
@@ -316,9 +314,7 @@ mod tests {
     #[test]
     fn test_jwt_provider_refresh_signs_new_token() {
         let provider = ZeroCostJwtProvider::new([1u8; 32]);
-        let token = provider
-            .authenticate(&"testuser".into())
-            .expect("auth");
+        let token = provider.authenticate(&"testuser".into()).expect("auth");
         let refreshed = provider.refresh(&token).expect("refresh");
         assert_ne!(token, refreshed);
         assert!(provider.validate(&refreshed));

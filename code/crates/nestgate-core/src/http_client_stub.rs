@@ -251,10 +251,9 @@ fn parse_url(url: &str) -> Result<(String, u16, String)> {
         crate::NestGateError::api_error("http_client_stub: only http:// supported")
     })?;
 
-    let (host_port, path) = stripped.split_once('/').map_or_else(
-        || (stripped, "/".into()),
-        |(hp, p)| (hp, format!("/{p}")),
-    );
+    let (host_port, path) = stripped
+        .split_once('/')
+        .map_or_else(|| (stripped, "/".into()), |(hp, p)| (hp, format!("/{p}")));
 
     let (host, port) = host_port.split_once(':').map_or_else(
         || (host_port.to_string(), 80),

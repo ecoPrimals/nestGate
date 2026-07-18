@@ -356,12 +356,10 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
     async fn test_concurrent_services_config_access() {
-        let config1 = Arc::new(
-            ServicesConfig::new().with_discovery_url("http://discovery1:8080".into()),
-        );
-        let config2 = Arc::new(
-            ServicesConfig::new().with_discovery_url("http://discovery2:8080".into()),
-        );
+        let config1 =
+            Arc::new(ServicesConfig::new().with_discovery_url("http://discovery1:8080".into()));
+        let config2 =
+            Arc::new(ServicesConfig::new().with_discovery_url("http://discovery2:8080".into()));
 
         let handle1 = {
             let config = Arc::clone(&config1);
@@ -388,14 +386,8 @@ mod tests {
     #[test]
     fn test_services_config_external_services() {
         let config = ServicesConfig::new()
-            .with_external_service(
-                "huggingface".into(),
-                "https://api.huggingface.co".into(),
-            )
-            .with_external_service(
-                "ncbi".into(),
-                "https://eutils.ncbi.nlm.nih.gov".into(),
-            );
+            .with_external_service("huggingface".into(), "https://api.huggingface.co".into())
+            .with_external_service("ncbi".into(), "https://eutils.ncbi.nlm.nih.gov".into());
 
         assert_eq!(
             config.get_external_service("huggingface"),

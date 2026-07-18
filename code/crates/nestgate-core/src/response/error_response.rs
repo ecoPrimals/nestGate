@@ -191,10 +191,7 @@ impl ErrorResponseFactory {
     pub fn rate_limited(retry_after: Option<u64>) -> UnifiedErrorResponse {
         let mut details = HashMap::new();
         if let Some(retry_after) = retry_after {
-            details.insert(
-                "retry_after_seconds".into(),
-                serde_json::json!(retry_after),
-            );
+            details.insert("retry_after_seconds".into(), serde_json::json!(retry_after));
         }
 
         UnifiedErrorResponse::with_status(

@@ -169,10 +169,7 @@ mod tests {
         };
 
         assert_eq!(pool_info.properties.len(), 2);
-        assert_eq!(
-            pool_info.properties.get("compression"),
-            Some(&"lz4".into())
-        );
+        assert_eq!(pool_info.properties.get("compression"), Some(&"lz4".into()));
     }
 
     #[test]
@@ -365,10 +362,7 @@ mod tests {
         };
 
         assert_eq!(snapshot_info.properties.len(), 2);
-        assert_eq!(
-            snapshot_info.properties.get("used"),
-            Some(&"10M".into())
-        );
+        assert_eq!(snapshot_info.properties.get("used"), Some(&"10M".into()));
     }
 
     #[test]

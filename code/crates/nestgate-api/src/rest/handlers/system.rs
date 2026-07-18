@@ -399,15 +399,9 @@ mod tests {
         let state = create_test_api_state();
 
         // Add test datasets
-        state
-            .zfs_engines
-            .insert("dataset1".into(), "data1".into());
-        state
-            .zfs_engines
-            .insert("dataset2".into(), "data2".into());
-        state
-            .zfs_engines
-            .insert("dataset3".into(), "data3".into());
+        state.zfs_engines.insert("dataset1".into(), "data1".into());
+        state.zfs_engines.insert("dataset2".into(), "data2".into());
+        state.zfs_engines.insert("dataset3".into(), "data3".into());
 
         let result = system_status(State(state)).await;
 

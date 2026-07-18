@@ -46,12 +46,10 @@ fn save_manifest(family_id: &str, manifest: &CoordManifest) -> Result<()> {
         NestGateError::io_error(format!("failed to create coordination directory: {e}"))
     })?;
     let path = dir.join("manifest.json");
-    let data = serde_json::to_string_pretty(manifest).map_err(|e| {
-        NestGateError::io_error(format!("failed to serialize manifest: {e}"))
-    })?;
-    std::fs::write(&path, data).map_err(|e| {
-        NestGateError::io_error(format!("failed to write manifest: {e}"))
-    })?;
+    let data = serde_json::to_string_pretty(manifest)
+        .map_err(|e| NestGateError::io_error(format!("failed to serialize manifest: {e}")))?;
+    std::fs::write(&path, data)
+        .map_err(|e| NestGateError::io_error(format!("failed to write manifest: {e}")))?;
     Ok(())
 }
 
@@ -81,9 +79,8 @@ fn store_artifact(family_id: &str, hash: &str, content: &[u8]) -> Result<()> {
         debug!("coord.ingest: dedup hit for artifact {hash}");
         return Ok(());
     }
-    std::fs::write(&path, content).map_err(|e| {
-        NestGateError::io_error(format!("failed to write artifact {hash}: {e}"))
-    })?;
+    std::fs::write(&path, content)
+        .map_err(|e| NestGateError::io_error(format!("failed to write artifact {hash}: {e}")))?;
     Ok(())
 }
 
@@ -122,7 +119,11 @@ fn extract_wave_from_content(content: &str, kind: &ArtifactKind) -> Option<Strin
     }
 }
 
-fn extract_gate_from_content(_content: &str, kind: &ArtifactKind, filename: &str) -> Option<String> {
+fn extract_gate_from_content(
+    _content: &str,
+    kind: &ArtifactKind,
+    filename: &str,
+) -> Option<String> {
     if *kind != ArtifactKind::Head {
         return None;
     }
@@ -165,10 +166,7 @@ fn extract_title(content: &str, kind: &ArtifactKind, filename: &str) -> String {
 ///   "content_base64": "..."
 /// }
 /// ```
-pub async fn coord_ingest(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn coord_ingest(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;

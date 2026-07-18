@@ -106,7 +106,9 @@ impl DiscoveryCache {
     pub fn get_port_discovery(&mut self, service_name: &str) -> Option<u16> {
         let key = format!("port:{service_name}");
 
-        if let Some(entry) = self.port_cache.get_mut(&key) && !entry.is_expired() {
+        if let Some(entry) = self.port_cache.get_mut(&key)
+            && !entry.is_expired()
+        {
             let value = entry.access();
             return value.parse::<u16>().ok();
         }
@@ -137,7 +139,9 @@ impl DiscoveryCache {
     pub fn get_endpoint_discovery(&mut self, service_name: &str) -> Option<String> {
         let key = format!("endpoint:{service_name}");
 
-        if let Some(entry) = self.endpoint_cache.get_mut(&key) && !entry.is_expired() {
+        if let Some(entry) = self.endpoint_cache.get_mut(&key)
+            && !entry.is_expired()
+        {
             return Some(entry.access());
         }
         if let Some(_entry) = self.endpoint_cache.get_mut(&key) {
@@ -198,7 +202,9 @@ impl DiscoveryCache {
     /// **GENERAL RETRIEVAL**: Get cached discovery result
     #[must_use]
     pub fn get_discovery(&mut self, key: &str) -> Option<String> {
-        if let Some(entry) = self.general_cache.get_mut(key) && !entry.is_expired() {
+        if let Some(entry) = self.general_cache.get_mut(key)
+            && !entry.is_expired()
+        {
             return Some(entry.access());
         }
         if let Some(_entry) = self.general_cache.get_mut(key) {
@@ -291,10 +297,7 @@ impl DiscoveryCache {
         let mut stats = HashMap::new();
 
         stats.insert("port_cache_size".into(), self.port_cache.len());
-        stats.insert(
-            "endpoint_cache_size".into(),
-            self.endpoint_cache.len(),
-        );
+        stats.insert("endpoint_cache_size".into(), self.endpoint_cache.len());
         stats.insert("timeout_cache_size".into(), self.timeout_cache.len());
         stats.insert("general_cache_size".into(), self.general_cache.len());
         stats.insert(

@@ -596,15 +596,9 @@ impl Default for HandlerSecurityConfig {
             enable_signing: false,
             security_headers: {
                 let mut headers = HashMap::new();
-                headers.insert(
-                    "X-Content-Type-Options".into(),
-                    "nosniff".into(),
-                );
+                headers.insert("X-Content-Type-Options".into(), "nosniff".into());
                 headers.insert("X-Frame-Options".into(), "DENY".into());
-                headers.insert(
-                    "X-XSS-Protection".into(),
-                    "1; mode=block".into(),
-                );
+                headers.insert("X-XSS-Protection".into(), "1; mode=block".into());
                 headers
             },
         }
@@ -628,10 +622,7 @@ mod tests {
     fn zfs_handler_validate_empty_name_errors() {
         let mut z = ZfsHandlerConfig::default();
         z.service_name.clear();
-        assert_eq!(
-            z.validate(),
-            Err("Service name cannot be empty")
-        );
+        assert_eq!(z.validate(), Err("Service name cannot be empty"));
     }
 
     #[test]

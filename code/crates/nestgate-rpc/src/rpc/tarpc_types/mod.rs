@@ -258,7 +258,9 @@ pub enum NestGateRpcError {
     },
 
     /// Quota exceeded.
-    #[error("Quota exceeded for dataset {dataset}: quota {quota} bytes, requested {requested} bytes")]
+    #[error(
+        "Quota exceeded for dataset {dataset}: quota {quota} bytes, requested {requested} bytes"
+    )]
     QuotaExceeded {
         /// Dataset name.
         dataset: Arc<str>,

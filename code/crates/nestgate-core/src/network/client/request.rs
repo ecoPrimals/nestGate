@@ -45,10 +45,7 @@ impl<'a> Request<'a> {
     pub fn post_json(path: &'a str, json: &'a str) -> Self {
         let mut headers = HeaderMap::new();
         // Use lowercase header names per HTTP/2 spec (RFC 7540)
-        headers.insert(
-            "content-type".into(),
-            "application/json".into(),
-        );
+        headers.insert("content-type".into(), "application/json".into());
 
         Self {
             method: Method::Post,
@@ -193,8 +190,8 @@ mod tests {
 
     #[test]
     fn test_request_with_header() {
-        let req = Request::get("/api/test")
-            .with_header("Authorization".into(), "Bearer token".into());
+        let req =
+            Request::get("/api/test").with_header("Authorization".into(), "Bearer token".into());
         assert_eq!(
             req.headers.get("Authorization"),
             Some(&"Bearer token".into())

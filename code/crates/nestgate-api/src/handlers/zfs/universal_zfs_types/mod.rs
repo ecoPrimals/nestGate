@@ -175,9 +175,7 @@ mod tests {
         metrics.requests_total = 1000;
         metrics.requests_failed = 50;
         metrics.error_rate = 5.0;
-        metrics
-            .custom_metrics
-            .insert("latency_p95".into(), 125.5);
+        metrics.custom_metrics.insert("latency_p95".into(), 125.5);
 
         assert_eq!(metrics.service_name, "zfs-backend");
         assert_eq!(metrics.requests_total, 1000);

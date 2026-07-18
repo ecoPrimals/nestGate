@@ -225,8 +225,7 @@ pub(super) async fn sync_repo(
 
 /// Send a JSON-RPC request to a remote `NestGate` (UDS socket or TCP).
 pub(super) async fn send_jsonrpc(target: &str, request: &Value) -> Result<Value> {
-    let payload = serde_json::to_string(request)
-        .internal_ctx("serialize request")?;
+    let payload = serde_json::to_string(request).internal_ctx("serialize request")?;
 
     if target.starts_with("tcp://") {
         send_jsonrpc_tcp(target, &payload).await
@@ -387,14 +386,10 @@ async fn send_jsonrpc_uds(socket_path: &str, payload: &str) -> Result<Value> {
         drop(stdin);
     }
 
-    let out = child
-        .wait_with_output()
-        .await
-        .internal_ctx("socat wait")?;
+    let out = child.wait_with_output().await.internal_ctx("socat wait")?;
 
     let response_text = String::from_utf8_lossy(&out.stdout);
-    serde_json::from_str(response_text.trim())
-        .internal_ctx("parse remote response")
+    serde_json::from_str(response_text.trim()).internal_ctx("parse remote response")
 }
 
 async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
@@ -424,8 +419,7 @@ async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
         .await
         .internal_ctx("tcp read response")?;
 
-    serde_json::from_str(line.trim())
-        .internal_ctx("parse tcp response")
+    serde_json::from_str(line.trim()).internal_ctx("parse tcp response")
 }
 
 #[cfg(test)]

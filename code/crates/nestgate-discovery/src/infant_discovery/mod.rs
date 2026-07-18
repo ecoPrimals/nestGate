@@ -264,10 +264,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
                 endpoint: Some("discovered://compute.local".into()),
                 metadata: HashMap::from([
                     ("capabilities".into(), "simd,parallel".into()),
-                    (
-                        "discovery_method".into(),
-                        "behavioral_inference".into(),
-                    ),
+                    ("discovery_method".into(), "behavioral_inference".into()),
                 ]),
                 sovereignty_compliant: true,
             },
@@ -331,9 +328,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
             DignityRule {
                 id: "user_consent".into(),
                 description: "Capability must respect user consent".into(),
-                validator: |cap| {
-                    cap.metadata.get("consent_required") != Some(&"false".into())
-                },
+                validator: |cap| cap.metadata.get("consent_required") != Some(&"false".into()),
             },
             DignityRule {
                 id: "data_sovereignty".into(),

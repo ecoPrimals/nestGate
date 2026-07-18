@@ -43,8 +43,7 @@ pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) 
     let family_id = resolve_family_id(params, state)?;
     let namespace = extract_namespace(params)?;
 
-    let serialized = serde_json::to_vec_pretty(data)
-        .io_ctx("Failed to serialize value")?;
+    let serialized = serde_json::to_vec_pretty(data).io_ctx("Failed to serialize value")?;
 
     let bytes = if let Some(ref enc) = state.encryption {
         enc.encrypt(&serialized)?

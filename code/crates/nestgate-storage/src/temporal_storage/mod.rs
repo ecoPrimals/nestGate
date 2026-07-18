@@ -266,12 +266,8 @@ mod tests {
 
     #[test]
     fn test_ingested_data_creation() {
-        let descriptor = DataDescriptor::new(
-            "data-1".into(),
-            DataType::Documents,
-            1024,
-            "/path".into(),
-        );
+        let descriptor =
+            DataDescriptor::new("data-1".into(), DataType::Documents, 1024, "/path".into());
 
         let mut data = IngestedData::new(
             "ingest-1".into(),
@@ -459,12 +455,8 @@ mod tests {
 
     #[test]
     fn test_ingested_data_empty_content() {
-        let descriptor = DataDescriptor::new(
-            "empty".into(),
-            DataType::Documents,
-            0,
-            "/path".into(),
-        );
+        let descriptor =
+            DataDescriptor::new("empty".into(), DataType::Documents, 0, "/path".into());
 
         let data = IngestedData::new(
             "ingest-empty".into(),
@@ -579,12 +571,8 @@ mod tests {
 
     #[test]
     fn test_ingested_data_validation_lifecycle() {
-        let descriptor = DataDescriptor::new(
-            "lifecycle".into(),
-            DataType::Documents,
-            100,
-            "/path".into(),
-        );
+        let descriptor =
+            DataDescriptor::new("lifecycle".into(), DataType::Documents, 100, "/path".into());
 
         let mut data = IngestedData::new(
             "ingest-lifecycle".into(),

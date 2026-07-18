@@ -44,104 +44,66 @@ impl UnifiedRpcRouter {
             .insert("generate_key".into(), RpcConnectionType::Tarpc);
         self.method_rules
             .insert("authenticate_user".into(), RpcConnectionType::Tarpc);
-        self.method_rules.insert(
-            "get_security_status".into(),
-            RpcConnectionType::Tarpc,
-        );
-        self.method_rules.insert(
-            "stream_security_events".into(),
-            RpcConnectionType::Tarpc,
-        );
-        self.method_rules.insert(
-            "stream_threat_detection".into(),
-            RpcConnectionType::Tarpc,
-        );
+        self.method_rules
+            .insert("get_security_status".into(), RpcConnectionType::Tarpc);
+        self.method_rules
+            .insert("stream_security_events".into(), RpcConnectionType::Tarpc);
+        self.method_rules
+            .insert("stream_threat_detection".into(), RpcConnectionType::Tarpc);
         self.method_rules
             .insert("stream_audit_logs".into(), RpcConnectionType::Tarpc);
 
         // Orchestration-related methods route to orchestration via JSON RPC
         self.method_rules
             .insert("register_service".into(), RpcConnectionType::JsonRpc);
-        self.method_rules.insert(
-            "discover_services".into(),
-            RpcConnectionType::JsonRpc,
-        );
-        self.method_rules.insert(
-            "coordinate_workflow".into(),
-            RpcConnectionType::JsonRpc,
-        );
-        self.method_rules.insert(
-            "get_service_status".into(),
-            RpcConnectionType::JsonRpc,
-        );
+        self.method_rules
+            .insert("discover_services".into(), RpcConnectionType::JsonRpc);
+        self.method_rules
+            .insert("coordinate_workflow".into(), RpcConnectionType::JsonRpc);
+        self.method_rules
+            .insert("get_service_status".into(), RpcConnectionType::JsonRpc);
         self.method_rules
             .insert("allocate_port".into(), RpcConnectionType::JsonRpc);
-        self.method_rules.insert(
-            "stream_service_events".into(),
-            RpcConnectionType::JsonRpc,
-        );
-        self.method_rules.insert(
-            "stream_workflow_status".into(),
-            RpcConnectionType::JsonRpc,
-        );
-        self.method_rules.insert(
-            "stream_network_topology".into(),
-            RpcConnectionType::JsonRpc,
-        );
+        self.method_rules
+            .insert("stream_service_events".into(), RpcConnectionType::JsonRpc);
+        self.method_rules
+            .insert("stream_workflow_status".into(), RpcConnectionType::JsonRpc);
+        self.method_rules
+            .insert("stream_network_topology".into(), RpcConnectionType::JsonRpc);
 
         // Real-time data methods route to WebSocket
-        self.method_rules.insert(
-            "get_real_time_metrics".into(),
-            RpcConnectionType::WebSocket,
-        );
-        self.method_rules.insert(
-            "start_metrics_stream".into(),
-            RpcConnectionType::WebSocket,
-        );
+        self.method_rules
+            .insert("get_real_time_metrics".into(), RpcConnectionType::WebSocket);
+        self.method_rules
+            .insert("start_metrics_stream".into(), RpcConnectionType::WebSocket);
         self.method_rules.insert(
             "stream_realtime_metrics".into(),
             RpcConnectionType::WebSocket,
         );
-        self.method_rules.insert(
-            "stream_zfs_events".into(),
-            RpcConnectionType::WebSocket,
-        );
-        self.method_rules.insert(
-            "stream_storage_events".into(),
-            RpcConnectionType::WebSocket,
-        );
-        self.method_rules.insert(
-            "stream_system_logs".into(),
-            RpcConnectionType::WebSocket,
-        );
+        self.method_rules
+            .insert("stream_zfs_events".into(), RpcConnectionType::WebSocket);
+        self.method_rules
+            .insert("stream_storage_events".into(), RpcConnectionType::WebSocket);
+        self.method_rules
+            .insert("stream_system_logs".into(), RpcConnectionType::WebSocket);
         self.method_rules.insert(
             "stream_performance_data".into(),
             RpcConnectionType::WebSocket,
         );
 
         // Capability-based service routing (sovereignty compliant)
-        self.target_rules.insert(
-            "security-encryption".into(),
-            RpcConnectionType::Tarpc,
-        );
-        self.target_rules.insert(
-            "orchestration-discovery".into(),
-            RpcConnectionType::JsonRpc,
-        );
-        self.target_rules.insert(
-            "storage-management".into(),
-            RpcConnectionType::WebSocket,
-        );
-        self.target_rules.insert(
-            "ai-text-generation".into(),
-            RpcConnectionType::JsonRpc,
-        );
+        self.target_rules
+            .insert("security-encryption".into(), RpcConnectionType::Tarpc);
+        self.target_rules
+            .insert("orchestration-discovery".into(), RpcConnectionType::JsonRpc);
+        self.target_rules
+            .insert("storage-management".into(), RpcConnectionType::WebSocket);
+        self.target_rules
+            .insert("ai-text-generation".into(), RpcConnectionType::JsonRpc);
         self.target_rules
             .insert("ai-embedding".into(), RpcConnectionType::JsonRpc);
-        self.target_rules.insert(
-            "ecosystem-management".into(),
-            RpcConnectionType::WebSocket,
-        );
+        self.target_rules
+            .insert("ecosystem-management".into(), RpcConnectionType::WebSocket);
 
         info!(
             "RPC router initialized with {} method rules and {} target rules",

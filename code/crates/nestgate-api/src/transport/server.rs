@@ -37,12 +37,12 @@
 //! - `UNIVERSAL_IPC_ARCHITECTURE_HANDOFF_JAN_19_2026.md`
 //! - `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md`
 
+#[cfg(unix)]
+use super::unix_socket::UnixSocketListener;
 use super::{
     config::TransportConfig,
     jsonrpc::{JsonRpcHandler, RpcMethodHandler},
 };
-#[cfg(unix)]
-use super::unix_socket::UnixSocketListener;
 use axum::{Router, http::StatusCode, routing::get};
 use nestgate_core::error::{NestGateError, Result};
 use std::net::SocketAddr;

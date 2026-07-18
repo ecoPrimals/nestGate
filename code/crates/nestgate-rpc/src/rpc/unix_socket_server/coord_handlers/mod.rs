@@ -29,13 +29,13 @@
 //!
 //! The `manifest.json` maps logical artifact names to CAS hashes.
 
-mod query;
 mod ingest;
+mod query;
 mod types;
 
+pub use ingest::coord_ingest;
 pub use query::{
     coord_blurbs_current, coord_blurbs_get, coord_blurbs_list, coord_depot_status,
-    coord_fragos_get, coord_fragos_list, coord_heads_all, coord_heads_get,
-    coord_provenance, coord_topology, coord_waves_current, coord_waves_history,
+    coord_fragos_get, coord_fragos_list, coord_heads_all, coord_heads_get, coord_provenance,
+    coord_topology, coord_waves_current, coord_waves_history,
 };
-pub use ingest::coord_ingest;

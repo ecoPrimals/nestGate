@@ -248,7 +248,9 @@ pub mod middleware {
 pub mod validation {
     use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
     /// Validate API response structure
-    pub const fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), &'static str> {
+    pub const fn validate_api_response<T>(
+        response: &ApiResponse<T>,
+    ) -> std::result::Result<(), &'static str> {
         if response.success && response.data.is_none() {
             return Err("Successful response must have data");
         }

@@ -110,9 +110,7 @@ impl SovereigntyConfig {
         let api_endpoint = Self::api_endpoint()?;
 
         if api_endpoint.contains("localhost") && env::var("NESTGATE_API_ENDPOINT").is_err() {
-            return Err(
-                "API endpoint using localhost without explicit user configuration",
-            );
+            return Err("API endpoint using localhost without explicit user configuration");
         }
 
         Ok(())

@@ -177,10 +177,9 @@ mod tests {
     #[test]
     fn test_capability_based_discovery() {
         let mut config = ServicesConfig::default();
-        config.discovered_capabilities.insert(
-            "security".into(),
-            "http://security-provider:8080".into(),
-        );
+        config
+            .discovered_capabilities
+            .insert("security".into(), "http://security-provider:8080".into());
 
         assert!(config.has_capability("security"));
         assert_eq!(

@@ -167,11 +167,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
             version: "1.1".into(),
             endpoint: format!("http://{advertise_host}:{api_port}"),
             port: Some(api_port),
-            features: vec![
-                "rest".into(),
-                "json".into(),
-                "streaming".into(),
-            ],
+            features: vec!["rest".into(), "json".into(), "streaming".into()],
             latency_us: Some(5000), // ~5ms
             status: None,
         },
@@ -185,11 +181,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
             version: "2.0".into(),
             endpoint: format!("http://{advertise_host}:{api_port}/jsonrpc"),
             port: Some(api_port),
-            features: vec![
-                "rpc".into(),
-                "universal".into(),
-                "language-agnostic".into(),
-            ],
+            features: vec!["rpc".into(), "universal".into(), "language-agnostic".into()],
             latency_us: Some(2000), // ~2ms
             status: None,
         },

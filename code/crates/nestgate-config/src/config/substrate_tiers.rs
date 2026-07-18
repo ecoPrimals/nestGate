@@ -56,8 +56,7 @@ impl SubstrateTiers {
             return Self { warm, cold };
         }
 
-        let base =
-            env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| "/mnt/nestgate".into());
+        let base = env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| "/mnt/nestgate".into());
         let base = PathBuf::from(base);
 
         let mut warm_mounts = Vec::new();
@@ -139,8 +138,7 @@ impl SubstrateMount {
 
     #[cfg(target_os = "linux")]
     fn probe_mount(path: &Path) -> (String, bool, u64) {
-        let fs_type =
-            Self::detect_fs_type_from_mounts(path).unwrap_or_else(|| "unknown".into());
+        let fs_type = Self::detect_fs_type_from_mounts(path).unwrap_or_else(|| "unknown".into());
 
         let rotational = Self::detect_rotational(path);
 

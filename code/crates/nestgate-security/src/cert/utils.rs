@@ -10,10 +10,8 @@ use std::time::{Duration, SystemTime};
 /// Convert `SystemTime` to a string representation
 #[must_use]
 pub fn format_system_time(time: SystemTime) -> String {
-    time.duration_since(SystemTime::UNIX_EPOCH).map_or_else(
-        |_| "0".into(),
-        |duration| duration.as_secs().to_string(),
-    )
+    time.duration_since(SystemTime::UNIX_EPOCH)
+        .map_or_else(|_| "0".into(), |duration| duration.as_secs().to_string())
 }
 /// Parse a string back into `SystemTime`
 pub fn parse_system_time(s: &str) -> Result<SystemTime> {

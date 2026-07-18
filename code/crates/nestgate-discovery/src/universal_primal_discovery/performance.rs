@@ -180,14 +180,8 @@ impl PerformanceTestRunner {
     pub fn generate_metrics(&self) -> HashMap<String, String> {
         let mut metrics = HashMap::new();
 
-        metrics.insert(
-            "test_name".into(),
-            "performance_discovery".into(),
-        );
-        metrics.insert(
-            "test_type".into(),
-            "timeout_optimization".into(),
-        );
+        metrics.insert("test_name".into(), "performance_discovery".into());
+        metrics.insert("test_type".into(), "timeout_optimization".into());
         metrics.insert("concurrent_users".into(), "1".into());
         metrics.insert("target_rps".into(), "100".into());
 

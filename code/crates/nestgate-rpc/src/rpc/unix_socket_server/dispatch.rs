@@ -16,9 +16,9 @@ use crate::rpc::protocol::{normalize_method, warn_legacy_method_alias};
 
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
-    bonding_handlers, content_federation_handlers, content_handlers, coord_handlers, footprint_handlers,
-    external_handlers, nat_handlers, session_handlers, storage_handlers, template_handlers,
-    zfs_handlers,
+    bonding_handlers, content_federation_handlers, content_handlers, coord_handlers,
+    external_handlers, footprint_handlers, nat_handlers, session_handlers, storage_handlers,
+    template_handlers, zfs_handlers,
 };
 
 /// Extract owned params from a request, defaulting to `{}`.
@@ -326,31 +326,21 @@ pub(super) async fn handle_request(
         "coord.waves.history" => {
             coord_handlers::coord_waves_history(request.params.as_ref(), state).await
         }
-        "coord.heads.get" => {
-            coord_handlers::coord_heads_get(request.params.as_ref(), state).await
-        }
-        "coord.heads.all" => {
-            coord_handlers::coord_heads_all(request.params.as_ref(), state).await
-        }
-        "coord.topology" => {
-            coord_handlers::coord_topology(request.params.as_ref(), state).await
-        }
+        "coord.heads.get" => coord_handlers::coord_heads_get(request.params.as_ref(), state).await,
+        "coord.heads.all" => coord_handlers::coord_heads_all(request.params.as_ref(), state).await,
+        "coord.topology" => coord_handlers::coord_topology(request.params.as_ref(), state).await,
         "coord.depot.status" => {
             coord_handlers::coord_depot_status(request.params.as_ref(), state).await
         }
         "coord.provenance" => {
             coord_handlers::coord_provenance(request.params.as_ref(), state).await
         }
-        "coord.ingest" => {
-            coord_handlers::coord_ingest(request.params.as_ref(), state).await
-        }
+        "coord.ingest" => coord_handlers::coord_ingest(request.params.as_ref(), state).await,
         // footPrint domain — CAS-backed project persistence (Wave 137b)
         "footprint.save" => {
             footprint_handlers::footprint_save(request.params.as_ref(), state).await
         }
-        "footprint.get" => {
-            footprint_handlers::footprint_get(request.params.as_ref(), state).await
-        }
+        "footprint.get" => footprint_handlers::footprint_get(request.params.as_ref(), state).await,
         "footprint.list" => {
             footprint_handlers::footprint_list(request.params.as_ref(), state).await
         }

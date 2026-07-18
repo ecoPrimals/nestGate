@@ -73,8 +73,7 @@ pub(super) async fn bonding_ledger_store(
         );
     }
 
-    let bytes = serde_json::to_vec_pretty(&enriched)
-        .io_ctx("Failed to serialize bond record")?;
+    let bytes = serde_json::to_vec_pretty(&enriched).io_ctx("Failed to serialize bond record")?;
 
     tokio::fs::write(&record_path, &bytes).await.map_err(|e| {
         NestGateError::io_error(format!(
@@ -130,8 +129,7 @@ pub(super) async fn bonding_ledger_retrieve(
         ))
     })?;
 
-    let data: Value = serde_json::from_slice(&bytes)
-        .io_ctx("Corrupt bond record")?;
+    let data: Value = serde_json::from_slice(&bytes).io_ctx("Corrupt bond record")?;
 
     let depth_path = bonding_record_path(family_id, contract_id, "__depth");
     let ledger_depth: u64 = tokio::fs::read_to_string(&depth_path)

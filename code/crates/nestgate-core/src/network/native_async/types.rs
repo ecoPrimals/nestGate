@@ -290,14 +290,8 @@ mod tests {
     #[test]
     fn test_network_request_with_headers() {
         let mut headers = HashMap::new();
-        headers.insert(
-            "Content-Type".into(),
-            "application/json".into(),
-        );
-        headers.insert(
-            "Authorization".into(),
-            "Bearer token123".into(),
-        );
+        headers.insert("Content-Type".into(), "application/json".into());
+        headers.insert("Authorization".into(), "Bearer token123".into());
 
         let request = NetworkRequest {
             request_id: "req-789".into(),

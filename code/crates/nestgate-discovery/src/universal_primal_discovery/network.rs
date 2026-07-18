@@ -76,11 +76,7 @@ impl NetworkDiscoveryConfig {
             scan_timeout: Duration::from_secs(5),
             preferred_interfaces: vec!["eth0".into(), "wlan0".into()],
             port_scan_range: (start_port, end_port),
-            interface_priority: vec![
-                "lo".into(),
-                "eth0".into(),
-                "wlan0".into(),
-            ],
+            interface_priority: vec!["lo".into(), "eth0".into(), "wlan0".into()],
         }
     }
 }

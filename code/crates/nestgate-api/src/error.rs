@@ -97,7 +97,6 @@ impl IntoResponse for ApiError {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

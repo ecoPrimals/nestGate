@@ -51,6 +51,58 @@ use nestgate_types::{EnvSource, ProcessEnv};
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
+/// Check whether a live process owns the socket at `socket_path`.
+///
+/// Reads the PID sidecar (`{socket}.pid`) and probes the process with
+/// `kill(pid, 0)` (signal 0 = liveness test, no actual signal sent).
+///
+/// Returns `true` if a live owner is detected (socket should NOT be unlinked).
+/// Returns `false` if the socket is stale (safe to reclaim).
+#[cfg(unix)]
+pub(crate) fn is_socket_owned_by_live_process(socket_path: &Path) -> bool {
+    let pid_path = socket_path.with_extension("pid");
+    let Ok(contents) = std::fs::read_to_string(&pid_path) else {
+        return false;
+    };
+    let Ok(raw_pid) = contents.trim().parse::<i32>() else {
+        warn!(
+            "PID sidecar {} contains non-numeric value: {:?}",
+            pid_path.display(),
+            contents.trim()
+        );
+        return false;
+    };
+    let current_pid = std::process::id();
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "PID fits i32 on all supported Unix platforms"
+    )]
+    let current_pid_i32 = current_pid as i32;
+    if raw_pid == current_pid_i32 {
+        return false;
+    }
+    let Some(pid) = rustix::process::Pid::from_raw(raw_pid) else {
+        return false;
+    };
+    match rustix::process::test_kill_process(pid) {
+        Ok(()) => {
+            warn!(
+                "Socket {} is owned by live process (PID {raw_pid})",
+                socket_path.display()
+            );
+            true
+        }
+        Err(e) if e == rustix::io::Errno::PERM => {
+            warn!(
+                "Socket {} is owned by live process (PID {raw_pid}, permission denied for probe)",
+                socket_path.display()
+            );
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Capability-domain socket name for storage discovery (symlink beside the bound socket).
 pub const STORAGE_CAPABILITY_SOCK_NAME: &str = "storage.sock";
 
@@ -444,7 +496,9 @@ impl SocketConfig {
     /// file, or checking writability fails.
     pub fn prepare_socket_path(&self) -> Result<()> {
         // Create parent directories if needed
-        if let Some(parent) = self.socket_path.parent() && !parent.exists() {
+        if let Some(parent) = self.socket_path.parent()
+            && !parent.exists()
+        {
             std::fs::create_dir_all(parent).map_err(|e| {
                 NestGateError::configuration_error(
                     "socket_directory",
@@ -465,8 +519,21 @@ impl SocketConfig {
             }
         }
 
-        // Remove old socket file if it exists (avoid "address already in use")
+        // Remove old socket file if it exists (avoid "address already in use").
+        // GAP-038: Check PID sidecar first — refuse to steal a live peer's socket.
         if self.socket_path.exists() {
+            #[cfg(unix)]
+            if is_socket_owned_by_live_process(&self.socket_path) {
+                return Err(NestGateError::configuration_error(
+                    "socket_conflict",
+                    format!(
+                        "Socket {} is owned by a live process (see PID sidecar). \
+                         Refusing to start — stop the existing instance first.",
+                        self.socket_path.display()
+                    ),
+                ));
+            }
+
             std::fs::remove_file(&self.socket_path).map_err(|e| {
                 NestGateError::configuration_error(
                     "socket_cleanup",
@@ -477,7 +544,7 @@ impl SocketConfig {
                 )
             })?;
 
-            debug!("Removed old socket file: {:?}", self.socket_path);
+            debug!("Removed stale socket file: {:?}", self.socket_path);
         }
 
         Ok(())
@@ -525,3 +592,71 @@ mod socket_config_from_env_and_btsp_tests;
 #[cfg(all(test, unix))]
 #[path = "socket_config_capability_symlink_tests.rs"]
 mod socket_config_capability_symlink_tests;
+
+#[cfg(all(test, unix))]
+mod socket_liveness_tests {
+    use super::*;
+
+    #[test]
+    fn stale_pid_sidecar_returns_false() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("test.sock");
+        let pid_path = sock.with_extension("pid");
+        std::fs::write(&sock, b"").expect("create fake socket");
+        std::fs::write(&pid_path, "999999999").expect("write stale PID");
+        assert!(
+            !is_socket_owned_by_live_process(&sock),
+            "Non-existent PID should be treated as stale"
+        );
+    }
+
+    #[test]
+    fn missing_pid_sidecar_returns_false() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("test.sock");
+        std::fs::write(&sock, b"").expect("create fake socket");
+        assert!(
+            !is_socket_owned_by_live_process(&sock),
+            "No PID sidecar should be treated as stale"
+        );
+    }
+
+    #[test]
+    fn own_pid_returns_false() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("test.sock");
+        let pid_path = sock.with_extension("pid");
+        std::fs::write(&sock, b"").expect("create fake socket");
+        std::fs::write(&pid_path, std::process::id().to_string()).expect("write own PID");
+        assert!(
+            !is_socket_owned_by_live_process(&sock),
+            "Own PID should not block startup"
+        );
+    }
+
+    #[test]
+    fn live_pid_returns_true() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("test.sock");
+        let pid_path = sock.with_extension("pid");
+        std::fs::write(&sock, b"").expect("create fake socket");
+        std::fs::write(&pid_path, "1").expect("write PID 1 (init, always alive)");
+        assert!(
+            is_socket_owned_by_live_process(&sock),
+            "PID 1 (init) should be detected as live"
+        );
+    }
+
+    #[test]
+    fn non_numeric_pid_returns_false() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("test.sock");
+        let pid_path = sock.with_extension("pid");
+        std::fs::write(&sock, b"").expect("create fake socket");
+        std::fs::write(&pid_path, "not-a-pid").expect("write garbage PID");
+        assert!(
+            !is_socket_owned_by_live_process(&sock),
+            "Non-numeric PID should be treated as stale"
+        );
+    }
+}

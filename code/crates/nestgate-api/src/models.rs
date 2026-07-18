@@ -20,7 +20,10 @@ pub struct User {
 }
 /// User login request payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(dead_code, reason = "Used by auth_production stub APIs awaiting route wiring")]
+#[expect(
+    dead_code,
+    reason = "Used by auth_production stub APIs awaiting route wiring"
+)]
 pub struct LoginRequest {
     /// Username for authentication
     pub username: String,
@@ -29,7 +32,10 @@ pub struct LoginRequest {
 }
 /// Successful login response
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(dead_code, reason = "Used by auth_production stub APIs awaiting route wiring")]
+#[expect(
+    dead_code,
+    reason = "Used by auth_production stub APIs awaiting route wiring"
+)]
 pub struct LoginResponse {
     /// Authentication token for subsequent requests
     pub token: String,
@@ -38,7 +44,10 @@ pub struct LoginResponse {
 }
 /// Authentication token with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(dead_code, reason = "Used by auth_production stub APIs awaiting route wiring")]
+#[expect(
+    dead_code,
+    reason = "Used by auth_production stub APIs awaiting route wiring"
+)]
 pub struct AuthToken {
     /// The authentication token string
     pub token: String,

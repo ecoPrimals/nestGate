@@ -193,8 +193,7 @@ mod tests {
 
     #[test]
     fn test_introspection_config_modern_detection() {
-        let config =
-            IntrospectionConfig::new().with_compute_capability_type("orchestrated".into());
+        let config = IntrospectionConfig::new().with_compute_capability_type("orchestrated".into());
 
         assert_eq!(
             config.detect_container_runtime(),

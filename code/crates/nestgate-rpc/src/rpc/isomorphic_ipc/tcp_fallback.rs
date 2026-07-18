@@ -178,7 +178,11 @@ impl TcpFallbackServer {
         loop {
             match listener.accept().await {
                 Ok((stream, peer)) => {
-                    debug!(peer, transport = stream.transport_type(), "TCP client connected");
+                    debug!(
+                        peer,
+                        transport = stream.transport_type(),
+                        "TCP client connected"
+                    );
                     let handler = self.handler.clone();
 
                     tokio::spawn(async move {

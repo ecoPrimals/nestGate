@@ -207,15 +207,13 @@ mod tests {
 
     #[tokio::test]
     async fn restore_workspace_rejects_slash_in_workspace_id_with_bad_request() {
-        let r =
-            restore_workspace(Path("bad/id".into()), Json(sample_restore_config())).await;
+        let r = restore_workspace(Path("bad/id".into()), Json(sample_restore_config())).await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
 
     #[tokio::test]
     async fn restore_workspace_rejects_space_in_workspace_id_with_bad_request() {
-        let r =
-            restore_workspace(Path("bad id".into()), Json(sample_restore_config())).await;
+        let r = restore_workspace(Path("bad id".into()), Json(sample_restore_config())).await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
 

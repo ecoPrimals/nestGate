@@ -304,10 +304,7 @@ pub struct CircuitBreakerConfig {
 
 /// Timeout configuration for network operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(
-    clippy::struct_field_names,
-    reason = "Deprecated REST RPC types"
-)]
+#[expect(clippy::struct_field_names, reason = "Deprecated REST RPC types")]
 /// Configuration for Timeout
 pub struct TimeoutConfig {
     /// Connection timeout in milliseconds

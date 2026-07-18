@@ -62,10 +62,7 @@ pub async fn write_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, payload: &[u8
     writer.write_all(payload).await.map_err(|e| {
         NestGateError::io_error(format!("BTSP Phase 3: failed to write frame payload: {e}"))
     })?;
-    writer
-        .flush()
-        .await
-        .io_ctx("BTSP Phase 3: flush failed")?;
+    writer.flush().await.io_ctx("BTSP Phase 3: flush failed")?;
     Ok(())
 }
 
@@ -189,10 +186,7 @@ async fn write_negotiate_response<W: AsyncWriteExt + Unpin>(
         })?;
         write_frame(writer, &payload).await?;
     }
-    writer
-        .flush()
-        .await
-        .io_ctx("BTSP Phase 3: flush")?;
+    writer.flush().await.io_ctx("BTSP Phase 3: flush")?;
     Ok(())
 }
 
@@ -261,8 +255,7 @@ async fn encrypt_and_write<W: AsyncWriteExt + Unpin>(
     keys: &SessionKeys,
     response: &Value,
 ) -> Result<()> {
-    let payload = serde_json::to_vec(response)
-        .api_ctx("BTSP Phase 3: serialize")?;
+    let payload = serde_json::to_vec(response).api_ctx("BTSP Phase 3: serialize")?;
     let encrypted = keys.encrypt(&payload)?;
     write_frame(writer, &encrypted).await
 }

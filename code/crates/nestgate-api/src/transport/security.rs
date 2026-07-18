@@ -276,8 +276,7 @@ impl SecurityProviderClient {
         };
 
         let response = self.send_request(&request).await?;
-        String::from_utf8(response.data)
-            .security_ctx("Invalid token")
+        String::from_utf8(response.data).security_ctx("Invalid token")
     }
 
     /// Validate an authentication token.
@@ -311,8 +310,7 @@ impl SecurityProviderClient {
             .net_ctx("Failed to connect")?;
 
         // Serialize and send request
-        let request_json = serde_json::to_vec(request)
-            .api_ctx("Failed to serialize request")?;
+        let request_json = serde_json::to_vec(request).api_ctx("Failed to serialize request")?;
 
         stream
             .write_all(&request_json)
@@ -333,9 +331,7 @@ impl SecurityProviderClient {
         if !response.success {
             return Err(NestGateError::security_error(format!(
                 "Security provider error: {}",
-                response
-                    .error
-                    .unwrap_or_else(|| "Unknown error".into())
+                response.error.unwrap_or_else(|| "Unknown error".into())
             )));
         }
 

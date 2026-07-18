@@ -114,9 +114,7 @@ impl Cli {
                     resolved_family_id.as_deref(),
                 )
                 .await
-                .map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some("server".into()))
-                })?;
+                .map_err(|e| BinErrorHelper::runtime_error(e.to_string(), Some("server".into())))?;
             }
 
             // UniBin: Status command
@@ -160,10 +158,7 @@ impl Cli {
             Commands::Service { action } => {
                 let mut service_manager = crate::commands::service::ServiceManager::new();
                 service_manager.execute(action).await.map_err(|e| {
-                    BinErrorHelper::runtime_error(
-                        e.to_string(),
-                        Some("service_command".into()),
-                    )
+                    BinErrorHelper::runtime_error(e.to_string(), Some("service_command".into()))
                 })?;
             }
             Commands::Doctor { comprehensive, fix } => {

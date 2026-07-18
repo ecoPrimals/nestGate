@@ -233,10 +233,7 @@ impl ServiceRegistryClient {
             );
         }
 
-        health.insert(
-            "cache_size".into(),
-            self.registry_cache.len().to_string(),
-        );
+        health.insert("cache_size".into(), self.registry_cache.len().to_string());
         health.insert("timeout".into(), format!("{:?}", self.timeout));
 
         Ok(health)
@@ -255,23 +252,18 @@ impl ServiceRegistryClient {
 
         // Check for basic configuration
         if self.base_url.is_none() {
-            warnings.push(
-                "No registry URL configured - using fallback discovery".into(),
-            );
+            warnings.push("No registry URL configured - using fallback discovery".into());
         }
 
         // Check for service mesh configuration (from config)
         if !self.config.has_service_mesh() {
-            warnings.push(
-                "No service mesh configuration detected - using localhost fallback".into(),
-            );
+            warnings
+                .push("No service mesh configuration detected - using localhost fallback".into());
         }
 
         // Check timeout configuration
         if self.timeout > Duration::from_secs(30) {
-            warnings.push(
-                "Registry timeout is very high - may impact startup performance".into(),
-            );
+            warnings.push("Registry timeout is very high - may impact startup performance".into());
         }
 
         Ok(warnings)
@@ -445,10 +437,7 @@ mod tests {
         assert!(result.is_ok());
 
         let health = result.unwrap();
-        assert_eq!(
-            health.get("registry_configured"),
-            Some(&"false".into())
-        );
+        assert_eq!(health.get("registry_configured"), Some(&"false".into()));
     }
 
     #[test]
@@ -490,10 +479,7 @@ mod tests {
         assert!(result.is_ok());
 
         let summary = result.unwrap();
-        assert_eq!(
-            summary.get("registry_url"),
-            Some(&"not_configured".into())
-        );
+        assert_eq!(summary.get("registry_url"), Some(&"not_configured".into()));
     }
 
     #[test]

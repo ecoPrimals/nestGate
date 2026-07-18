@@ -300,8 +300,10 @@ impl UnixSocketRpcHandler {
             m @ ("auth.check" | "auth.mode" | "auth.peer_info") => {
                 let gate = crate::rpc::method_gate::MethodGate::from_env();
                 let caller = crate::rpc::method_gate::CallerContext::unix();
-                crate::rpc::method_gate::auth_introspection(m, &gate, &caller)
-                    .ok_or((nestgate_types::JsonRpcErrorCode::MethodNotFound.code(), Cow::Borrowed("Method not found")))
+                crate::rpc::method_gate::auth_introspection(m, &gate, &caller).ok_or((
+                    nestgate_types::JsonRpcErrorCode::MethodNotFound.code(),
+                    Cow::Borrowed("Method not found"),
+                ))
             }
             "btsp.capabilities" => Ok(json!({
                 "protocol": "btsp-v1",
@@ -329,7 +331,11 @@ impl UnixSocketRpcHandler {
             Err((code, message)) => JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),
                 result: None,
-                error: Some(JsonRpcError { code, message, data: None }),
+                error: Some(JsonRpcError {
+                    code,
+                    message,
+                    data: None,
+                }),
                 id,
             },
         }

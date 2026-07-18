@@ -105,7 +105,11 @@ pub fn ai_success_with_confidence<T>(data: T, confidence: f64) -> AIFirstRespons
 pub fn ai_response_with_actions<T>(data: T, actions: Vec<SuggestedAction>) -> AIFirstResponse<T> {
     let count = actions.len();
     #[expect(clippy::cast_precision_loss, reason = "action count fits f64")]
-    let confidence = if count == 0 { 0.0 } else { actions.iter().map(|a| a.confidence).sum::<f64>() / count as f64 };
+    let confidence = if count == 0 {
+        0.0
+    } else {
+        actions.iter().map(|a| a.confidence).sum::<f64>() / count as f64
+    };
     AIFirstResponse {
         data,
         success: true,
@@ -307,10 +311,7 @@ pub async fn get_pool_info(
                     confidence: 0.8,
                     parameters: {
                         let mut params = HashMap::new();
-                        params.insert(
-                            "pool_name".into(),
-                            serde_json::Value::String(pool_name),
-                        );
+                        params.insert("pool_name".into(), serde_json::Value::String(pool_name));
                         params
                     },
                     priority: 1, // High priority for degraded pools
@@ -494,10 +495,7 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
             confidence: 0.85,
             parameters: HashMap::new(),
             priority: 3, // Lower priority (depends on others)
-            dependencies: vec![
-                "enable_monitoring".into(),
-                "configure_alerts".into(),
-            ],
+            dependencies: vec!["enable_monitoring".into(), "configure_alerts".into()],
             estimated_duration_ms: Some(30000),
         },
     ];

@@ -354,10 +354,7 @@ mod tests {
         assert_eq!(knowledge.capabilities.len(), 2);
         assert!(knowledge.capabilities.contains(&"storage".into()));
         assert_eq!(knowledge.endpoints.len(), 1);
-        assert_eq!(
-            knowledge.metadata.get("version"),
-            Some(&"1.0.0".into())
-        );
+        assert_eq!(knowledge.metadata.get("version"), Some(&"1.0.0".into()));
     }
 
     #[test]

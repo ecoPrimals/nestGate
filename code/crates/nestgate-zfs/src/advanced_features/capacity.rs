@@ -66,9 +66,7 @@ pub fn detect_performance_bottlenecks(performance_data: &[SystemInfo]) -> Result
         // CPU bottleneck detection
         if latest.cpu_usage > 80.0 {
             bottlenecks.push("High CPU usage".into());
-            recommendations.push(
-                "Consider CPU upgrade or workload optimization".into(),
-            );
+            recommendations.push("Consider CPU upgrade or workload optimization".into());
         }
 
         // Memory bottleneck detection

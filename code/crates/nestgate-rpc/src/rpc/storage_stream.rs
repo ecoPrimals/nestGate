@@ -134,9 +134,7 @@ fn extract_dataset(params: &Value) -> &str {
 
 pub async fn ensure_parent(path: &Path) -> Result<()> {
     if let Some(parent) = path.parent() {
-        tokio::fs::create_dir_all(parent)
-            .await
-            .io_ctx("mkdir")?;
+        tokio::fs::create_dir_all(parent).await.io_ctx("mkdir")?;
     }
     Ok(())
 }
@@ -319,12 +317,8 @@ pub async fn storage_store_stream_chunk(params: Value) -> Result<Value> {
         file.seek(std::io::SeekFrom::Start(offset))
             .await
             .io_ctx("seek")?;
-        file.write_all(&chunk)
-            .await
-            .io_ctx("write staging")?;
-        file.flush()
-            .await
-            .io_ctx("flush staging")?;
+        file.write_all(&chunk).await.io_ctx("write staging")?;
+        file.flush().await.io_ctx("flush staging")?;
     }
 
     upload.bytes_written = next;
@@ -408,9 +402,7 @@ pub async fn storage_retrieve_stream_begin(
         )));
     };
 
-    let meta = tokio::fs::metadata(&path)
-        .await
-        .io_ctx("stat")?;
+    let meta = tokio::fs::metadata(&path).await.io_ctx("stat")?;
     let total_size = meta.len();
 
     let stream_id = Uuid::new_v4().to_string();
@@ -476,18 +468,13 @@ pub async fn storage_retrieve_stream_chunk(params: &Value) -> Result<Value> {
     let to_read = u64::min(session.chunk_size, remaining);
     let to_read_usize = usize::try_from(to_read).unwrap_or(usize::MAX);
 
-    let mut file = tokio::fs::File::open(&session.path)
-        .await
-        .io_ctx("open")?;
+    let mut file = tokio::fs::File::open(&session.path).await.io_ctx("open")?;
     file.seek(std::io::SeekFrom::Start(offset))
         .await
         .io_ctx("seek")?;
 
     let mut buf = vec![0u8; to_read_usize];
-    let n = file
-        .read(&mut buf)
-        .await
-        .io_ctx("read")?;
+    let n = file.read(&mut buf).await.io_ctx("read")?;
     buf.truncate(n);
 
     let is_last = offset.saturating_add(u64::try_from(n).unwrap_or(0)) >= session.total_size;

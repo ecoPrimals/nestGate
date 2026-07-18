@@ -13,6 +13,5 @@ mod session;
 mod token_management;
 mod types;
 
-
 #[cfg(test)]
 mod tests;

@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 3,797+ tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 144b (deep debt sweep: 292 dead code → 0, let-chains, clippy zero; Phase 2 transport, typed JSON-RPC errors, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
-date = 2026-07-16
+description = "Content-addressed storage primal v0.5.0 — 3,797+ tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 149b (dimensional audit: cargo fmt, GAP-038 PID liveness, scorecard clean; deep debt sweep, Phase 2 transport, typed JSON-RPC errors, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+date = 2026-07-18
 
 [taxonomies]
 primals = ["nestgate"]
@@ -11,10 +11,11 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **3,797+ tests** (all passing, 73+ ignored), **0 failures** (serial and parallel), 0 clippy warnings
-- **Session 118 Deep debt sweep** (Wave 144b): 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead type alias, unfulfilled lint expects; 1710 tests pass
-- **Session 117 Phase 2 Transport** (Wave 144b): `TransportStream` + `TransportListener` enum types, unified `serve_listener()` accept loop, `JsonRpcClient` connect consolidation, `IpcStream` → type alias, `AsyncStream` trait removed, 7 new tests
-- **Session 116 Deep debt sweep** (Wave 144b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types` replaces 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules); removed `/opt/ecoPrimals/depot` hardcoded fallback; security socket tier-6 → XDG-based
-- **Session 115 Deep debt sweep** (Wave 144b): `ErrorContextExt` trait — 152 `map_err(format!())` sites → `.io_ctx`/`.net_ctx`/`.internal_ctx`/`.api_ctx`/`.validation_ctx`/`.security_ctx`
+- **Session 119 Dimensional audit** (Wave 149b): `cargo fmt` (133 files); GAP-038 PID sidecar liveness check (socket conflict detection); btsp re-export → `#[cfg(test)]`; wave stamps 149b; PROJECTS_PATH verified complete; 1,630+ tests pass
+- **Session 118 Deep debt sweep** (Wave 149b): 292 dead code warnings → 0 (stale imports removed, stub modules gated with `#[expect(dead_code)]`); 8 let-chain modernizations; 30 clippy errors → 0; removed dead type alias, unfulfilled lint expects; 1710 tests pass
+- **Session 117 Phase 2 Transport** (Wave 149b): `TransportStream` + `TransportListener` enum types, unified `serve_listener()` accept loop, `JsonRpcClient` connect consolidation, `IpcStream` → type alias, `AsyncStream` trait removed, 7 new tests
+- **Session 116 Deep debt sweep** (Wave 149b): Typed JSON-RPC errors — canonical `JsonRpcErrorCode` enum + `JsonRpcError` in `nestgate-types` replaces 6 duplicate structs, ~97 stringly-typed error sites → typed; `pub(crate)` tightening (10 modules); removed `/opt/ecoPrimals/depot` hardcoded fallback; security socket tier-6 → XDG-based
+- **Session 115 Deep debt sweep** (Wave 149b): `ErrorContextExt` trait — 152 `map_err(format!())` sites → `.io_ctx`/`.net_ctx`/`.internal_ctx`/`.api_ctx`/`.validation_ctx`/`.security_ctx`
 - **Session 114 Deep debt sweep** (Wave 143b): `PROJECTS_PATH` CAS wiring (footPrint composition), `String::from` R8 sweep (2500+ across 382 files)
 - **Session 113 Deep debt sweep** (Wave 142b): Production mock evolution — ZFS performance defaults zero'd (was 80K IOPS/16GB/0.85 ARC), tier utilization now real `used/(used+available)` computation, AI confidence computed from actions (was hardcoded 0.85); 21 `String::from` → `.into()` across 11 files in `nestgate-rpc`; `ZfsError` doc added (clippy `missing-docs` fix); full codebase audit clean (no files >800L, no hardcoded primal names, no `todo!()`/`unimplemented!()` in production)
 - **Session 112 Deep debt sweep** (Wave 142b): `btsp_client`, `btsp_phase3`, `primal_announce` → `pub(crate)` (3 internal-only modules); `generate_server_nonce()` simplified from `Result<[u8;32]>` → `[u8;32]` (infallible); 31 `unwrap_or_else(|| String::from(...))` → `.into()` across 18 files

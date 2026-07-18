@@ -270,8 +270,7 @@ mod tests {
 
     #[test]
     fn test_registry_config_has_env_var() {
-        let config =
-            RegistryConfig::new().with_service_mesh_endpoint("http://mesh:9090".into());
+        let config = RegistryConfig::new().with_service_mesh_endpoint("http://mesh:9090".into());
 
         assert!(config.has_env_var("NESTGATE_SERVICE_MESH_ENDPOINT"));
         assert!(!config.has_env_var("KUBERNETES_NAMESPACE"));
@@ -280,12 +279,10 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
     async fn test_concurrent_registry_config_access() {
         // Create two different configurations
-        let config1 = Arc::new(
-            RegistryConfig::new().with_registry_url("http://registry1:8080".into()),
-        );
-        let config2 = Arc::new(
-            RegistryConfig::new().with_registry_url("http://registry2:8080".into()),
-        );
+        let config1 =
+            Arc::new(RegistryConfig::new().with_registry_url("http://registry1:8080".into()));
+        let config2 =
+            Arc::new(RegistryConfig::new().with_registry_url("http://registry2:8080".into()));
 
         // Spawn concurrent tasks accessing different configs
         let handle1 = {

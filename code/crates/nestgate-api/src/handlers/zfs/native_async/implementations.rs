@@ -171,10 +171,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             });
         }
         let mut meta = HashMap::new();
-        meta.insert(
-            "zfs_proc_present".into(),
-            zfs_kernel_present().to_string(),
-        );
+        meta.insert("zfs_proc_present".into(), zfs_kernel_present().to_string());
         Ok(HealthStatus {
             service_name: self.service_name.clone(),
             status,
@@ -213,14 +210,8 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
 
         let custom = HashMap::from([
             ("pool_count".into(), usize_to_f64_lossy(pools.len())),
-            (
-                "dataset_count".into(),
-                usize_to_f64_lossy(datasets.len()),
-            ),
-            (
-                "snapshot_count".into(),
-                usize_to_f64_lossy(snapshots.len()),
-            ),
+            ("dataset_count".into(), usize_to_f64_lossy(datasets.len())),
+            ("snapshot_count".into(), usize_to_f64_lossy(snapshots.len())),
             (
                 "total_capacity_bytes".into(),
                 u64_to_f64_approximate(total_cap),

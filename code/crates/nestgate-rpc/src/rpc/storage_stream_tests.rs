@@ -80,8 +80,8 @@ async fn store_and_retrieve_stream_roundtrip_multichunk() {
             "offset": ro
         });
         let part = storage_retrieve_stream_chunk(&part_params)
-        .await
-        .expect("retrieve chunk");
+            .await
+            .expect("retrieve chunk");
         let b64 = part["data"].as_str().expect("data");
         let bytes = STANDARD.decode(b64).expect("b64");
         out.extend_from_slice(&bytes);
@@ -350,8 +350,8 @@ async fn retrieve_stream_chunk_unknown_stream() {
         "offset": 0
     });
     let err = storage_retrieve_stream_chunk(&p)
-    .await
-    .expect_err("unknown");
+        .await
+        .expect_err("unknown");
     assert!(err.to_string().contains("unknown or expired"));
 }
 
@@ -380,8 +380,8 @@ async fn retrieve_stream_chunk_offset_past_end() {
         "offset": 999
     });
     let err = storage_retrieve_stream_chunk(&p)
-    .await
-    .expect_err("past end");
+        .await
+        .expect_err("past end");
     assert!(err.to_string().contains("past end"));
 
     let mut guard = maps().lock().await;
@@ -420,9 +420,7 @@ async fn retrieve_stream_chunk_size_zero_normalized() {
         "stream_id": sid,
         "offset": 0
     });
-    let chunk = storage_retrieve_stream_chunk(&p)
-    .await
-    .unwrap();
+    let chunk = storage_retrieve_stream_chunk(&p).await.unwrap();
     assert_eq!(chunk["is_last"], true);
     assert_eq!(chunk["length"], 16);
 
@@ -459,9 +457,7 @@ async fn retrieve_stream_falls_back_to_flat_blob_path() {
         "stream_id": stream_id,
         "offset": 0
     });
-    let chunk = storage_retrieve_stream_chunk(&p)
-    .await
-    .expect("chunk");
+    let chunk = storage_retrieve_stream_chunk(&p).await.expect("chunk");
     let bytes = STANDARD.decode(chunk["data"].as_str().unwrap()).unwrap();
     assert_eq!(bytes, payload);
     assert_eq!(chunk["is_last"], true);

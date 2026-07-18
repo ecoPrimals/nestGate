@@ -210,8 +210,7 @@ mod tests {
 
     #[test]
     fn test_discovery_config_builder() {
-        let custom_discovery =
-            ServiceDiscoveryConfig::with_host_and_port("test".into(), 8000);
+        let custom_discovery = ServiceDiscoveryConfig::with_host_and_port("test".into(), 8000);
 
         let config = DiscoveryRuntimeConfig::new()
             .with_service_discovery(custom_discovery)

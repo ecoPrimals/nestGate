@@ -137,11 +137,7 @@ impl Default for MiddlewareConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            middleware_chain: vec![
-                "cors".into(),
-                "auth".into(),
-                "logging".into(),
-            ],
+            middleware_chain: vec!["cors".into(), "auth".into(), "logging".into()],
             request_settings: HashMap::new(),
             response_settings: HashMap::new(),
         }

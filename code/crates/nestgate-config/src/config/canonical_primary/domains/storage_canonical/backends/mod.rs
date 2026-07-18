@@ -213,10 +213,7 @@ mod tests {
     #[test]
     fn backend_type_custom_equality() {
         let custom = StorageBackendType::Custom("mybackend".into());
-        assert_eq!(
-            custom,
-            StorageBackendType::Custom("mybackend".into())
-        );
+        assert_eq!(custom, StorageBackendType::Custom("mybackend".into()));
     }
 
     #[test]

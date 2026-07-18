@@ -385,18 +385,12 @@ impl SystemIntrospection {
 
         let mut summary = HashMap::new();
 
-        summary.insert(
-            "cpu_cores".into(),
-            capabilities.cpu_cores.to_string(),
-        );
+        summary.insert("cpu_cores".into(), capabilities.cpu_cores.to_string());
         summary.insert(
             "logical_cores".into(),
             capabilities.logical_cores.to_string(),
         );
-        summary.insert(
-            "memory_gb".into(),
-            format!("{:.1}", capabilities.memory_gb),
-        );
+        summary.insert("memory_gb".into(), format!("{:.1}", capabilities.memory_gb));
         summary.insert(
             "network_interfaces".into(),
             capabilities.network_interfaces.len().to_string(),

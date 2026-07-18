@@ -116,9 +116,7 @@ impl CompressionAnalytics {
         let mut recommendations = Vec::new();
 
         if self.compression_ratio < 1.2 {
-            recommendations.push(
-                "Consider disabling compression for this dataset".into(),
-            );
+            recommendations.push("Consider disabling compression for this dataset".into());
         } else if self.compression_ratio < 1.5 {
             recommendations.push("lz4 compression is optimal for this data".into());
         } else {

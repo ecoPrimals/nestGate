@@ -88,22 +88,15 @@ mod tests {
         manager.add_access_policy(policy);
 
         // User with sufficient permissions and clearance should be compliant
-        assert!(manager.check_access_compliance(
-            &[
-                "read".into(),
-                "write".into(),
-                "admin".into()
-            ],
-            5
-        ));
+        assert!(
+            manager.check_access_compliance(&["read".into(), "write".into(), "admin".into()], 5)
+        );
 
         // User with insufficient permissions should be non-compliant
         assert!(!manager.check_access_compliance(&["read".into()], 5));
 
         // User with insufficient clearance should be non-compliant
-        assert!(
-            !manager.check_access_compliance(&["read".into(), "write".into()], 2)
-        );
+        assert!(!manager.check_access_compliance(&["read".into(), "write".into()], 2));
     }
 
     #[test]

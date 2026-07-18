@@ -33,7 +33,9 @@ pub fn default_security_socket_path() -> PathBuf {
         .unwrap_or_else(|_| nestgate_config::constants::system::ecosystem_path_segment());
     let runtime_base = std::env::var("XDG_RUNTIME_DIR")
         .unwrap_or_else(|_| format!("/run/user/{}", rustix::process::getuid().as_raw()));
-    PathBuf::from(runtime_base).join(socket_dir).join("security.sock")
+    PathBuf::from(runtime_base)
+        .join(socket_dir)
+        .join("security.sock")
 }
 
 /// Session lifecycle as reported by the security capability provider.
@@ -69,7 +71,7 @@ pub struct BtspClient {
 /// Delegates to [`super::btsp_server_handshake::is_btsp_required`] so
 /// client and server use identical env-var resolution and sentinel logic.
 #[must_use]
-#[expect(dead_code, reason = "BTSP client re-export — used by downstream crates via pub mod btsp_server_handshake")]
+#[cfg(test)]
 pub fn is_btsp_required() -> bool {
     super::btsp_server_handshake::is_btsp_required()
 }
@@ -133,7 +135,10 @@ fn discover_security_socket_xdg() -> Option<PathBuf> {
     None
 }
 
-#[expect(dead_code, reason = "BTSP client surface — will activate with security primal integration")]
+#[expect(
+    dead_code,
+    reason = "BTSP client surface — will activate with security primal integration"
+)]
 impl BtspClient {
     /// Wraps a path to the security provider's JSON-RPC socket.
     #[must_use]

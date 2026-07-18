@@ -18,10 +18,7 @@ use super::ingest::load_manifest;
 /// ```json
 /// { "limit": 50, "offset": 0 }
 /// ```
-pub async fn footprint_list(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn footprint_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let p = params.unwrap_or(&default_params);
     let family_id = resolve_family_id(p, state)?;
@@ -63,20 +60,15 @@ pub async fn footprint_list(
 /// ```json
 /// { "project_id": "my-portfolio", "include_content": true }
 /// ```
-pub async fn footprint_get(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn footprint_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
     let manifest = load_manifest(family_id)?;
 
-    let project_id = params["project_id"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field("project_id", "project_id required")
-        })?;
+    let project_id = params["project_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("project_id", "project_id required")
+    })?;
 
     let project = manifest.projects.get(project_id).ok_or_else(|| {
         NestGateError::invalid_input_with_field(
@@ -137,20 +129,15 @@ pub async fn footprint_get(
 /// ```json
 /// { "project_id": "my-portfolio", "limit": 20 }
 /// ```
-pub async fn footprint_history(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn footprint_history(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
     let manifest = load_manifest(family_id)?;
 
-    let project_id = params["project_id"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field("project_id", "project_id required")
-        })?;
+    let project_id = params["project_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("project_id", "project_id required")
+    })?;
 
     let project = manifest.projects.get(project_id).ok_or_else(|| {
         NestGateError::invalid_input_with_field(
@@ -195,11 +182,8 @@ mod tests {
 
     #[test]
     fn project_with_revisions_serializes() {
-        let mut project = FootPrintProject::new(
-            "test".into(),
-            "Test Project".into(),
-            serde_json::json!({}),
-        );
+        let mut project =
+            FootPrintProject::new("test".into(), "Test Project".into(), serde_json::json!({}));
         let rev = ProjectRevision {
             hash: "abc123".into(),
             message: "Initial".into(),

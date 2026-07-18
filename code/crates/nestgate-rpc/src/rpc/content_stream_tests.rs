@@ -21,8 +21,8 @@ async fn content_stream_store_and_retrieve_roundtrip() {
         "content_type": "application/octet-stream"
     });
     let begin = content_store_stream_begin(&begin_params, Some("default"))
-    .await
-    .expect("content store stream begin");
+        .await
+        .expect("content store stream begin");
 
     let sid = begin["stream_id"].as_str().unwrap();
     let chunk_size = begin["chunk_size"].as_u64().unwrap() as usize;
@@ -40,8 +40,8 @@ async fn content_stream_store_and_retrieve_roundtrip() {
             "is_last": is_last
         });
         let result = content_store_stream_chunk(&chunk_params)
-        .await
-        .expect("content store stream chunk");
+            .await
+            .expect("content store stream chunk");
 
         if is_last {
             assert!(result["hash"].is_string());
@@ -55,8 +55,8 @@ async fn content_stream_store_and_retrieve_roundtrip() {
                 "hash": hash
             });
             let r_begin = content_retrieve_stream_begin(&retrieve_params, Some("default"))
-            .await
-            .expect("content retrieve stream begin");
+                .await
+                .expect("content retrieve stream begin");
 
             let rsid = r_begin["stream_id"].as_str().unwrap();
             let total = r_begin["total_size"].as_u64().unwrap();
@@ -70,8 +70,8 @@ async fn content_stream_store_and_retrieve_roundtrip() {
                     "offset": ro
                 });
                 let part = crate::rpc::storage_stream::storage_retrieve_stream_chunk(&part_params)
-                .await
-                .expect("content retrieve chunk");
+                    .await
+                    .expect("content retrieve chunk");
                 let bytes = STANDARD.decode(part["data"].as_str().unwrap()).unwrap();
                 out.extend_from_slice(&bytes);
                 ro += bytes.len() as u64;
@@ -99,8 +99,7 @@ async fn content_stream_dedup_on_second_upload() {
         let data = data.to_vec();
         async move {
             let begin_params = json!({"family_id": fam, "total_size": data.len()});
-            let begin = content_store_stream_begin(&begin_params, Some("default"))
-                .await?;
+            let begin = content_store_stream_begin(&begin_params, Some("default")).await?;
             let sid = begin["stream_id"].as_str().unwrap().to_owned();
             let chunk_params = json!({
                 "stream_id": sid,
@@ -108,8 +107,7 @@ async fn content_stream_dedup_on_second_upload() {
                 "data": STANDARD.encode(&data),
                 "is_last": true
             });
-            content_store_stream_chunk(&chunk_params)
-            .await
+            content_store_stream_chunk(&chunk_params).await
         }
     };
 
@@ -128,8 +126,7 @@ async fn content_retrieve_stream_not_found() {
     let family_id = format!("content-stream-404-{}", Uuid::new_v4());
     let fake_hash = "b".repeat(64);
     let retrieve_params = json!({"family_id": family_id, "hash": fake_hash});
-    let err = content_retrieve_stream_begin(&retrieve_params, Some("default"))
-    .await;
+    let err = content_retrieve_stream_begin(&retrieve_params, Some("default")).await;
     assert!(err.is_err());
 }
 
@@ -146,8 +143,7 @@ async fn begin_rejects_missing_total_size() {
 async fn begin_rejects_oversized_total() {
     let fam = format!("cs-oversize-{}", Uuid::new_v4());
     let p = json!({"family_id": fam, "total_size": MAX_STREAM_TOTAL + 1});
-    let err = content_store_stream_begin(&p, None)
-    .await;
+    let err = content_store_stream_begin(&p, None).await;
     assert!(err.is_err());
     cleanup_family(&fam).await;
 }
@@ -160,8 +156,7 @@ async fn chunk_rejects_unknown_stream_id() {
         "data": STANDARD.encode(b"x"),
         "is_last": true
     });
-    let err = content_store_stream_chunk(&p)
-    .await;
+    let err = content_store_stream_chunk(&p).await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
     assert!(msg.contains("unknown") || msg.contains("expired"));
@@ -182,8 +177,7 @@ async fn chunk_rejects_bad_offset() {
         "data": STANDARD.encode(b"data"),
         "is_last": false
     });
-    let err = content_store_stream_chunk(&chunk_params)
-    .await;
+    let err = content_store_stream_chunk(&chunk_params).await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
     assert!(msg.contains("expected 0"));
@@ -205,8 +199,7 @@ async fn chunk_rejects_exceeding_total_size() {
         "data": STANDARD.encode(b"too much data for 4 bytes"),
         "is_last": true
     });
-    let err = content_store_stream_chunk(&chunk_params)
-    .await;
+    let err = content_store_stream_chunk(&chunk_params).await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
     assert!(msg.contains("exceed"));
@@ -228,8 +221,7 @@ async fn chunk_rejects_invalid_base64() {
         "data": "not!valid!base64!!!",
         "is_last": false
     });
-    let err = content_store_stream_chunk(&chunk_params)
-    .await;
+    let err = content_store_stream_chunk(&chunk_params).await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
     assert!(msg.contains("base64"));
@@ -268,8 +260,8 @@ async fn empty_upload_fast_path_returns_hash() {
     let fam = format!("cs-empty-{}", Uuid::new_v4());
     let p = json!({"family_id": &fam, "total_size": 0, "content_type": "text/plain"});
     let result = content_store_stream_begin(&p, None)
-    .await
-    .expect("empty upload should succeed");
+        .await
+        .expect("empty upload should succeed");
 
     let expected_hash = content_hash_hex(&[]);
     assert_eq!(result["hash"].as_str().unwrap(), expected_hash);
@@ -294,9 +286,7 @@ async fn empty_upload_dedup_on_second_call() {
     let fam = format!("cs-empty-dedup-{}", Uuid::new_v4());
     let params = json!({"family_id": &fam, "total_size": 0});
 
-    let first = content_store_stream_begin(&params, None)
-        .await
-        .unwrap();
+    let first = content_store_stream_begin(&params, None).await.unwrap();
     let second = content_store_stream_begin(&params, None).await.unwrap();
 
     assert_eq!(first["hash"], second["hash"]);
@@ -322,8 +312,7 @@ async fn chunk_rejects_oversized_decoded_data() {
         "data": STANDARD.encode(&oversized),
         "is_last": false
     });
-    let err = content_store_stream_chunk(&chunk_params)
-    .await;
+    let err = content_store_stream_chunk(&chunk_params).await;
     assert!(err.is_err());
     let msg = format!("{}", err.unwrap_err());
     assert!(msg.contains("chunk exceeds") || msg.contains("MAX_STREAM_CHUNK"));
@@ -348,9 +337,7 @@ async fn retrieve_stream_begin_valid_hash_returns_stream() {
         "data": STANDARD.encode(payload),
         "is_last": true
     });
-    let fin = content_store_stream_chunk(&chunk_params)
-        .await
-        .unwrap();
+    let fin = content_store_stream_chunk(&chunk_params).await.unwrap();
     let hash = fin["hash"].as_str().unwrap();
 
     let retrieve_params = json!({"family_id": &fam, "hash": hash});
@@ -370,8 +357,7 @@ async fn chunk_missing_stream_id_param_errors() {
         "data": STANDARD.encode(b"x"),
         "is_last": true
     });
-    let err = content_store_stream_chunk(&p)
-    .await;
+    let err = content_store_stream_chunk(&p).await;
     assert!(err.is_err(), "missing stream_id should be rejected");
 }
 
@@ -389,8 +375,7 @@ async fn chunk_missing_offset_param_errors() {
         "data": STANDARD.encode(b"x"),
         "is_last": false
     });
-    let err = content_store_stream_chunk(&chunk_params)
-    .await;
+    let err = content_store_stream_chunk(&chunk_params).await;
     assert!(err.is_err(), "missing offset should be rejected");
     cleanup_family(&fam).await;
 }
@@ -409,8 +394,7 @@ async fn chunk_missing_data_param_errors() {
         "offset": 0,
         "is_last": false
     });
-    let err = content_store_stream_chunk(&chunk_params)
-    .await;
+    let err = content_store_stream_chunk(&chunk_params).await;
     assert!(err.is_err(), "missing data should be rejected");
     cleanup_family(&fam).await;
 }

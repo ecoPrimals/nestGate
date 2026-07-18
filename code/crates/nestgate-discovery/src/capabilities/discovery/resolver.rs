@@ -95,9 +95,7 @@ impl ServiceResolver {
                     .find(|s| s.is_available())
                     .cloned()
                     .ok_or_else(|| {
-                        CapabilityError::ConnectionFailed(
-                            "No healthy providers available".into(),
-                        )
+                        CapabilityError::ConnectionFailed("No healthy providers available".into())
                     })
             }
 
@@ -125,9 +123,7 @@ impl ServiceResolver {
                     })
                     .cloned()
                     .ok_or_else(|| {
-                        CapabilityError::ConnectionFailed(
-                            "No healthy providers available".into(),
-                        )
+                        CapabilityError::ConnectionFailed("No healthy providers available".into())
                     })
             }
 
@@ -158,9 +154,7 @@ impl ServiceResolver {
                     )
                     .cloned()
                     .ok_or_else(|| {
-                        CapabilityError::ConnectionFailed(
-                            "No healthy providers available".into(),
-                        )
+                        CapabilityError::ConnectionFailed("No healthy providers available".into())
                     })
             }
         }

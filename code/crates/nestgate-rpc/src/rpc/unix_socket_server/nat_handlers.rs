@@ -71,8 +71,7 @@ pub(super) async fn nat_store_traversal_info(
         "stored_at": chrono::Utc::now().to_rfc3339(),
     });
 
-    let data = serde_json::to_vec_pretty(&record)
-        .io_ctx("Failed to serialize NAT record")?;
+    let data = serde_json::to_vec_pretty(&record).io_ctx("Failed to serialize NAT record")?;
     tokio::fs::write(&path, &data)
         .await
         .io_ctx("Failed to write NAT traversal file")?;
@@ -97,8 +96,7 @@ pub(super) async fn nat_retrieve_traversal_info(
         }
     })?;
 
-    let record: Value = serde_json::from_slice(&data)
-        .io_ctx("Corrupted NAT record")?;
+    let record: Value = serde_json::from_slice(&data).io_ctx("Corrupted NAT record")?;
 
     debug!(peer_id, "nat.retrieve_traversal_info: loaded");
     Ok(record)
@@ -123,8 +121,7 @@ pub(super) async fn beacon_store(params: Option<&Value>, _state: &StorageState) 
         "stored_at": chrono::Utc::now().to_rfc3339(),
     });
 
-    let data = serde_json::to_vec_pretty(&record)
-        .io_ctx("Failed to serialize beacon record")?;
+    let data = serde_json::to_vec_pretty(&record).io_ctx("Failed to serialize beacon record")?;
     tokio::fs::write(&path, &data)
         .await
         .io_ctx("Failed to write beacon file")?;
@@ -149,8 +146,7 @@ pub(super) async fn beacon_retrieve(
         }
     })?;
 
-    let record: Value = serde_json::from_slice(&data)
-        .io_ctx("Corrupted beacon record")?;
+    let record: Value = serde_json::from_slice(&data).io_ctx("Corrupted beacon record")?;
 
     debug!(peer_id, "beacon.retrieve: loaded");
     Ok(record)

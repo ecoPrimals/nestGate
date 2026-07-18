@@ -65,7 +65,9 @@ pub enum ZeroCostError {
     #[error("Storage operation failed")]
     StorageError,
     /// Deprecated zero-cost file storage; use `UnifiedStorage` instead.
-    #[error("ZeroCostFileStorage is deprecated; use nestgate_core::traits::unified_storage::UnifiedStorage")]
+    #[error(
+        "ZeroCostFileStorage is deprecated; use nestgate_core::traits::unified_storage::UnifiedStorage"
+    )]
     DeprecatedStorage,
     /// Invalid request format.
     #[error("Invalid request format")]
@@ -113,7 +115,6 @@ pub enum RequestPriority {
     /// Critical
     Critical,
 }
-
 
 #[cfg(test)]
 mod tests {

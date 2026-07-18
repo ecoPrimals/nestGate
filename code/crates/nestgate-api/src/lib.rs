@@ -98,7 +98,10 @@ pub(crate) mod models;
 /// **REST MODULE**
 ///
 /// REST API implementation including routing, middleware, and HTTP handlers.
-#[expect(dead_code, reason = "Deprecated REST layer maintained for backward compatibility")]
+#[expect(
+    dead_code,
+    reason = "Deprecated REST layer maintained for backward compatibility"
+)]
 pub(crate) mod rest;
 
 /// **ROUTES MODULE**

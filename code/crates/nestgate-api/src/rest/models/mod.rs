@@ -44,11 +44,12 @@ pub mod storage;
 pub use datasets::*;
 pub use snapshots::*;
 pub use types::{
-    Alert, AlertCondition, AlertSeverity, AlertStatus, ChecksumType, ComparisonOperator, CompressionType, DatasetStatus,
-    DatasetType, DiskIoMetrics, NetworkIoMetrics, StorageBackendType, SystemMetrics,
+    Alert, AlertCondition, AlertSeverity, AlertStatus, ChecksumType, ComparisonOperator,
+    CompressionType, DatasetStatus, DatasetType, DiskIoMetrics, NetworkIoMetrics,
+    StorageBackendType, SystemMetrics,
 };
 // Note: ZfsMetrics from types module excluded to avoid conflict
- // This includes ZfsMetrics from zfs module
+// This includes ZfsMetrics from zfs module
 
 // ==================== UTILITY TYPES ====================
 

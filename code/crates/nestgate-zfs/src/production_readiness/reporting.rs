@@ -32,9 +32,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Warning,
                 blocking: false,
             });
-            report.recommendations.push(
-                "Run on real hardware for production workloads".into(),
-            );
+            report
+                .recommendations
+                .push("Run on real hardware for production workloads".into());
         }
 
         if !report.mock_dependencies.is_empty() {
@@ -47,9 +47,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report.recommendations.push(
-                "Disable mock mode for production: unset NESTGATE_MOCK_MODE".into(),
-            );
+            report
+                .recommendations
+                .push("Disable mock mode for production: unset NESTGATE_MOCK_MODE".into());
         }
 
         if !report.performance_validated {
@@ -59,9 +59,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Warning,
                 blocking: false,
             });
-            report.recommendations.push(
-                "Ensure sufficient memory and CPU for production workloads".into(),
-            );
+            report
+                .recommendations
+                .push("Ensure sufficient memory and CPU for production workloads".into());
         }
 
         if !report.security_validated {
@@ -71,9 +71,9 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report.recommendations.push(
-                "Enable ZFS encryption support for secure mode".into(),
-            );
+            report
+                .recommendations
+                .push("Enable ZFS encryption support for secure mode".into());
         }
 
         if !report.configuration_validated {
@@ -83,21 +83,21 @@ impl ProductionReadinessValidator {
                 severity: FindingSeverity::Error,
                 blocking: true,
             });
-            report.recommendations.push(
-                "Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable".into(),
-            );
+            report
+                .recommendations
+                .push("Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable".into());
         }
 
         // Add general production recommendations
-        report.recommendations.push(
-            "Review logs for any warnings during operation".into(),
-        );
-        report.recommendations.push(
-            "Monitor ZFS pool health and performance metrics".into(),
-        );
-        report.recommendations.push(
-            "Ensure backup and recovery procedures are tested".into(),
-        );
+        report
+            .recommendations
+            .push("Review logs for any warnings during operation".into());
+        report
+            .recommendations
+            .push("Monitor ZFS pool health and performance metrics".into());
+        report
+            .recommendations
+            .push("Ensure backup and recovery procedures are tested".into());
 
         Ok(())
     }

@@ -245,11 +245,7 @@ impl UniversalStorageDiscovery {
                 signing_algorithm: SigningAlgorithm::HmacSha256,
                 key_id: access_key,
                 secret_key: SecretString::new(secret_key),
-                headers_to_sign: vec![
-                    "host".into(),
-                    "x-amz-date".into(),
-                    "authorization".into(),
-                ],
+                headers_to_sign: vec!["host".into(), "x-amz-date".into(), "authorization".into()],
                 session_token,
             });
         }

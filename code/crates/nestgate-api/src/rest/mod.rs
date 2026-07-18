@@ -9,7 +9,10 @@
 
 pub mod handlers;
 pub mod models;
-#[expect(dead_code, reason = "Deprecated REST RPC layer maintained for backward compatibility")]
+#[expect(
+    dead_code,
+    reason = "Deprecated REST RPC layer maintained for backward compatibility"
+)]
 pub mod rpc;
 /// **WEBSOCKET MODULE**
 ///

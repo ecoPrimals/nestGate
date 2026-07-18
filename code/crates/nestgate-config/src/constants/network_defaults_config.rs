@@ -286,16 +286,13 @@ mod tests {
 
     #[test]
     fn test_case_insensitive_environment() {
-        let config_upper =
-            NetworkDefaultsConfig::new().with_environment("PRODUCTION".into());
+        let config_upper = NetworkDefaultsConfig::new().with_environment("PRODUCTION".into());
         assert!(config_upper.is_production());
 
-        let config_mixed =
-            NetworkDefaultsConfig::new().with_environment("Production".into());
+        let config_mixed = NetworkDefaultsConfig::new().with_environment("Production".into());
         assert!(config_mixed.is_production());
 
-        let config_dev_upper =
-            NetworkDefaultsConfig::new().with_environment("DEVELOPMENT".into());
+        let config_dev_upper = NetworkDefaultsConfig::new().with_environment("DEVELOPMENT".into());
         assert!(config_dev_upper.is_development());
     }
 }

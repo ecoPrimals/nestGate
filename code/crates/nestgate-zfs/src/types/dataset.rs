@@ -252,14 +252,8 @@ mod tests {
         };
 
         assert_eq!(info.properties.len(), 2);
-        assert_eq!(
-            info.properties.get("custom:priority"),
-            Some(&"high".into())
-        );
-        assert_eq!(
-            info.properties.get("custom:owner"),
-            Some(&"admin".into())
-        );
+        assert_eq!(info.properties.get("custom:priority"), Some(&"high".into()));
+        assert_eq!(info.properties.get("custom:owner"), Some(&"admin".into()));
     }
 
     // ==================== DatasetProperties Tests ====================
@@ -332,10 +326,7 @@ mod tests {
         };
 
         assert_eq!(props.custom.len(), 2);
-        assert_eq!(
-            props.custom.get("backup:enabled"),
-            Some(&"true".into())
-        );
+        assert_eq!(props.custom.get("backup:enabled"), Some(&"true".into()));
     }
 
     #[test]

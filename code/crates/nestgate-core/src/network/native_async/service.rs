@@ -97,11 +97,7 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
             can_scale: true,
             can_migrate: true,
             can_backup: false,
-            supported_protocols: vec![
-                "tcp".into(),
-                "http".into(),
-                "websocket".into(),
-            ],
+            supported_protocols: vec!["tcp".into(), "http".into(), "websocket".into()],
         })
     }
 
@@ -145,11 +141,7 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
             can_scale: true,
             can_migrate: true,
             can_backup: false,
-            supported_protocols: vec![
-                "tcp".into(),
-                "http".into(),
-                "websocket".into(),
-            ],
+            supported_protocols: vec!["tcp".into(), "http".into(), "websocket".into()],
         })
     }
 

@@ -54,10 +54,7 @@ pub fn get_configuration(
         "service_name".into(),
         serde_json::Value::String("native-zfs".into()),
     );
-    config.insert(
-        "version".into(),
-        serde_json::Value::String("1.0.0".into()),
-    );
+    config.insert("version".into(), serde_json::Value::String("1.0.0".into()));
     Ok(config)
 }
 

@@ -469,10 +469,7 @@ impl NestGateRpcClient {
         let client = self.get_connection().await?;
         let ctx = tarpc::context::current();
 
-        client
-            .health(ctx)
-            .await
-            .api_ctx("RPC call failed")
+        client.health(ctx).await.api_ctx("RPC call failed")
     }
 
     /// Get storage metrics
@@ -484,10 +481,7 @@ impl NestGateRpcClient {
         let client = self.get_connection().await?;
         let ctx = tarpc::context::current();
 
-        client
-            .metrics(ctx)
-            .await
-            .api_ctx("RPC call failed")
+        client.metrics(ctx).await.api_ctx("RPC call failed")
     }
 
     /// Get version information
@@ -499,10 +493,7 @@ impl NestGateRpcClient {
         let client = self.get_connection().await?;
         let ctx = tarpc::context::current();
 
-        client
-            .version(ctx)
-            .await
-            .api_ctx("RPC call failed")
+        client.version(ctx).await.api_ctx("RPC call failed")
     }
 
     /// Get available protocols
@@ -514,10 +505,7 @@ impl NestGateRpcClient {
         let client = self.get_connection().await?;
         let ctx = tarpc::context::current();
 
-        client
-            .protocols(ctx)
-            .await
-            .api_ctx("RPC call failed")
+        client.protocols(ctx).await.api_ctx("RPC call failed")
     }
 
     // ==================== INTERNAL HELPERS ====================

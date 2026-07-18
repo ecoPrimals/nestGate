@@ -79,8 +79,7 @@ pub async fn model_register_from_env_source(
         "metadata": params.get("metadata").unwrap_or(&meta_default),
     });
 
-    let data = serde_json::to_vec_pretty(&record)
-        .io_ctx("Failed to serialize model record")?;
+    let data = serde_json::to_vec_pretty(&record).io_ctx("Failed to serialize model record")?;
     tokio::fs::write(&path, &data)
         .await
         .io_ctx("Failed to write model file")?;
@@ -157,8 +156,7 @@ pub async fn model_metadata_from_env_source(
         }
     })?;
 
-    let record: Value = serde_json::from_slice(&data)
-        .io_ctx("Corrupted model record")?;
+    let record: Value = serde_json::from_slice(&data).io_ctx("Corrupted model record")?;
 
     debug!(model_id, "model.metadata: loaded");
     Ok(record)

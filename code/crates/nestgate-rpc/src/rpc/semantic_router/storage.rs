@@ -221,14 +221,10 @@ pub(super) async fn storage_store_blob(
 
     let path = blob_path(fid, key);
     if let Some(parent) = path.parent() {
-        tokio::fs::create_dir_all(parent)
-            .await
-            .io_ctx("mkdir")?;
+        tokio::fs::create_dir_all(parent).await.io_ctx("mkdir")?;
     }
     let size = data.len();
-    tokio::fs::write(&path, &data)
-        .await
-        .io_ctx("write blob")?;
+    tokio::fs::write(&path, &data).await.io_ctx("write blob")?;
 
     Ok(json!({"status": "stored", "key": key, "family_id": fid, "size": size}))
 }
@@ -247,9 +243,7 @@ pub(super) async fn storage_retrieve_blob(
     if !path.exists() {
         return Ok(json!({"blob": null, "key": key}));
     }
-    let data = tokio::fs::read(&path)
-        .await
-        .io_ctx("read blob")?;
+    let data = tokio::fs::read(&path).await.io_ctx("read blob")?;
 
     Ok(json!({"blob": STANDARD.encode(&data), "key": key, "family_id": fid, "size": data.len()}))
 }
@@ -283,23 +277,14 @@ pub(super) async fn storage_retrieve_range(
         return Ok(json!({"data": null, "key": key, "error": "not_found"}));
     };
 
-    let mut file = tokio::fs::File::open(&path)
-        .await
-        .io_ctx("open")?;
-    let total_size = file
-        .metadata()
-        .await
-        .io_ctx("stat")?
-        .len();
+    let mut file = tokio::fs::File::open(&path).await.io_ctx("open")?;
+    let total_size = file.metadata().await.io_ctx("stat")?.len();
     file.seek(std::io::SeekFrom::Start(offset))
         .await
         .io_ctx("seek")?;
 
     let mut buf = vec![0u8; length];
-    let bytes_read = file
-        .read(&mut buf)
-        .await
-        .io_ctx("read")?;
+    let bytes_read = file.read(&mut buf).await.io_ctx("read")?;
     buf.truncate(bytes_read);
 
     Ok(json!({
@@ -333,9 +318,7 @@ pub(super) async fn storage_object_size(
         return Ok(json!({"size": null, "key": key, "exists": false}));
     };
 
-    let meta = tokio::fs::metadata(&path)
-        .await
-        .io_ctx("stat")?;
+    let meta = tokio::fs::metadata(&path).await.io_ctx("stat")?;
 
     Ok(json!({"size": meta.len(), "key": key, "family_id": fid, "exists": true}))
 }
@@ -349,9 +332,7 @@ pub(super) async fn storage_namespaces_list(
     let dir = family_dir(fid);
     let mut namespaces = Vec::new();
     if dir.exists() {
-        let mut entries = tokio::fs::read_dir(&dir)
-            .await
-            .io_ctx("readdir")?;
+        let mut entries = tokio::fs::read_dir(&dir).await.io_ctx("readdir")?;
         while let Ok(Some(entry)) = entries.next_entry().await {
             let name = entry.file_name();
             let name = name.to_string_lossy();

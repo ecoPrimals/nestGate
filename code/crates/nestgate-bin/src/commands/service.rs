@@ -86,9 +86,7 @@ impl ServiceManager {
                 || std::env::var("FAMILY_ID").is_ok());
 
         if tcp_only {
-            tracing::info!(
-                "PRIMAL_BIND_MODE={bind_mode}: skipping UDS, using HTTP/TCP only"
-            );
+            tracing::info!("PRIMAL_BIND_MODE={bind_mode}: skipping UDS, using HTTP/TCP only");
         }
 
         if socket_requested {

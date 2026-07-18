@@ -5,8 +5,8 @@
 
 use crate::zero_cost_security_provider::types::{ZeroCostAuthToken, ZeroCostCredentials};
 use nestgate_discovery::primal_discovery::PrimalConnection;
-use nestgate_types::{NestGateError, Result};
 use nestgate_types::error::ErrorContextExt;
+use nestgate_types::{NestGateError, Result};
 use std::path::Path;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};

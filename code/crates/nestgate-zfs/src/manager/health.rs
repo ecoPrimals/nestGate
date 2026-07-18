@@ -190,7 +190,10 @@ impl ZfsManager {
             return Ok(0.0);
         }
 
-        #[expect(clippy::cast_precision_loss, reason = "byte counts fit f64 for ratio computation")]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "byte counts fit f64 for ratio computation"
+        )]
         let utilization = total_used as f64 / total_space as f64;
         Ok(utilization)
     }

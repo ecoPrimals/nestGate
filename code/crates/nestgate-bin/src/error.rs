@@ -310,8 +310,7 @@ mod tests {
 
     #[test]
     fn test_command_execution_failed() {
-        let error =
-            NestGateBinError::command_failed("test failed", Some("ls".into()), Some(1));
+        let error = NestGateBinError::command_failed("test failed", Some("ls".into()), Some(1));
         assert!(error.to_string().contains("Command execution failed"));
         assert!(error.to_string().contains("test failed"));
     }
@@ -324,8 +323,7 @@ mod tests {
 
     #[test]
     fn test_configuration_error() {
-        let error =
-            NestGateBinError::config_error("invalid config", Some("/etc/config".into()));
+        let error = NestGateBinError::config_error("invalid config", Some("/etc/config".into()));
         assert!(error.to_string().contains("Configuration error"));
         assert!(error.to_string().contains("invalid config"));
     }
@@ -351,10 +349,8 @@ mod tests {
 
     #[test]
     fn test_service_initialization_error() {
-        let error = NestGateBinError::service_init_error(
-            "failed to start",
-            Some("http-server".into()),
-        );
+        let error =
+            NestGateBinError::service_init_error("failed to start", Some("http-server".into()));
         assert!(error.to_string().contains("Service initialization error"));
         assert!(error.to_string().contains("failed to start"));
     }
@@ -367,10 +363,8 @@ mod tests {
 
     #[test]
     fn test_runtime_error() {
-        let error = NestGateBinError::runtime_error(
-            "panic occurred",
-            Some("data_processing".into()),
-        );
+        let error =
+            NestGateBinError::runtime_error("panic occurred", Some("data_processing".into()));
         assert!(error.to_string().contains("Runtime error"));
         assert!(error.to_string().contains("panic occurred"));
     }
@@ -424,8 +418,7 @@ mod tests {
 
     #[test]
     fn test_bin_error_helper_service_init() {
-        let error =
-            BinErrorHelper::service_initialization_error("crashed", Some("api".into()));
+        let error = BinErrorHelper::service_initialization_error("crashed", Some("api".into()));
         assert!(error.to_string().contains("Service initialization error"));
     }
 
@@ -465,8 +458,7 @@ mod tests {
 
     #[test]
     fn test_conversion_to_nestgate_error_command() {
-        let bin_error =
-            NestGateBinError::command_failed("test", Some("cmd".into()), Some(1));
+        let bin_error = NestGateBinError::command_failed("test", Some("cmd".into()), Some(1));
         let nestgate_error: NestGateError = bin_error.into();
         assert!(nestgate_error.to_string().contains("Command"));
     }

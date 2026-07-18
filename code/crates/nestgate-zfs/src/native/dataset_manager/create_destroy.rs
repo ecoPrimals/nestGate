@@ -33,11 +33,7 @@ impl NativeZfsDatasetManager {
         if let Some(dedup) = options.deduplication {
             properties.insert(
                 "dedup".into(),
-                if dedup {
-                    "on".into()
-                } else {
-                    "off".into()
-                },
+                if dedup { "on".into() } else { "off".into() },
             );
         }
 

@@ -24,19 +24,19 @@ pub(super) fn extract_namespace(params: &Value) -> &str {
 
 /// Extract required `key` from params.
 pub(super) fn extract_key(params: &Value) -> std::result::Result<&str, (i32, Cow<'static, str>)> {
-    params
-        .get("key")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'key' parameter")))
+    params.get("key").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'key' parameter"),
+    ))
 }
 
 pub(super) fn require_params(
     request: &JsonRpcRequest,
 ) -> std::result::Result<&Value, (i32, Cow<'static, str>)> {
-    request
-        .params
-        .as_ref()
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing params")))
+    request.params.as_ref().ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing params"),
+    ))
 }
 
 /// Ensure parent directories exist before writing.
@@ -44,9 +44,12 @@ pub(super) async fn ensure_parent(
     path: &std::path::Path,
 ) -> std::result::Result<(), (i32, Cow<'static, str>)> {
     if let Some(parent) = path.parent() {
-        tokio::fs::create_dir_all(parent)
-            .await
-            .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("mkdir: {e}"))))?;
+        tokio::fs::create_dir_all(parent).await.map_err(|e| {
+            (
+                nestgate_types::JsonRpcErrorCode::InternalError.code(),
+                Cow::Owned(format!("mkdir: {e}")),
+            )
+        })?;
     }
     Ok(())
 }
@@ -75,25 +78,35 @@ pub(super) async fn handle_session_save(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let session_id = params
-        .get("session_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'session_id' parameter")))?;
-    let data = params
-        .get("data")
-        .or_else(|| params.get("state"))
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'data' or 'state' parameter")))?;
+    let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'session_id' parameter"),
+    ))?;
+    let data = params.get("data").or_else(|| params.get("state")).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'data' or 'state' parameter"),
+    ))?;
 
     let dir = resolve_session_dir(state);
-    tokio::fs::create_dir_all(&dir)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("mkdir: {e}"))))?;
+    tokio::fs::create_dir_all(&dir).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("mkdir: {e}")),
+        )
+    })?;
     let path = dir.join(format!("{session_id}.json"));
-    let bytes =
-        serde_json::to_vec_pretty(data).map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("json: {e}"))))?;
-    tokio::fs::write(&path, &bytes)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("write: {e}"))))?;
+    let bytes = serde_json::to_vec_pretty(data).map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("json: {e}")),
+        )
+    })?;
+    tokio::fs::write(&path, &bytes).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("write: {e}")),
+        )
+    })?;
     Ok(
         json!({"status": "saved", "session_id": session_id, "family_id": state.family_id, "size": bytes.len()}),
     )
@@ -104,19 +117,22 @@ pub(super) async fn handle_session_load(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let session_id = params
-        .get("session_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'session_id' parameter")))?;
+    let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'session_id' parameter"),
+    ))?;
 
     let dir = resolve_session_dir(state);
     let path = dir.join(format!("{session_id}.json"));
     if !path.exists() {
         return Ok(json!({"data": null, "session_id": session_id, "found": false}));
     }
-    let bytes = tokio::fs::read(&path)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("read: {e}"))))?;
+    let bytes = tokio::fs::read(&path).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("read: {e}")),
+        )
+    })?;
     let data: Value = serde_json::from_slice(&bytes)
         .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()));
     Ok(
@@ -132,9 +148,12 @@ pub(super) async fn handle_session_list(
     if !dir.exists() {
         return Ok(json!({"sessions": []}));
     }
-    let mut entries = tokio::fs::read_dir(&dir)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("readdir: {e}"))))?;
+    let mut entries = tokio::fs::read_dir(&dir).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("readdir: {e}")),
+        )
+    })?;
     let mut ids = Vec::new();
     while let Ok(Some(entry)) = entries.next_entry().await {
         let name = entry.file_name();
@@ -151,18 +170,21 @@ pub(super) async fn handle_session_delete(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let session_id = params
-        .get("session_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'session_id' parameter")))?;
+    let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'session_id' parameter"),
+    ))?;
     let dir = resolve_session_dir(state);
     let path = dir.join(format!("{session_id}.json"));
     if !path.exists() {
         return Ok(json!({"deleted": false, "session_id": session_id, "reason": "not found"}));
     }
-    tokio::fs::remove_file(&path)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("rm: {e}"))))?;
+    tokio::fs::remove_file(&path).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("rm: {e}")),
+        )
+    })?;
     Ok(json!({"deleted": true, "session_id": session_id}))
 }
 
@@ -171,24 +193,35 @@ pub(super) async fn handle_nat_store(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let peer_id = params
-        .get("peer_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'peer_id'")))?;
-    let info = params
-        .get("info")
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'info'")))?;
+    let peer_id = params.get("peer_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'peer_id'"),
+    ))?;
+    let info = params.get("info").ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'info'"),
+    ))?;
 
     let dir = state.nat_dir();
-    tokio::fs::create_dir_all(&dir)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("mkdir: {e}"))))?;
+    tokio::fs::create_dir_all(&dir).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("mkdir: {e}")),
+        )
+    })?;
     let path = dir.join(format!("{peer_id}.json"));
-    let data =
-        serde_json::to_vec_pretty(info).map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("json: {e}"))))?;
-    tokio::fs::write(&path, &data)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("write: {e}"))))?;
+    let data = serde_json::to_vec_pretty(info).map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("json: {e}")),
+        )
+    })?;
+    tokio::fs::write(&path, &data).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("write: {e}")),
+        )
+    })?;
     Ok(json!({"status": "stored", "peer_id": peer_id}))
 }
 
@@ -197,18 +230,21 @@ pub(super) async fn handle_nat_retrieve(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let peer_id = params
-        .get("peer_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'peer_id'")))?;
+    let peer_id = params.get("peer_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'peer_id'"),
+    ))?;
 
     let path = state.nat_dir().join(format!("{peer_id}.json"));
     if !path.exists() {
         return Ok(json!({"info": null, "peer_id": peer_id}));
     }
-    let data = tokio::fs::read(&path)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("read: {e}"))))?;
+    let data = tokio::fs::read(&path).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("read: {e}")),
+        )
+    })?;
     let info: Value = serde_json::from_slice(&data).unwrap_or(Value::Null);
     Ok(json!({"info": info, "peer_id": peer_id}))
 }
@@ -218,24 +254,35 @@ pub(super) async fn handle_beacon_store(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let peer_id = params
-        .get("peer_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'peer_id'")))?;
-    let beacon = params
-        .get("beacon")
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'beacon'")))?;
+    let peer_id = params.get("peer_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'peer_id'"),
+    ))?;
+    let beacon = params.get("beacon").ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'beacon'"),
+    ))?;
 
     let dir = state.beacon_dir();
-    tokio::fs::create_dir_all(&dir)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("mkdir: {e}"))))?;
+    tokio::fs::create_dir_all(&dir).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("mkdir: {e}")),
+        )
+    })?;
     let path = dir.join(format!("{peer_id}.json"));
-    let data = serde_json::to_vec_pretty(beacon)
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("json: {e}"))))?;
-    tokio::fs::write(&path, &data)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("write: {e}"))))?;
+    let data = serde_json::to_vec_pretty(beacon).map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("json: {e}")),
+        )
+    })?;
+    tokio::fs::write(&path, &data).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("write: {e}")),
+        )
+    })?;
     Ok(json!({"status": "stored", "peer_id": peer_id}))
 }
 
@@ -244,18 +291,21 @@ pub(super) async fn handle_beacon_retrieve(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let peer_id = params
-        .get("peer_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'peer_id'")))?;
+    let peer_id = params.get("peer_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'peer_id'"),
+    ))?;
 
     let path = state.beacon_dir().join(format!("{peer_id}.json"));
     if !path.exists() {
         return Ok(json!({"beacon": null, "peer_id": peer_id}));
     }
-    let data = tokio::fs::read(&path)
-        .await
-        .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("read: {e}"))))?;
+    let data = tokio::fs::read(&path).await.map_err(|e| {
+        (
+            nestgate_types::JsonRpcErrorCode::InternalError.code(),
+            Cow::Owned(format!("read: {e}")),
+        )
+    })?;
     let beacon: Value = serde_json::from_slice(&data).unwrap_or(Value::Null);
     Ok(json!({"beacon": beacon, "peer_id": peer_id}))
 }
@@ -265,16 +315,19 @@ pub(super) async fn handle_beacon_delete(
     request: &JsonRpcRequest,
 ) -> HandlerResult {
     let params = require_params(request)?;
-    let peer_id = params
-        .get("peer_id")
-        .and_then(|v| v.as_str())
-        .ok_or((nestgate_types::JsonRpcErrorCode::InvalidParams.code(), Cow::Borrowed("Missing 'peer_id'")))?;
+    let peer_id = params.get("peer_id").and_then(|v| v.as_str()).ok_or((
+        nestgate_types::JsonRpcErrorCode::InvalidParams.code(),
+        Cow::Borrowed("Missing 'peer_id'"),
+    ))?;
 
     let path = state.beacon_dir().join(format!("{peer_id}.json"));
     if path.exists() {
-        tokio::fs::remove_file(&path)
-            .await
-            .map_err(|e| (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(format!("delete: {e}"))))?;
+        tokio::fs::remove_file(&path).await.map_err(|e| {
+            (
+                nestgate_types::JsonRpcErrorCode::InternalError.code(),
+                Cow::Owned(format!("delete: {e}")),
+            )
+        })?;
     }
     Ok(json!({"status": "deleted", "peer_id": peer_id}))
 }
@@ -324,7 +377,10 @@ fn content_state() -> &'static ContentState {
 }
 
 fn content_err(e: &nestgate_types::error::NestGateError) -> (i32, Cow<'static, str>) {
-    (nestgate_types::JsonRpcErrorCode::InternalError.code(), Cow::Owned(e.to_string()))
+    (
+        nestgate_types::JsonRpcErrorCode::InternalError.code(),
+        Cow::Owned(e.to_string()),
+    )
 }
 
 pub(super) async fn handle_content_put(request: &JsonRpcRequest) -> HandlerResult {

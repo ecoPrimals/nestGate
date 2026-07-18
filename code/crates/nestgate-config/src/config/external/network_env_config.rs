@@ -145,10 +145,7 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let config = NetworkEnvConfig::new()
-            .with_host(
-                "NESTGATE_API".into(),
-                "api.example.com".into(),
-            )
+            .with_host("NESTGATE_API".into(), "api.example.com".into())
             .with_port("NESTGATE_API".into(), runtime_fallback_ports::http())
             .with_endpoint(
                 "NESTGATE_DB".into(),
@@ -170,10 +167,8 @@ mod tests {
 
     #[test]
     fn test_has_methods() {
-        let config = NetworkEnvConfig::new().with_host(
-            "NESTGATE_API".into(),
-            "api.example.com".into(),
-        );
+        let config =
+            NetworkEnvConfig::new().with_host("NESTGATE_API".into(), "api.example.com".into());
 
         assert!(config.has_host("NESTGATE_API"));
         assert!(!config.has_port("NESTGATE_API"));
@@ -182,10 +177,8 @@ mod tests {
 
     #[test]
     fn test_partial_config() {
-        let config = NetworkEnvConfig::new().with_port(
-            "NESTGATE_REDIS".into(),
-            runtime_fallback_ports::redis(),
-        );
+        let config = NetworkEnvConfig::new()
+            .with_port("NESTGATE_REDIS".into(), runtime_fallback_ports::redis());
 
         assert!(config.has_port("NESTGATE_REDIS"));
         assert!(!config.has_host("NESTGATE_REDIS"));
@@ -199,16 +192,10 @@ mod tests {
     async fn test_concurrent_access() {
         let config = Arc::new(
             NetworkEnvConfig::new()
-                .with_host(
-                    "NESTGATE_API".into(),
-                    "api.example.com".into(),
-                )
+                .with_host("NESTGATE_API".into(), "api.example.com".into())
                 .with_port("NESTGATE_API".into(), runtime_fallback_ports::http())
                 .with_host("NESTGATE_DB".into(), "db.example.com".into())
-                .with_port(
-                    "NESTGATE_DB".into(),
-                    runtime_fallback_ports::postgres(),
-                ),
+                .with_port("NESTGATE_DB".into(), runtime_fallback_ports::postgres()),
         );
 
         let handles: Vec<_> = (0..100)
@@ -233,22 +220,13 @@ mod tests {
     async fn test_concurrent_different_configs() {
         let config1 = Arc::new(
             NetworkEnvConfig::new()
-                .with_host(
-                    "NESTGATE_API".into(),
-                    "api1.example.com".into(),
-                )
+                .with_host("NESTGATE_API".into(), "api1.example.com".into())
                 .with_port("NESTGATE_API".into(), runtime_fallback_ports::http()),
         );
         let config2 = Arc::new(
             NetworkEnvConfig::new()
-                .with_host(
-                    "NESTGATE_API".into(),
-                    "api2.example.com".into(),
-                )
-                .with_port(
-                    "NESTGATE_API".into(),
-                    runtime_fallback_ports::metrics(),
-                ),
+                .with_host("NESTGATE_API".into(), "api2.example.com".into())
+                .with_port("NESTGATE_API".into(), runtime_fallback_ports::metrics()),
         );
 
         let handle1 = tokio::spawn({

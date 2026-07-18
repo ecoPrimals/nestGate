@@ -335,8 +335,7 @@ mod tests {
         };
 
         // Test authentication - using canonical error handling
-        let credentials =
-            ZeroCostCredentials::new_password("testuser".into(), "testpass".into());
+        let credentials = ZeroCostCredentials::new_password("testuser".into(), "testpass".into());
         let token = provider.authenticate(&credentials).await?;
         assert_eq!(token.user_id, "user123");
 

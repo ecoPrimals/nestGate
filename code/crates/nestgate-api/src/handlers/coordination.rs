@@ -117,9 +117,8 @@ pub async fn coord_blurb_by_wave(
     let artifacts = manifest["artifacts"].as_object();
     let hash = artifacts
         .and_then(|arts| {
-            arts.values().find(|a| {
-                a["kind"].as_str() == Some("blurb") && a["wave"].as_str() == Some(&wave)
-            })
+            arts.values()
+                .find(|a| a["kind"].as_str() == Some("blurb") && a["wave"].as_str() == Some(&wave))
         })
         .and_then(|a| a["hash"].as_str())
         .ok_or_else(|| {
@@ -190,8 +189,7 @@ pub async fn coord_waves(
     debug!(family_id = %fid, "GET /coord/waves");
 
     let current_hash = manifest["current_wave"].as_str();
-    let current_content = current_hash
-        .and_then(|h| load_artifact(&fid, h).ok());
+    let current_content = current_hash.and_then(|h| load_artifact(&fid, h).ok());
 
     let history: Vec<Value> = manifest["blurb_history"]
         .as_array()

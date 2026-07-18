@@ -9,12 +9,12 @@
 
 use super::config::AuthenticationConfig;
 use super::security_primal::call_security_primal;
-use nestgate_types::error::ErrorContextExt;
 use crate::crypto::jwt_claims::JwtClaims;
 use crate::zero_cost_security_provider::types::{
     AuthMethod, ZeroCostAuthToken, ZeroCostCredentials,
 };
 use nestgate_discovery::primal_discovery::RuntimeDiscovery;
+use nestgate_types::error::ErrorContextExt;
 use nestgate_types::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -105,9 +105,7 @@ impl HybridAuthenticationManager {
             };
 
             if let Some(created_at) = created_at {
-                let elapsed = created_at
-                    .elapsed()
-                    .internal_ctx("System time error")?;
+                let elapsed = created_at.elapsed().internal_ctx("System time error")?;
 
                 if elapsed < self.config.local_token_settings.token_expiry {
                     debug!("Token found in cache and still valid");
@@ -373,8 +371,8 @@ impl HybridAuthenticationManager {
             .await
             .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
 
-        let old_claims: JwtClaims = serde_json::from_str(&claims_json)
-            .validation_ctx("JWT claims parse error")?;
+        let old_claims: JwtClaims =
+            serde_json::from_str(&claims_json).validation_ctx("JWT claims parse error")?;
 
         let new_expiry_seconds =
             i64::try_from(self.config.local_token_settings.token_expiry.as_secs())

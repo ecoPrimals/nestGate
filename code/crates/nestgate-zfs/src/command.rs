@@ -343,11 +343,7 @@ impl ZfsOperations {
                 "DEGRADED".into()
             },
             scan: extract_scan_status(&output),
-            errors: if errors {
-                "Yes".into()
-            } else {
-                "No".into()
-            },
+            errors: if errors { "Yes".into() } else { "No".into() },
             raw_output: output,
         })
     }

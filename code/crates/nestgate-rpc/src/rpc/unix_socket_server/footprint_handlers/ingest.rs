@@ -52,9 +52,8 @@ pub(super) fn save_manifest(family_id: &str, manifest: &FootPrintManifest) -> Re
     let data = serde_json::to_string_pretty(manifest).map_err(|e| {
         NestGateError::io_error(format!("failed to serialize footprint manifest: {e}"))
     })?;
-    std::fs::write(&path, data).map_err(|e| {
-        NestGateError::io_error(format!("failed to write footprint manifest: {e}"))
-    })?;
+    std::fs::write(&path, data)
+        .map_err(|e| NestGateError::io_error(format!("failed to write footprint manifest: {e}")))?;
     Ok(())
 }
 
@@ -63,9 +62,8 @@ pub(super) fn load_manifest(family_id: &str) -> Result<FootPrintManifest> {
     if !manifest_path.exists() {
         return Ok(FootPrintManifest::new());
     }
-    let data = std::fs::read_to_string(&manifest_path).map_err(|e| {
-        NestGateError::io_error(format!("failed to read footprint manifest: {e}"))
-    })?;
+    let data = std::fs::read_to_string(&manifest_path)
+        .map_err(|e| NestGateError::io_error(format!("failed to read footprint manifest: {e}")))?;
     serde_json::from_str(&data).map_err(|e| {
         NestGateError::invalid_input_with_field(
             "manifest",
@@ -120,19 +118,14 @@ fn store_content_cas(family_id: &str, data: &[u8]) -> Result<String> {
 ///   "metadata": {"tags": ["portfolio", "personal"]}
 /// }
 /// ```
-pub async fn footprint_save(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn footprint_save(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
 
-    let project_id = params["project_id"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field("project_id", "project_id required")
-        })?;
+    let project_id = params["project_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("project_id", "project_id required")
+    })?;
 
     if project_id.is_empty() || project_id.len() > 128 {
         return Err(NestGateError::invalid_input_with_field(
@@ -141,20 +134,15 @@ pub async fn footprint_save(
         ));
     }
 
-    let content_b64 = params["content_base64"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field(
-                "content_base64",
-                "content_base64 required (base64-encoded project snapshot)",
-            )
-        })?;
-
-    let raw = STANDARD.decode(content_b64).map_err(|e| {
+    let content_b64 = params["content_base64"].as_str().ok_or_else(|| {
         NestGateError::invalid_input_with_field(
             "content_base64",
-            format!("invalid base64: {e}"),
+            "content_base64 required (base64-encoded project snapshot)",
         )
+    })?;
+
+    let raw = STANDARD.decode(content_b64).map_err(|e| {
+        NestGateError::invalid_input_with_field("content_base64", format!("invalid base64: {e}"))
     })?;
 
     let message = params["message"]
@@ -162,10 +150,7 @@ pub async fn footprint_save(
         .unwrap_or("Save project")
         .to_owned();
 
-    let name = params["name"]
-        .as_str()
-        .unwrap_or(project_id)
-        .to_owned();
+    let name = params["name"].as_str().unwrap_or(project_id).to_owned();
 
     let metadata = params.get("metadata").cloned().unwrap_or_else(|| json!({}));
 
@@ -238,19 +223,14 @@ pub async fn footprint_save(
 /// ```json
 /// { "project_id": "my-portfolio" }
 /// ```
-pub async fn footprint_delete(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub async fn footprint_delete(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let family_id = resolve_family_id(params, state)?;
 
-    let project_id = params["project_id"]
-        .as_str()
-        .ok_or_else(|| {
-            NestGateError::invalid_input_with_field("project_id", "project_id required")
-        })?;
+    let project_id = params["project_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("project_id", "project_id required")
+    })?;
 
     let mut manifest = load_manifest(family_id)?;
     let removed = manifest.projects.remove(project_id);
@@ -324,11 +304,7 @@ mod tests {
     #[test]
     fn manifest_roundtrip() {
         let mut m = FootPrintManifest::new();
-        let project = FootPrintProject::new(
-            "test".into(),
-            "Test".into(),
-            json!({}),
-        );
+        let project = FootPrintProject::new("test".into(), "Test".into(), json!({}));
         m.projects.insert("test".into(), project);
         m.project_count = 1;
 
