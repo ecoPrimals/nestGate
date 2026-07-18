@@ -15,6 +15,7 @@ workspace = true
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
+nestgate-platform = { path = "../nestgate-platform" }
 nestgate-security = { path = "../nestgate-security" }
 nestgate-types = { path = "../nestgate-types" }
 nestgate-zfs = { path = "../nestgate-zfs" }

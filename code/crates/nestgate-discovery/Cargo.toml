@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 nestgate-types = { path = "../nestgate-types" }
 nestgate-config = { path = "../nestgate-config" }
+nestgate-platform = { path = "../nestgate-platform" }
 nestgate-rpc = { path = "../nestgate-rpc" }
 
 anyhow = { workspace = true }
@@ -27,7 +28,6 @@ url = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
-nestgate-platform = { path = "../nestgate-platform" }
 serial_test = { workspace = true }
 temp-env = { workspace = true }
 tokio-test = { workspace = true }

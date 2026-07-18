@@ -220,23 +220,10 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, &'static
     let total_used_bytes = 0_u64;
     let (arc_hit_ratio, arc_size, arc_target) = zfs_arc_snapshot();
 
-    let load_average = std::fs::read_to_string("/proc/loadavg")
-        .ok()
-        .and_then(|c| {
-            c.split_whitespace()
-                .next()
-                .and_then(|s| s.parse::<f64>().ok())
-        })
-        .unwrap_or(0.0);
+    let load_average =
+        nestgate_platform::linux_proc::load_averages().map_or(0.0, |(one, _, _)| one);
 
-    let uptime_seconds = std::fs::read_to_string("/proc/uptime")
-        .ok()
-        .and_then(|c| {
-            c.split_whitespace()
-                .next()
-                .and_then(|s| s.parse::<f64>().ok())
-        })
-        .map_or(0, |s| s.clamp(0.0, u64::MAX as f64) as u64);
+    let uptime_seconds = nestgate_platform::linux_proc::uptime_secs().unwrap_or(0);
 
     let cpu_usage_percent =
         nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);

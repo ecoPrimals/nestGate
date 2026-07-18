@@ -203,10 +203,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
             used_cap = used_cap.saturating_add(parse_size_with_units(&p.allocated).unwrap_or(0));
         }
 
-        let uptime_secs = std::fs::read_to_string("/proc/uptime")
-            .ok()
-            .and_then(|s| s.split_whitespace().next()?.parse::<f64>().ok())
-            .unwrap_or(0.0);
+        let uptime_secs = nestgate_platform::linux_proc::uptime_secs().map_or(0.0, |s| s as f64);
 
         let custom = HashMap::from([
             ("pool_count".into(), usize_to_f64_lossy(pools.len())),

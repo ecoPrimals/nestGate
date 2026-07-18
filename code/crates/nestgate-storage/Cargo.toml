@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 nestgate-types = { path = "../nestgate-types" }
 nestgate-config = { path = "../nestgate-config" }
+nestgate-platform = { path = "../nestgate-platform" }
 
 chrono = { workspace = true }
 dashmap = { workspace = true }

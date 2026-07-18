@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 122: Procfs Consolidation — Health Provider Evolution (Jul 18, 2026)
+
+- **`SystemHealthProvider` platform evolution**: Replaced raw `/proc/uptime` + `/proc/meminfo`
+  reads with `nestgate_platform::linux_proc` functions. Now returns `Healthy` on non-Linux
+  platforms (was previously always trying procfs). Added `total_memory_mb`, `uptime_secs`,
+  and `cpus` to health metadata.
+- **4 scattered `/proc` reads consolidated**:
+  - `nestgate-discovery/introspection.rs`: `estimate_memory_gb()` — raw `/proc/meminfo`
+    parsing → `linux_proc::total_memory_bytes()`
+  - `nestgate-storage/storage_detector/analysis.rs`: `read_meminfo()` — raw `/proc/meminfo`
+    → `linux_proc::total_memory_bytes()` + `available_memory_bytes()`
+  - `nestgate-api/rest/handlers/websocket.rs`: load average + uptime — raw `/proc/loadavg`
+    + `/proc/uptime` → `linux_proc::load_averages()` + `uptime_secs()`
+  - `nestgate-api/handlers/zfs/native_async/implementations.rs`: uptime — raw `/proc/uptime`
+    → `linux_proc::uptime_secs()`
+- **Dependency wiring**: `nestgate-platform` promoted from dev-dependency to dependency in
+  `nestgate-discovery`; added to `nestgate-api` and `nestgate-storage`.
+- **Wave stamps → 150g**: All root docs updated.
+
 ### Session 121: Prod Unwrap Deep Audit (Jul 18, 2026)
 
 - **Full 14-crate production unwrap/expect audit**: Scanned all `.rs` files across all 14 crates,

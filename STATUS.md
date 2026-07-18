@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 18, 2026 (Wave 150d — Session 121: prod unwrap deep audit confirmed 10, wave stamps 150d)
+**Last Updated**: Jul 18, 2026 (Wave 150g — Session 122: procfs consolidation to linux_proc, health provider evolution, wave stamps 150g)
 **Version**: 0.5.0
 
 ---
@@ -50,9 +50,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–121) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–122) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 122** (Wave 150g): Procfs consolidation — `SystemHealthProvider` evolved from raw `/proc` reads to `nestgate_platform::linux_proc` (platform-agnostic); 4 scattered `/proc/meminfo`/`/proc/uptime`/`/proc/loadavg` reads in discovery, storage, API, and websocket → `linux_proc` functions; wave stamps → 150g
 - **Session 121** (Wave 150d): Prod unwrap deep audit — full 14-crate scan confirmed 0 `.unwrap()`, 10 `.expect()` in production (all justified, annotated with `#[expect(clippy::expect_used)]`); wave stamps → 150d
 - **Session 120** (Wave 150b): 99 dependency patch bumps (all semver-compatible); socket path ecosystem segment — legacy `$XDG_RUNTIME_DIR/{service}.sock` → `$XDG_RUNTIME_DIR/<ecosystem>/{service}.sock` across discovery, launcher, and server fallback paths (GAP-036 alignment); dimensional scorecard audit (1,710 tests / 0 clippy / 0 fmt / 0 unsafe / 0 >800L); wave stamps → 150b
 - **Session 119** (Wave 149b): `cargo fmt` (133 files); GAP-038 PID sidecar liveness check (socket conflict detection before unlink); btsp `is_btsp_required` → `#[cfg(test)]`; dimensional audit aligned with ecosystem scorecard; wave stamps → 149b

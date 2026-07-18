@@ -234,20 +234,10 @@ impl SystemIntrospection {
 
     /// **MEMORY ESTIMATION**: Estimate available memory
     fn estimate_memory_gb(&self) -> Result<f64> {
-        // Simplified estimation - in a real system would use proper system APIs
-        if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
-            // Parse /proc/meminfo on Linux systems
-            for line in meminfo.lines() {
-                if line.starts_with("MemTotal:")
-                    && let Some(kb_str) = line.split_whitespace().nth(1)
-                    && let Ok(kb) = kb_str.parse::<u64>()
-                {
-                    return Ok(kb as f64 / 1024.0 / 1024.0); // Convert KB to GB
-                }
-            }
+        if let Some(bytes) = nestgate_platform::linux_proc::total_memory_bytes() {
+            return Ok(bytes as f64 / 1024.0 / 1024.0 / 1024.0);
         }
 
-        // Fallback estimation based on environment
         Ok(self.config.estimate_memory_gb())
     }
 

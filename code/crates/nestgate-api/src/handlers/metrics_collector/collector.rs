@@ -135,30 +135,13 @@ impl RealTimeMetricsCollector {
             .map(|n| u32::try_from(n.get()).unwrap_or(u32::MAX))
             .unwrap_or(1);
 
-        let (memory_total_gb, memory_used_gb, cpu_usage) =
-            match std::fs::read_to_string("/proc/meminfo") {
-                Ok(content) => {
-                    let mut mem_total_kb = 0u64;
-                    let mut mem_available_kb = 0u64;
-                    for line in content.lines() {
-                        let parts: Vec<&str> = line.split_whitespace().collect();
-                        if parts.len() >= 2 {
-                            match parts[0] {
-                                "MemTotal:" => mem_total_kb = parts[1].parse().unwrap_or(0),
-                                "MemAvailable:" => mem_available_kb = parts[1].parse().unwrap_or(0),
-                                _ => {}
-                            }
-                        }
-                    }
-                    let total_gb = u32::try_from(mem_total_kb / (1024 * 1024)).unwrap_or(u32::MAX);
-                    let used_gb = u32::try_from(
-                        mem_total_kb.saturating_sub(mem_available_kb) / (1024 * 1024),
-                    )
-                    .unwrap_or(u32::MAX);
-                    (total_gb, used_gb, 0.0)
-                }
-                Err(_) => (0, 0, 0.0),
-            };
+        let (memory_total_gb, memory_used_gb, cpu_usage) = {
+            let total_bytes = nestgate_platform::linux_proc::total_memory_bytes().unwrap_or(0);
+            let used_bytes = nestgate_platform::linux_proc::used_memory_bytes().unwrap_or(0);
+            let total_gb = u32::try_from(total_bytes / (1024 * 1024 * 1024)).unwrap_or(u32::MAX);
+            let used_gb = u32::try_from(used_bytes / (1024 * 1024 * 1024)).unwrap_or(u32::MAX);
+            (total_gb, used_gb, 0.0)
+        };
 
         // statvfs would be ideal but we stay pure-Rust; disk metrics deferred
         let (disk_total_gb, disk_used_gb) = (0, 0);

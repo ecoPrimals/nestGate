@@ -174,16 +174,31 @@ impl Default for HealthChecker {
     }
 }
 
-/// Basic system health check provider
+/// Platform-agnostic system health check provider.
+///
+/// Uses [`nestgate_platform::linux_proc`] on Linux (pure Rust `/proc` reading)
+/// and degrades gracefully on other platforms (always healthy — no procfs).
 pub struct SystemHealthProvider;
-impl HealthCheckProvider for SystemHealthProvider {
-    /// Check Health
-    fn check_health(&self) -> Result<ComponentHealth> {
-        // Basic system checks
-        let uptime_check = std::fs::read_to_string("/proc/uptime").is_ok();
-        let memory_check = std::fs::read_to_string("/proc/meminfo").is_ok();
 
-        let status = if uptime_check && memory_check {
+impl HealthCheckProvider for SystemHealthProvider {
+    fn check_health(&self) -> Result<ComponentHealth> {
+        let mut metadata = HashMap::new();
+
+        let uptime_ok = nestgate_platform::linux_proc::uptime_secs().is_some();
+        let memory_ok = nestgate_platform::linux_proc::total_memory_bytes().is_some();
+
+        if let Some(mb) = nestgate_platform::linux_proc::total_memory_bytes() {
+            metadata.insert("total_memory_mb".into(), (mb / 1_048_576).to_string());
+        }
+        if let Some(secs) = nestgate_platform::linux_proc::uptime_secs() {
+            metadata.insert("uptime_secs".into(), secs.to_string());
+        }
+        metadata.insert(
+            "cpus".into(),
+            nestgate_platform::linux_proc::logical_cpu_count().to_string(),
+        );
+
+        let status = if uptime_ok && memory_ok || !cfg!(target_os = "linux") {
             HealthStatus::Healthy
         } else {
             HealthStatus::Warning
@@ -194,11 +209,10 @@ impl HealthCheckProvider for SystemHealthProvider {
             message: "System basic checks completed".into(),
             last_success: Some(SystemTime::now()),
             last_failure: None,
-            metadata: HashMap::new(),
+            metadata,
         })
     }
 
-    /// Component Name
     fn component_name(&self) -> &'static str {
         "system"
     }

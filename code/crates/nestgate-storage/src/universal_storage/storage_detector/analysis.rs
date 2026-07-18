@@ -17,30 +17,11 @@
 use super::types::{DetectedStorage, StorageAnalysisReport};
 use nestgate_types::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 
-/// Read total and available memory from `/proc/meminfo` (Linux).
-/// Returns `(total_bytes, free_bytes)` or `None` if unavailable.
+/// Total and available memory in bytes via [`nestgate_platform::linux_proc`].
+/// Returns `(total_bytes, available_bytes)` or `None` if unavailable.
 fn read_meminfo() -> Option<(u64, u64)> {
-    let content = std::fs::read_to_string("/proc/meminfo").ok()?;
-    let mut total_kb = None;
-    let mut available_kb = None;
-    for line in content.lines() {
-        if let Some(rest) = line.strip_prefix("MemTotal:") {
-            total_kb = rest
-                .trim()
-                .strip_suffix("kB")
-                .and_then(|s| s.trim().parse::<u64>().ok());
-        } else if let Some(rest) = line.strip_prefix("MemAvailable:") {
-            available_kb = rest
-                .trim()
-                .strip_suffix("kB")
-                .and_then(|s| s.trim().parse::<u64>().ok());
-        }
-        if total_kb.is_some() && available_kb.is_some() {
-            break;
-        }
-    }
-    let total = total_kb? * 1024;
-    let available = available_kb? * 1024;
+    let total = nestgate_platform::linux_proc::total_memory_bytes()?;
+    let available = nestgate_platform::linux_proc::available_memory_bytes()?;
     Some((total, available))
 }
 
