@@ -405,10 +405,7 @@ impl ProductionReadinessValidator {
 
 #[cfg(target_os = "linux")]
 fn mem_total_mb_from_proc() -> Option<u64> {
-    let content = std::fs::read_to_string("/proc/meminfo").ok()?;
-    let line = content.lines().find(|l| l.starts_with("MemTotal:"))?;
-    let kb = line.split_whitespace().nth(1)?.parse::<u64>().ok()?;
-    Some(kb / 1024)
+    nestgate_platform::linux_proc::total_memory_bytes().map(|b| b / (1024 * 1024))
 }
 
 impl Default for ProductionReadinessValidator {

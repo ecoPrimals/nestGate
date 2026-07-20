@@ -62,17 +62,10 @@ const fn host_has_procfs_cpu_and_mem() -> bool {
 
 #[cfg(target_os = "linux")]
 fn proc_cpuinfo_readable() -> bool {
-    std::fs::read_to_string("/proc/cpuinfo")
-        .map(|s| {
-            s.lines()
-                .any(|l| l.starts_with("processor") || l.starts_with("Processor"))
-        })
-        .unwrap_or(false)
+    nestgate_platform::linux_proc::physical_cpu_count() > 0
 }
 
 #[cfg(target_os = "linux")]
 fn proc_meminfo_readable() -> bool {
-    std::fs::read_to_string("/proc/meminfo")
-        .map(|s| s.contains("MemTotal:"))
-        .unwrap_or(false)
+    nestgate_platform::linux_proc::total_memory_bytes().is_some()
 }

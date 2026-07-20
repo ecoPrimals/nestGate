@@ -3,10 +3,10 @@
 **Version**: 0.5.0  
 **Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific) (see STATUS.md)  
 **Coverage**: 84%+ line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Wave 150g)  
+**Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Wave 150o)  
 **Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: Jul 16, 2026 (Wave 150g)
+**Last Updated**: Jul 16, 2026 (Wave 150o)
 
 ---
 
@@ -229,4 +229,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: Jul 16, 2026 (Wave 150g)
+**Last Updated**: Jul 16, 2026 (Wave 150o)

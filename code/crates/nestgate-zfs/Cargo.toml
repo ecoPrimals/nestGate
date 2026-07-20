@@ -24,6 +24,7 @@ benchmark = []
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
+nestgate-platform = { path = "../nestgate-platform" }
 nestgate-types = { path = "../nestgate-types" }
 
 

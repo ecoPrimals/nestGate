@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 123: 150o Audit Triage + Procfs Phase 2 (Jul 20, 2026)
+
+- **Wave 150o audit triage**: Fresh 43-repo dimensional review flagged nestGate with 27 TODOs,
+  5 >800L files, and 52 unsafe mentions. All confirmed as false positives from broad grep
+  methodology: TODOs are in `vendor/` (rustls-webpki/rustls-rustcrypto), >800L files are in
+  `vendor/` (4) + 1 test file (794L), and unsafe mentions are `#![forbid(unsafe_code)]`
+  annotations + word occurrences in identifiers/strings. Zero actual issues in nestGate code.
+- **Procfs consolidation phase 2**: 3 more raw `/proc` reads replaced with `linux_proc`:
+  - `nestgate-zfs/production_readiness/readiness_env.rs`: cpu/meminfo probes → `physical_cpu_count()` + `total_memory_bytes()`
+  - `nestgate-zfs/production_readiness/mod.rs`: meminfo parsing → `total_memory_bytes()`
+  - `nestgate-api/handlers/performance_analyzer/metrics.rs`: loadavg + meminfo → `load_averages()` + `used_memory_bytes()` + `logical_cpu_count()`; removed `num_cpus_from_proc()` and `parse_meminfo_kb()` helpers
+- **18 dependency patch bumps**: anyhow 1.0.104, hyper 1.11.0, serde 1.0.229, serde_json 1.0.151,
+  thiserror 2.0.19, and 13 others.
+- **`nestgate-platform` added to `nestgate-zfs`** as production dependency.
+- **Wave stamps → 150o**: All root docs updated.
+
 ### Session 122: Procfs Consolidation — Health Provider Evolution (Jul 18, 2026)
 
 - **`SystemHealthProvider` platform evolution**: Replaced raw `/proc/uptime` + `/proc/meminfo`

@@ -40,60 +40,24 @@ impl SystemMetricsCollector {
         })
     }
 
-    /// Read CPU usage from `/proc/stat` (Linux) or return 0 on other platforms.
+    /// CPU usage estimate from load average (Linux) or 0 on other platforms.
     #[expect(
         clippy::unused_async,
         reason = "async signature required by collect_metrics"
     )]
     async fn getcpu_usage(&self) -> Result<f64, MetricsError> {
-        #[cfg(target_os = "linux")]
-        {
-            match std::fs::read_to_string("/proc/loadavg") {
-                Ok(content) => {
-                    let load_1m: f64 = content
-                        .split_whitespace()
-                        .next()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(0.0);
-                    Ok(load_1m * 100.0 / num_cpus_from_proc().max(1) as f64)
-                }
-                Err(_) => Ok(0.0),
-            }
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            Ok(0.0)
-        }
+        let load_1m = nestgate_platform::linux_proc::load_averages().map_or(0.0, |(one, _, _)| one);
+        let cpus = nestgate_platform::linux_proc::logical_cpu_count().max(1);
+        Ok(load_1m * 100.0 / cpus as f64)
     }
 
-    /// Read memory usage from `/proc/meminfo` (Linux) or return 0 on other platforms.
+    /// Used memory in bytes (Linux) or 0 on other platforms.
     #[expect(
         clippy::unused_async,
         reason = "async signature required by collect_metrics"
     )]
     async fn get_memory_usage(&self) -> Result<u64, MetricsError> {
-        #[cfg(target_os = "linux")]
-        {
-            match std::fs::read_to_string("/proc/meminfo") {
-                Ok(content) => {
-                    let mut total_kb = 0u64;
-                    let mut available_kb = 0u64;
-                    for line in content.lines() {
-                        if let Some(val) = line.strip_prefix("MemTotal:") {
-                            total_kb = parse_meminfo_kb(val);
-                        } else if let Some(val) = line.strip_prefix("MemAvailable:") {
-                            available_kb = parse_meminfo_kb(val);
-                        }
-                    }
-                    Ok(total_kb.saturating_sub(available_kb) * 1024)
-                }
-                Err(_) => Ok(0),
-            }
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            Ok(0)
-        }
+        Ok(nestgate_platform::linux_proc::used_memory_bytes().unwrap_or(0))
     }
 
     /// Read disk I/O from `/proc/diskstats` (Linux) or return zeros.
@@ -123,21 +87,6 @@ impl SystemMetricsCollector {
             tx_packets_per_sec: 0,
         })
     }
-}
-
-#[cfg(target_os = "linux")]
-fn num_cpus_from_proc() -> u64 {
-    std::fs::read_to_string("/proc/cpuinfo")
-        .map(|c| c.matches("processor").count() as u64)
-        .unwrap_or(1)
-}
-
-#[cfg(target_os = "linux")]
-fn parse_meminfo_kb(val: &str) -> u64 {
-    val.split_whitespace()
-        .next()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(0)
 }
 
 /// Complete system metrics snapshot
