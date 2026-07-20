@@ -1,6 +1,6 @@
 # Documentation Quick Guide
 
-**Last Updated**: Jul 16, 2026 (Wave 150o)
+**Last Updated**: Jul 16, 2026 (Wave 150q)
 
 ---
 
@@ -53,4 +53,4 @@ These are not in the nestgate repository — they live in the shared infra tree.
 
 ---
 
-**Last Updated**: Jul 16, 2026 (Wave 150o)
+**Last Updated**: Jul 16, 2026 (Wave 150q)

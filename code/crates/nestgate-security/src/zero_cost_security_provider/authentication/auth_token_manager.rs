@@ -3,8 +3,8 @@
 
 //! Token management with crypto operations delegated to the crypto capability provider.
 //!
-//! Token creation uses UUIDs for unique identifiers and delegates
-//! HMAC signing to the crypto capability provider when available.
+//! Token creation uses UUIDs for unique identifiers and BLAKE3 keyed hash
+//! for MAC signing (consolidated from HMAC-SHA256).
 
 use crate::zero_cost_security_provider::types::ZeroCostAuthToken;
 use std::time::Duration;
@@ -34,16 +34,16 @@ impl AuthTokenManager {
         expiry: Duration,
     ) -> ZeroCostAuthToken {
         let payload = format!("token_{}_{}", user_id, uuid::Uuid::new_v4());
-        let mac = Self::compute_hmac(&self.signing_key, &payload);
+        let mac = Self::compute_mac(&self.signing_key, &payload);
         let token_id = format!("{payload}.{mac}");
         ZeroCostAuthToken::new(token_id, user_id.to_string(), permissions, expiry)
     }
 
-    /// Validate a token's HMAC signature using the signing key.
+    /// Validate a token's BLAKE3 keyed-hash signature using the signing key.
     ///
     /// Verifies that the token was issued by this manager by recomputing the
-    /// HMAC-SHA256 over the token prefix and comparing it to the embedded
-    /// signature suffix. Tokens without an HMAC suffix are rejected.
+    /// BLAKE3 keyed hash over the token prefix and comparing it to the embedded
+    /// signature suffix. Tokens without a MAC suffix are rejected.
     #[must_use]
     pub fn validate_token_signature(&self, token: &str) -> bool {
         if token.is_empty() {
@@ -52,18 +52,13 @@ impl AuthTokenManager {
         let Some((payload, provided_mac)) = token.rsplit_once('.') else {
             return false;
         };
-        let expected_mac = Self::compute_hmac(&self.signing_key, payload);
+        let expected_mac = Self::compute_mac(&self.signing_key, payload);
         expected_mac == provided_mac
     }
 
-    fn compute_hmac(key: &str, data: &str) -> String {
-        use hmac::{Hmac, Mac};
-        use sha2::Sha256;
-        let Ok(mut mac) = <Hmac<Sha256>>::new_from_slice(key.as_bytes()) else {
-            unreachable!("HMAC-SHA256 accepts any key length")
-        };
-        mac.update(data.as_bytes());
-        hex::encode(mac.finalize().into_bytes())
+    fn compute_mac(key: &str, data: &str) -> String {
+        let key_hash = blake3::hash(key.as_bytes());
+        hex::encode(blake3::keyed_hash(key_hash.as_bytes(), data.as_bytes()).as_bytes())
     }
 
     /// Creates a workspace secret by requesting random bytes from the crypto provider.

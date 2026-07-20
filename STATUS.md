@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 20, 2026 (Wave 150o — Session 123: 150o audit triage, procfs consolidation phase 2, 18 dep bumps)
+**Last Updated**: Jul 20, 2026 (Wave 150q — Session 124: vendor elimination + BLAKE3 crypto consolidation — oxitls-rustcrypto-provider, all internal crypto → BLAKE3, sha2/hmac/hkdf eliminated as direct deps)
 **Version**: 0.5.0
 
 ---
@@ -50,9 +50,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–123) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–124) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 124** (Wave 150q): Vendor elimination + BLAKE3 crypto consolidation — replaced vendored TLS crates with `oxitls-rustcrypto-provider 0.2.1`; all internal crypto (auth tokens, BTSP KDF, checksums, cert fingerprints) consolidated to BLAKE3; `sha2`/`hmac`/`hkdf` removed as direct deps (sha2/hmac optional behind `s3-backend` in nestgate-zfs); `vendor/` + `[patch.crates-io]` removed; 27 TODOs + 4 >800L gone; wave stamps → 150q
 - **Session 123** (Wave 150o): 150o dimensional audit triage — 27 TODOs, 5 >800L, 52 unsafe all confirmed in vendor/ (zero in nestGate code); procfs consolidation phase 2 — 3 more callsites (ZFS readiness, performance analyzer) → `linux_proc`; 18 dep bumps; wave stamps → 150o
 - **Session 122** (Wave 150g): Procfs consolidation — `SystemHealthProvider` evolved from raw `/proc` reads to `nestgate_platform::linux_proc` (platform-agnostic); 4 scattered `/proc/meminfo`/`/proc/uptime`/`/proc/loadavg` reads in discovery, storage, API, and websocket → `linux_proc` functions; wave stamps → 150g
 - **Session 121** (Wave 150d): Prod unwrap deep audit — full 14-crate scan confirmed 0 `.unwrap()`, 10 `.expect()` in production (all justified, annotated with `#[expect(clippy::expect_used)]`); wave stamps → 150d

@@ -63,9 +63,9 @@ url = { workspace = true }
 
 # Encoding, hashing, and RNG
 base64 = { workspace = true }
+blake3 = { workspace = true }
 hex = { workspace = true }
 rand = { workspace = true }
-sha2 = { workspace = true }
 
 
 # System utilities

@@ -2068,6 +2068,7 @@ dependencies = [
  "axum",
  "base64",
  "bincode",
+ "blake3",
  "bytes",
  "chrono",
  "criterion",
@@ -2089,7 +2090,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
- "sha2",
  "tarpc",
  "temp-env",
  "tempfile",
@@ -2275,17 +2275,15 @@ dependencies = [
  "chrono",
  "etcetera",
  "futures-util",
- "hkdf",
  "jsonrpsee",
  "nestgate-config",
  "nestgate-types",
+ "oxitls-rustcrypto-provider",
  "rand 0.9.5",
  "rustix 0.38.44",
- "rustls-rustcrypto",
  "serde",
  "serde_json",
  "serial_test",
- "sha2",
  "tarpc",
  "temp-env",
  "tempfile",
@@ -2306,9 +2304,9 @@ name = "nestgate-security"
 version = "0.5.0"
 dependencies = [
  "base64",
+ "blake3",
  "chrono",
  "hex",
- "hmac",
  "nestgate-config",
  "nestgate-discovery",
  "nestgate-platform",
@@ -2316,7 +2314,6 @@ dependencies = [
  "nestgate-types",
  "serde",
  "serde_json",
- "sha2",
  "temp-env",
  "tempfile",
  "thiserror 2.0.19",
@@ -2575,6 +2572,36 @@ dependencies = [
  "percent-encoding",
  "rand 0.8.7",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "oxitls-rustcrypto-provider"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66db43dc069b45e2cec89e0e6dc962eeecd94f129c07cdf3209f8683a3d09814"
+dependencies = [
+ "aead",
+ "aes-gcm",
+ "chacha20",
+ "chacha20poly1305",
+ "crypto-common",
+ "der",
+ "digest",
+ "ecdsa",
+ "ed25519-dalek",
+ "hmac",
+ "p256",
+ "p384",
+ "paste",
+ "pkcs8",
+ "rand_core 0.6.4",
+ "rsa",
+ "rustls",
+ "rustls-pki-types",
+ "sec1",
+ "sha2",
+ "signature",
+ "x25519-dalek",
 ]
 
 [[package]]
@@ -2964,6 +2991,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring"
+version = "0.17.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
+dependencies = [
+ "cc",
+ "cfg-if",
+ "getrandom 0.2.17",
+ "libc",
+ "untrusted",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "route-recognizer"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3080,37 +3121,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustls-rustcrypto"
-version = "0.0.2-alpha"
-dependencies = [
- "aead",
- "aes-gcm",
- "chacha20poly1305",
- "crypto-common",
- "der",
- "digest",
- "ecdsa",
- "ed25519-dalek",
- "hmac",
- "p256",
- "p384",
- "paste",
- "pkcs8",
- "rand_core 0.6.4",
- "rsa",
- "rustls",
- "rustls-pki-types",
- "rustls-webpki",
- "sec1",
- "sha2",
- "signature",
- "x25519-dalek",
-]
-
-[[package]]
 name = "rustls-webpki"
-version = "0.103.12"
+version = "0.103.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61c429a8649f110dddef65e2a5ad240f747e85f7758a6bccc7e5777bd33f756e"
 dependencies = [
+ "ring",
  "rustls-pki-types",
  "untrusted",
 ]
@@ -4293,6 +4309,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
 dependencies = [
  "windows-targets 0.48.5",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
+dependencies = [
+ "windows-targets 0.52.6",
 ]
 
 [[package]]

@@ -30,10 +30,9 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 
-const HKDF_HANDSHAKE_SALT: &[u8] = b"btsp-v1";
-const HKDF_HANDSHAKE_INFO: &[u8] = b"handshake";
-const HKDF_INFO_C2S: &[u8] = b"btsp-session-v1-c2s";
-const HKDF_INFO_S2C: &[u8] = b"btsp-session-v1-s2c";
+const BLAKE3_CTX_HANDSHAKE: &str = "nestgate btsp-v1 handshake key";
+const BLAKE3_CTX_C2S: &str = "nestgate btsp-session-v1 client-to-server";
+const BLAKE3_CTX_S2C: &str = "nestgate btsp-session-v1 server-to-client";
 
 const NONCE_SIZE: usize = 12;
 const KEY_DERIVATION_NONCE_SIZE: usize = 32;
@@ -119,49 +118,33 @@ impl std::fmt::Debug for SessionKeys {
 impl SessionKeys {
     /// Derive directional session keys via HKDF-SHA256.
     ///
-    /// `salt = client_nonce || server_nonce`, `ikm = handshake_key`.
+    /// `ikm = handshake_key || client_nonce || server_nonce`.
     /// Server encrypt = s2c, server decrypt = c2s.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if HKDF expansion fails.
+    #[must_use]
     pub fn derive(
         handshake_key: &[u8; 32],
         client_nonce: &[u8],
         server_nonce: &[u8],
         is_server: bool,
-    ) -> Result<Self> {
-        use hkdf::Hkdf;
-        use sha2::Sha256;
+    ) -> Self {
+        let mut ikm = Vec::with_capacity(32 + client_nonce.len() + server_nonce.len());
+        ikm.extend_from_slice(handshake_key);
+        ikm.extend_from_slice(client_nonce);
+        ikm.extend_from_slice(server_nonce);
 
-        let mut salt = Vec::with_capacity(client_nonce.len() + server_nonce.len());
-        salt.extend_from_slice(client_nonce);
-        salt.extend_from_slice(server_nonce);
-
-        let hk = Hkdf::<Sha256>::new(Some(&salt), handshake_key);
-
-        let mut client_to_server = [0u8; 32];
-        hk.expand(HKDF_INFO_C2S, &mut client_to_server)
-            .map_err(|e| {
-                NestGateError::api_internal_error(format!("BTSP Phase 3 HKDF c2s: {e}"))
-            })?;
-
-        let mut server_to_client = [0u8; 32];
-        hk.expand(HKDF_INFO_S2C, &mut server_to_client)
-            .map_err(|e| {
-                NestGateError::api_internal_error(format!("BTSP Phase 3 HKDF s2c: {e}"))
-            })?;
+        let client_to_server = blake3::derive_key(BLAKE3_CTX_C2S, &ikm);
+        let server_to_client = blake3::derive_key(BLAKE3_CTX_S2C, &ikm);
 
         if is_server {
-            Ok(Self {
+            Self {
                 encrypt_key: server_to_client,
                 decrypt_key: client_to_server,
-            })
+            }
         } else {
-            Ok(Self {
+            Self {
                 encrypt_key: client_to_server,
                 decrypt_key: server_to_client,
-            })
+            }
         }
     }
 
@@ -225,22 +208,10 @@ impl SessionKeys {
 
 /// Derive the 32-byte handshake key from the raw family seed.
 ///
-/// `HKDF-SHA256(ikm=family_seed, salt="btsp-v1", info="handshake")`
-///
-/// # Errors
-///
-/// Returns an error if HKDF expansion fails.
-pub fn derive_handshake_key(family_seed: &[u8]) -> Result<[u8; 32]> {
-    use hkdf::Hkdf;
-    use sha2::Sha256;
-
-    let hk = Hkdf::<Sha256>::new(Some(HKDF_HANDSHAKE_SALT), family_seed);
-
-    let mut key = [0u8; 32];
-    hk.expand(HKDF_HANDSHAKE_INFO, &mut key).map_err(|e| {
-        NestGateError::api_internal_error(format!("BTSP handshake key derivation: {e}"))
-    })?;
-    Ok(key)
+/// Uses BLAKE3 `derive_key` with context "nestgate btsp-v1 handshake key".
+#[must_use]
+pub fn derive_handshake_key(family_seed: &[u8]) -> [u8; 32] {
+    blake3::derive_key(BLAKE3_CTX_HANDSHAKE, family_seed)
 }
 
 /// Generate a 32-byte random nonce for Phase 3 key derivation salt.
@@ -300,11 +271,8 @@ mod tests {
         let client_nonce = [1u8; 32];
         let server_nonce = [2u8; 32];
 
-        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
-            .expect("server keys");
-        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false)
-            .expect("client keys");
-
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
+        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false);
         assert_eq!(
             server_keys.encrypt_key, client_keys.decrypt_key,
             "server encrypt must equal client decrypt"
@@ -325,11 +293,8 @@ mod tests {
         let client_nonce = [3u8; 32];
         let server_nonce = [4u8; 32];
 
-        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
-            .expect("server keys");
-        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false)
-            .expect("client keys");
-
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
+        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false);
         let plaintext = b"hello encrypted btsp from nestgate";
 
         let encrypted = server_keys.encrypt(plaintext).expect("encrypt");
@@ -347,8 +312,8 @@ mod tests {
         let nonce_c = [3u8; 32];
         let nonce_s = [4u8; 32];
 
-        let keys_a = SessionKeys::derive(&key_a, &nonce_c, &nonce_s, true).expect("keys a");
-        let keys_b = SessionKeys::derive(&key_b, &nonce_c, &nonce_s, false).expect("keys b");
+        let keys_a = SessionKeys::derive(&key_a, &nonce_c, &nonce_s, true);
+        let keys_b = SessionKeys::derive(&key_b, &nonce_c, &nonce_s, false);
 
         let encrypted = keys_a.encrypt(b"secret").expect("encrypt");
         assert!(keys_b.decrypt(&encrypted).is_err());
@@ -356,7 +321,7 @@ mod tests {
 
     #[test]
     fn decrypt_frame_too_short() {
-        let keys = SessionKeys::derive(&[0u8; 32], &[1u8; 32], &[2u8; 32], true).expect("keys");
+        let keys = SessionKeys::derive(&[0u8; 32], &[1u8; 32], &[2u8; 32], true);
         let result = keys.decrypt(&[0u8; 10]);
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
@@ -425,16 +390,15 @@ mod tests {
 
     #[test]
     fn session_keys_debug_redacted() {
-        let keys = SessionKeys::derive(&[0u8; 32], &[1u8; 32], &[2u8; 32], true).expect("keys");
+        let keys = SessionKeys::derive(&[0u8; 32], &[1u8; 32], &[2u8; 32], true);
         let debug = format!("{keys:?}");
         assert!(debug.contains("REDACTED"));
     }
 
     #[test]
     fn encrypt_empty_payload() {
-        let keys = SessionKeys::derive(&[0x55u8; 32], &[1u8; 32], &[2u8; 32], true).expect("keys");
-        let client_keys =
-            SessionKeys::derive(&[0x55u8; 32], &[1u8; 32], &[2u8; 32], false).expect("keys");
+        let keys = SessionKeys::derive(&[0x55u8; 32], &[1u8; 32], &[2u8; 32], true);
+        let client_keys = SessionKeys::derive(&[0x55u8; 32], &[1u8; 32], &[2u8; 32], false);
 
         let encrypted = keys.encrypt(b"").expect("encrypt empty");
         assert_eq!(encrypted.len(), NONCE_SIZE + 16);
@@ -445,9 +409,8 @@ mod tests {
 
     #[test]
     fn encrypt_large_payload() {
-        let keys = SessionKeys::derive(&[0x77u8; 32], &[1u8; 32], &[2u8; 32], true).expect("keys");
-        let client_keys =
-            SessionKeys::derive(&[0x77u8; 32], &[1u8; 32], &[2u8; 32], false).expect("keys");
+        let keys = SessionKeys::derive(&[0x77u8; 32], &[1u8; 32], &[2u8; 32], true);
+        let client_keys = SessionKeys::derive(&[0x77u8; 32], &[1u8; 32], &[2u8; 32], false);
 
         let large = vec![0xFFu8; 64 * 1024];
         let encrypted = keys.encrypt(&large).expect("encrypt large");
@@ -458,32 +421,29 @@ mod tests {
     #[test]
     fn derive_handshake_key_deterministic() {
         let seed = b"test-family-seed-for-nestgate";
-        let key1 = derive_handshake_key(seed).expect("key1");
-        let key2 = derive_handshake_key(seed).expect("key2");
+        let key1 = derive_handshake_key(seed);
+        let key2 = derive_handshake_key(seed);
         assert_eq!(key1, key2);
         assert_ne!(key1, [0u8; 32]);
     }
 
     #[test]
     fn derive_handshake_key_differs_by_seed() {
-        let key_a = derive_handshake_key(b"seed-a").expect("key a");
-        let key_b = derive_handshake_key(b"seed-b").expect("key b");
+        let key_a = derive_handshake_key(b"seed-a");
+        let key_b = derive_handshake_key(b"seed-b");
         assert_ne!(key_a, key_b);
     }
 
     #[test]
     fn full_phase3_key_agreement() {
         let seed = b"deterministic-test-seed-for-key-verification";
-        let handshake_key = derive_handshake_key(seed).expect("handshake key");
+        let handshake_key = derive_handshake_key(seed);
 
         let client_nonce = [0x01; 32];
         let server_nonce = [0x02; 32];
 
-        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
-            .expect("server keys");
-        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false)
-            .expect("client keys");
-
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
+        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false);
         let msg = b"bidirectional test";
 
         let server_encrypted = server_keys.encrypt(msg).expect("server encrypt");

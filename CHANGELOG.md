@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 124: Vendor Elimination + BLAKE3 Crypto Consolidation (Jul 20, 2026)
+
+- **Vendor eliminated**: Replaced vendored `rustls-webpki 0.103.12` + `rustls-rustcrypto 0.0.2-alpha`
+  with published `oxitls-rustcrypto-provider 0.2.1` — a fork that drops the `rustls-webpki`
+  dependency entirely and routes algorithm identifiers through `rustls-pki-types`. RUSTSEC-2026-0104
+  fix included. Zero C/asm (Silicon Atheism preserved). MIT/Apache-2.0 license.
+- **Migration**: Package rename (`rustls-rustcrypto = { package = "oxitls-rustcrypto-provider" }`)
+  preserves the `rustls_rustcrypto::provider()` import path — zero code changes for TLS.
+- **Removed**: `vendor/` directory (692KB), `[patch.crates-io]` block from root `Cargo.toml`.
+- **BLAKE3 crypto consolidation**: All internal crypto ops consolidated to BLAKE3:
+  - Auth token MACs: HMAC-SHA256 → `blake3::keyed_hash` (nestgate-security)
+  - Auth token manager: HMAC-SHA256 → `blake3::keyed_hash` (nestgate-security)
+  - Certificate fingerprinting: SHA-256 → `blake3::hash` (nestgate-security)
+  - BTSP Phase 3 key derivation: HKDF-SHA256 → `blake3::derive_key` (nestgate-rpc)
+  - Storage checksums: SHA-256 → `blake3::hash` (nestgate-core)
+  - `SessionKeys::derive` and `derive_handshake_key` made infallible (BLAKE3 KDF never fails)
+- **Direct dependency elimination**:
+  - `sha2`, `hmac` removed from nestgate-security, nestgate-rpc, nestgate-core
+  - `hkdf` removed entirely from workspace
+  - `sha2`, `hmac` made optional in nestgate-zfs (`s3-backend` feature gate for AWS SigV4)
+  - `blake3` added to nestgate-security and nestgate-core
+- **Impact**: 27 vendored TODOs gone, 4 >800L files gone. Internal crypto surface reduced to
+  BLAKE3 + chacha20poly1305 (BTSP encryption). TLS crypto pure-Rust via oxitls-rustcrypto-provider.
+- **Wave stamps → 150q**: All root docs updated.
+
 ### Session 123: 150o Audit Triage + Procfs Phase 2 (Jul 20, 2026)
 
 - **Wave 150o audit triage**: Fresh 43-repo dimensional review flagged nestGate with 27 TODOs,

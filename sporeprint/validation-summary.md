@@ -1,6 +1,6 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 1,710 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 150o (150o audit triage: vendor false positives confirmed; procfs phase 2: 7+ callsites → linux_proc; prod unwrap audit: 0 unwrap / 10 expect; 117 dep bumps; socket ecosystem segment GAP-036; dimensional audit, GAP-038 PID liveness, deep debt sweep, Phase 2 transport, typed JSON-RPC errors, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+description = "Content-addressed storage primal v0.5.0 — 1,710 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 150q (vendor eliminated: oxitls-rustcrypto-provider replaces vendored rustls-webpki/rustls-rustcrypto, 27 TODOs + 4 >800L gone; procfs 7+ callsites → linux_proc; prod unwrap: 0/10 expect; 117+ dep bumps; GAP-036/038; deep debt sweep, Phase 2 transport, typed JSON-RPC, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
 date = 2026-07-18
 
 [taxonomies]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **1,710 tests** (1,630 passing, 80 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 124 vendor elimination + BLAKE3 consolidation** (Wave 150q): Replaced vendored TLS crates with `oxitls-rustcrypto-provider 0.2.1`; all internal crypto → BLAKE3 (auth MACs, BTSP KDF, checksums, cert fingerprints); sha2/hmac/hkdf removed as direct deps; `vendor/` + `[patch.crates-io]` removed; 27 TODO + 4 >800L gone; wave stamps → 150q
 - **Session 123 150o audit triage + procfs phase 2** (Wave 150o): 27 TODO / 5 >800L / 52 unsafe all vendor false positives; 3 more procfs callsites → linux_proc (ZFS readiness, perf analyzer); 18 dep bumps; wave stamps → 150o
 - **Session 122 Procfs consolidation** (Wave 150g): `SystemHealthProvider` evolved to `linux_proc`; 4 scattered `/proc` reads consolidated (discovery, storage, API, websocket); wave stamps → 150g
 - **Session 121 Prod unwrap audit** (Wave 150d): Full 14-crate audit confirmed 0 `.unwrap()`, 10 `.expect()` in production (all annotated invariant guards/lazy-init); wave stamps → 150d

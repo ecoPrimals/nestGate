@@ -41,11 +41,10 @@ impl CertUtils {
         ))
     }
 
-    /// SHA-256 fingerprint of the raw certificate bytes (lowercase hex, 64 characters).
+    /// BLAKE3 fingerprint of the raw certificate bytes (lowercase hex, 64 characters).
     #[must_use]
     pub fn calculate_fingerprint(cert_data: &[u8]) -> String {
-        use sha2::{Digest, Sha256};
-        hex::encode(Sha256::digest(cert_data))
+        hex::encode(blake3::hash(cert_data).as_bytes())
     }
 
     /// Parse certificate subject from PEM data

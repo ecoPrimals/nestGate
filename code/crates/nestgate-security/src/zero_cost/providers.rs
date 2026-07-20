@@ -136,22 +136,16 @@ impl ZeroCostJwtProvider {
         if payload.is_empty() {
             return false;
         }
-        let expected = Self::compute_hmac(&self.secret, payload);
+        let expected = Self::compute_mac(&self.secret, payload);
         expected == provided_mac
     }
 
-    fn compute_hmac(key: &[u8; 32], data: &str) -> String {
-        use hmac::{Hmac, Mac};
-        use sha2::Sha256;
-        let Ok(mut mac) = <Hmac<Sha256>>::new_from_slice(key) else {
-            unreachable!("HMAC-SHA256 accepts any key length")
-        };
-        mac.update(data.as_bytes());
-        hex::encode(mac.finalize().into_bytes())
+    fn compute_mac(key: &[u8; 32], data: &str) -> String {
+        hex::encode(blake3::keyed_hash(key, data.as_bytes()).as_bytes())
     }
 
     fn sign_payload(&self, payload: &str) -> String {
-        let mac = Self::compute_hmac(&self.secret, payload);
+        let mac = Self::compute_mac(&self.secret, payload);
         format!("{payload}.{mac}")
     }
 }

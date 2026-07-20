@@ -295,12 +295,9 @@ pub async fn delete_object(config: &StorageServiceConfig, dataset: &str, key: &s
     Ok(())
 }
 
-/// Calculate SHA-256 checksum for data integrity
+/// Calculate BLAKE3 checksum for data integrity
 fn calculate_checksum(data: &[u8]) -> String {
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(data);
-    format!("{:x}", hasher.finalize())
+    blake3::hash(data).to_hex().to_string()
 }
 
 /// Get current timestamp in Unix epoch seconds.

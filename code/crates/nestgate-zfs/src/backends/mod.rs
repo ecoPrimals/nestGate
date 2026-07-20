@@ -39,7 +39,9 @@ pub mod gcs;
 /// Works with ANY S3-compatible service: AWS, MinIO, Ceph, Wasabi, DigitalOcean, etc.
 pub mod object_storage;
 
-/// AWS Signature V4 authentication (protocol-first, no AWS SDK)
+/// AWS Signature V4 authentication (protocol-first, no AWS SDK).
+/// Gated behind `s3-backend` feature — pulls in `hmac`/`sha2` (protocol-mandated).
+#[cfg(feature = "s3-backend")]
 pub mod aws_auth;
 
 // Re-exports

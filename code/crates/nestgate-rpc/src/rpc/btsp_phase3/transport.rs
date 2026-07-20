@@ -138,7 +138,7 @@ pub async fn try_phase3_negotiate<W: AsyncWriteExt + Unpin>(
         return Ok(None);
     }
 
-    let handshake_key = derive_handshake_key(family_seed.as_bytes())?;
+    let handshake_key = derive_handshake_key(family_seed.as_bytes());
 
     let client_nonce = BASE64.decode(&params.client_nonce).map_err(|e| {
         NestGateError::validation_error(format!("Invalid base64 in client_nonce: {e}"))
@@ -147,7 +147,7 @@ pub async fn try_phase3_negotiate<W: AsyncWriteExt + Unpin>(
     let server_nonce = generate_server_nonce();
     let server_nonce_b64 = BASE64.encode(server_nonce);
 
-    let keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)?;
+    let keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
 
     let result = NegotiateResult {
         cipher: selected.wire_name().to_owned(),
@@ -426,11 +426,8 @@ mod tests {
         let client_nonce = [3u8; 32];
         let server_nonce = [4u8; 32];
 
-        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
-            .expect("server keys");
-        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false)
-            .expect("client keys");
-
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
+        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false);
         let plaintext = b"test json-rpc payload";
 
         let (mut tx, mut rx) = duplex(8192);
@@ -450,11 +447,8 @@ mod tests {
         let client_nonce = [3u8; 32];
         let server_nonce = [4u8; 32];
 
-        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
-            .expect("server keys");
-        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false)
-            .expect("client keys");
-
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
+        let client_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, false);
         let (client_tx, server_rx) = duplex(8192);
         let (server_tx, client_rx) = duplex(8192);
 
@@ -506,9 +500,7 @@ mod tests {
         let client_nonce = [3u8; 32];
         let server_nonce = [4u8; 32];
 
-        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true)
-            .expect("server keys");
-
+        let server_keys = SessionKeys::derive(&handshake_key, &client_nonce, &server_nonce, true);
         let (mut client_tx, server_rx) = duplex(8192);
         let (server_tx, _client_rx) = duplex(8192);
 
