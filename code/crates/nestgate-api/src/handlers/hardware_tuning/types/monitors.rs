@@ -42,66 +42,18 @@ pub struct DiskMonitor;
 pub struct NetworkMonitor;
 
 impl CpuMonitor {
-    /// Current aggregate CPU utilisation from `/proc/stat` (best-effort, single sample).
+    /// Current aggregate CPU utilisation via `linux_proc` (best-effort, single sample).
     pub(crate) fn usage_percent(&self) -> Result<f64> {
         let _: &Self = self;
-        match std::fs::read_to_string("/proc/stat") {
-            Ok(content) => {
-                if let Some(line) = content.lines().next() {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 5 && parts[0] == "cpu" {
-                        let user: u64 = parts[1].parse().unwrap_or(0);
-                        let nice: u64 = parts[2].parse().unwrap_or(0);
-                        let system: u64 = parts[3].parse().unwrap_or(0);
-                        let idle: u64 = parts[4].parse().unwrap_or(0);
-
-                        let total = user + nice + system + idle;
-                        let usage = if total > 0 {
-                            ((total - idle) as f64 / total as f64) * 100.0
-                        } else {
-                            0.0
-                        };
-                        return Ok(usage);
-                    }
-                }
-                Ok(0.0)
-            }
-            Err(_) => Ok(0.0), // Fallback for non-Linux systems
-        }
+        Ok(nestgate_platform::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0))
     }
 }
 
 impl MemoryMonitor {
-    /// Resident memory pressure as a percentage of total RAM from `/proc/meminfo`.
+    /// Resident memory pressure as a percentage of total RAM via `linux_proc`.
     pub(crate) fn usage_percent(&self) -> Result<f64> {
         let _: &Self = self;
-        match std::fs::read_to_string("/proc/meminfo") {
-            Ok(content) => {
-                let mut total_kb = 0u64;
-                let mut available_kb = 0u64;
-
-                for line in content.lines() {
-                    if line.starts_with("MemTotal:") {
-                        if let Some(value) = line.split_whitespace().nth(1) {
-                            total_kb = value.parse().unwrap_or(0);
-                        }
-                    } else if line.starts_with("MemAvailable:")
-                        && let Some(value) = line.split_whitespace().nth(1)
-                    {
-                        available_kb = value.parse().unwrap_or(0);
-                    }
-                }
-
-                if total_kb > 0 {
-                    let used_kb = total_kb - available_kb;
-                    let usage_percent = (used_kb as f64 / total_kb as f64) * 100.0;
-                    Ok(usage_percent)
-                } else {
-                    Ok(0.0)
-                }
-            }
-            Err(_) => Ok(0.0), // Fallback for non-Linux systems
-        }
+        Ok(nestgate_platform::linux_proc::memory_usage_percent().unwrap_or(0.0))
     }
 }
 
@@ -153,24 +105,12 @@ impl DiskMonitor {
 }
 
 impl NetworkMonitor {
-    /// Heuristic activity level from `/proc/net/dev` (not a true link utilisation %).
+    /// Heuristic activity level from `linux_proc` (not a true link utilisation %).
     pub(crate) fn usage_percent(&self) -> Result<f64> {
         let _: &Self = self;
-        match std::fs::read_to_string("/proc/net/dev") {
-            Ok(content) => {
-                let mut total_bytes = 0u64;
-                for line in content.lines().skip(2) {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 10 {
-                        let rx_bytes: u64 = parts[1].parse().unwrap_or(0);
-                        let tx_bytes: u64 = parts[9].parse().unwrap_or(0);
-                        total_bytes += rx_bytes + tx_bytes;
-                    }
-                }
-                Ok(if total_bytes > 0 { 10.0 } else { 0.0 })
-            }
-            Err(_) => Ok(0.0),
-        }
+        let (rx, tx) = nestgate_platform::linux_proc::network_rx_tx_bytes_sum().unwrap_or((0, 0));
+        let total_bytes = rx.saturating_add(tx);
+        Ok(if total_bytes > 0 { 10.0 } else { 0.0 })
     }
 }
 

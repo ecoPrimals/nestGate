@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jul 16, 2026 (Wave 150q)  
+**Last Updated**: Jul 16, 2026 (Wave 150t)  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of July 2026.

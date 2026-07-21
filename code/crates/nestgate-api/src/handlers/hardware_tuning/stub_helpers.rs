@@ -45,7 +45,7 @@ pub fn snapshot_compute_allocation() -> ComputeAllocation {
 #[must_use]
 pub fn snapshot_system_profile() -> SystemProfile {
     let cpu = snapshot_cpu_info();
-    let mem_gb = linux_proc::mem_total_gib().unwrap_or(1);
+    let mem_gb = linux_proc::mem_total_gib();
     SystemProfile {
         cpu_profile: format!("{} cores: {}", cpu.cores, cpu.model),
         memory_profile: format!("{mem_gb} GiB total"),

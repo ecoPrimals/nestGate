@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 125: Procfs Consolidation Phase 3 + Dep Bumps (Jul 21, 2026)
+
+- **Procfs consolidation phase 3**: Eliminated 17 scattered `/proc` read callsites across
+  `nestgate-api` by delegating to `nestgate_platform::linux_proc`:
+  - `handlers/hardware_tuning/linux_proc.rs` (428→235L): CPU, memory, network, disk metrics
+    now delegate to centralized `linux_proc`; GPU/sysfs detection retained as domain-specific.
+  - `handlers/metrics_collector/linux_proc.rs` (352→170L): CPU, memory, network reads replaced
+    with `linux_proc` calls; ZFS ARC + pool metrics retained as ZFS-specific.
+  - `handlers/hardware_tuning/types/monitors.rs`: `CpuMonitor`, `MemoryMonitor`,
+    `NetworkMonitor` implementations replaced with `linux_proc` delegates.
+  - `handlers/hardware_tuning/handlers.rs`: `detect_cpu_info` and `detect_memory_info`
+    replaced with `linux_proc` delegates.
+  - `handlers/performance_dashboard/metrics/metrics_system.rs` (186→97L): All system metrics
+    now via `linux_proc`; disk I/O retained (requires async sector parsing).
+  - Total production `/proc` reads: 58→41 (remaining: 8 canonical `linux_proc`, 8 ZFS arcstats,
+    3 `/proc/mounts`, 2 `/proc/modules`, and domain-specific niche reads).
+- **Dependency bumps**: 6 patch-level updates — tokio 1.53.0→1.53.1, libc 0.2.186→0.2.188,
+  tokio-util 0.7.18→0.7.19, zerocopy 0.8.54→0.8.55.
+- **Clippy cleanup**: Removed `mem_total_gib` unnecessary Result wrapping (now returns `u32`
+  directly); removed unfulfilled `clippy::similar_names` expect from `lib.rs`.
+- **Wave stamps → 150t**: All root docs updated.
+
 ### Session 124: Vendor Elimination + BLAKE3 Crypto Consolidation (Jul 20, 2026)
 
 - **Vendor eliminated**: Replaced vendored `rustls-webpki 0.103.12` + `rustls-rustcrypto 0.0.2-alpha`

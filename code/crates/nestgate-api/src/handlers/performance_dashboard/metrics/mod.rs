@@ -297,37 +297,34 @@ mod tests {
     }
 
     #[cfg(target_os = "linux")]
-    #[tokio::test]
-    async fn getcpu_usage_reads_proc_stat() {
-        let cpu = metrics_system::getcpu_usage().await;
-        assert!(cpu.is_ok());
-        let v = cpu.unwrap();
+    #[test]
+    fn getcpu_usage_reads_proc_stat() {
+        let v = nestgate_platform::linux_proc::globalcpu_usage_percent_from_stat();
+        assert!(v.is_some());
+        let v = v.unwrap();
         assert!((0.0..=100.0).contains(&v));
     }
 
     #[cfg(target_os = "linux")]
-    #[tokio::test]
-    async fn get_memory_info_from_proc() {
-        let m = metrics_system::get_memory_info().await;
-        assert!(m.is_ok());
-        let (pct, total, avail) = m.unwrap();
-        assert!((0.0..=100.0).contains(&pct));
+    #[test]
+    fn get_memory_info_from_proc() {
+        let total = nestgate_platform::linux_proc::total_memory_bytes();
+        let avail = nestgate_platform::linux_proc::available_memory_bytes();
+        assert!(total.is_some());
+        assert!(avail.is_some());
+        let total = total.unwrap();
+        let avail = avail.unwrap();
         assert!(total > 0);
         assert!(avail <= total);
     }
 
     #[cfg(target_os = "linux")]
-    #[tokio::test]
-    async fn get_network_io_from_proc() {
-        let n = metrics_system::get_network_io().await;
-        assert!(n.is_ok());
-        let n = n.unwrap();
-        let _ = (
-            n.bytes_sent,
-            n.bytes_received,
-            n.packets_sent,
-            n.packets_received,
-        );
+    #[test]
+    fn get_network_io_from_proc() {
+        let n = nestgate_platform::linux_proc::network_rx_tx_bytes_sum();
+        assert!(n.is_some());
+        let (rx, tx) = n.unwrap();
+        let _ = (rx, tx);
     }
 
     #[cfg(target_os = "linux")]

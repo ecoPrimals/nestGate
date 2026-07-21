@@ -1,68 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Linux `/proc`-based hardware resource discovery (no `sysinfo`).
-//!
-//! On non-Linux hosts, values are best-effort from `std::thread::available_parallelism`
-//! where applicable; memory may be unavailable without `/proc/meminfo`.
+//! Linux hardware resource discovery delegating to `nestgate_platform::linux_proc`
+//! for standard system metrics, with hardware-tuning-specific extensions
+//! (GPU detection, sysfs profiles).
 
 use chrono::Utc;
 use nestgate_core::{NestGateError, Result};
+use nestgate_platform::linux_proc;
 
 use super::types::{ComputeResources, GpuInfo, LiveHardwareMetrics, SystemCapabilities};
 
-/// Read logical CPU count from `/proc/cpuinfo` (Linux), else [`std::thread::available_parallelism`].
+/// Read logical CPU count, delegating to `linux_proc::logical_cpu_count`.
 pub fn logical_cpu_count() -> Result<u32> {
-    #[cfg(target_os = "linux")]
-    {
-        let cpu_info = std::fs::read_to_string("/proc/cpuinfo").map_err(|e| {
-            NestGateError::system(
-                "cpu_detection",
-                format!("Failed to read /proc/cpuinfo: {e}"),
-            )
-        })?;
-        let n = cpu_info
-            .lines()
-            .filter(|l| l.starts_with("processor"))
-            .count();
-        Ok(u32::try_from(n.max(1)).unwrap_or(1))
+    let count = linux_proc::logical_cpu_count();
+    if count == 0 {
+        return Err(NestGateError::system(
+            "cpu_detection",
+            "logical_cpu_count returned 0".to_string(),
+        ));
     }
-    #[cfg(not(target_os = "linux"))]
-    {
-        std::thread::available_parallelism()
-            .map(|n| n.get() as u32)
-            .map_err(|e| {
-                NestGateError::system("cpu_detection", format!("available_parallelism: {e}"))
-            })
-    }
+    Ok(u32::try_from(count).unwrap_or(u32::MAX))
 }
 
-/// Total RAM in GiB from `/proc/meminfo` `MemTotal` (Linux). On other OSes returns `Ok(0)` (unknown).
-pub fn mem_total_gib() -> Result<u32> {
-    #[cfg(target_os = "linux")]
-    {
-        let meminfo = std::fs::read_to_string("/proc/meminfo").map_err(|e| {
-            NestGateError::system(
-                "memory_detection",
-                format!("Failed to read /proc/meminfo: {e}"),
-            )
-        })?;
-        let total_kb = meminfo
-            .lines()
-            .find(|l| l.starts_with("MemTotal:"))
-            .and_then(|l| l.split_whitespace().nth(1))
-            .and_then(|s| s.parse::<u64>().ok())
-            .unwrap_or(0);
-        let gib = (total_kb / 1024 / 1024).max(1);
-        Ok(u32::try_from(gib).unwrap_or(u32::MAX))
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        Ok(0)
-    }
+/// Total RAM in GiB from `linux_proc::total_memory_bytes`.
+#[must_use]
+pub fn mem_total_gib() -> u32 {
+    let bytes = linux_proc::total_memory_bytes().unwrap_or(0);
+    let gib = (bytes / 1024 / 1024 / 1024).max(1);
+    u32::try_from(gib).unwrap_or(u32::MAX)
 }
 
-/// Best-effort GPU count: NVIDIA via `nvidia-smi -L` line count, else 0.
+/// Best-effort GPU count: NVIDIA via `/proc/driver/nvidia/gpus` or `nvidia-smi -L`.
 #[must_use]
 pub fn gpu_count_best_effort() -> u32 {
     #[cfg(target_os = "linux")]
@@ -84,18 +53,12 @@ pub fn gpu_count_best_effort() -> u32 {
     0
 }
 
-/// Build [`ComputeResources`] from `/proc` (and optional GPU tools).
+/// Build [`ComputeResources`] from `linux_proc` (and optional GPU tools).
 pub fn compute_resources_from_proc() -> Result<ComputeResources> {
-    let available_cpu = logical_cpu_count()?.max(1);
-    let available_memory_gb = {
-        let g = mem_total_gib()?;
-        if g == 0 { 1 } else { g }
-    };
-    let available_gpu = gpu_count_best_effort();
     Ok(ComputeResources {
-        available_cpu,
-        available_memory_gb,
-        available_gpu,
+        available_cpu: logical_cpu_count()?.max(1),
+        available_memory_gb: mem_total_gib().max(1),
+        available_gpu: gpu_count_best_effort(),
     })
 }
 
@@ -151,10 +114,10 @@ pub fn nvidia_gpu_info_best_effort() -> Option<GpuInfo> {
     None
 }
 
-/// CPU, memory, and optional GPU capabilities from `/proc` and `nvidia-smi`.
+/// CPU, memory, and optional GPU capabilities.
 pub fn system_capabilities_from_proc() -> Result<SystemCapabilities> {
     let cpu_cores = usize::try_from(logical_cpu_count()?.max(1)).unwrap_or(1);
-    let memory_gb = u64::from(mem_total_gib()?.max(1));
+    let memory_gb = u64::from(mem_total_gib().max(1));
     let cpu_model = cpu_model_best_effort()?;
     let gpu_info = nvidia_gpu_info_best_effort();
     Ok(SystemCapabilities {
@@ -166,105 +129,28 @@ pub fn system_capabilities_from_proc() -> Result<SystemCapabilities> {
     })
 }
 
-/// Aggregated live metrics from `/proc` (and best-effort `df` / `nvidia-smi`), with zeros on failure.
+/// Aggregated live metrics from `linux_proc` + best-effort GPU/disk, with zeros on failure.
 #[must_use]
 pub fn live_hardware_metrics_best_effort() -> LiveHardwareMetrics {
-    #[cfg(not(target_os = "linux"))]
-    {
-        return zeroed_live_metrics();
-    }
-    #[cfg(target_os = "linux")]
-    {
-        let timestamp = Utc::now();
-        let cpu_usage = cpu_usage_percent_from_stat();
-        let memory_usage = memory_usage_percent_from_meminfo();
-        let gpu_usage = gpu_usage_from_nvidia_smi();
-        let (disk_io, disk_usage) = disk_metrics_best_effort();
-        let (network_io, network_usage) = network_metrics_from_proc_net_dev();
-        LiveHardwareMetrics {
-            timestamp,
-            cpu_usage,
-            memory_usage,
-            gpu_usage,
-            disk_io,
-            disk_usage,
-            network_io,
-            network_usage,
-            temperature: 0.0,
-            power_consumption: 0.0,
-        }
-    }
-}
-
-#[cfg(not(target_os = "linux"))]
-fn zeroed_live_metrics() -> LiveHardwareMetrics {
+    let cpu_usage = linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
+    let memory_usage = linux_proc::memory_usage_percent().unwrap_or(0.0);
+    let gpu_usage = gpu_usage_from_nvidia_smi();
+    let (disk_io, disk_usage) = disk_metrics_best_effort();
+    let (network_io, network_usage) = network_metrics_best_effort();
     LiveHardwareMetrics {
         timestamp: Utc::now(),
-        cpu_usage: 0.0,
-        memory_usage: 0.0,
-        gpu_usage: 0.0,
-        disk_io: 0.0,
-        disk_usage: 0.0,
-        network_io: 0.0,
-        network_usage: 0.0,
+        cpu_usage,
+        memory_usage,
+        gpu_usage,
+        disk_io,
+        disk_usage,
+        network_io,
+        network_usage,
         temperature: 0.0,
         power_consumption: 0.0,
     }
 }
 
-#[cfg(target_os = "linux")]
-fn cpu_usage_percent_from_stat() -> f64 {
-    let Ok(content) = std::fs::read_to_string("/proc/stat") else {
-        return 0.0;
-    };
-    let Some(line) = content.lines().next() else {
-        return 0.0;
-    };
-    let parts: Vec<&str> = line.split_whitespace().collect();
-    if parts.len() < 5 || parts[0] != "cpu" {
-        return 0.0;
-    }
-    let user: u64 = parts[1].parse().unwrap_or(0);
-    let nice: u64 = parts[2].parse().unwrap_or(0);
-    let system: u64 = parts[3].parse().unwrap_or(0);
-    let idle: u64 = parts[4].parse().unwrap_or(0);
-    let total = user + nice + system + idle;
-    if total == 0 {
-        return 0.0;
-    }
-    ((total - idle) as f64 / total as f64) * 100.0
-}
-
-#[cfg(target_os = "linux")]
-fn memory_usage_percent_from_meminfo() -> f64 {
-    let Ok(content) = std::fs::read_to_string("/proc/meminfo") else {
-        return 0.0;
-    };
-    let mut total_kb = 0u64;
-    let mut available_kb = 0u64;
-    for line in content.lines() {
-        if line.starts_with("MemTotal:") {
-            total_kb = line
-                .split_whitespace()
-                .nth(1)
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0);
-        } else if line.starts_with("MemAvailable:") {
-            available_kb = line
-                .split_whitespace()
-                .nth(1)
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0);
-        }
-    }
-    if total_kb == 0 {
-        return 0.0;
-    }
-    let used_kb = total_kb.saturating_sub(available_kb);
-    (used_kb as f64 / total_kb as f64) * 100.0
-}
-
-#[cfg(target_os = "linux")]
 fn gpu_usage_from_nvidia_smi() -> f64 {
     if let Ok(output) = std::process::Command::new("nvidia-smi")
         .args([
@@ -282,33 +168,12 @@ fn gpu_usage_from_nvidia_smi() -> f64 {
     0.0
 }
 
-#[cfg(target_os = "linux")]
 fn disk_metrics_best_effort() -> (f64, f64) {
-    let mut disk_io_score = 0.0_f64;
-    if let Ok(content) = std::fs::read_to_string("/proc/diskstats") {
-        let mut sectors = 0u64;
-        for line in content.lines() {
-            let cols: Vec<&str> = line.split_whitespace().collect();
-            if cols.len() < 10 {
-                continue;
-            }
-            let name = cols[2];
-            if name.starts_with("loop") || name.starts_with("zram") {
-                continue;
-            }
-            let read_sectors: u64 = cols[5].parse().unwrap_or(0);
-            let write_sectors: u64 = cols[9].parse().unwrap_or(0);
-            sectors = sectors.saturating_add(read_sectors.saturating_add(write_sectors));
-        }
-        if sectors > 0 {
-            disk_io_score = f64::min((sectors as f64).log10() * 12.5, 100.0);
-        }
-    }
+    let disk_io_score = linux_proc::diskstats_entry_count().unwrap_or(0.0);
     let disk_usage = root_disk_usage_percent_df();
     (disk_io_score, disk_usage)
 }
 
-#[cfg(target_os = "linux")]
 fn root_disk_usage_percent_df() -> f64 {
     if let Ok(output) = std::process::Command::new("df")
         .args(["/", "--output=pcent", "-B1"])
@@ -326,20 +191,9 @@ fn root_disk_usage_percent_df() -> f64 {
     0.0
 }
 
-#[cfg(target_os = "linux")]
-fn network_metrics_from_proc_net_dev() -> (f64, f64) {
-    let Ok(content) = std::fs::read_to_string("/proc/net/dev") else {
-        return (0.0, 0.0);
-    };
-    let mut total_bytes = 0u64;
-    for line in content.lines().skip(2) {
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.len() >= 10 {
-            let rx_bytes: u64 = parts[1].parse().unwrap_or(0);
-            let tx_bytes: u64 = parts[9].parse().unwrap_or(0);
-            total_bytes = total_bytes.saturating_add(rx_bytes.saturating_add(tx_bytes));
-        }
-    }
+fn network_metrics_best_effort() -> (f64, f64) {
+    let (rx, tx) = linux_proc::network_rx_tx_bytes_sum().unwrap_or((0, 0));
+    let total_bytes = rx.saturating_add(tx);
     let network_io = if total_bytes > 0 {
         f64::min((total_bytes as f64).log10() * 5.0, 100.0)
     } else {

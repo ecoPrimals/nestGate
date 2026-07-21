@@ -343,44 +343,17 @@ impl RealHardwareTuningHandler {
 
     /// Detect Cpu Info
     fn detect_cpu_info(&self) -> Result<CpuInfo> {
-        // Read from /proc/cpuinfo or use system APIs
-        let cpu_info = std::fs::read_to_string("/proc/cpuinfo").map_err(|e| {
-            NestGateError::system("cpu_detection", format!("Failed to read CPU info: {e}"))
-        })?;
-
-        let cores = cpu_info
-            .lines()
-            .filter(|line| line.starts_with("processor"))
-            .count();
-
-        let model = cpu_info
-            .lines()
-            .find(|line| line.starts_with("model name"))
-            .and_then(|line| line.split(':').nth(1))
-            .map_or_else(|| "Unknown CPU".into(), |s| s.trim().to_string());
-
+        use nestgate_platform::linux_proc;
+        let cores = linux_proc::logical_cpu_count();
+        let model = super::linux_proc::cpu_model_best_effort()?;
         Ok(CpuInfo { cores, model })
     }
 
     /// Detect Memory Info
     fn detect_memory_info(&self) -> Result<MemoryInfo> {
-        // Read from /proc/meminfo
-        let meminfo = std::fs::read_to_string("/proc/meminfo").map_err(|e| {
-            NestGateError::system(
-                "memory_detection",
-                format!("Failed to read memory info: {e}"),
-            )
-        })?;
-
-        let total_kb = meminfo
-            .lines()
-            .find(|line| line.starts_with("MemTotal:"))
-            .and_then(|line| line.split_whitespace().nth(1))
-            .and_then(|s| s.parse::<u64>().ok())
-            .unwrap_or(0);
-
-        let total_gb = total_kb / 1024 / 1024;
-
+        use nestgate_platform::linux_proc;
+        let total_bytes = linux_proc::total_memory_bytes().unwrap_or(0);
+        let total_gb = total_bytes / 1024 / 1024 / 1024;
         Ok(MemoryInfo { total_gb })
     }
 

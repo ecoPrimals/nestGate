@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 20, 2026 (Wave 150q — Session 124: vendor elimination + BLAKE3 crypto consolidation — oxitls-rustcrypto-provider, all internal crypto → BLAKE3, sha2/hmac/hkdf eliminated as direct deps)
+**Last Updated**: Jul 21, 2026 (Wave 150t — Session 125: procfs consolidation phase 3 + dep bumps — 17 /proc callsites consolidated to linux_proc, 6 patch-level dep bumps, unfulfilled lint expects cleaned)
 **Version**: 0.5.0
 
 ---

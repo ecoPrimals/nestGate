@@ -26,10 +26,6 @@
     reason = "kept for readability where map_or_else harms clarity"
 )]
 #![expect(
-    clippy::similar_names,
-    reason = "req / res / resp naming is conventional in API layer"
-)]
-#![expect(
     clippy::too_long_first_doc_paragraph,
     reason = "API endpoint docs need full context in the summary line"
 )]
