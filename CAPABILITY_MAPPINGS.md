@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)
 
 ---
 
@@ -294,7 +294,7 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 
 ```rust
 // External HTTPS fetch is implemented in NestGate (e.g. storage handler → fetch_external):
-// ureq + rustls-rustcrypto (pure Rust); no Songbird http.get hop for this path.
+// ureq + oxitls-rustcrypto-provider (pure Rust TLS); no external http.get hop for this path.
 ```
 
 **Status**: Implemented — NestGate terminates TLS for this fetch path
@@ -390,12 +390,12 @@ impl StorageService {
 
 ### **How biomeOS Routes NestGate Requests**
 
-Authoritative capability and method inventory: [`capability_registry.toml`](capability_registry.toml) at the NestGate repository root.
+Authoritative capability and method inventory: [`capability_registry.toml`](config/capability_registry.toml) in `config/`.
 
 **Illustrative biomeOS graph fragment** (conceptual routing example):
 
 ```toml
-# Canonical semantic names: see capability_registry.toml (NestGate repo root).
+# Canonical semantic names: see config/capability_registry.toml
 
 [nodes.nestgate]
 primal_name = "nestgate"
@@ -517,8 +517,8 @@ self.call_method("storage.put", json!({
 **Next Steps**:
 1. Push coverage 84% → 90%
 2. Test cross-primal integration with streaming tensors
-3. Track vendored `rustls-rustcrypto` + `rustls-webpki` upstream for drop opportunity
+3. `primal-transport` crate extraction (ecosystem P2)
 
 ---
 
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)

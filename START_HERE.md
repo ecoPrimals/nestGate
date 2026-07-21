@@ -4,7 +4,7 @@
 
 ```
 Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 150t)
-Tests:       PASS — 3,790 passed, 73 ignored (1 pre-existing env-specific) (STATUS.md)
+Tests:       PASS — 1,630 passed, 80 ignored (1,710 total) (1 pre-existing env-specific) (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
 Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 150t)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
@@ -176,10 +176,10 @@ RUST_LOG=info                       # Logging level
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — Development guidelines
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capabilities
 - [CHANGELOG.md](./CHANGELOG.md) — Version history
-- [capability_registry.toml](./capability_registry.toml) — Capability and method registry
+- [capability_registry.toml](./config/capability_registry.toml) — Capability and method registry
 - [docs/](./docs/) — Architecture and guides
 
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)

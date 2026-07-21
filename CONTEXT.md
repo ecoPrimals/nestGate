@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)
 
 ## What This Is
 
@@ -24,12 +24,12 @@ than by importing this crate graph.
 | **Version** | 0.5.0 |
 | **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
-| **Tests** | 3,790 passed, 73 ignored (1 pre-existing env-specific) |
+| **Tests** | 1,630 passed, 80 ignored (1,710 total) (1 pre-existing env-specific) |
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
 | **Architecture** | 22 workspace packages: 20 `code/crates/*` + fuzz + root |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
-| **TLS/crypto** | `ureq` + `rustls-rustcrypto` (pure Rust); ring/reqwest/openssl eliminated; installer uses system `curl` |
+| **TLS/crypto** | `ureq` + `oxitls-rustcrypto-provider` (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl eliminated; installer uses system `curl` |
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean with `-D warnings` |

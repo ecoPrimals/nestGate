@@ -24,7 +24,7 @@ Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
 Mocks in prod:      ZERO fabricated metrics — 11 ZFS handlers evolved to honest not_implemented; system memory from /proc/meminfo (was hardcoded); ARC fallback 0.0 (was 0.85); dev_environment gated behind `dev-stubs` feature
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
-TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED
+TLS/crypto:         ureq + oxitls-rustcrypto-provider (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
 Auth mode:          NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider
 Discovery:          Environment variables + capability IPC; 6-tier security socket discovery (XDG-based + ecosystem path segment, zero hardcoded FHS paths)
@@ -50,9 +50,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–124) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–125) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 125** (Wave 150t): Procfs consolidation phase 3 — 17 `/proc` callsites in nestgate-api consolidated to `linux_proc` delegates (hardware_tuning, metrics_collector, performance_dashboard); 6 dep bumps (tokio, libc, tokio-util, zerocopy); clippy cleanup; wave stamps → 150t
 - **Session 124** (Wave 150q): Vendor elimination + BLAKE3 crypto consolidation — replaced vendored TLS crates with `oxitls-rustcrypto-provider 0.2.1`; all internal crypto (auth tokens, BTSP KDF, checksums, cert fingerprints) consolidated to BLAKE3; `sha2`/`hmac`/`hkdf` removed as direct deps (sha2/hmac optional behind `s3-backend` in nestgate-zfs); `vendor/` + `[patch.crates-io]` removed; 27 TODOs + 4 >800L gone; wave stamps → 150q
 - **Session 123** (Wave 150o): 150o dimensional audit triage — 27 TODOs, 5 >800L, 52 unsafe all confirmed in vendor/ (zero in nestGate code); procfs consolidation phase 2 — 3 more callsites (ZFS readiness, performance analyzer) → `linux_proc`; 18 dep bumps; wave stamps → 150o
 - **Session 122** (Wave 150g): Procfs consolidation — `SystemHealthProvider` evolved from raw `/proc` reads to `nestgate_platform::linux_proc` (platform-agnostic); 4 scattered `/proc/meminfo`/`/proc/uptime`/`/proc/loadavg` reads in discovery, storage, API, and websocket → `linux_proc` functions; wave stamps → 150g

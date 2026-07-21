@@ -1,12 +1,12 @@
 # NestGate - Quick Reference
 
 **Version**: 0.5.0  
-**Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific) (see STATUS.md)  
+**Tests**: 1,630 passed, 80 ignored (1,710 total) (1 pre-existing env-specific) (see STATUS.md)  
 **Coverage**: 84%+ line (llvm-cov); target 90%  
 **Clippy**: PASS — `cargo clippy --workspace --all-targets -- -D warnings` (as of Wave 150t)  
 **Crates**: 22 workspace packages (20 under `code/crates/` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)
 
 ---
 
@@ -225,8 +225,8 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — Development guidelines
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capabilities
 - [CHANGELOG.md](./CHANGELOG.md) — Version history
-- [capability_registry.toml](./capability_registry.toml) — Capability and method registry
+- [capability_registry.toml](./config/capability_registry.toml) — Capability and method registry
 
 ---
 
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)

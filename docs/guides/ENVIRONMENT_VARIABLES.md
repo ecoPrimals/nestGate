@@ -1,6 +1,6 @@
 # Environment Variables Reference
 
-**Last Updated**: Jul 16, 2026  
+**Last Updated**: Jul 21, 2026  
 **Status**: Comprehensive reference for all NestGate environment variables  
 **Default mode**: HTTP (`nestgate server`); use `--socket-only` for UDS-only operation
 

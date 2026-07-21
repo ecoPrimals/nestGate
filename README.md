@@ -2,16 +2,16 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-07-16, Wave 150t)**  
+**Verification (as of 2026-07-21, Wave 150t)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 3,790 passed, 73 ignored (1 pre-existing env-specific)  
+- **Tests**: 1,630 passed, 80 ignored (1,710 total)  
 - **Format**: `cargo fmt --check` — PASS  
 - **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 3,790 passed, 73 ignored
+- **Tests (last recorded)**: 1,630 passed, 80 ignored (1,710 total)
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -20,14 +20,13 @@
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
 - **External deps**: Zero unused workspace deps (`lru`/`getrandom` removed Wave 128b; `fastrand` consolidated → `rand`); zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
-- **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`
-- **Vendored crates** (`vendor/`): `rustls-rustcrypto` and `rustls-webpki` are vendored via `[patch.crates-io]` in the workspace `Cargo.toml`. Rationale: upstream `rustls-rustcrypto` optionally depends on `ring`; vendoring lets us build with pure-Rust crypto only, eliminating `ring` from the lockfile entirely. `rustls-webpki` is pinned at 0.103.12+ for RUSTSEC-2023-0071 mitigation. Both are consistent with `deny.toml` banning `ring`, `openssl`, `aws-lc-sys`  
+- **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + `oxitls-rustcrypto-provider 0.2.1` (pure Rust TLS, no vendoring); internal crypto consolidated to BLAKE3 (`blake3::keyed_hash` for MACs, `blake3::derive_key` for KDF, `blake3::hash` for checksums/fingerprints); `sha2`/`hmac` optional behind `s3-backend` feature in nestgate-zfs for AWS SigV4 only; installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 - **File size**: All `.rs` files under 800 lines (`content_handlers.rs` split → 4-file directory module Wave 128b)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate); JSON-line + length-prefixed dual framing; 6-tier security socket discovery; security provider wire contract aligned (`family_seed`, `session_token`, `btsp.session.verify` params); mode-aware error frames; `SECURITY_FAMILY_SEED` canonical env var (Session 45c)  
-- **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, HKDF-SHA256 key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners; transport hardened (decrypt/read errors propagate as Err, not silent Ok)
+- **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, BLAKE3 KDF key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners; transport hardened (decrypt/read errors propagate as Err, not silent Ok)
 - **JWT NUCLEUS bypass**: BTSP composition auto-detected via `is_btsp_required()` — skips `NESTGATE_JWT_SECRET` validation when FAMILY_ID signals a NUCLEUS stack
 - **`is_btsp_required` unified**: client delegates to canonical server version (eliminates env-var and `"standalone"` divergence)  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code); Azure/GCS/ObjectStorage backends return `not_implemented` until REST API wired; 11 ZFS production handlers evolved from fake success to honest `not_implemented`; system memory reads `/proc/meminfo` (was hardcoded 16GB); ARC fallback uses `0.0` (was misleading `0.85`)  
@@ -57,7 +56,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jul 16, 2026
+**Last Updated**: Jul 21, 2026
 
 ---
 
@@ -160,20 +159,20 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-16 (Wave 150t).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-21 (Wave 150t).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 3,790 passed, 73 ignored (1 pre-existing env-specific) |
+| Tests | 1,630 passed, 80 ignored (1,710 total) |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
 | unwrap/expect | Zero in production library code; tests may use |
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots |
-| TLS/crypto | `ureq` + `rustls-rustcrypto` (pure Rust); zero C-FFI `-sys` in production |
+| TLS/crypto | `ureq` + `oxitls-rustcrypto-provider` (pure Rust); internal crypto BLAKE3; zero C-FFI `-sys` in production |
 | File size | All `.rs` files under 800 LOC (wateringHole limit 1000) |
 | Env-var isolation | `EnvSource` / `MapEnv` primary; `#[serial]` scoped to ZFS command stub tests only |
 
@@ -190,7 +189,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-16 (Wa
 | Coverage (80%+) | Pass — 84%+ line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
-| BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
+| BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to security capability provider via IPC |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
 | Discovery | Env vars + capability IPC (runtime socket resolution — mDNS removed) |
 | Crypto delegation | Pass — capability-based `SecurityProviderClient` |
@@ -250,7 +249,7 @@ Other workspace crates define their own features (for example `sysinfo`, per-cra
 - **HTTP**: Axum
 - **Serialization**: Serde, serde_json
 - **Concurrency**: DashMap, tokio::sync, parking_lot, std::sync::LazyLock, pin-project
-- **Security**: Delegated to security capability provider via IPC; local JWT via RustCrypto (hmac, sha2)
+- **Security**: Delegated to security capability provider via IPC; local auth MACs via BLAKE3 (`blake3::keyed_hash`)
 - **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0, storage.sock capability symlink)
 - **CLI**: Clap 4 (derive mode)
 - **Discovery**: Environment variables + capability IPC (capability-based)
@@ -282,7 +281,7 @@ RUST_LOG=info                 # Logging level
 - [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capability mappings
 - [CHANGELOG.md](./CHANGELOG.md) — Version history
 - [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) — Full doc index
-- [capability_registry.toml](./capability_registry.toml) — Capability and method registry
+- [capability_registry.toml](./config/capability_registry.toml) — Capability and method registry
 - [docs/](./docs/) — Architecture, API, guides
 
 ### Fossil Record
@@ -294,10 +293,10 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 ## What's Active
 
 1. Push test coverage toward 90% target (currently 84%+)
-2. Track vendored `rustls-rustcrypto` + `rustls-webpki` upstream for drop opportunity
-3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
-4. Cross-gate replication (multi-node data orchestration)
-5. aarch64 musl cross-compile CI (config exists; pipeline not wired)
+2. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
+3. Cross-gate replication (multi-node data orchestration)
+4. aarch64 musl cross-compile CI (config exists; pipeline not wired)
+5. `primal-transport` crate extraction (ecosystem P2)
 
 For details: See [STATUS.md](./STATUS.md).
 

@@ -1,6 +1,6 @@
 # Documentation Quick Guide
 
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)
 
 ---
 
@@ -15,7 +15,7 @@
 - [STATUS.md](../../STATUS.md) — Current measured metrics (ground truth)
 - [CAPABILITY_MAPPINGS.md](../../CAPABILITY_MAPPINGS.md) — Wire standard and method catalog
 - [CONTEXT.md](../../CONTEXT.md) — Project context for new contributors
-- [capability_registry.toml](../../capability_registry.toml) — Capability and method registry
+- [capability_registry.toml](../../config/capability_registry.toml) — Capability and method registry
 
 ### Contribute
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — Contribution guidelines
@@ -33,12 +33,11 @@
 nestgate/
 ├── README.md, STATUS.md, START_HERE.md    Root docs (ground truth)
 ├── CAPABILITY_MAPPINGS.md                 Wire standard compliance
-├── capability_registry.toml               Machine-readable self-knowledge
+├── config/capability_registry.toml        Machine-readable self-knowledge
 ├── code/crates/                           20 crates (22 workspace members total incl. root, fuzz)
 ├── tests/                                 Integration, chaos, e2e tests
-├── docs/
-│   └── guides/                            Environment variables, this guide
-└── vendor/                                Vendored rustls-rustcrypto
+└── docs/
+    └── guides/                            Environment variables, this guide
 ```
 
 ---
@@ -53,4 +52,4 @@ These are not in the nestgate repository — they live in the shared infra tree.
 
 ---
 
-**Last Updated**: Jul 16, 2026 (Wave 150t)
+**Last Updated**: Jul 21, 2026 (Wave 150t)
