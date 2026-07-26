@@ -119,10 +119,10 @@ impl AuthManager {
     pub fn new() -> Self {
         let mut users = HashMap::new();
         users.insert(
-            String::from("admin"),
+            "admin".into(),
             UserRecord {
-                user_id: String::from("admin"),
-                username: String::from("admin"),
+                user_id: "admin".into(),
+                username: "admin".into(),
                 role: Role::Admin,
                 permissions: vec![Permission::new("all")],
             },

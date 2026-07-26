@@ -60,9 +60,9 @@ pub struct CoordArtifact {
     pub ingested_at: String,
     /// BLAKE3 hash of the raw content in CAS.
     pub content_hash: String,
-    /// Optional loamSpine entry index for provenance history.
+    /// Optional ledger entry index for provenance history.
     pub spine_index: Option<u64>,
-    /// Optional sweetGrass braid ID for attribution.
+    /// Optional attribution braid ID.
     pub braid_id: Option<String>,
 }
 

@@ -24,7 +24,7 @@ pub const CAPABILITY_ANNOUNCE_TTL: Duration = Duration::from_secs(60);
 
 /// riboCipher ecosystem signal prefix.
 ///
-/// `cellMembrane` probes send `[0xEC, 0x01]` before the JSON-RPC payload to
+/// The orchestrator sends `[0xEC, 0x01]` before the JSON-RPC payload to
 /// identify ecosystem-aware connections. Primals must accept and discard this
 /// prefix (guideStone amendment: "riboCipher signal handling MANDATORY on UDS").
 pub const RIBOCIPHER_PREFIX: [u8; 2] = [0xEC, 0x01];

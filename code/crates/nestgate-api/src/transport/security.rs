@@ -229,7 +229,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: String::from("encrypt"),
+            method: "encrypt".into(),
             data: plaintext.to_vec(),
         };
 
@@ -250,7 +250,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: String::from("decrypt"),
+            method: "decrypt".into(),
             data: ciphertext.to_vec(),
         };
 
@@ -271,7 +271,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: String::from("generate_token"),
+            method: "generate_token".into(),
             data: identity.as_bytes().to_vec(),
         };
 
@@ -292,7 +292,7 @@ impl SecurityProviderClient {
         }
 
         let request = SecurityProviderRequest {
-            method: String::from("validate_token"),
+            method: "validate_token".into(),
             data: token.as_bytes().to_vec(),
         };
 

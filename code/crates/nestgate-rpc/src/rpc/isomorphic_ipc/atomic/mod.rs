@@ -28,7 +28,7 @@
 //!     JSON-RPC on UDS (primary surface)
 //!     Self-knowledge + capability-based peer discovery
 //!
-//!   [Dynamic overlays discovered at runtime via biomeOS]
+//!   [Dynamic overlays discovered at runtime via orchestrator]
 //!     AI/MCP: meta-tier, not atomic member
 //!     Any capability provider via Neural API routing
 //! ```

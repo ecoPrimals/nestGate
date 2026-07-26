@@ -4,8 +4,9 @@
 //! ZFS automation integration shims.
 //!
 //! The `nestgate-automation` crate was deprecated in v4.7.0 — automation /
-//! orchestration concerns are delegated to biomeOS.  These thin types remain
-//! for API compatibility until callers migrate to [`DatasetAutomation`](super::engine::DatasetAutomation).
+//! orchestration concerns are delegated to the ecosystem orchestrator.
+//! These thin types remain for API compatibility until callers migrate to
+//! [`DatasetAutomation`](super::engine::DatasetAutomation).
 
 /// Check if ecosystem services are available for ZFS automation.
 ///

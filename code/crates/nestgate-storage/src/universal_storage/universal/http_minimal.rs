@@ -23,10 +23,9 @@ fn parse_http_url(url: &str) -> Result<ParsedUrl> {
         )
     })?;
 
-    let (host_port, path_part) = stripped.split_once('/').map_or_else(
-        || (stripped, String::from("/")),
-        |(hp, p)| (hp, format!("/{p}")),
-    );
+    let (host_port, path_part) = stripped
+        .split_once('/')
+        .map_or_else(|| (stripped, "/".into()), |(hp, p)| (hp, format!("/{p}")));
 
     let (host, port) = host_port.split_once(':').map_or_else(
         || (host_port.to_string(), 80),

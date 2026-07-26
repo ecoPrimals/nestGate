@@ -215,7 +215,7 @@ pub(super) async fn handle_request(
             )
             .await
         }
-        // Content federation (Wave 60 — waterFall / rootPulse signal graphs)
+        // Content federation (Wave 60 — cascade / provenance signal graphs)
         "content.fetch_heads" => {
             content_federation_handlers::content_fetch_heads(request.params.as_ref(), state).await
         }
@@ -422,8 +422,8 @@ pub(super) fn discovery_capability_register(
 ///
 /// This builds the full announce payload (including gate identity, federation
 /// endpoints, and storage backend info) and writes it to the local route
-/// manifest. An external mesh coordinator or biomeOS can consume this manifest
-/// to route cross-gate `content.*` and `storage.*` requests.
+/// manifest. An external mesh coordinator or orchestrator can consume this
+/// manifest to route cross-gate `content.*` and `storage.*` requests.
 ///
 /// Optional params:
 /// - `gate_id`: Override gate identity (default: `NESTGATE_GATE_ID` env)

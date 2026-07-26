@@ -5,9 +5,9 @@
 //!
 //! The coordination backend makes wateringHole artifacts (blurbs, FRAGOs,
 //! AARs, wave state, gate heads) queryable over JSON-RPC and HTTP. Data
-//! is ingested into nestGate CAS via the rootPulse pipeline (rhizoCrypt
-//! DAG → bearDog sign → CAS store → loamSpine commit → sweetGrass braid)
-//! and served immutably from content-addressed storage.
+//! is ingested into nestGate CAS via the provenance commit pipeline
+//! (DAG session → crypto sign → CAS store → ledger commit → attribution
+//! braid) and served immutably from content-addressed storage.
 //!
 //! ## Artifact kinds
 //!

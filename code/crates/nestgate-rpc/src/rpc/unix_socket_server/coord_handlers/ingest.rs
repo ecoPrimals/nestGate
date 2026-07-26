@@ -2,34 +2,35 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Coordination ingest pipeline — processes wateringHole artifacts into CAS
-//! via the rootPulse commit pipeline.
+//! via the provenance commit pipeline.
 //!
-//! ## rootPulse flow
+//! ## Ingest flow
 //!
 //! 1. Parse and classify artifacts (blurb, FRAGO, AAR, wave, head)
 //! 2. Hash content with BLAKE3 and store in CAS (`content.put`)
 //! 3. Update coordination manifest atomically
 //!
-//! ## Provenance trio integration
+//! ## Provenance capability integration
 //!
-//! When the provenance trio is available on the local gate (rhizoCrypt,
-//! loamSpine, sweetGrass), ingest calls the rootPulse commit pipeline:
+//! When provenance capabilities are available on the local gate (DAG
+//! tracking, ledger, attribution), ingest calls the commit pipeline:
 //!
-//! - rhizoCrypt `session.create` + `session.dehydrate` — DAG session
-//! - bearDog `crypto.sign_ed25519` — sign dehydration summary
-//! - loamSpine `session.commit` — permanent ledger entry
-//! - sweetGrass `braid.create` — attribution braid
+//! - DAG capability `session.create` + `session.dehydrate`
+//! - Security capability `crypto.sign_ed25519`
+//! - Ledger capability `session.commit` — permanent entry
+//! - Attribution capability `braid.create`
 //!
-//! When the trio is unavailable (e.g. thin-relay gate), ingest stores
-//! content in CAS and updates the manifest without provenance metadata.
-//! The provenance fields (`spine_index`, `braid_id`) remain `None` and
-//! can be backfilled when the trio becomes reachable via mesh federation.
+//! When provenance capabilities are unavailable (e.g. thin-relay gate),
+//! ingest stores content in CAS and updates the manifest without
+//! provenance metadata. The provenance fields (`spine_index`, `braid_id`)
+//! remain `None` and can be backfilled when capabilities become
+//! reachable via mesh federation.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use super::super::StorageState;
 use super::super::storage_paths::resolve_family_id;
@@ -272,25 +273,17 @@ pub async fn coord_ingest(params: Option<&Value>, state: &StorageState) -> Resul
     manifest.version += 1;
     save_manifest(family_id, &manifest)?;
 
-    // rootPulse provenance trio integration:
-    // When rhizoCrypt, loamSpine, and sweetGrass are reachable via IPC,
-    // the ingest pipeline will call:
-    //   1. rhizoCrypt session.create + event.append (DAG session for change set)
-    //   2. rhizoCrypt session.dehydrate (merkle root)
-    //   3. bearDog crypto.sign_ed25519 (sign dehydration summary)
-    //   4. loamSpine session.commit (permanent ledger entry)
-    //   5. sweetGrass braid.create (attribution braid)
+    // Provenance capability integration:
+    // When DAG, ledger, and attribution capabilities are reachable via IPC,
+    // the ingest pipeline calls the provenance commit sequence:
+    //   1. DAG capability: session.create + event.append + session.dehydrate
+    //   2. Security capability: crypto.sign_ed25519 (sign dehydration summary)
+    //   3. Ledger capability: session.commit (permanent entry)
+    //   4. Attribution capability: braid.create
     //
     // The pipeline populates spine_index and braid_id on each artifact.
-    // This is orchestrated by biomeOS via the rootpulse_commit graph.
-    //
-    // For now, the manifest stores artifacts without provenance metadata.
-    // The trio integration is wired in the rootpulse_commit.toml graph
-    // and will be activated when the NUCLEUS composition is live on sporeGate.
-    let provenance_available = false;
-    if provenance_available {
-        warn!("coord.ingest: provenance pipeline integration is pending NUCLEUS activation");
-    }
+    // Manifest stores artifacts without provenance metadata until the
+    // NUCLEUS composition is live; provenance fields can be backfilled.
 
     Ok(json!({
         "ingested": ingested.len(),
@@ -298,7 +291,7 @@ pub async fn coord_ingest(params: Option<&Value>, state: &StorageState) -> Resul
         "results": ingested,
         "error_details": errors,
         "manifest_version": manifest.version,
-        "provenance": provenance_available,
+        "provenance": false,
     }))
 }
 

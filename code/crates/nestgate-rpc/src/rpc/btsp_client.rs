@@ -4,9 +4,8 @@
 //! Security capability provider socket resolution.
 //!
 //! Resolves the Unix domain socket path for the security capability provider
-//! (e.g. bearDog) used by both the BTSP server handshake and the BTSP client
-//! handshake. The actual wire-level handshake is in
-//! [`super::btsp_client_handshake`].
+//! used by both the BTSP server handshake and the BTSP client handshake.
+//! The actual wire-level handshake is in [`super::btsp_client_handshake`].
 
 use std::path::PathBuf;
 

@@ -142,8 +142,8 @@ pub use isomorphic_ipc::{
 /// classification with enforcement modes.
 ///
 /// Exempt methods are limited to read-only health/identity/capability
-/// discovery that exposes no user data and is required for primalSpring /
-/// biomeOS discovery probing.  Everything else (storage, session, bonding,
+/// discovery that exposes no user data and is required for ecosystem
+/// discovery probing.  Everything else (storage, session, bonding,
 /// templates, audit, NAT, ZFS, model) requires an authenticated connection.
 ///
 /// The check is applied after `protocol::normalize_method`, so callers must

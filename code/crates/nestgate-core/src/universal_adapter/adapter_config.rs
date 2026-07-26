@@ -116,31 +116,31 @@ impl AdapterDiscoveryConfig {
         if let Some(endpoint) = env.get("ORCHESTRATION_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert(String::from("orchestration"), endpoint);
+                .insert("orchestration".into(), endpoint);
         }
 
         if let Some(endpoint) = env.get("COMPUTE_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert(String::from("compute"), endpoint);
+                .insert("compute".into(), endpoint);
         }
 
         if let Some(endpoint) = env.get("SECURITY_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert(String::from("security"), endpoint);
+                .insert("security".into(), endpoint);
         }
 
         if let Some(endpoint) = env.get("AI_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert(String::from("artificial_intelligence"), endpoint);
+                .insert("artificial_intelligence".into(), endpoint);
         }
 
         if let Some(endpoint) = env.get("ECOSYSTEM_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
-                .insert(String::from("ecosystem"), endpoint);
+                .insert("ecosystem".into(), endpoint);
         }
 
         // Load from centralized runtime config

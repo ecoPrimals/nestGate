@@ -4,7 +4,7 @@
 //! Content federation handlers — remote repo sync, push, and blob replication.
 //!
 //! These methods form the Neural API surface that replaces `cascade-pull.sh`
-//! and enables the waterFall / rootPulse signal graphs to operate against
+//! and enables the cascade / provenance signal graphs to operate against
 //! live `NestGate` instances.
 //!
 //! ## Methods

@@ -23,7 +23,7 @@ pub async fn create_workspace_secret(
 ) -> Result<Json<Value>, StatusCode> {
     info!("Creating workspace secret: {}", workspace_id);
     // Attempt to delegate to security adapter
-    let adapter = AuthTokenManager::new(String::from("default-signing-key"));
+    let adapter = AuthTokenManager::new("default-signing-key".into());
 
     // Use security adapter for actual secret management
     match adapter.create_workspace_secret(&workspace_id) {

@@ -97,8 +97,8 @@ pub mod compliance;
 ///
 /// Ecosystem coordination backend — serves blurbs, FRAGOs, AARs, wave state,
 /// gate heads, and provenance trails from the coordination CAS. The live,
-/// queryable surface over wateringHole artifacts. Powered by rootPulse
-/// provenance trio when NUCLEUS composition is active.
+/// queryable surface over wateringHole artifacts. Powered by the provenance
+/// capability pipeline when NUCLEUS composition is active.
 pub(crate) mod coordination;
 
 /// **DASHBOARD TYPES MODULE**
@@ -180,7 +180,10 @@ mod storage_unit_tests;
 /// **WORKSPACE MANAGEMENT MODULE**
 ///
 /// Workspace creation, management, and collaboration features.
-#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
+#[expect(
+    dead_code,
+    reason = "Routes registered but handler internals pending full wiring"
+)]
 pub(crate) mod workspace_management;
 
 #[cfg(test)]

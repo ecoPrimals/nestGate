@@ -184,9 +184,9 @@ pub async fn coord_waves_current(params: Option<&Value>, state: &StorageState) -
 
 /// `coord.waves.history` — return wave history from the coordination manifest.
 ///
-/// Full provenance history requires loamSpine IPC (`entry.list` on the
-/// coordination spine). When loamSpine is unavailable, falls back to the
-/// local manifest's blurb history as a wave timeline.
+/// Full provenance history requires ledger capability IPC (`entry.list` on
+/// the coordination spine). When unavailable, falls back to the local
+/// manifest's blurb history as a wave timeline.
 pub async fn coord_waves_history(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let default_params = json!({});
     let family_id = resolve_family_id(params.unwrap_or(&default_params), state)?;
@@ -353,8 +353,8 @@ fn scan_depot(depot_path: &std::path::Path) -> Result<Value> {
 
 /// `coord.provenance` — return provenance trail for an artifact.
 ///
-/// Full provenance requires `loamSpine` + `sweetGrass` IPC. Returns what is
-/// available from the local manifest (`spine_index`, `braid_id`).
+/// Full provenance requires ledger + attribution capability IPC. Returns
+/// what is available from the local manifest (`spine_index`, `braid_id`).
 pub async fn coord_provenance(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;

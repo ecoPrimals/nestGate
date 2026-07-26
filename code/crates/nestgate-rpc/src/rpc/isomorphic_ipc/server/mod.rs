@@ -376,7 +376,7 @@ impl IsomorphicIpcServer {
         crate::rpc::protocol::strip_ribocipher_prefix(&mut raw_reader).await;
 
         if crate::rpc::btsp_server_handshake::is_btsp_required() {
-            // Peek buffered data. `{` may be plain JSON-RPC (biomeOS
+            // Peek buffered data. `{` may be plain JSON-RPC (orchestrator
             // composition) *or* a JSON-line BTSP ClientHello. Disambiguate:
             //   - `"jsonrpc"` / `"method"` → plain JSON-RPC, skip handshake
             //   - `"client_ephemeral_pub"` → JSON-line BTSP

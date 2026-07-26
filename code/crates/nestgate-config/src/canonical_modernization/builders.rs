@@ -53,18 +53,12 @@ impl CanonicalConfigBuilder {
     /// Set the API port
     #[must_use]
     pub const fn api_port(self, _port: u16) -> Self {
-        // Removed mut and prefixed parameter with underscore
-        // Note: NetworkConfig structure needs to be updated for http_server field access
-        // self.config.network.http_server.port = port; // Field not available in current structure
         self
     }
 
     /// Enable TLS
     #[must_use]
     pub const fn enable_tls(self, _enabled: bool) -> Self {
-        // Removed mut and prefixed parameter with underscore
-        // Note: NetworkConfig structure needs to be updated for tls field access
-        // self.config.network.tls // Field not available in current structure.enabled = enabled;
         self
     }
 }

@@ -72,7 +72,7 @@ pub trait EvolutionCompatible {
 
     /// Get evolution version information
     fn get_evolution_version(&self) -> String {
-        String::from("1.0.0")
+        "1.0.0".into()
     }
 
     /// Apply evolution compatibility fixes

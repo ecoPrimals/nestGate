@@ -116,7 +116,7 @@ impl ApiState {
 
             // Universal adapter RPC integration when enabled
             if std::env::var("UNIVERSAL_ADAPTER_ENABLED")
-                .unwrap_or_else(|_| String::from("true"))
+                .unwrap_or_else(|_| "true".into())
                 .parse()
                 .unwrap_or(true)
             {
@@ -307,8 +307,8 @@ async fn handle_rpc_call(
 ) -> std::result::Result<axum::Json<DataResponse<UnifiedRpcResponse>>, axum::Json<DataError>> {
     let Some(rpc_manager) = state.rpc_manager.get() else {
         return Err(axum::Json(DataError::new(
-            String::from("RPC manager not initialized"),
-            String::from("RPC_NOT_AVAILABLE"),
+            "RPC manager not initialized".into(),
+            "RPC_NOT_AVAILABLE".into(),
         )));
     };
     let target = request.target.clone();
@@ -316,7 +316,7 @@ async fn handle_rpc_call(
         Ok(response) => Ok(axum::Json(DataResponse::new(response))),
         Err(e) => Err(axum::Json(DataError::new(
             format!("RPC call failed: {e}"),
-            String::from("RPC_CALL_FAILED"),
+            "RPC_CALL_FAILED".into(),
         ))),
     }
 }
@@ -328,8 +328,8 @@ async fn handle_rpc_stream(
 ) -> std::result::Result<axum::Json<DataResponse<serde_json::Value>>, axum::Json<DataError>> {
     let Some(rpc_manager) = state.rpc_manager.get() else {
         return Err(axum::Json(DataError::new(
-            String::from("RPC manager not initialized"),
-            String::from("RPC_NOT_AVAILABLE"),
+            "RPC manager not initialized".into(),
+            "RPC_NOT_AVAILABLE".into(),
         )));
     };
     match rpc_manager.start_bidirectional_stream(request) {
@@ -352,7 +352,7 @@ async fn handle_rpc_stream(
         }
         Err(e) => Err(axum::Json(DataError::new(
             format!("Failed to start RPC stream: {e}"),
-            String::from("RPC_STREAM_FAILED"),
+            "RPC_STREAM_FAILED".into(),
         ))),
     }
 }
