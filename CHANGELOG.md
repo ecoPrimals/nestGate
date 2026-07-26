@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 126: BTSP ClientHello + Deep Debt + Dep Bumps (Jul 26, 2026)
+
+- **BTSP ClientHello shipped**: New `nestgate-rpc/src/rpc/btsp_client_handshake.rs` — full 7-step outbound wire handshake (P1 Nest Atomic blocker resolved).
+- **Integration hooks**: `JsonRpcClient::from_btsp_stream` (const fn), `connect_with_btsp()` entrypoint.
+- **Dead code cleanup**: Removed dead `BtspClient` stub from `btsp_client.rs`; retained security socket resolution helpers.
+- **Primal decoupling**: Replaced hardcoded primal names (`bearDog`, `biomeOS`, `rhizoCrypt`, etc.) with capability-based language across 12 production files.
+- **Idiomatic Rust**: `String::from("literal")` → `"literal".into()` across 10 production files (~32 sites).
+- **Commented-out code removed**: `canonical_modernization/builders.rs` stubs; `provenance_available` stub evolved in `ingest.rs`.
+- **8 dependency patch bumps**: cc, clap, either, libc, rustls-pki-types, syn, tokio-stream.
+- **Wave stamps → 151c**: All root docs updated.
+- See `docs/handoffs/session-126-btsp-clienthello.md` for details.
+
 ### Session 125: Procfs Consolidation Phase 3 + Dep Bumps (Jul 21, 2026)
 
 - **Procfs consolidation phase 3**: Eliminated 17 scattered `/proc` read callsites across

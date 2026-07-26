@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-use super::{
-    BackupConfig, MigrationConfig, MigrationStrategy, RestoreConfig, backup_workspace,
-    migrate_workspace, restore_workspace,
-};
+use super::backup::backup_workspace;
+use super::migration::migrate_workspace;
+use super::restore::restore_workspace;
+use super::types::{BackupConfig, MigrationConfig, MigrationStrategy, RestoreConfig};
 use axum::extract::{Json, Path};
 use axum::http::StatusCode;
 

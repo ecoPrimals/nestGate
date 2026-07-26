@@ -259,7 +259,7 @@ impl DownloadManager {
         let config_path = target_dir.join("etc").join("nestgate.toml");
         let default_config = crate::config::InstallerConfig::default();
         let config_toml = toml::to_string(&default_config)
-            .map_err(|_e| NestGateError::validation("Configuration serialization error".into()))?;
+            .map_err(|_e| NestGateError::validation("Configuration serialization error"))?;
         std::fs::write(&config_path, config_toml)?;
 
         info!("Configuration created: {}", config_path.display());

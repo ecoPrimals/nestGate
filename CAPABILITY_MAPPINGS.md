@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: Jul 21, 2026 (Wave 150t)
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
 
 ---
 
@@ -13,7 +13,7 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 1. **Capabilities Provided** - What NestGate offers to other primals
 2. **Capabilities Required** - What NestGate needs from other primals  
 3. **Semantic Method Mappings** - Internal methods → semantic names
-4. **Neural API Translation** - How biomeOS routes requests
+4. **Neural API Translation** - How orchestration routes requests
 
 ---
 
@@ -94,7 +94,7 @@ pub async fn list_objects(...)  // → storage.list
 // fetch_external handler  // → storage.fetch_external (HTTPS/TLS in NestGate)
 ```
 
-**Evolution Plan**: Rename internal methods to match semantic format (8-12 hours)
+**Status**: Semantic naming complete — dispatch routes use `{domain}.{operation}` format
 
 ---
 
@@ -153,7 +153,7 @@ pub async fn list_services()  // → discovery.list
 pub async fn get_service_metadata(name: &str)  // → discovery.metadata
 ```
 
-**Status**: Implemented, needs semantic method naming
+**Status**: Implemented — semantic naming complete
 
 ---
 
@@ -181,7 +181,7 @@ pub async fn get_service(name: &str)  // → metadata.retrieve
 pub async fn find_by_capability(cap: &str)  // → metadata.search
 ```
 
-**Status**: Implemented, needs semantic naming
+**Status**: Implemented — semantic naming complete
 
 ---
 
@@ -215,10 +215,10 @@ pub async fn liveness_check()  // → health.liveness
 
 ## Capabilities Required by NestGate
 
-### **1. IPC/Orchestration (from Songbird)**
+### **1. IPC/Orchestration**
 
 **Capability**: `ipc` or `orchestration`  
-**Provider**: Songbird primal
+**Provider**: Orchestration capability provider (discovered at runtime)
 
 #### **Methods Used**:
 
@@ -236,8 +236,8 @@ pub async fn liveness_check()  // → health.liveness
 
 ```rust
 // Via CapabilityDiscovery module:
-let songbird = CapabilityDiscovery::discover_songbird_ipc().await?;
-let discovery = CapabilityDiscovery::new(songbird);
+let orchestration = CapabilityDiscovery::discover_orchestration_ipc().await?;
+let discovery = CapabilityDiscovery::new(orchestration);
 let crypto_service = discovery.find("crypto").await?;
 ```
 
@@ -245,10 +245,10 @@ let crypto_service = discovery.find("crypto").await?;
 
 ---
 
-### **2. Security/Crypto (from BearDog)**
+### **2. Security/Crypto**
 
 **Capability**: `crypto` or `security`  
-**Provider**: BearDog primal  
+**Provider**: Security capability provider (discovered at runtime)  
 **Usage**: Optional (for encrypted storage)
 
 #### **Methods Used**:
@@ -301,14 +301,14 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 
 #### **Optional / future (Songbird or other primals)**
 
-Legacy documentation referred to Songbird for generic `http.get` / `http.post` and `tls.derive_secrets`. Those remain **optional** for orchestration or other capabilities; they are **not** the path for `storage.fetch_external`.
+Legacy documentation referred to an orchestration provider for generic `http.get` / `http.post` and `tls.derive_secrets`. Those remain **optional** for orchestration or other capabilities; they are **not** the path for `storage.fetch_external`.
 
 ---
 
-### **4. Compute (from ToadStool)**
+### **4. Compute**
 
 **Capability**: `compute`  
-**Provider**: ToadStool primal  
+**Provider**: Compute capability provider (discovered at runtime)  
 **Usage**: Optional (for storage optimization)
 
 #### **Methods Used**:
@@ -341,58 +341,21 @@ Legacy documentation referred to Songbird for generic `http.get` / `http.post` a
 
 ---
 
-### **Evolution Plan**
+### **Completed Evolution**
 
-#### **Phase 1: Internal Method Refactoring** (8-12 hours)
-
-**Pattern**:
-```rust
-// OLD: Domain-specific method names
-impl StorageService {
-    pub async fn store_object(...) -> Result<()>
-    pub async fn retrieve_object(...) -> Result<()>
-    pub async fn delete_object(...) -> Result<()>
-}
-
-// NEW: Semantic method routing
-impl StorageService {
-    pub async fn call_method(method: &str, params: Value) -> Result<Value> {
-        match method {
-            "storage.put" => self.storage_put(params).await,
-            "storage.get" => self.storage_get(params).await,
-            "storage.delete" => self.storage_delete(params).await,
-            _ => Err(NestGateError::method_not_found(method)),
-        }
-    }
-    
-    async fn storage_put(&self, params: Value) -> Result<Value> {
-        // Implementation
-    }
-}
-```
-
-#### **Phase 2: Documentation** (2-3 hours)
-
-- Create capability registry
-- Document all provided methods
-- Document required methods
-- Update integration guides
-
-#### **Phase 3: Neural API Integration** (2-3 hours)
-
-- Add capability mappings to biomeOS graphs
-- Configure translation layer
-- Test cross-primal method calls
+Semantic naming is complete. All JSON-RPC dispatch routes use `{domain}.{operation}` format.
+`capability_registry.toml` is the authoritative machine-readable inventory (20 capability domains).
+The Neural API translation layer routes requests via capability discovery at runtime.
 
 ---
 
 ## Neural API Translation
 
-### **How biomeOS Routes NestGate Requests**
+### **How Orchestration Routes NestGate Requests**
 
 Authoritative capability and method inventory: [`capability_registry.toml`](config/capability_registry.toml) in `config/`.
 
-**Illustrative biomeOS graph fragment** (conceptual routing example):
+**Illustrative orchestration graph fragment** (conceptual routing example):
 
 ```toml
 # Canonical semantic names: see config/capability_registry.toml
@@ -466,11 +429,7 @@ optional = ["crypto", "compute"]
 ### **Example 1: Another Primal Uses NestGate Storage**
 
 ```rust
-// In BearDog (or any primal):
-use nestgate_core::capability_discovery::CapabilityDiscovery;
-
-// Discover storage capability
-let discovery = CapabilityDiscovery::discover_songbird_ipc().await?;
+// In any primal — discover storage by capability, not by name:
 let storage = discovery.find("storage").await?;
 
 // Use semantic method name
@@ -481,11 +440,10 @@ let response = storage.call_rpc("storage.put", json!({
 })).await?;
 ```
 
-### **Example 2: NestGate Uses BearDog Crypto**
+### **Example 2: NestGate Uses Security Crypto**
 
 ```rust
-// In NestGate:
-let discovery = CapabilityDiscovery::discover_songbird_ipc().await?;
+// In NestGate — discover crypto provider at runtime:
 let crypto = discovery.find("crypto").await?;
 
 // Encrypt data before storing
@@ -508,7 +466,7 @@ self.call_method("storage.put", json!({
 - wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0
 - wateringHole/PRIMAL_IPC_PROTOCOL.md v1.0
 - UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md
-- biomeOS/NEURAL_API_ROUTING_SPECIFICATION.md (when available)
+- Orchestration Neural API routing specification (when available)
 
 ---
 
@@ -521,4 +479,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: Jul 21, 2026 (Wave 150t)
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)

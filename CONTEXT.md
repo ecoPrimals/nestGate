@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Jul 21, 2026 (Wave 150t)
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
 
 ## What This Is
 
@@ -64,8 +64,8 @@ networking, and service lifecycle across the adapter stack.
 - Expose storage and workspace lifecycle operations over JSON-RPC (and optionally tarpc).
 - Discover and advertise capabilities at runtime without hard-wiring peer primals.
 - Integrate observability, caching, ZFS-specific paths, and NAS/middleware surfaces
-  as named workspace crates (see crate list above). MCP is delegated to biomeOS via
-  `capability.call`.
+  as named workspace crates (see crate list above). MCP is delegated to the
+  orchestration layer via `capability.call`.
 
 ## What This Does Not Do
 

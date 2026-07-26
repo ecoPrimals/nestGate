@@ -12,7 +12,7 @@ mod router;
 mod serde_helpers;
 mod types;
 
-#[cfg(any(test, feature = "dev-stubs"))]
+#[cfg(test)]
 pub use migration::ApiHandlerBenchmark;
 
 #[cfg(test)]

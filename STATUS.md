@@ -15,7 +15,7 @@ Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --
 Tests:              1,630 passed, 80 ignored — cargo test --workspace (1,710 total)
 Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
 Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
-Unwrap/Expect:      0 .unwrap(), 10 .expect() in production — AUDITED across all 14 crates (OnceLock init ×5, pool invariant ×4, const timestamp ×1; all #[expect(clippy::expect_used)] annotated)
+Unwrap/Expect:      0 .unwrap(), 10 .expect() in production — AUDITED across all 20 crates (OnceLock init ×5, pool invariant ×4, const timestamp ×1; all #[expect(clippy::expect_used)] annotated)
 Inline markers:     none in committed production `.rs` (wateringHole policy)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 20 crate roots (zero exceptions)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)

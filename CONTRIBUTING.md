@@ -158,8 +158,8 @@ cargo llvm-cov --workspace --summary-only
 ### High Priority
 
 1. **Coverage**: Push toward 90% — see STATUS.md for gap analysis
-2. **IMPLEMENTATION STUBs**: Evolve boilerplate DefaultService patterns to real logic
-3. **Semantic method naming**: Align internal methods with `{domain}.{operation}` format
+2. **BTSP integration**: Wire `connect_with_btsp` into outbound IPC call sites (Session 126 follow-up)
+3. **`primal-transport` crate extraction**: Ecosystem P2 — extract shared transport types
 
 ### Other Areas
 
@@ -179,4 +179,4 @@ cargo llvm-cov --workspace --summary-only
 
 ---
 
-**Last Updated**: Jul 21, 2026 (Wave 150t)
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)

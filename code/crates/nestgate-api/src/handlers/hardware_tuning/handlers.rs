@@ -96,7 +96,7 @@ impl RealHardwareTuningHandler {
     /// Analyze system profile from detected CPU and memory characteristics.
     fn analyze_system_profile(&self, _metrics: &LiveHardwareMetrics) -> Result<SystemProfile> {
         let cpu = self.detect_cpu_info()?;
-        let mem = self.detect_memory_info()?;
+        let mem = self.detect_memory_info();
         Ok(SystemProfile {
             cpu_profile: format!("{} cores: {}", cpu.cores, cpu.model),
             memory_profile: format!("{} GiB total", mem.total_gb),
@@ -329,7 +329,7 @@ impl RealHardwareTuningHandler {
     pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
         // Detect real system capabilities
         let cpu_info = self.detect_cpu_info()?;
-        let memory_info = self.detect_memory_info()?;
+        let memory_info = self.detect_memory_info();
         let gpu_info = self.detect_gpu_info().await;
 
         Ok(SystemCapabilities {
@@ -350,11 +350,11 @@ impl RealHardwareTuningHandler {
     }
 
     /// Detect Memory Info
-    fn detect_memory_info(&self) -> Result<MemoryInfo> {
+    fn detect_memory_info(&self) -> MemoryInfo {
         use nestgate_platform::linux_proc;
         let total_bytes = linux_proc::total_memory_bytes().unwrap_or(0);
         let total_gb = total_bytes / 1024 / 1024 / 1024;
-        Ok(MemoryInfo { total_gb })
+        MemoryInfo { total_gb }
     }
 
     /// Detect Gpu Info

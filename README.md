@@ -56,7 +56,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jul 21, 2026
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
 
 ---
 
@@ -159,7 +159,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-21 (Wave 150t).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-26 (Wave 151c).
 
 | Area | Status |
 |------|--------|
@@ -189,7 +189,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-21 (Wa
 | Coverage (80%+) | Pass — 84%+ line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
-| BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to security capability provider via IPC |
+| BTSP Phase 2 | Pass — server-side + client-side handshake (`btsp_server_handshake`, `btsp_client_handshake` / `ClientHello` shipped Session 126); crypto delegated to security capability provider via IPC |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
 | Discovery | Env vars + capability IPC (runtime socket resolution — mDNS removed) |
 | Crypto delegation | Pass — capability-based `SecurityProviderClient` |
@@ -314,4 +314,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: July 2026 (Wave 150t)
+**Latest**: Jul 26, 2026 (Wave 151c — Session 126)

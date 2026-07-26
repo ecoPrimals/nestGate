@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 150t)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 151c)
 Tests:       PASS — 1,630 passed, 80 ignored (1,710 total) (1 pre-existing env-specific) (STATUS.md)
 Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 150t)
+Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 151c)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -85,8 +85,7 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem. It p
 ### NEST Atomic Composition
 
 ```
-NEST Atomic = TOWER + nestgate + squirrel
-            = (security provider + network provider) + nestgate + squirrel
+NEST Atomic = (security capability provider + network capability provider) + nestgate + compute capability provider
             = Security + Network + Storage + AI
 ```
 
@@ -182,4 +181,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jul 21, 2026 (Wave 150t)
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
