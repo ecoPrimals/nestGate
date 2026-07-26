@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 21, 2026 (Wave 150t — Session 125: procfs consolidation phase 3 + dep bumps — 17 /proc callsites consolidated to linux_proc, 6 patch-level dep bumps, unfulfilled lint expects cleaned)
+**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126: BTSP ClientHello shipped + deep debt + 8 dep bumps)
 **Version**: 0.5.0
 
 ---
@@ -34,7 +34,7 @@ IPC routes (HTTP):  Aligned with UDS namespace (storage.store not storage.object
 IPC routes (tarpc): storage.*, content.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.*, lifecycle.* — 52 semantic-routed methods
 content.* parity:   ALL transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API
 Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope, protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"]
-BTSP:               Phase 1-3 PASS — family-scoped sockets, server-side handshake, ChaCha20-Poly1305 encrypted channel
+BTSP:               Phase 1-3 PASS — family-scoped sockets, server+client handshake (ClientHello shipped S126), ChaCha20-Poly1305 encrypted channel
 MethodGate:         Public/Protected method classification; NESTGATE_AUTH_MODE=enforced rejects unauthed protected calls
 TCP JSON-RPC:       Functional — --port, --listen, NESTGATE_API_PORT activates alongside UDS
 Constants:          Runtime-configurable via LazyLock + env vars (NESTGATE_ZFS_*, NESTGATE_FALLBACK_PORT_*)
@@ -50,9 +50,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–125) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–126) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 126** (Wave 151c): BTSP ClientHello shipped — `btsp_client_handshake.rs` implements full outbound wire handshake (P1 Nest Atomic blocker resolved); dead `BtspClient` stub removed from `btsp_client.rs`; `JsonRpcClient::from_btsp_stream` + `connect_with_btsp` integration hook; 8 dep bumps (cc, clap, either, libc, rustls-pki-types, syn, tokio-stream)
 - **Session 125** (Wave 150t): Procfs consolidation phase 3 — 17 `/proc` callsites in nestgate-api consolidated to `linux_proc` delegates (hardware_tuning, metrics_collector, performance_dashboard); 6 dep bumps (tokio, libc, tokio-util, zerocopy); clippy cleanup; wave stamps → 150t
 - **Session 124** (Wave 150q): Vendor elimination + BLAKE3 crypto consolidation — replaced vendored TLS crates with `oxitls-rustcrypto-provider 0.2.1`; all internal crypto (auth tokens, BTSP KDF, checksums, cert fingerprints) consolidated to BLAKE3; `sha2`/`hmac`/`hkdf` removed as direct deps (sha2/hmac optional behind `s3-backend` in nestgate-zfs); `vendor/` + `[patch.crates-io]` removed; 27 TODOs + 4 >800L gone; wave stamps → 150q
 - **Session 123** (Wave 150o): 150o dimensional audit triage — 27 TODOs, 5 >800L, 52 unsafe all confirmed in vendor/ (zero in nestGate code); procfs consolidation phase 2 — 3 more callsites (ZFS readiness, performance analyzer) → `linux_proc`; 18 dep bumps; wave stamps → 150o

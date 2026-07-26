@@ -64,6 +64,7 @@
 
 pub mod audit_storage;
 pub(crate) mod btsp_client;
+pub mod btsp_client_handshake;
 pub(crate) mod btsp_phase3;
 pub mod btsp_server_handshake;
 pub mod content_ops;

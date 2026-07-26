@@ -327,6 +327,20 @@ impl JsonRpcClient {
         })
     }
 
+    /// Construct a client from a BTSP-authenticated stream.
+    ///
+    /// After a successful client-side BTSP handshake, the caller passes the
+    /// already-buffered stream here. The client reuses the open connection for
+    /// subsequent JSON-RPC calls.
+    #[must_use]
+    pub const fn from_btsp_stream(stream: BufReader<IpcStream>) -> Self {
+        Self {
+            stream: Some(stream),
+            next_id: 1,
+            timeout: Duration::from_secs(5),
+        }
+    }
+
     /// Close the connection
     ///
     /// # Errors
