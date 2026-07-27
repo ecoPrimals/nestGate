@@ -309,6 +309,9 @@ impl IsomorphicIpcServer {
         #[cfg(unix)]
         let _storage_capability_symlink_guard =
             crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path, &family_id);
+        #[cfg(not(unix))]
+        let _storage_capability_marker_guard =
+            crate::rpc::socket_config::StorageCapabilityMarkerGuard::new(&socket_path, &family_id);
 
         Self::serve_listener(listener, self.handler.clone()).await
     }

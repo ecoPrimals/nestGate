@@ -275,6 +275,10 @@ impl CapabilityDiscovery {
     }
 
     /// Like [`Self::discover_orchestration_ipc`], but reads from an injectable [`EnvSource`].
+    ///
+    /// Uses plain `connect_transport` (not BTSP-aware) because this is a **bootstrap**
+    /// connection: the orchestration IPC gateway is how the security provider is
+    /// discovered, so requiring BTSP here would create a circular dependency.
     pub async fn discover_orchestration_ipc_from_env(
         env: &(impl EnvSource + ?Sized),
     ) -> Result<JsonRpcClient> {

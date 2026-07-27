@@ -119,7 +119,7 @@ pub fn storage_capability_sock_name(family_id: &str) -> String {
 /// `true` when `socket_path` is `.../<ecosystem>/<file>` (`CAPABILITY_BASED_DISCOVERY` domain layout).
 #[cfg(unix)]
 #[must_use]
-pub fn socket_parent_is_biomeos_standard_dir(socket_path: &Path) -> bool {
+pub fn socket_parent_is_ecosystem_standard_dir(socket_path: &Path) -> bool {
     let segment = nestgate_config::constants::system::ecosystem_path_segment();
     socket_path
         .parent()
@@ -137,7 +137,7 @@ pub fn socket_parent_is_biomeos_standard_dir(socket_path: &Path) -> bool {
 pub fn install_storage_capability_symlink(socket_path: &Path, family_id: &str) -> bool {
     use std::os::unix::fs::symlink;
 
-    if !socket_parent_is_biomeos_standard_dir(socket_path) {
+    if !socket_parent_is_ecosystem_standard_dir(socket_path) {
         debug!(
             "storage capability symlink: skipped (socket not under ecosystem standard {}/ parent): {}",
             nestgate_config::constants::system::ecosystem_path_segment(),
@@ -250,6 +250,67 @@ impl Drop for StorageCapabilitySymlinkGuard {
     }
 }
 
+/// Cross-platform storage capability discovery marker.
+///
+/// On Windows, symlinks require elevated privileges, so we write a small JSON
+/// marker file (`storage.marker`) containing the primary socket/pipe path.
+/// Peers read this file to discover NestGate's storage endpoint.
+///
+/// On Unix, this is a no-op — use [`StorageCapabilitySymlinkGuard`] instead.
+#[cfg(not(unix))]
+pub struct StorageCapabilityMarkerGuard {
+    marker_path: Option<PathBuf>,
+}
+
+#[cfg(not(unix))]
+impl StorageCapabilityMarkerGuard {
+    /// Write a discovery marker file beside the socket/pipe path.
+    #[must_use]
+    pub fn new(socket_path: &Path, family_id: &str) -> Self {
+        let Some(parent) = socket_path.parent() else {
+            return Self { marker_path: None };
+        };
+        let marker_name = if is_family_scoped(family_id) {
+            format!("storage-{family_id}.marker")
+        } else {
+            "storage.marker".into()
+        };
+        let marker_path = parent.join(&marker_name);
+        let content = serde_json::json!({
+            "socket": socket_path.to_string_lossy(),
+            "family_id": family_id,
+            "pid": std::process::id(),
+        });
+        match std::fs::write(&marker_path, serde_json::to_string_pretty(&content).unwrap_or_default()) {
+            Ok(()) => {
+                info!(
+                    "storage capability marker: {}",
+                    marker_path.display()
+                );
+                Self {
+                    marker_path: Some(marker_path),
+                }
+            }
+            Err(e) => {
+                warn!(
+                    "storage capability marker: failed to write {}: {e}",
+                    marker_path.display()
+                );
+                Self { marker_path: None }
+            }
+        }
+    }
+}
+
+#[cfg(not(unix))]
+impl Drop for StorageCapabilityMarkerGuard {
+    fn drop(&mut self) {
+        if let Some(ref path) = self.marker_path {
+            let _ = std::fs::remove_file(path);
+        }
+    }
+}
+
 /// Returns `true` when `family_id` represents a real deployed family (not a dev default).
 ///
 /// BTSP Phase 1: family-scoped socket naming (`nestgate-{fid}.sock`) is only
@@ -285,8 +346,8 @@ pub struct SocketConfig {
 pub enum SocketConfigSource {
     /// Explicit environment variable (`NESTGATE_SOCKET`)
     Environment,
-    /// Ecosystem shared socket directory via `BIOMEOS_SOCKET_DIR` (standard wateringHole path)
-    BiomeOSDirectory,
+    /// Ecosystem shared socket directory via env (e.g. `BIOMEOS_SOCKET_DIR`)
+    EcosystemDirectory,
     /// `$XDG_RUNTIME_DIR/<ecosystem>/nestgate[-{fid}].sock` (see [`nestgate_config::constants::system::ecosystem_path_segment`])
     XdgRuntime,
     /// System temporary directory fallback (`std::env::temp_dir()`)
@@ -347,7 +408,7 @@ impl SocketConfig {
                 socket_path,
                 family_id,
                 node_id,
-                source: SocketConfigSource::BiomeOSDirectory,
+                source: SocketConfigSource::EcosystemDirectory,
             });
         }
 
@@ -571,7 +632,7 @@ impl SocketConfig {
             "  Source:    {}",
             match self.source {
                 SocketConfigSource::Environment => "NESTGATE_SOCKET env var (explicit)",
-                SocketConfigSource::BiomeOSDirectory =>
+                SocketConfigSource::EcosystemDirectory =>
                     "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
                 SocketConfigSource::XdgRuntime => xdg_layout.as_str(),
                 SocketConfigSource::TempDirectory => "temp dir fallback (insecure)",

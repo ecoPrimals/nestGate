@@ -56,7 +56,6 @@ mod tests;
 
 use anyhow::{Context, Result};
 use std::time::Duration;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, info, warn};
 
 use super::health::{HealthStatus, check_nestgate_health, wait_for_healthy};
@@ -192,63 +191,35 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
     debug!("Connecting to {} at {}", primal_name, socket.display());
 
     let endpoint = nestgate_types::TransportEndpoint::uds(&socket);
-    let stream = crate::rpc::connect_transport(&endpoint)
-        .await
-        .map_err(|e| {
-            anyhow::anyhow!(
-                "{} not reachable at {}: {}",
-                primal_name,
-                socket.display(),
-                e
-            )
-        })?;
+    let mut client =
+        crate::rpc::JsonRpcClient::connect_btsp_aware(&endpoint)
+            .await
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "{} not reachable at {}: {}",
+                    primal_name,
+                    socket.display(),
+                    e
+                )
+            })?;
 
-    let (reader, mut writer) = tokio::io::split(stream);
-
-    let health_request = serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": "health",
-        "id": 1
-    });
-
-    let mut request_bytes = serde_json::to_vec(&health_request)?;
-    request_bytes.push(b'\n');
-    writer.write_all(&request_bytes).await?;
-
-    let mut buf_reader = BufReader::new(reader);
-    let mut response_line = String::new();
-
-    let read_result = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        buf_reader.read_line(&mut response_line),
-    )
-    .await;
-
-    match read_result {
-        Ok(Ok(_)) if !response_line.is_empty() => {
-            if let Ok(resp) = serde_json::from_str::<serde_json::Value>(&response_line) {
-                if resp.get("result").is_some() {
-                    debug!("{} is healthy (responded to health check)", primal_name);
-                    return Ok(HealthStatus::Healthy);
-                } else if resp.get("error").is_some() {
-                    debug!("{} responded with error", primal_name);
-                    return Ok(HealthStatus::Degraded);
-                }
+    match client.call("health", serde_json::json!({})).await {
+        Ok(_) => {
+            debug!("{} is healthy (responded to health check)", primal_name);
+            Ok(HealthStatus::Healthy)
+        }
+        Err(e) => {
+            let msg = e.to_string();
+            if msg.contains("timeout") || msg.contains("Timeout") {
+                debug!("{} health check timed out", primal_name);
+                Ok(HealthStatus::Degraded)
+            } else if msg.contains("not connected") || msg.contains("Connection refused") {
+                debug!("{} unreachable: {}", primal_name, e);
+                Ok(HealthStatus::Unreachable)
+            } else {
+                debug!("{} responded with error: {}", primal_name, e);
+                Ok(HealthStatus::Degraded)
             }
-            debug!("{} responded but health format unknown", primal_name);
-            Ok(HealthStatus::Degraded)
-        }
-        Ok(Ok(_)) => {
-            debug!("{} connected but no response", primal_name);
-            Ok(HealthStatus::Degraded)
-        }
-        Ok(Err(e)) => {
-            debug!("{} read error: {}", primal_name, e);
-            Ok(HealthStatus::Unreachable)
-        }
-        Err(_) => {
-            debug!("{} health check timed out (5s)", primal_name);
-            Ok(HealthStatus::Degraded)
         }
     }
 }

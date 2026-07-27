@@ -163,7 +163,7 @@ pub async fn announce_to_coordinator(own_socket: &Path) -> Result<()> {
     );
 
     let endpoint = nestgate_types::TransportEndpoint::uds(&coordinator_path);
-    let Ok(mut client) = super::JsonRpcClient::connect_transport(&endpoint).await else {
+    let Ok(mut client) = super::JsonRpcClient::connect_btsp_aware(&endpoint).await else {
         warn!(
             "Could not connect to ecosystem coordinator at {} — skipping announce",
             coordinator_path.display()

@@ -45,7 +45,7 @@ fn test_biomeos_dir_second_priority() {
         config.socket_path,
         PathBuf::from("/tmp/biomeos-test-dir/nestgate-biotest.sock")
     );
-    assert_eq!(config.source, SocketConfigSource::BiomeOSDirectory);
+    assert_eq!(config.source, SocketConfigSource::EcosystemDirectory);
 }
 
 #[test]
@@ -431,7 +431,7 @@ fn log_summary_covers_all_sources() {
             PathBuf::from("/tmp/a.sock"),
         ),
         (
-            SocketConfigSource::BiomeOSDirectory,
+            SocketConfigSource::EcosystemDirectory,
             PathBuf::from("/tmp/biomeos/nestgate.sock"),
         ),
         (

@@ -11,13 +11,13 @@ use tempfile::tempdir;
 #[test]
 fn biomeos_parent_detected() {
     let p = PathBuf::from("/run/user/1000/biomeos/nestgate.sock");
-    assert!(socket_parent_is_biomeos_standard_dir(&p));
+    assert!(socket_parent_is_ecosystem_standard_dir(&p));
 }
 
 #[test]
 fn custom_socket_dir_name_is_not_biomeos_standard() {
     let p = PathBuf::from("/tmp/biomeos-test-dir/nestgate.sock");
-    assert!(!socket_parent_is_biomeos_standard_dir(&p));
+    assert!(!socket_parent_is_ecosystem_standard_dir(&p));
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn symlink_skipped_when_socket_not_under_biomeos_directory() {
     let sock = not_biomeos.join("nestgate.sock");
     fs::write(&sock, b"").expect("touch");
 
-    assert!(!socket_parent_is_biomeos_standard_dir(&sock));
+    assert!(!socket_parent_is_ecosystem_standard_dir(&sock));
     assert!(!install_storage_capability_symlink(&sock, "standalone"));
     assert!(!not_biomeos.join(STORAGE_CAPABILITY_SOCK_NAME).exists());
 }

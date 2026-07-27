@@ -48,7 +48,7 @@ fn from_env_source_biomeos_dir_when_no_socket_override() {
     ]);
     let cfg = SocketConfig::from_env_source(&env).expect("from_env_source");
     assert_eq!(cfg.socket_path, expected_sock);
-    assert_eq!(cfg.source, SocketConfigSource::BiomeOSDirectory);
+    assert_eq!(cfg.source, SocketConfigSource::EcosystemDirectory);
 }
 
 #[test]

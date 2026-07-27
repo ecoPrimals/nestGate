@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 128: G3 BTSP Peer Wiring + G4 NTFS CAS Safety + Deep Debt (Jul 27, 2026)
+
+- **G3: BTSP wired into peer connections**: Upgraded 3 production call sites from `connect_transport` to `connect_btsp_aware` — crypto delegate, coordinator announce, atomic health check. Added `OutboundEndpoint::connect_jsonrpc()` for BTSP-aware outbound RPC.
+- **G3: atomic/mod.rs refactored**: Replaced raw stream I/O with `JsonRpcClient::connect_btsp_aware` + `client.call` for peer primal health checks — cleaner, reusable, BTSP-secure.
+- **G4: NTFS-safe CAS validation**: New `validate_path_segment()` enforces NTFS reserved chars (`: < > " | ? *`), trailing dot/space, 200-byte max. Wired into `resolve_family_id`, `extract_namespace`, `validate_collection_name`, and `validate_segment`.
+- **G4: Strict lowercase BLAKE3 validation**: `validate_blake3_hex` now rejects uppercase hex (`A-F`) to prevent case-sensitivity mismatches on NTFS/APFS.
+- **G4: Atomic `content.put`**: CAS writes now use temp file + rename pattern (`.part` → final), eliminating partial-write visibility to concurrent readers.
+- **G4: Windows storage discovery**: Added `StorageCapabilityMarkerGuard` (`#[cfg(not(unix))]`) — writes a JSON marker file on Windows instead of symlink (which requires elevation). Server wired for cross-platform guard.
+- **Deep debt: biomeOS identifier rename**: `BiomeOSDirectory` → `EcosystemDirectory`, `socket_parent_is_biomeos_standard_dir` → `socket_parent_is_ecosystem_standard_dir`, local `biomeos_dir` → `eco_dir`. Env var names (`BIOMEOS_*`) retained as protocol-level compat.
+- **Deep debt: bootstrap doc**: Added doc comment to `discover_orchestration_ipc_from_env` explaining why it stays plain (circular dependency with security provider during BTSP handshake).
+
 ### Session 127: G3 BTSP→CAS Wiring + G4 Cross-Platform Paths (Jul 27, 2026)
 
 - **G3: BTSP wired into CAS federation**: Replaced `socat`/raw-TCP in `federation_ops.rs` with `connect_with_btsp` + `JsonRpcClient::call`. Cross-gate CAS replication (`content.replicate`, `content.replicate.pull`) now uses BTSP when `is_btsp_required()`. Eliminates the external `socat` dependency entirely.

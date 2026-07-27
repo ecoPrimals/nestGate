@@ -157,7 +157,7 @@ impl ServiceManager {
             "Source: {}",
             match socket_config.source {
                 nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
-                nestgate_core::rpc::SocketConfigSource::BiomeOSDirectory =>
+                nestgate_core::rpc::SocketConfigSource::EcosystemDirectory =>
                     "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
                 nestgate_core::rpc::SocketConfigSource::XdgRuntime => "XDG runtime directory",
                 nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",

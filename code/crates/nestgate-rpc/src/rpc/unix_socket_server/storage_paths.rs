@@ -71,31 +71,79 @@ pub(in crate::rpc::unix_socket_server) fn blob_key_path(
     )
 }
 
+/// Characters reserved on NTFS that are invalid in path components.
+///
+/// Includes `:` (ADS separator), `<`, `>`, `"`, `|`, `?`, `*`.
+/// Forward- and back-slash are checked separately as path separators.
+const NTFS_RESERVED_CHARS: &[char] = &[':', '<', '>', '"', '|', '?', '*'];
+
+/// Maximum byte length for a single path component.
+///
+/// NTFS and most Unix filesystems cap individual directory/file names at 255
+/// bytes. We enforce 200 to leave margin for suffixes (`.meta.json`, `.part`).
+const MAX_SEGMENT_BYTES: usize = 200;
+
+/// Validate a path segment for cross-platform safety.
+///
+/// Rejects:
+/// - empty names
+/// - path separators (`/`, `\`) and traversal (`..`)
+/// - leading `.` or `_` (reserved for internal dirs like `_content`, `_blobs`)
+/// - NTFS-reserved characters (`:`, `<`, `>`, `"`, `|`, `?`, `*`)
+/// - trailing `.` or space (silently stripped by NTFS, causing misrouting)
+/// - segments exceeding [`MAX_SEGMENT_BYTES`] (200)
+pub fn validate_path_segment(name: &str, field: &'static str) -> Result<()> {
+    if name.is_empty() {
+        return Err(NestGateError::invalid_input_with_field(
+            field,
+            "must not be empty",
+        ));
+    }
+    if name.len() > MAX_SEGMENT_BYTES {
+        return Err(NestGateError::invalid_input_with_field(
+            field,
+            "exceeds maximum length (200 bytes)",
+        ));
+    }
+    if name.contains('/')
+        || name.contains('\\')
+        || name.contains("..")
+        || name.starts_with('.')
+        || name.starts_with('_')
+    {
+        return Err(NestGateError::invalid_input_with_field(
+            field,
+            "must be a non-empty simple name without path separators; \
+             cannot start with '.' or '_'",
+        ));
+    }
+    if name.ends_with('.') || name.ends_with(' ') {
+        return Err(NestGateError::invalid_input_with_field(
+            field,
+            "must not end with '.' or space (invalid on NTFS)",
+        ));
+    }
+    if name.contains(NTFS_RESERVED_CHARS) {
+        return Err(NestGateError::invalid_input_with_field(
+            field,
+            "contains characters reserved on Windows (: < > \" | ? *)",
+        ));
+    }
+    Ok(())
+}
+
 /// Extract and validate the optional `namespace` parameter.
 ///
 /// Returns `Ok(None)` when omitted (backward-compatible flat layout).
 /// Returns `Ok(Some(ns))` when present and valid (namespaced layout).
-/// Returns `Err` when present but contains path separators, `..`, or
-/// starts with `.` or `_` (reserved for internal directories like `_blobs`).
+/// Returns `Err` when present but fails [`validate_path_segment`].
 pub(in crate::rpc::unix_socket_server) fn extract_namespace(
     params: &Value,
 ) -> Result<Option<&str>> {
     let Some(ns) = params.get("namespace").and_then(Value::as_str) else {
         return Ok(None);
     };
-    if ns.is_empty()
-        || ns.contains('/')
-        || ns.contains('\\')
-        || ns.contains("..")
-        || ns.starts_with('.')
-        || ns.starts_with('_')
-    {
-        return Err(NestGateError::invalid_input_with_field(
-            "namespace",
-            "must be a non-empty simple name without path separators; \
-             cannot start with '.' or '_'",
-        ));
-    }
+    validate_path_segment(ns, "namespace")?;
     Ok(Some(ns))
 }
 
@@ -149,6 +197,7 @@ pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
     state: &'a StorageState,
 ) -> Result<&'a str> {
     if let Some(fid) = params["family_id"].as_str() {
+        validate_path_segment(fid, "family_id")?;
         return Ok(fid);
     }
     if let Some(ref fid) = state.family_id {
@@ -253,5 +302,55 @@ mod tests {
         let path = manifest_path("fam", "staging");
         let s = path.to_string_lossy();
         assert!(s.contains("datasets/fam/_manifests/staging.json"));
+    }
+
+    #[test]
+    fn validate_path_segment_accepts_normal() {
+        assert!(validate_path_segment("my-family", "test").is_ok());
+        assert!(validate_path_segment("v1", "test").is_ok());
+        assert!(validate_path_segment("data-2026", "test").is_ok());
+    }
+
+    #[test]
+    fn validate_path_segment_rejects_ntfs_reserved() {
+        assert!(validate_path_segment("a:b", "test").is_err());
+        assert!(validate_path_segment("a<b", "test").is_err());
+        assert!(validate_path_segment("a>b", "test").is_err());
+        assert!(validate_path_segment("a\"b", "test").is_err());
+        assert!(validate_path_segment("a|b", "test").is_err());
+        assert!(validate_path_segment("a?b", "test").is_err());
+        assert!(validate_path_segment("a*b", "test").is_err());
+    }
+
+    #[test]
+    fn validate_path_segment_rejects_trailing_dot_or_space() {
+        assert!(validate_path_segment("name.", "test").is_err());
+        assert!(validate_path_segment("name ", "test").is_err());
+    }
+
+    #[test]
+    fn validate_path_segment_rejects_too_long() {
+        let long = "a".repeat(201);
+        assert!(validate_path_segment(&long, "test").is_err());
+        let ok = "a".repeat(200);
+        assert!(validate_path_segment(&ok, "test").is_ok());
+    }
+
+    #[test]
+    fn validate_path_segment_rejects_traversal() {
+        assert!(validate_path_segment("../etc", "test").is_err());
+        assert!(validate_path_segment("a/b", "test").is_err());
+        assert!(validate_path_segment("a\\b", "test").is_err());
+    }
+
+    #[test]
+    fn validate_path_segment_rejects_reserved_prefixes() {
+        assert!(validate_path_segment(".hidden", "test").is_err());
+        assert!(validate_path_segment("_internal", "test").is_err());
+    }
+
+    #[test]
+    fn validate_path_segment_rejects_empty() {
+        assert!(validate_path_segment("", "test").is_err());
     }
 }

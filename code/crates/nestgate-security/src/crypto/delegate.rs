@@ -123,7 +123,7 @@ impl CryptoDelegate {
         );
 
         let ep = nestgate_types::TransportEndpoint::uds(&endpoint.endpoint);
-        let client = JsonRpcClient::connect_transport(&ep).await?;
+        let client = JsonRpcClient::connect_btsp_aware(&ep).await?;
 
         Ok(Self {
             client: Mutex::new(client),

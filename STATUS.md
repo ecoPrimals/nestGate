@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 27, 2026 (Wave 155b — Session 127: G3 BTSP→CAS wiring + G4 cross-platform paths)
+**Last Updated**: Jul 27, 2026 (Wave 155b — Session 128: G3 BTSP peer wiring + G4 NTFS CAS safety + deep debt)
 **Version**: 0.5.0
 
 ---

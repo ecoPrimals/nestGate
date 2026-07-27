@@ -54,8 +54,14 @@ pub fn merge_sidecar_fields(resp: &mut Value, sidecar: &Value) {
     }
 }
 
+/// Validate that `hash` is a 64-character **lowercase** hex BLAKE3 digest.
+///
+/// Rejects uppercase hex (`A–F`) to avoid case-sensitivity mismatches on
+/// case-insensitive filesystems (NTFS, APFS-default). All CAS writes produce
+/// lowercase via [`blake3::Hash::to_hex`]; reads must match.
 pub fn validate_blake3_hex(hash: &str) -> Result<()> {
-    if hash.len() != 64 || !hash.chars().all(|c| c.is_ascii_hexdigit()) {
+    if hash.len() != 64 || !hash.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    {
         return Err(NestGateError::invalid_input_with_field(
             "hash",
             "must be a 64-character lowercase hex BLAKE3 digest",
@@ -64,19 +70,12 @@ pub fn validate_blake3_hex(hash: &str) -> Result<()> {
     Ok(())
 }
 
+/// Validate a collection name for cross-platform safety.
+///
+/// Delegates to [`super::storage_paths::validate_path_segment`] so that NTFS
+/// reserved characters, trailing dots/spaces, and length limits are checked.
 pub fn validate_collection_name(name: &str) -> Result<()> {
-    if name.is_empty()
-        || name.contains('/')
-        || name.contains('\\')
-        || name.contains("..")
-        || name.starts_with('.')
-    {
-        return Err(NestGateError::invalid_input_with_field(
-            "collection",
-            "must be a non-empty simple name without path separators",
-        ));
-    }
-    Ok(())
+    super::storage_paths::validate_path_segment(name, "collection")
 }
 
 /// Decrypt content bytes if an encrypted envelope is detected.
@@ -112,6 +111,14 @@ mod tests {
     }
 
     #[test]
+    fn validate_blake3_hex_rejects_uppercase() {
+        let upper = "A".repeat(64);
+        assert!(validate_blake3_hex(&upper).is_err());
+        let mixed = format!("{}Ab", "a".repeat(62));
+        assert!(validate_blake3_hex(&mixed).is_err());
+    }
+
+    #[test]
     fn validate_blake3_hex_rejects_empty() {
         assert!(validate_blake3_hex("").is_err());
     }
@@ -142,6 +149,12 @@ mod tests {
     #[test]
     fn validate_collection_name_rejects_leading_dot() {
         assert!(validate_collection_name(".hidden").is_err());
+    }
+
+    #[test]
+    fn validate_collection_name_rejects_ntfs_reserved() {
+        assert!(validate_collection_name("col:1").is_err());
+        assert!(validate_collection_name("col|x").is_err());
     }
 
     #[test]

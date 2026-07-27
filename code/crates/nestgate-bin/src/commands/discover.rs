@@ -193,10 +193,10 @@ fn discover_socket_dir_from_env_source(
 
     // Check XDG runtime directory
     if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
-        let biomeos_dir = std::path::PathBuf::from(xdg)
+        let eco_dir = std::path::PathBuf::from(xdg)
             .join(nestgate_core::constants::system::ecosystem_path_segment());
-        if biomeos_dir.exists() {
-            return Some(biomeos_dir);
+        if eco_dir.exists() {
+            return Some(eco_dir);
         }
     }
 

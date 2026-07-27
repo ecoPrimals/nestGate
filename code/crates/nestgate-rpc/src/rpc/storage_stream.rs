@@ -64,19 +64,13 @@ pub fn maps() -> &'static Arc<Mutex<StreamMaps>> {
     })
 }
 
+/// Validate a streaming-path segment for cross-platform safety.
+///
+/// Delegates to [`super::unix_socket_server::storage_paths::validate_path_segment`]
+/// so that NTFS reserved characters, trailing dots/spaces, and length limits are
+/// enforced uniformly.
 pub fn validate_segment(name: &str, field: &'static str) -> Result<()> {
-    if name.is_empty()
-        || name.contains('/')
-        || name.contains('\\')
-        || name.contains("..")
-        || name.starts_with('.')
-    {
-        return Err(NestGateError::invalid_input_with_field(
-            field,
-            "must be a non-empty simple name without path separators",
-        ));
-    }
-    Ok(())
+    super::unix_socket_server::storage_paths::validate_path_segment(name, field)
 }
 
 pub fn staging_path(family_id: &str, stream_id: &str) -> PathBuf {

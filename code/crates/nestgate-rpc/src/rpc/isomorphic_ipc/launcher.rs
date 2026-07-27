@@ -441,11 +441,15 @@ pub enum OutboundEndpoint {
 }
 
 impl OutboundEndpoint {
-    /// Connect to whichever endpoint variant was resolved.
+    /// Connect to whichever endpoint variant was resolved, using BTSP when required.
+    ///
+    /// The `Transport` variant uses [`crate::rpc::JsonRpcClient::connect_btsp_aware`]
+    /// so that outbound peer connections are secured when the ecosystem requires BTSP.
+    /// The `Legacy` variant retains plain transport (pre-transport-injection paths).
     ///
     /// # Errors
     ///
-    /// Returns an error if the connection fails.
+    /// Returns an error if the connection or BTSP handshake fails.
     pub async fn connect(&self) -> Result<IpcStream> {
         match self {
             Self::Transport(ep) => super::streams::connect_transport(ep)
@@ -454,6 +458,29 @@ impl OutboundEndpoint {
             Self::Legacy(ep) => connect_endpoint(ep)
                 .await
                 .context("connect via legacy discovery"),
+        }
+    }
+
+    /// Connect and return a [`crate::rpc::JsonRpcClient`] for JSON-RPC calls,
+    /// using BTSP when required for the `Transport` variant.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the connection or BTSP handshake fails.
+    pub async fn connect_jsonrpc(&self) -> Result<crate::rpc::JsonRpcClient> {
+        match self {
+            Self::Transport(ep) => crate::rpc::JsonRpcClient::connect_btsp_aware(ep)
+                .await
+                .map_err(|e| anyhow!(e))
+                .context("JSON-RPC connect via TRANSPORT_ENDPOINT"),
+            Self::Legacy(ep) => {
+                let stream = connect_endpoint(ep)
+                    .await
+                    .context("connect via legacy discovery")?;
+                Ok(crate::rpc::JsonRpcClient::from_btsp_stream(
+                    tokio::io::BufReader::new(stream),
+                ))
+            }
         }
     }
 }

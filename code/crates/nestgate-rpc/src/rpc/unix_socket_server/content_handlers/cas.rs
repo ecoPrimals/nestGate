@@ -82,10 +82,12 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     };
 
     ensure_parent_dirs(&object_path).await?;
-    tokio::fs::write(&object_path, write_data.as_ref())
+
+    let tmp_content = object_path.with_extension("part");
+    tokio::fs::write(&tmp_content, write_data.as_ref())
         .await
         .map_err(|e| {
-            NestGateError::io_error(format!("Failed to write content {blake3_hex}: {e}"))
+            NestGateError::io_error(format!("Failed to write content staging {blake3_hex}: {e}"))
         })?;
 
     let mut meta = json!({
@@ -109,16 +111,28 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     let depth = derivation_depth.unwrap_or_else(|| u64::from(parent_hash.is_some()));
     meta["derivation_depth"] = json!(depth);
     let meta_path = object_path.with_extension("meta.json");
+    let tmp_meta = object_path.with_extension("meta.json.part");
     tokio::fs::write(
-        &meta_path,
+        &tmp_meta,
         serde_json::to_vec_pretty(&meta).unwrap_or_default(),
     )
     .await
     .map_err(|e| {
         NestGateError::io_error(format!(
-            "Failed to write content metadata {blake3_hex}: {e}"
+            "Failed to write content metadata staging {blake3_hex}: {e}"
         ))
     })?;
+
+    tokio::fs::rename(&tmp_meta, &meta_path).await.map_err(|e| {
+        NestGateError::io_error(format!(
+            "Failed to finalize content metadata {blake3_hex}: {e}"
+        ))
+    })?;
+    tokio::fs::rename(&tmp_content, &object_path)
+        .await
+        .map_err(|e| {
+            NestGateError::io_error(format!("Failed to finalize content {blake3_hex}: {e}"))
+        })?;
 
     debug!(
         "content.put: stored family_id='{}', hash={blake3_hex}, size={}",
