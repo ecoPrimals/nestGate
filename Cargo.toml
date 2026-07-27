@@ -157,7 +157,6 @@ chacha20poly1305 = "0.10"
 base64 = "0.22"
 sha2 = "0.10"
 hmac = "0.12"
-hkdf = "0.12"
 zeroize = { version = "1", features = ["derive"] }
 hex = "0.4"
 x509-parser = "0.17"

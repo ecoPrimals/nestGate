@@ -135,16 +135,22 @@ impl RealTimeMetricsCollector {
             .map(|n| u32::try_from(n.get()).unwrap_or(u32::MAX))
             .unwrap_or(1);
 
-        let (memory_total_gb, memory_used_gb, cpu_usage) = {
+        let (memory_total_gb, memory_used_gb) = {
             let total_bytes = nestgate_platform::linux_proc::total_memory_bytes().unwrap_or(0);
             let used_bytes = nestgate_platform::linux_proc::used_memory_bytes().unwrap_or(0);
             let total_gb = u32::try_from(total_bytes / (1024 * 1024 * 1024)).unwrap_or(u32::MAX);
             let used_gb = u32::try_from(used_bytes / (1024 * 1024 * 1024)).unwrap_or(u32::MAX);
-            (total_gb, used_gb, 0.0)
+            (total_gb, used_gb)
         };
 
-        // statvfs would be ideal but we stay pure-Rust; disk metrics deferred
-        let (disk_total_gb, disk_used_gb) = (0, 0);
+        let cpu_usage =
+            nestgate_platform::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
+
+        let (disk_total_gb, disk_used_gb) = nestgate_platform::linux_proc::statvfs_space(
+            std::path::Path::new("/"),
+        )
+        .map(|(total, used)| (total / (1024 * 1024 * 1024), used / (1024 * 1024 * 1024)))
+        .unwrap_or((0, 0));
 
         let network_interfaces = match std::fs::read_to_string("/proc/net/dev") {
             Ok(content) => content

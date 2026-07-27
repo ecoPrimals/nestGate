@@ -301,13 +301,26 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
         }))
     }
 
-    /// Handle identity.capabilities request
+    /// Handle identity.capabilities request.
+    ///
+    /// Probes runtime availability instead of hardcoding — `zfs` and
+    /// `hardware_tuning` are reported as present only when their
+    /// underlying tools are reachable on this host.
     pub(crate) fn handle_capabilities(&self, _params: Value) -> Result<Value> {
+        let zfs_available = std::process::Command::new("zfs")
+            .arg("version")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .is_ok();
+        let hardware_tuning = cfg!(target_os = "linux")
+            && std::path::Path::new("/proc/meminfo").exists();
+
         Ok(serde_json::json!({
             "storage": self.storage.is_some(),
-            "zfs": true,
-            "performance_monitoring": true,
-            "hardware_tuning": true,
+            "zfs": zfs_available,
+            "performance_monitoring": hardware_tuning,
+            "hardware_tuning": hardware_tuning,
             "transport": ["unix-socket", "http"],
             "protocol": ["jsonrpc-2.0"],
             "security": ["genetic_key_validation"]

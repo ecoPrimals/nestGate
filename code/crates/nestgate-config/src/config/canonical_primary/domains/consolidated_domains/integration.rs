@@ -113,7 +113,7 @@ pub struct CustomProtocolConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EcosystemConfig {
     /// Management integration settings
-    pub management: BiomeOsIntegrationConfig,
+    pub management: EcosystemPlatformConfig,
 
     /// Primal ecosystem settings
     pub primal_ecosystem: PrimalEcosystemConfig,
@@ -127,7 +127,7 @@ pub struct EcosystemConfig {
 
 /// Ecosystem platform integration configuration (reserved for future use).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct BiomeOsIntegrationConfig {}
+pub struct EcosystemPlatformConfig {}
 
 /// Primal ecosystem configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
