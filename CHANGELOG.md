@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 129: Dep Evolution + Stub Evolution + Fabricated Fallback Cleanup (Jul 27, 2026)
+
+- **Dep trim: `serde/rc` feature removed** — no `serde(rc)` usage found; unnecessary compile cost eliminated.
+- **Dep trim: `tower-http/fs` feature removed** — only `cors` + `trace` are used; `fs` was dead weight.
+- **Dep trim: lock prune** — `cargo update` ran to prune stale lock entries (old `ring`, `mio`, `bitflags` ghosts).
+- **Stub → real: `should_transition_to_stage`** — evolved from `const fn → false` (functional bug when automation runs) to live logic: computes natural lifecycle stage from age + access patterns (same progression as `update_lifecycle_stage`) and returns `true` when the natural stage meets or exceeds the current. New `stage_ordinal()` + `compute_natural_stage()` helpers. 4 new tests including ordinal ordering and aged-dataset scenarios.
+- **Stub → real: `get_all_pool_metrics`** — evolved from `NotImplemented` to live `zpool list -H -p` collection via existing `linux_proc::collect_zfs_pool_metrics()`, returned as `HashMap<String, PoolMetrics>`.
+- **Stub → real: `get_cache_metrics`** — evolved from `NotImplemented` to live point-in-time ARC/L2ARC snapshot via existing `collect_zfs_cache_stats()` + new `arc_and_l2arc_sizes()` helper reading `size` and `l2_size` from `/proc/spl/kstat/zfs/arcstats`.
+- **Fabricated fallback cleanup**: Disk I/O fallback (`get_real_disk_io` error branch) replaced magic numbers (1 GB read, 512 MB write, 10k ops) with honest zeroes. ARC fallback percentages (90%, 70%, 85%, 65%) replaced with 0.0. Compression fallback 1.4/1.2 → 1.0 (identity).
+- **Stale `#![expect(clippy::unnecessary_wraps)]` removed** from `lifecycle.rs` — no longer needed after stub evolution; all `Result` returns are now real.
+
 ### Session 128: G3 BTSP Peer Wiring + G4 NTFS CAS Safety + Deep Debt (Jul 27, 2026)
 
 - **G3: BTSP wired into peer connections**: Upgraded 3 production call sites from `connect_transport` to `connect_btsp_aware` — crypto delegate, coordinator announce, atomic health check. Added `OutboundEndpoint::connect_jsonrpc()` for BTSP-aware outbound RPC.

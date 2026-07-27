@@ -633,22 +633,19 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_collector_with_pool_metrics() {
+    #[tokio::test]
+    async fn test_collector_with_pool_metrics() {
         let collector = RealTimeMetricsCollector::new();
-        let result = collector.get_all_pool_metrics();
+        let result = collector.get_all_pool_metrics().await;
 
-        // Result may be Ok or Err depending on ZFS availability
         match result {
             Ok(pools) => {
-                // If we have pools, verify structure
                 for (_name, pool) in pools {
                     assert!(!pool.name.is_empty(), "Pool should have a name");
                     assert!(pool.total_capacity > 0, "Pool should have capacity");
                 }
             }
             Err(_) => {
-                // Expected in environments without ZFS
                 assert!(true, "ZFS may not be available in test env");
             }
         }

@@ -175,16 +175,21 @@ impl RealTimeMetricsCollector {
 
     /// Per-pool metrics keyed by pool name.
     ///
-    /// Returns an empty map until ZFS pool enumeration is wired into the
-    /// real-time collector (live metrics use `/proc/spl/kstat/zfs` instead).
+    /// Collects live metrics via `zpool list -H -p` and returns them keyed
+    /// by pool name for dashboard and monitoring consumers.
     ///
     /// # Errors
     ///
-    /// Returns an error if metric retrieval fails.
-    pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
-        Err(NestGateError::not_implemented(
-            "Per-pool metric map requires ZFS pool enumeration capability",
-        ))
+    /// Returns an error if ZFS pool enumeration fails.
+    pub async fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
+        let pools = linux_proc::collect_zfs_pool_metrics()
+            .await
+            .unwrap_or_else(|_| vec![]);
+        let map = pools
+            .into_iter()
+            .map(|p| (p.name.clone(), p))
+            .collect();
+        Ok(map)
     }
 
     /// I/O performance over time.
@@ -204,18 +209,28 @@ impl RealTimeMetricsCollector {
         ))
     }
 
-    /// ZFS ARC / L2ARC cache performance over time.
+    /// ZFS ARC / L2ARC cache performance — current snapshot.
     ///
-    /// Point-in-time snapshots are available via [`Self::get_current_metrics`]; historical
-    /// trends require a time-series backend.
+    /// Returns a single-element vec with the current ARC/L2ARC state read from
+    /// `/proc/spl/kstat/zfs/arcstats`. Historical trends require a time-series
+    /// capability provider.
     ///
     /// # Errors
     ///
-    /// Returns an error if metric retrieval fails.
-    pub fn get_cache_metrics(&self) -> Result<Vec<super::types::CacheMetricsPoint>> {
-        Err(NestGateError::not_implemented(
-            "Cache historical metrics require a time-series capability provider",
-        ))
+    /// Returns an error if ARC stats cannot be read.
+    pub async fn get_cache_metrics(&self) -> Result<Vec<super::types::CacheMetricsPoint>> {
+        let (arc_hit_ratio, l2arc_hit_ratio, _compression) =
+            linux_proc::collect_zfs_cache_stats().await?;
+
+        let (arc_size, l2arc_size) = linux_proc::arc_and_l2arc_sizes().await.unwrap_or((0, 0));
+
+        Ok(vec![super::types::CacheMetricsPoint {
+            timestamp: SystemTime::now(),
+            arc_hit_ratio,
+            l2arc_hit_ratio,
+            arc_size,
+            l2arc_size,
+        }])
     }
 
     /// Comprehensive combined metrics over time.

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 27, 2026 (Wave 155b — Session 128: G3 BTSP peer wiring + G4 NTFS CAS safety + deep debt)
+**Last Updated**: Jul 27, 2026 (Wave 155b — Session 129: Dep evolution + stub evolution + fabricated fallback cleanup)
 **Version**: 0.5.0
 
 ---
@@ -22,7 +22,7 @@ println! in lib:    ZERO in core libs; installer retains stdout for interactive 
 Dead code:          ZERO #[allow(dead_code)]; stub modules use #[expect(dead_code, reason=...)] per ecosystem standard
 Box<dyn Error>:     ZERO in production library code
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
-Mocks in prod:      ZERO fabricated metrics — 11 ZFS handlers evolved to honest not_implemented; system memory from /proc/meminfo (was hardcoded); ARC fallback 0.0 (was 0.85); dev_environment gated behind `dev-stubs` feature
+Mocks in prod:      ZERO fabricated metrics — 11 ZFS handlers honest not_implemented; `get_all_pool_metrics` + `get_cache_metrics` evolved to live; disk I/O + ARC fallbacks zeroed (no magic numbers); dev_environment gated behind `dev-stubs` feature
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + oxitls-rustcrypto-provider (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl/native-tls ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305

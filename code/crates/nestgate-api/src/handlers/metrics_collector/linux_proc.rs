@@ -80,12 +80,12 @@ async fn get_real_disk_io() -> Result<DiskIOMetrics> {
             })
         }
         Err(e) => {
-            warn!("Could not read /proc/diskstats: {e}, using fallback");
+            warn!("Could not read /proc/diskstats: {e} — returning zeroed I/O metrics");
             Ok(DiskIOMetrics {
-                read_bytes: 1024 * 1024 * 1024,
-                write_bytes: 512 * 1024 * 1024,
-                read_operations: 10_000,
-                write_operations: 5000,
+                read_bytes: 0,
+                write_bytes: 0,
+                read_operations: 0,
+                write_operations: 0,
             })
         }
     }
@@ -140,6 +140,29 @@ pub(super) async fn collect_zfs_pool_metrics() -> Result<Vec<PoolMetrics>> {
     }
 }
 
+/// Read ARC and L2ARC sizes in bytes from `/proc/spl/kstat/zfs/arcstats`.
+pub(super) async fn arc_and_l2arc_sizes() -> Result<(u64, u64)> {
+    let content = tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats")
+        .await
+        .map_err(|e| nestgate_types::error::NestGateError::internal(format!("arcstats: {e}")))?;
+
+    let mut arc_size = 0u64;
+    let mut l2_size = 0u64;
+
+    for line in content.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 3 {
+            match parts[0] {
+                "size" => arc_size = parts[2].parse().unwrap_or(0),
+                "l2_size" => l2_size = parts[2].parse().unwrap_or(0),
+                _ => {}
+            }
+        }
+    }
+
+    Ok((arc_size, l2_size))
+}
+
 /// Collect ZFS ARC cache statistics from `/proc/spl/kstat/zfs/arcstats`.
 pub(super) async fn collect_zfs_cache_stats() -> Result<(f64, f64, f64)> {
     if let Ok(content) = tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await {
@@ -165,19 +188,19 @@ pub(super) async fn collect_zfs_cache_stats() -> Result<(f64, f64, f64)> {
         let arc_hit_ratio = if arc_total > 0 {
             (arc_hits as f64 / arc_total as f64) * 100.0
         } else {
-            90.0
+            0.0
         };
 
         let l2arc_total = l2arc_hits + l2arc_misses;
         let l2arc_hit_ratio = if l2arc_total > 0 {
             (l2arc_hits as f64 / l2arc_total as f64) * 100.0
         } else {
-            70.0
+            0.0
         };
 
-        Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4))
+        Ok((arc_hit_ratio, l2arc_hit_ratio, 1.0))
     } else {
-        debug!("ZFS ARC stats not available, using defaults");
-        Ok((85.0, 65.0, 1.2))
+        debug!("ZFS ARC stats not available — returning zeroed cache metrics");
+        Ok((0.0, 0.0, 1.0))
     }
 }

@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-//
 // This module handles the complete lifecycle of datasets including stage
 // transitions, condition evaluation, and automated lifecycle rule application.
 
@@ -136,14 +131,67 @@ fn evaluate_single_condition(
     Ok(false)
 }
 
-/// Check if dataset should transition to a new stage
+/// Numeric ordering for lifecycle stages (lower = younger).
+const fn stage_ordinal(stage: &LifecycleStage) -> u8 {
+    match stage {
+        LifecycleStage::New => 0,
+        LifecycleStage::Active => 1,
+        LifecycleStage::Aging => 2,
+        LifecycleStage::Archived => 3,
+        LifecycleStage::Obsolete => 4,
+    }
+}
+
+/// Compute the natural lifecycle stage from age and access patterns.
+///
+/// Same progression as [`update_lifecycle_stage`] but returns the stage
+/// without mutating the lifecycle.
+fn compute_natural_stage(lifecycle: &DatasetLifecycle) -> LifecycleStage {
+    let now = SystemTime::now();
+    let age_days = now
+        .duration_since(lifecycle.created)
+        .unwrap_or(Duration::ZERO)
+        .as_secs()
+        / (24 * 3600);
+
+    match age_days {
+        0..=7 => LifecycleStage::New,
+        8..=30 => LifecycleStage::Active,
+        31..=90 => LifecycleStage::Aging,
+        _ => {
+            if lifecycle.access_count < 10 {
+                LifecycleStage::Archived
+            } else {
+                LifecycleStage::Active
+            }
+        }
+    }
+}
+
+/// Check if dataset should transition to a new stage.
+///
+/// Returns `true` when the dataset's natural stage (computed from age and
+/// access patterns) is at or past the current stage — indicating that the
+/// lifecycle has progressed enough for the automation engine to apply the
+/// configured `next_stage` transition.
+///
+/// This is called by the automation engine *after* `evaluate_lifecycle_conditions`
+/// has already confirmed that all rule conditions are met. It serves as the
+/// final gate: ensuring the dataset's organic maturity matches the expected
+/// progression before triggering a transition.
 #[must_use]
-pub const fn should_transition_to_stage(
-    _dataset_name: &str,
-    _current_lifecycle: &DatasetLifecycle,
+pub fn should_transition_to_stage(
+    dataset_name: &str,
+    current_lifecycle: &DatasetLifecycle,
 ) -> bool {
-    // Default implementation - could be made more sophisticated
-    false
+    let natural = compute_natural_stage(current_lifecycle);
+    let current = &current_lifecycle.lifecycle_stage;
+    let should = stage_ordinal(&natural) >= stage_ordinal(current);
+    debug!(
+        "should_transition_to_stage: dataset={}, current={:?}, natural={:?}, transition={}",
+        dataset_name, current, natural, should
+    );
+    should
 }
 /// Transition dataset to new lifecycle stage
 pub fn transition_lifecycle_stage(
@@ -205,7 +253,7 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn test_should_transition_to_stage() {
+    fn transition_allowed_when_natural_stage_matches_current() {
         let lifecycle = DatasetLifecycle {
             dataset_name: "pool/ds".into(),
             current_tier: StorageTier::Warm,
@@ -217,7 +265,51 @@ mod tests {
             lifecycle_stage: LifecycleStage::New,
             automation_history: vec![],
         };
+        assert!(should_transition_to_stage("pool/ds", &lifecycle));
+    }
+
+    #[test]
+    fn transition_blocked_when_current_beyond_natural() {
+        let lifecycle = DatasetLifecycle {
+            dataset_name: "pool/ds".into(),
+            current_tier: StorageTier::Warm,
+            created: SystemTime::now(),
+            last_accessed: None,
+            access_count: 0,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::Archived,
+            automation_history: vec![],
+        };
         assert!(!should_transition_to_stage("pool/ds", &lifecycle));
+    }
+
+    #[test]
+    fn transition_allowed_for_aged_dataset() {
+        let lifecycle = DatasetLifecycle {
+            dataset_name: "pool/old".into(),
+            current_tier: StorageTier::Warm,
+            created: SystemTime::now() - Duration::from_secs(60 * 24 * 3600),
+            last_accessed: None,
+            access_count: 3,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::Aging,
+            automation_history: vec![],
+        };
+        assert!(should_transition_to_stage("pool/old", &lifecycle));
+    }
+
+    #[test]
+    fn stage_ordinal_ordering() {
+        assert!(stage_ordinal(&LifecycleStage::New) < stage_ordinal(&LifecycleStage::Active));
+        assert!(stage_ordinal(&LifecycleStage::Active) < stage_ordinal(&LifecycleStage::Aging));
+        assert!(
+            stage_ordinal(&LifecycleStage::Aging) < stage_ordinal(&LifecycleStage::Archived)
+        );
+        assert!(
+            stage_ordinal(&LifecycleStage::Archived) < stage_ordinal(&LifecycleStage::Obsolete)
+        );
     }
 
     #[test]
