@@ -150,13 +150,34 @@ async fn push_to_remote_without_remote_fails_gracefully() {
 
 #[tokio::test]
 async fn send_jsonrpc_uds_nonexistent_socket_errors() {
-    let result = send_jsonrpc("/tmp/nonexistent-socket-xyz.sock", &json!({"test": true})).await;
+    let result =
+        send_jsonrpc("/tmp/nonexistent-socket-xyz.sock", "test.method", json!({})).await;
     assert!(result.is_err());
 }
 
 #[tokio::test]
 async fn send_jsonrpc_tcp_nonexistent_host_errors() {
-    let result = send_jsonrpc("tcp://127.0.0.1:1", &json!({"test": true})).await;
+    let result = send_jsonrpc("tcp://127.0.0.1:1", "test.method", json!({})).await;
+    assert!(result.is_err());
+}
+
+#[test]
+fn parse_federation_target_uds() {
+    let ep = parse_federation_target("/run/user/1000/nestgate.sock").unwrap();
+    assert!(matches!(ep, nestgate_types::TransportEndpoint::Uds { .. }));
+}
+
+#[test]
+fn parse_federation_target_tcp() {
+    let ep = parse_federation_target("tcp://192.168.1.100:7700").unwrap();
+    assert!(
+        matches!(ep, nestgate_types::TransportEndpoint::Tcp { ref host, port } if host == "192.168.1.100" && port == 7700)
+    );
+}
+
+#[test]
+fn parse_federation_target_tcp_bad_port_errors() {
+    let result = parse_federation_target("tcp://host:notaport");
     assert!(result.is_err());
 }
 

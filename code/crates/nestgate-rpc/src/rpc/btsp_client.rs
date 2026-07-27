@@ -3,8 +3,10 @@
 
 //! Security capability provider socket resolution.
 //!
-//! Resolves the Unix domain socket path for the security capability provider
+//! Resolves the IPC endpoint path for the security capability provider
 //! used by both the BTSP server handshake and the BTSP client handshake.
+//! Supports Unix domain sockets (`$XDG_RUNTIME_DIR`) and falls back to
+//! platform-appropriate defaults on Windows.
 //! The actual wire-level handshake is in [`super::btsp_client_handshake`].
 
 use std::path::PathBuf;
@@ -13,8 +15,8 @@ use std::path::PathBuf;
 /// tiers (env vars and `$XDG_RUNTIME_DIR/biomeos/` discovery).
 ///
 /// Overridable via `NESTGATE_SECURITY_SOCKET` environment variable.
-/// Constructs from `$XDG_RUNTIME_DIR` or `/run/user/{uid}` — never hardcodes
-/// a fixed FHS path.
+/// Constructs from `$XDG_RUNTIME_DIR` (Unix) or `%TEMP%` (Windows) — never
+/// hardcodes a fixed FHS path.
 pub fn default_security_socket_path() -> PathBuf {
     if let Ok(p) = std::env::var("NESTGATE_SECURITY_SOCKET")
         && !p.is_empty()
@@ -23,11 +25,32 @@ pub fn default_security_socket_path() -> PathBuf {
     }
     let socket_dir = std::env::var("ECOSYSTEM_SOCKET_DIR")
         .unwrap_or_else(|_| nestgate_config::constants::system::ecosystem_path_segment());
-    let runtime_base = std::env::var("XDG_RUNTIME_DIR")
-        .unwrap_or_else(|_| format!("/run/user/{}", rustix::process::getuid().as_raw()));
+    let runtime_base = resolve_runtime_base();
     PathBuf::from(runtime_base)
         .join(socket_dir)
         .join("security.sock")
+}
+
+/// Platform-aware runtime base directory.
+///
+/// Unix: `$XDG_RUNTIME_DIR` or `/run/user/{uid}`.
+/// Windows: `$TEMP` or system temp directory.
+fn resolve_runtime_base() -> String {
+    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        return xdg;
+    }
+    #[cfg(unix)]
+    {
+        format!("/run/user/{}", rustix::process::getuid().as_raw())
+    }
+    #[cfg(not(unix))]
+    {
+        std::env::var("TEMP").unwrap_or_else(|_| {
+            std::env::temp_dir()
+                .to_string_lossy()
+                .into_owned()
+        })
+    }
 }
 
 /// Returns `true` when BTSP is mandatory.

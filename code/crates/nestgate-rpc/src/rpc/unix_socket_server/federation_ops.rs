@@ -9,8 +9,10 @@
 //! - **Git operations**: `verify_git_available`, `git_rev_parse`, `count_divergence`,
 //!   `count_commits`, `resolve_best_remote`
 //! - **Repo sync**: `fetch_head_refs`, `push_to_remote`, `sync_repo`, `clone_repo`
-//! - **JSON-RPC transport**: `send_jsonrpc` (UDS via socat, TCP direct)
+//! - **JSON-RPC transport**: `connect_federation` / `send_jsonrpc` via
+//!   `connect_with_btsp` (BTSP-aware, cross-platform, no socat dependency)
 
+use nestgate_types::TransportEndpoint;
 use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::Path;
@@ -18,6 +20,8 @@ use tokio::process::Command;
 use tracing::debug;
 
 use super::storage_paths::ensure_parent_dirs;
+use crate::rpc::btsp_client_handshake::connect_with_btsp;
+use crate::rpc::jsonrpc_client::JsonRpcClient;
 
 /// Run `git ls-remote` and compare with the local HEAD.
 pub(super) async fn fetch_head_refs(repo_path: &str, remote: &str, branch: &str) -> Result<Value> {
@@ -223,14 +227,51 @@ pub(super) async fn sync_repo(
     Ok(result)
 }
 
-/// Send a JSON-RPC request to a remote `NestGate` (UDS socket or TCP).
-pub(super) async fn send_jsonrpc(target: &str, request: &Value) -> Result<Value> {
-    let payload = serde_json::to_string(request).internal_ctx("serialize request")?;
+/// Connect to a remote `NestGate` for federation operations.
+///
+/// Returns a [`JsonRpcClient`] ready for one or more `call()` invocations on
+/// the same connection. Uses BTSP when the ecosystem requires it
+/// (`is_btsp_required()`), otherwise connects plainly.
+///
+/// Accepts socket paths (UDS) or `tcp://host:port` strings.
+pub(super) async fn connect_federation(target: &str) -> Result<JsonRpcClient> {
+    let endpoint = parse_federation_target(target)?;
+    connect_with_btsp(&endpoint).await
+}
 
-    if target.starts_with("tcp://") {
-        send_jsonrpc_tcp(target, &payload).await
+/// One-shot JSON-RPC call to a remote `NestGate`.
+///
+/// Convenience wrapper: connects (with BTSP when required), calls `method`
+/// with `params`, and returns the result.
+#[cfg(test)]
+pub(super) async fn send_jsonrpc(
+    target: &str,
+    method: &str,
+    params: Value,
+) -> Result<Value> {
+    let mut client = connect_federation(target).await?;
+    client.call(method, params).await
+}
+
+/// Parse a federation target string into a [`TransportEndpoint`].
+///
+/// - `tcp://host:port` → TCP endpoint
+/// - anything else → UDS endpoint (socket path)
+fn parse_federation_target(target: &str) -> Result<TransportEndpoint> {
+    if let Some(addr) = target.strip_prefix("tcp://") {
+        let (host, port_str) = addr.rsplit_once(':').ok_or_else(|| {
+            NestGateError::internal(format!(
+                "invalid tcp:// federation target (expected host:port): {target}"
+            ))
+        })?;
+        let port: u16 = port_str.parse().map_err(|_| {
+            NestGateError::internal(format!(
+                "invalid port in federation target: {port_str}"
+            ))
+        })?;
+        Ok(TransportEndpoint::tcp(host, port))
     } else {
-        send_jsonrpc_uds(target, &payload).await
+        Ok(TransportEndpoint::uds(target))
     }
 }
 
@@ -363,64 +404,6 @@ async fn resolve_best_remote(repo_path: &str) -> String {
     }
 }
 
-async fn send_jsonrpc_uds(socket_path: &str, payload: &str) -> Result<Value> {
-    use tokio::io::AsyncWriteExt;
-
-    let mut child = Command::new("socat")
-        .args(["-", &format!("UNIX-CONNECT:{socket_path}")])
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .map_err(|e| {
-            NestGateError::internal(format!(
-                "socat not available for UDS replication — install socat or use tcp:// target: {e}"
-            ))
-        })?;
-    if let Some(mut stdin) = child.stdin.take() {
-        stdin
-            .write_all(payload.as_bytes())
-            .await
-            .internal_ctx("write to socat")?;
-        stdin.write_all(b"\n").await.ok();
-        drop(stdin);
-    }
-
-    let out = child.wait_with_output().await.internal_ctx("socat wait")?;
-
-    let response_text = String::from_utf8_lossy(&out.stdout);
-    serde_json::from_str(response_text.trim()).internal_ctx("parse remote response")
-}
-
-async fn send_jsonrpc_tcp(target: &str, payload: &str) -> Result<Value> {
-    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-    use tokio::net::TcpStream;
-
-    let addr = target
-        .strip_prefix("tcp://")
-        .ok_or_else(|| NestGateError::internal("invalid tcp:// target"))?;
-
-    let stream = TcpStream::connect(addr)
-        .await
-        .map_err(|e| NestGateError::internal(format!("tcp connect to {addr}: {e}")))?;
-
-    let (reader, mut writer) = stream.into_split();
-    writer
-        .write_all(payload.as_bytes())
-        .await
-        .internal_ctx("tcp write")?;
-    writer.write_all(b"\n").await.ok();
-    writer.shutdown().await.ok();
-
-    let mut buf_reader = BufReader::new(reader);
-    let mut line = String::new();
-    buf_reader
-        .read_line(&mut line)
-        .await
-        .internal_ctx("tcp read response")?;
-
-    serde_json::from_str(line.trim()).internal_ctx("parse tcp response")
-}
 
 #[cfg(test)]
 #[path = "federation_ops_tests.rs"]

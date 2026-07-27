@@ -3,14 +3,14 @@
 
 //! Ecosystem-standard transport endpoint types.
 //!
-//! Wire-compatible with the sourDough `TransportEndpoint` canonical standard.
+//! Wire-compatible with the scaffolding tool's `TransportEndpoint` canonical standard.
 //! Primals accept `TRANSPORT_ENDPOINT` as a JSON-encoded env var; the launcher
 //! (Tower Atomic / membrane) decides the transport — primals never self-bind.
 //!
 //! ## Wire Format
 //!
 //! ```json
-//! { "transport": "uds", "path": "/run/user/1000/biomeos/beardog.sock" }
+//! { "transport": "uds", "path": "/run/user/1000/biomeos/security.sock" }
 //! { "transport": "tcp", "host": "127.0.0.1", "port": 9100 }
 //! { "transport": "mesh_relay", "peer_id": "strandgate", "capability": "security" }
 //! ```

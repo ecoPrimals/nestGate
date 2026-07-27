@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 1,710 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 151c (BTSP ClientHello shipped: P1 Nest Atomic unblocked; 8 dep bumps; dead BtspClient stub removed; procfs consolidated; vendor eliminated; all internal crypto → BLAKE3; prod unwrap: 0/10 expect; GAP-036/038; deep debt sweep, Phase 2 transport, typed JSON-RPC, ErrorContextExt), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
-date = 2026-07-26
+description = "Content-addressed storage primal v0.5.0 — 1,710 tests, 20 crates, 20 capability domains, 4 transport surfaces, Wave 155b (G3: BTSP wired into CAS federation — socat eliminated; G4: cross-platform path resolution — Windows paths, named pipe IPC; BTSP ClientHello shipped; procfs consolidated; vendor eliminated; all internal crypto → BLAKE3; prod unwrap: 0/10 expect; deep debt sweep), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+date = 2026-07-27
 
 [taxonomies]
 primals = ["nestgate"]
@@ -11,6 +11,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **1,710 tests** (1,630 passing, 80 ignored), **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 127 G3 BTSP→CAS wiring + G4 cross-platform paths** (Wave 155b): `federation_ops.rs` socat/raw-TCP → `connect_with_btsp` + `JsonRpcClient`; `connect_federation()` factory; `parse_federation_target()` target parser; `JsonRpcClient::connect_btsp_aware()` central entry; connection reuse for multi-call CAS ops; cross-platform path resolution (`USERPROFILE`, `%ProgramData%`, `%LOCALAPPDATA%`); ZFS binary PATH lookup on Windows; Windows named pipe IPC detection; `resolve_runtime_base()` cross-platform; 1 pre-existing test fixed; 9 primal name → capability-based decouplings
 - **Session 126 BTSP ClientHello shipped + doc cleanup** (Wave 151c): `btsp_client_handshake.rs` — full outbound wire handshake (P1 Nest Atomic blocker resolved); dead `BtspClient` stub removed; `connect_with_btsp()` integration hook; 8 dep bumps; primal name decoupling (12 files); root doc stamps → 151c; CAPABILITY_MAPPINGS primal names → capability-based; placeholder examples + orphan test scaffolding removed; 3 pre-existing clippy fixes (unnecessary Result wrap, redundant pub(crate), cfg gate); CHANGELOG Session 126 added; 57.5 GiB reclaimed via cargo clean
 - **Session 125 procfs consolidation phase 3 + dep bumps** (Wave 150t): 17 `/proc` callsites → `linux_proc` delegates across hardware_tuning, metrics_collector, performance_dashboard; 6 dep bumps; clippy cleanup; wave stamps → 150t
 - **Session 124 vendor elimination + BLAKE3 consolidation** (Wave 150q): Replaced vendored TLS crates with `oxitls-rustcrypto-provider 0.2.1`; all internal crypto → BLAKE3 (auth MACs, BTSP KDF, checksums, cert fingerprints); sha2/hmac/hkdf removed as direct deps; `vendor/` + `[patch.crates-io]` removed; 27 TODO + 4 >800L gone; wave stamps → 150q
@@ -65,7 +66,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 - **Content-addressed storage** (NG-1): BLAKE3 hash-as-key, automatic dedup, optional encrypt-at-rest, provenance metadata sidecars
 - **Content manifests** (NG-2): versioned path→hash manifests, atomic deploy via `content.promote` aliases, index.html path normalization
 - **MethodGate** adopted: Public/Protected method classification, BTSP auth gating
-- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup (Wave 43)
+- **`primal.announce`**: JSON-RPC self-registration with orchestration Neural API on startup (Wave 43)
 - **Wave 47 deployment convergence**: `--socket PATH` CLI flag, `health.liveness` normalized to `{"status":"alive","primal":"nestgate"}` across all transports
 - **Wave 49 ecosystem tightening**: `plasmidBin` sole binary channel documented, `genomeBin` terminology evolved, 3 dead fuzz targets removed, `notify-plasmidbin.yml` active
 - **aarch64-musl fix (validated)**: `link-self-contained=yes` + `relocation-model=static` prevents musl ≤1.2.2 segfault; linker converged to `aarch64-linux-gnu-gcc` (ecosystem standard, Session 104)
@@ -91,7 +92,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Shadow Run Readiness (Wave 24 S3)
 
 NestGate is the storage backend for the S3 Content Hosting Shadow (vs GitHub Pages).
-petalTongue is the HTTP-facing edge.
+The HTTP-facing edge capability provider serves content.
 
 - **8 `content.*` methods** on all 4 transports (Session 60)
 - **Path normalization** in `content.resolve`: `/` → `/index.html`, `/about` → `/about/index.html` (Session 66)
@@ -102,7 +103,7 @@ petalTongue is the HTTP-facing edge.
 ## Architecture
 
 ```
-Browser → petalTongue :8080 (HTTP edge)
+Browser → HTTP edge :8080 (edge capability provider)
        → nestGate content.resolve (content-addressed storage)
        → BLAKE3 hash verification + optional decrypt
        → inline base64 response with content_type + timing
@@ -112,9 +113,9 @@ Browser → petalTongue :8080 (HTTP edge)
 
 | Spring | Consumption |
 |--------|-------------|
-| neuralSpring | Weight persistence via `storage.*` IPC |
-| airSpring | NestGate + Squirrel IPC wired |
-| wetSpring | Content storage for pipeline outputs |
+| neural compute layer | Weight persistence via `storage.*` IPC |
+| air compute layer | NestGate + compute capability IPC wired |
+| streaming compute layer | Content storage for pipeline outputs |
 | groundSpring | NestGate IPC module in `src/ipc/` tree |
 
 ## See Also

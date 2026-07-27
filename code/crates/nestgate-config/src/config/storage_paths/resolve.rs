@@ -2,10 +2,94 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Environment and XDG fallback resolution for each path kind.
+//!
+//! Resolution order (same on all platforms):
+//! 1. `NESTGATE_*` explicit env var
+//! 2. `XDG_*` standard (available on Linux, can be set on Windows/macOS)
+//! 3. User home directory (`HOME` on Unix, `USERPROFILE` on Windows)
+//! 4. Platform-specific system fallback (FHS on Linux, `%ProgramData%`/`%LOCALAPPDATA%` on Windows)
 
 use nestgate_types::EnvSource;
 use std::path::PathBuf;
 use tracing::{debug, warn};
+
+/// Resolve user home directory from env, supporting both Unix (`HOME`) and
+/// Windows (`USERPROFILE`).
+fn resolve_home(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
+    env.get("HOME")
+        .or_else(|| env.get("USERPROFILE"))
+        .map(PathBuf::from)
+}
+
+/// Platform-appropriate system fallback for data storage.
+fn system_data_fallback() -> PathBuf {
+    #[cfg(windows)]
+    {
+        std::env::var("ProgramData")
+            .map(|p| PathBuf::from(p).join("nestgate"))
+            .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate"))
+    }
+    #[cfg(not(windows))]
+    {
+        PathBuf::from("/var/lib/nestgate")
+    }
+}
+
+/// Platform-appropriate system fallback for configuration.
+fn system_config_fallback() -> PathBuf {
+    #[cfg(windows)]
+    {
+        std::env::var("ProgramData")
+            .map(|p| PathBuf::from(p).join("nestgate\\config"))
+            .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\config"))
+    }
+    #[cfg(not(windows))]
+    {
+        PathBuf::from("/etc/nestgate")
+    }
+}
+
+/// Platform-appropriate system fallback for cache.
+fn system_cache_fallback() -> PathBuf {
+    #[cfg(windows)]
+    {
+        std::env::var("LOCALAPPDATA")
+            .map(|p| PathBuf::from(p).join("nestgate\\cache"))
+            .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\cache"))
+    }
+    #[cfg(not(windows))]
+    {
+        PathBuf::from("/var/cache/nestgate")
+    }
+}
+
+/// Platform-appropriate system fallback for state.
+fn system_state_fallback() -> PathBuf {
+    #[cfg(windows)]
+    {
+        std::env::var("ProgramData")
+            .map(|p| PathBuf::from(p).join("nestgate\\state"))
+            .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\state"))
+    }
+    #[cfg(not(windows))]
+    {
+        PathBuf::from("/var/lib/nestgate/state")
+    }
+}
+
+/// Platform-appropriate system fallback for logs.
+fn system_log_fallback() -> PathBuf {
+    #[cfg(windows)]
+    {
+        std::env::var("ProgramData")
+            .map(|p| PathBuf::from(p).join("nestgate\\logs"))
+            .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\logs"))
+    }
+    #[cfg(not(windows))]
+    {
+        PathBuf::from("/var/log/nestgate")
+    }
+}
 
 /// Resolve data directory from an injectable [`EnvSource`] (e.g. [`nestgate_types::MapEnv`] in tests).
 #[must_use]
@@ -21,14 +105,18 @@ pub fn resolve_data_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Path
         return path;
     }
 
-    if let Some(home) = env.get("HOME") {
-        let path = PathBuf::from(home).join(".local/share/nestgate");
+    if let Some(home) = resolve_home(env) {
+        let path = home.join(".local").join("share").join("nestgate");
         debug!("Data dir from HOME: {}", path.display());
         return path;
     }
 
-    warn!("Data dir using system fallback (requires permissions): /var/lib/nestgate");
-    PathBuf::from("/var/lib/nestgate")
+    let fallback = system_data_fallback();
+    warn!(
+        "Data dir using system fallback (requires permissions): {}",
+        fallback.display()
+    );
+    fallback
 }
 
 /// Resolve config directory from an injectable [`EnvSource`].
@@ -45,14 +133,18 @@ pub fn resolve_config_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Pa
         return path;
     }
 
-    if let Some(home) = env.get("HOME") {
-        let path = PathBuf::from(home).join(".config/nestgate");
+    if let Some(home) = resolve_home(env) {
+        let path = home.join(".config").join("nestgate");
         debug!("Config dir from HOME: {}", path.display());
         return path;
     }
 
-    warn!("Config dir using system fallback (requires permissions): /etc/nestgate");
-    PathBuf::from("/etc/nestgate")
+    let fallback = system_config_fallback();
+    warn!(
+        "Config dir using system fallback (requires permissions): {}",
+        fallback.display()
+    );
+    fallback
 }
 
 /// Resolve cache directory from an injectable [`EnvSource`].
@@ -69,14 +161,15 @@ pub fn resolve_cache_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Pat
         return path;
     }
 
-    if let Some(home) = env.get("HOME") {
-        let path = PathBuf::from(home).join(".cache/nestgate");
+    if let Some(home) = resolve_home(env) {
+        let path = home.join(".cache").join("nestgate");
         debug!("Cache dir from HOME: {}", path.display());
         return path;
     }
 
-    warn!("Cache dir using system fallback: /var/cache/nestgate");
-    PathBuf::from("/var/cache/nestgate")
+    let fallback = system_cache_fallback();
+    warn!("Cache dir using system fallback: {}", fallback.display());
+    fallback
 }
 
 /// Resolve state directory from an injectable [`EnvSource`].
@@ -93,14 +186,15 @@ pub fn resolve_state_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Pat
         return path;
     }
 
-    if let Some(home) = env.get("HOME") {
-        let path = PathBuf::from(home).join(".local/state/nestgate");
+    if let Some(home) = resolve_home(env) {
+        let path = home.join(".local").join("state").join("nestgate");
         debug!("State dir from HOME: {}", path.display());
         return path;
     }
 
-    warn!("State dir using system fallback: /var/lib/nestgate/state");
-    PathBuf::from("/var/lib/nestgate/state")
+    let fallback = system_state_fallback();
+    warn!("State dir using system fallback: {}", fallback.display());
+    fallback
 }
 
 /// Resolve log directory from an injectable [`EnvSource`].
@@ -117,14 +211,22 @@ pub fn resolve_log_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathB
         return path;
     }
 
-    if let Some(home) = env.get("HOME") {
-        let path = PathBuf::from(home).join(".local/state/nestgate/logs");
+    if let Some(home) = resolve_home(env) {
+        let path = home
+            .join(".local")
+            .join("state")
+            .join("nestgate")
+            .join("logs");
         debug!("Log dir from HOME: {}", path.display());
         return path;
     }
 
-    warn!("Log dir using system fallback (requires permissions): /var/log/nestgate");
-    PathBuf::from("/var/log/nestgate")
+    let fallback = system_log_fallback();
+    warn!(
+        "Log dir using system fallback (requires permissions): {}",
+        fallback.display()
+    );
+    fallback
 }
 
 /// Resolve temporary directory from an injectable [`EnvSource`].

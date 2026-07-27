@@ -25,7 +25,7 @@ curl -sSL https://raw.githubusercontent.com/ecoPrimals/plasmidBin/main/fetch.sh 
 # Binary: $XDG_DATA_HOME/ecoPrimals/plasmidBin/primals/{triple}/nestgate
 ```
 
-Production binaries are distributed via `plasmidBin` — see upstream `primalSpring` wateringHole for composition details.
+Production binaries are distributed via `plasmidBin` — see upstream wateringHole for composition details.
 
 ## Build (Local Development)
 

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 127: G3 BTSP→CAS Wiring + G4 Cross-Platform Paths (Jul 27, 2026)
+
+- **G3: BTSP wired into CAS federation**: Replaced `socat`/raw-TCP in `federation_ops.rs` with `connect_with_btsp` + `JsonRpcClient::call`. Cross-gate CAS replication (`content.replicate`, `content.replicate.pull`) now uses BTSP when `is_btsp_required()`. Eliminates the external `socat` dependency entirely.
+- **G3: Central BTSP delegation**: Added `JsonRpcClient::connect_btsp_aware()` — BTSP-aware entry point for all outbound JSON-RPC connections.
+- **G3: Connection reuse**: `replicate_blob_to_remote` now uses a single `JsonRpcClient` for both `content.exists` and `content.put` calls (was 2 separate connections).
+- **G4: Cross-platform path resolution**: Storage path fallbacks (`resolve.rs`) now use `USERPROFILE` on Windows and platform-appropriate system dirs (`%ProgramData%`, `%LOCALAPPDATA%`) instead of hardcoded FHS paths. `Path::join` used consistently (no string concatenation with `/`).
+- **G4: ZFS binary detection**: `zfs_binary_path()` / `zpool_binary_path()` fall back to bare `zfs`/`zpool` commands on Windows (PATH lookup) instead of hardcoded `/usr/sbin/`.
+- **G4: IPC endpoint heuristics**: Security provider discovery now recognizes Windows named pipe paths (`\\.\pipe\`) alongside Unix socket paths.
+- **G4: btsp_client runtime base**: `resolve_runtime_base()` uses `$TEMP` fallback on Windows instead of Unix-specific `/run/user/{uid}`.
+- **Pre-existing test fix**: `get_socket_path_prefers_xdg_runtime_dir_when_set` corrected to account for ecosystem path segment.
+- **Primal decoupling**: 9 additional doc/code references to specific primal names replaced with capability-based language.
+- See `docs/handoffs/session-127-g3-g4-wiring.md` for details.
+
 ### Session 126: BTSP ClientHello + Deep Debt + Dep Bumps (Jul 26, 2026)
 
 - **BTSP ClientHello shipped**: New `nestgate-rpc/src/rpc/btsp_client_handshake.rs` — full 7-step outbound wire handshake (P1 Nest Atomic blocker resolved).

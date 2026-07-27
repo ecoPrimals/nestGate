@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126: BTSP ClientHello shipped + deep debt + 8 dep bumps)
+**Last Updated**: Jul 27, 2026 (Wave 155b — Session 127: G3 BTSP→CAS wiring + G4 cross-platform paths)
 **Version**: 0.5.0
 
 ---
@@ -34,7 +34,7 @@ IPC routes (HTTP):  Aligned with UDS namespace (storage.store not storage.object
 IPC routes (tarpc): storage.*, content.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.*, lifecycle.* — 52 semantic-routed methods
 content.* parity:   ALL transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API
 Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope, protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"]
-BTSP:               Phase 1-3 PASS — family-scoped sockets, server+client handshake (ClientHello shipped S126), ChaCha20-Poly1305 encrypted channel
+BTSP:               Phase 1-3 PASS — family-scoped sockets, server+client handshake, BTSP wired into CAS federation (S127), ChaCha20-Poly1305 encrypted channel
 MethodGate:         Public/Protected method classification; NESTGATE_AUTH_MODE=enforced rejects unauthed protected calls
 TCP JSON-RPC:       Functional — --port, --listen, NESTGATE_API_PORT activates alongside UDS
 Constants:          Runtime-configurable via LazyLock + env vars (NESTGATE_ZFS_*, NESTGATE_FALLBACK_PORT_*)

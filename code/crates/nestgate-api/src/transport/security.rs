@@ -90,7 +90,12 @@ impl SecurityProviderClient {
             let mut discovery = CapabilityDiscovery::new(ipc);
             if let Ok(endpoint) = discovery.find("security").await {
                 let ep = endpoint.endpoint;
-                if ep.starts_with('/') && std::path::Path::new(&ep).exists() {
+                let is_local_ipc = ep.starts_with('/')
+                    || ep.starts_with(r"\\.\pipe\")
+                    || std::path::Path::new(&ep)
+                        .extension()
+                        .is_some_and(|e| e.eq_ignore_ascii_case("sock"));
+                if is_local_ipc && std::path::Path::new(&ep).exists() {
                     info!("Found security provider via capability discovery: {}", ep);
                     return Self::new(ep);
                 }

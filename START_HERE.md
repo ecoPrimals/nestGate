@@ -25,7 +25,7 @@ See [STATUS.md](./STATUS.md) for full measured metrics.
 
 ### Production Deployment
 
-Post-primordial, all NUCLEUS binaries come from `plasmidBin`. See upstream `primalSpring` wateringHole for the depot pattern.
+Post-primordial, all NUCLEUS binaries come from `plasmidBin`. See upstream wateringHole for the depot pattern.
 
 ### 1. Build (Local Development)
 

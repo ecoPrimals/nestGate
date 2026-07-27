@@ -248,7 +248,7 @@ pub fn is_btsp_required() -> bool {
 /// On failure, a **mode-aware** error frame is written to the client before
 /// the error is returned, so the client always sees an error message instead
 /// of bare EOF.  This eliminates the "zero bytes / silent close" symptom
-/// reported by `primalSpring` guidestone.
+/// reported by ecosystem scenario runner guidestone.
 ///
 /// # Errors
 ///

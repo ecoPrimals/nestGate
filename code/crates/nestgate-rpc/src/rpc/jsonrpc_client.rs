@@ -158,6 +158,25 @@ impl JsonRpcClient {
         })
     }
 
+    /// Connect via a BTSP-aware path.
+    ///
+    /// When the ecosystem requires BTSP (`is_btsp_required()`), performs the
+    /// full client-side handshake before returning the client. Otherwise,
+    /// connects plainly via [`Self::connect_transport`].
+    ///
+    /// Use this for all outbound peer connections. Use [`Self::connect_transport`]
+    /// only for bootstrap connections (e.g. to the security provider during
+    /// the BTSP handshake itself).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if the connection or BTSP handshake fails.
+    pub async fn connect_btsp_aware(
+        endpoint: &nestgate_types::TransportEndpoint,
+    ) -> Result<Self> {
+        super::btsp_client_handshake::connect_with_btsp(endpoint).await
+    }
+
     /// Connect to a JSON-RPC service over TCP.
     ///
     /// Delegates to [`Self::connect_transport`] with a TCP endpoint.

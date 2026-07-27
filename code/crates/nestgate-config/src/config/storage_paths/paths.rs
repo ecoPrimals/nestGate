@@ -121,18 +121,38 @@ impl StoragePaths {
             .map_or_else(|_| self.data_dir.join("storage"), PathBuf::from)
     }
 
-    /// Get ZFS binary path with environment override
+    /// Get ZFS binary path with environment override.
+    ///
+    /// Falls back to `/usr/sbin/zfs` on Unix, `zfs` (bare command) on Windows.
     #[must_use]
     pub fn zfs_binary_path(&self) -> PathBuf {
-        env::var("NESTGATE_ZFS_BINARY")
-            .map_or_else(|_| PathBuf::from("/usr/sbin/zfs"), PathBuf::from)
+        env::var("NESTGATE_ZFS_BINARY").map_or_else(
+            |_| {
+                if cfg!(windows) {
+                    PathBuf::from("zfs")
+                } else {
+                    PathBuf::from("/usr/sbin/zfs")
+                }
+            },
+            PathBuf::from,
+        )
     }
 
-    /// Get zpool binary path with environment override
+    /// Get zpool binary path with environment override.
+    ///
+    /// Falls back to `/usr/sbin/zpool` on Unix, `zpool` (bare command) on Windows.
     #[must_use]
     pub fn zpool_binary_path(&self) -> PathBuf {
-        env::var("NESTGATE_ZPOOL_BINARY")
-            .map_or_else(|_| PathBuf::from("/usr/sbin/zpool"), PathBuf::from)
+        env::var("NESTGATE_ZPOOL_BINARY").map_or_else(
+            |_| {
+                if cfg!(windows) {
+                    PathBuf::from("zpool")
+                } else {
+                    PathBuf::from("/usr/sbin/zpool")
+                }
+            },
+            PathBuf::from,
+        )
     }
 
     /// Get PID file path

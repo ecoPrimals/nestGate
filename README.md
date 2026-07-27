@@ -31,7 +31,7 @@
 - **`is_btsp_required` unified**: client delegates to canonical server version (eliminates env-var and `"standalone"` divergence)  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`; `ZfsBackendType::Mock` removed (dead code); Azure/GCS/ObjectStorage backends return `not_implemented` until REST API wired; 11 ZFS production handlers evolved from fake success to honest `not_implemented`; system memory reads `/proc/meminfo` (was hardcoded 16GB); ARC fallback uses `0.0` (was misleading `0.85`)  
 - **Primal sovereignty**: zero hardcoded other-primal names in production; capability-based socket discovery (`security.sock`, `crypto.sock`); `DEFAULT_SERVICE_NAME` for self-references  
-- **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (neuralSpring/wetSpring)  
+- **Streaming storage**: `storage.store_stream` / `retrieve_stream` chunked protocol for large tensors (streaming capability providers)  
 - **TCP alongside UDS**: `--port` / `NESTGATE_JSONRPC_TCP` activates TCP JSON-RPC listener (UniBin compliance)  
 - **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests  
 - **Lint mega-list narrowing**: Crate-level lint suppressions narrowed: nestgate-core 22→16, nestgate-zfs 24→17, nestgate-api 14→12, nestgate-installer 12→2/4, nestgate-bin 6→4 (real code fixes, not just moved)
@@ -72,8 +72,8 @@ All NUCLEUS primal binaries come from `plasmidBin`. No `target/release/`,
 curl -sSL https://raw.githubusercontent.com/ecoPrimals/plasmidBin/main/fetch.sh | bash
 
 # Binary lands in $XDG_DATA_HOME/ecoPrimals/plasmidBin/primals/{triple}/nestgate
-# Or use primalSpring's composition launcher:
-COMPOSITION_NAME=nest primalSpring/tools/composition_nucleus.sh start
+# Or use the ecosystem composition launcher:
+COMPOSITION_NAME=nest composition_nucleus start
 ```
 
 ### Local Development

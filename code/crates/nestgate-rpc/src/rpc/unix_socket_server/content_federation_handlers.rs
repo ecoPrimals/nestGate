@@ -426,22 +426,14 @@ async fn pull_blob_from_remote(
     family_id: &str,
     local_path: &Path,
 ) -> Result<u64> {
-    let get_request = json!({
-        "jsonrpc": "2.0",
-        "method": "content.get",
-        "params": {"hash": cid, "family_id": family_id},
-        "id": 1
-    });
+    let mut client = federation_ops::connect_federation(source).await?;
 
-    let get_response = federation_ops::send_jsonrpc(source, &get_request).await?;
+    let result = client
+        .call("content.get", json!({"hash": cid, "family_id": family_id}))
+        .await
+        .map_err(|e| NestGateError::internal(format!("remote content.get failed: {e}")))?;
 
-    if let Some(err) = get_response.get("error") {
-        return Err(NestGateError::internal(format!(
-            "remote content.get failed: {err}"
-        )));
-    }
-
-    let data_b64 = get_response["result"]["data"]
+    let data_b64 = result["data"]
         .as_str()
         .ok_or_else(|| NestGateError::internal("remote returned no data field"))?;
 
@@ -483,15 +475,18 @@ async fn replicate_blob_to_remote(
     let size = raw.len() as u64;
     let encoded = STANDARD.encode(&raw);
 
-    let exists_request = json!({
-        "jsonrpc": "2.0",
-        "method": "content.exists",
-        "params": {"hash": cid, "family_id": family_id},
-        "id": 1
-    });
+    let mut client = federation_ops::connect_federation(target).await?;
 
-    let exists_response = federation_ops::send_jsonrpc(target, &exists_request).await?;
-    if exists_response["result"]["exists"].as_bool() == Some(true) {
+    let exists_result = client
+        .call(
+            "content.exists",
+            json!({"hash": cid, "family_id": family_id}),
+        )
+        .await;
+
+    if let Ok(ref val) = exists_result
+        && val["exists"].as_bool() == Some(true)
+    {
         return Ok(0);
     }
 
@@ -518,20 +513,9 @@ async fn replicate_blob_to_remote(
         }
     }
 
-    let put_request = json!({
-        "jsonrpc": "2.0",
-        "method": "content.put",
-        "params": put_params,
-        "id": 2
-    });
-
-    let put_response = federation_ops::send_jsonrpc(target, &put_request).await?;
-    if put_response.get("error").is_some() {
-        return Err(NestGateError::internal(format!(
-            "remote content.put failed: {}",
-            put_response["error"]
-        )));
-    }
+    client.call("content.put", put_params).await.map_err(|e| {
+        NestGateError::internal(format!("remote content.put failed: {e}"))
+    })?;
 
     Ok(size)
 }

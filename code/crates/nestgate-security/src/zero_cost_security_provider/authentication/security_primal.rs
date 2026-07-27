@@ -23,6 +23,7 @@ pub async fn call_security_primal(
     let endpoint = &connection.endpoint;
 
     if endpoint.starts_with('/')
+        || endpoint.starts_with(r"\\.\pipe\")
         || Path::new(endpoint)
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))

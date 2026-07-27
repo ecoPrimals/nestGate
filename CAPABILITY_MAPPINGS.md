@@ -280,7 +280,7 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 
 **Capability**: `storage.fetch_external` (storage domain)  
 **Provider**: NestGate (TLS and HTTP client for ecosystem external fetch)  
-**Usage**: Fetching remote content over HTTPS for storage workflows — NestGate owns the TLS boundary; this is **not** delegated to Songbird.
+**Usage**: Fetching remote content over HTTPS for storage workflows — NestGate owns the TLS boundary; this is **not** delegated to the orchestration capability provider.
 
 #### **Methods Used**:
 
@@ -299,7 +299,7 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 
 **Status**: Implemented — NestGate terminates TLS for this fetch path
 
-#### **Optional / future (Songbird or other primals)**
+#### **Optional / future (orchestration or other capability providers)**
 
 Legacy documentation referred to an orchestration provider for generic `http.get` / `http.post` and `tls.derive_secrets`. Those remain **optional** for orchestration or other capabilities; they are **not** the path for `storage.fetch_external`.
 

@@ -12,7 +12,7 @@
 
 ## Quick Start
 
-**Production**: Use `plasmidBin` — see upstream `primalSpring` wateringHole for the depot pattern.
+**Production**: Use `plasmidBin` — see upstream wateringHole for the depot pattern.
 
 **Local development**:
 

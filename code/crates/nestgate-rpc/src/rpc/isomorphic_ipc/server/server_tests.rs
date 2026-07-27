@@ -75,11 +75,13 @@ fn prepare_socket_path_creates_parent_and_removes_stale_socket() {
 
 #[test]
 fn get_socket_path_prefers_xdg_runtime_dir_when_set() {
+    let eco = nestgate_config::constants::system::ecosystem_path_segment();
     temp_env::with_vars([("XDG_RUNTIME_DIR", Some("/run/user/4242"))], || {
         let handler = Arc::new(MockHandler);
         let server = IsomorphicIpcServer::new("ipc-test-svc".to_string(), handler);
         let p = server.get_socket_path().expect("path");
-        assert_eq!(p.to_string_lossy(), "/run/user/4242/ipc-test-svc.sock");
+        let expected = format!("/run/user/4242/{eco}/ipc-test-svc.sock");
+        assert_eq!(p.to_string_lossy(), expected);
     });
 }
 
