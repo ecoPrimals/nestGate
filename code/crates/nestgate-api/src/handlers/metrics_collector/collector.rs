@@ -3,39 +3,112 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::SystemTime;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, SystemTime};
 
 use nestgate_core::Result;
-use nestgate_types::error::NestGateError;
 use tokio::sync::broadcast;
 use tracing::{debug, info, warn};
 
 use crate::handlers::dashboard_types::{DashboardEvent, DashboardTimeRange};
 
+use super::history::{
+    DEFAULT_COLLECTION_INTERVAL, DEFAULT_HISTORY_CAPACITY, MetricsHistoryBuffer, MetricsSnapshot,
+    capacity_metrics_history, comprehensive_metrics_history, io_metrics_history,
+    pool_metrics_history,
+};
 use super::linux_proc;
 use super::types::{PoolMetrics, RealTimeMetrics, SystemSnapshot};
 
 /// Real-time metrics collection engine backed by /proc filesystem reads.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RealTimeMetricsCollector {
-    // Implementation details
+    history: Arc<MetricsHistoryBuffer>,
+    collection_interval: Duration,
+    collection_started: Arc<AtomicBool>,
 }
+
 impl RealTimeMetricsCollector {
-    /// Create a new metrics collector
+    /// Create a new metrics collector with default history capacity and interval.
     #[must_use]
-    pub const fn new() -> Self {
-        Self {}
+    pub fn new() -> Self {
+        Self::with_config(DEFAULT_HISTORY_CAPACITY, DEFAULT_COLLECTION_INTERVAL)
+    }
+
+    /// Create a collector with a custom ring-buffer capacity and collection interval.
+    #[must_use]
+    pub fn with_config(capacity: usize, collection_interval: Duration) -> Self {
+        Self {
+            history: Arc::new(MetricsHistoryBuffer::with_capacity(capacity)),
+            collection_interval,
+            collection_started: Arc::new(AtomicBool::new(false)),
+        }
     }
 
     /// Start real-time metrics collection with event broadcasting.
     ///
-    /// Background collection is not yet wired — this logs the intent and
-    /// returns immediately. Callers should use [`Self::get_current_metrics`]
-    /// for point-in-time snapshots.
-    pub fn start_collection(&self, _broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
-        warn!(
-            "start_collection: background metrics collection not yet wired — point-in-time snapshots available via get_current_metrics()"
+    /// Spawns a background task on the current Tokio runtime that collects metrics
+    /// on a fixed interval and appends each snapshot to the in-memory ring buffer.
+    pub fn start_collection(&self, broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
+        let Ok(handle) = tokio::runtime::Handle::try_current() else {
+            warn!("start_collection: no tokio runtime; background collection not started");
+            return;
+        };
+
+        if self
+            .collection_started
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            debug!("start_collection: background collection already running");
+            return;
+        }
+
+        let collector = self.clone();
+        handle.spawn(async move {
+            collector.run_collection_loop(broadcaster).await;
+        });
+    }
+
+    async fn run_collection_loop(&self, broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
+        info!(
+            "Starting background metrics collection (interval {:?})",
+            self.collection_interval
         );
+        let mut interval = tokio::time::interval(self.collection_interval);
+
+        loop {
+            interval.tick().await;
+
+            match self.capture_snapshot().await {
+                Ok(snapshot) => {
+                    self.history.push(snapshot.clone());
+                    let event = DashboardEvent {
+                        event_type: "metrics_update".into(),
+                        data: serde_json::json!({
+                            "timestamp": snapshot.metrics.timestamp,
+                            "pool_count": snapshot.metrics.pool_metrics.len(),
+                            "total_throughput": snapshot.metrics.total_throughput,
+                        }),
+                        timestamp: snapshot.metrics.timestamp,
+                    };
+                    let _ = broadcaster.send(event);
+                }
+                Err(error) => {
+                    warn!("Background metrics collection failed: {error}");
+                }
+            }
+        }
+    }
+
+    async fn capture_snapshot(&self) -> Result<MetricsSnapshot> {
+        let metrics = self.get_current_metrics().await?;
+        let (arc_size, l2arc_size) = linux_proc::arc_and_l2arc_sizes().await.unwrap_or((0, 0));
+        Ok(MetricsSnapshot {
+            metrics,
+            arc_size,
+            l2arc_size,
+        })
     }
 
     /// Get current system and storage metrics with real data collection
@@ -108,8 +181,8 @@ impl RealTimeMetricsCollector {
 
     /// Get historical performance data for a specific pool.
     ///
-    /// Requires a time-series store (not yet wired). Returns an empty vec
-    /// until the observability capability provider supplies historical storage.
+    /// Returns snapshots from the in-memory ring buffer filtered by `time_range`.
+    /// When collection has not started, returns an empty vec.
     ///
     /// # Errors
     ///
@@ -117,12 +190,11 @@ impl RealTimeMetricsCollector {
     pub fn get_historical_data(
         &self,
         pool_name: &str,
-        _time_range: &DashboardTimeRange,
+        time_range: &DashboardTimeRange,
     ) -> Result<Vec<PoolMetrics>> {
         debug!(pool = pool_name, "Historical pool metrics requested");
-        Err(NestGateError::not_implemented(
-            "Historical pool metrics require a time-series capability provider",
-        ))
+        let snapshots = self.history.snapshots_in_range(time_range);
+        Ok(pool_metrics_history(&snapshots, pool_name))
     }
 
     /// Get system resource snapshot from /proc, with safe fallbacks.
@@ -146,11 +218,10 @@ impl RealTimeMetricsCollector {
         let cpu_usage =
             nestgate_platform::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
 
-        let (disk_total_gb, disk_used_gb) = nestgate_platform::linux_proc::statvfs_space(
-            std::path::Path::new("/"),
-        )
-        .map(|(total, used)| (total / (1024 * 1024 * 1024), used / (1024 * 1024 * 1024)))
-        .unwrap_or((0, 0));
+        let (disk_total_gb, disk_used_gb) =
+            nestgate_platform::linux_proc::statvfs_space(std::path::Path::new("/"))
+                .map(|(total, used)| (total / (1024 * 1024 * 1024), used / (1024 * 1024 * 1024)))
+                .unwrap_or((0, 0));
 
         let network_interfaces = match std::fs::read_to_string("/proc/net/dev") {
             Ok(content) => content
@@ -185,28 +256,23 @@ impl RealTimeMetricsCollector {
         let pools = linux_proc::collect_zfs_pool_metrics()
             .await
             .unwrap_or_else(|_| vec![]);
-        let map = pools
-            .into_iter()
-            .map(|p| (p.name.clone(), p))
-            .collect();
+        let map = pools.into_iter().map(|p| (p.name.clone(), p)).collect();
         Ok(map)
     }
 
-    /// I/O performance over time.
+    /// I/O performance over time from the in-memory ring buffer.
     ///
-    /// Requires a time-series store; returns empty until the observability
-    /// capability provider supplies historical I/O storage.
+    /// Returns an empty vec when collection has not started.
     ///
     /// # Errors
     ///
     /// Returns an error if metric retrieval fails.
     pub fn get_io_historical_data(
         &self,
-        _time_range: &DashboardTimeRange,
+        time_range: &DashboardTimeRange,
     ) -> Result<Vec<super::types::IOMetricsPoint>> {
-        Err(NestGateError::not_implemented(
-            "I/O historical data requires a time-series capability provider",
-        ))
+        let snapshots = self.history.snapshots_in_range(time_range);
+        Ok(io_metrics_history(&snapshots))
     }
 
     /// ZFS ARC / L2ARC cache performance — current snapshot.
@@ -233,9 +299,9 @@ impl RealTimeMetricsCollector {
         }])
     }
 
-    /// Comprehensive combined metrics over time.
+    /// Comprehensive combined metrics over time from the ring buffer.
     ///
-    /// Requires a time-series store; returns empty until wired.
+    /// Returns an empty vec when collection has not started.
     ///
     /// # Errors
     ///
@@ -243,25 +309,29 @@ impl RealTimeMetricsCollector {
     pub fn get_comprehensive_historical_data(
         &self,
     ) -> Result<Vec<super::types::ComprehensiveMetricsPoint>> {
-        Err(NestGateError::not_implemented(
-            "Comprehensive historical data requires a time-series capability provider",
-        ))
+        let snapshots = self.history.all_snapshots();
+        Ok(comprehensive_metrics_history(&snapshots))
     }
 
-    /// Storage capacity trends over time.
+    /// Storage capacity trends over time from the ring buffer.
     ///
-    /// Requires a time-series store; returns empty until wired.
+    /// Returns an empty vec when collection has not started.
     ///
     /// # Errors
     ///
     /// Returns an error if metric retrieval fails.
     pub fn get_capacity_historical_data(
         &self,
-        _time_range: &DashboardTimeRange,
+        time_range: &DashboardTimeRange,
     ) -> Result<Vec<super::types::CapacityMetricsPoint>> {
-        Err(NestGateError::not_implemented(
-            "Capacity historical data requires a time-series capability provider",
-        ))
+        let snapshots = self.history.snapshots_in_range(time_range);
+        Ok(capacity_metrics_history(&snapshots))
+    }
+
+    /// Push a snapshot directly (test helper).
+    #[cfg(test)]
+    pub(crate) fn push_test_snapshot(&self, snapshot: MetricsSnapshot) {
+        self.history.push(snapshot);
     }
 }
 

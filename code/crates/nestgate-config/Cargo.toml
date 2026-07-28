@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2024"
 license = "AGPL-3.0-or-later"
 description = "Configuration, constants, and defaults for the NestGate ecosystem"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 
 [lints]
 workspace = true
@@ -15,6 +15,7 @@ nestgate-types = { path = "../nestgate-types" }
 anyhow = { workspace = true }
 chrono = { workspace = true }
 dashmap = { workspace = true }
+etcetera = { workspace = true }
 parking_lot = { workspace = true }
 regex = { workspace = true }
 rustix = { workspace = true }

@@ -7,7 +7,7 @@
 
 use crate::cli::ConfigAction;
 use anyhow::Result;
-use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
+use nestgate_types::{EnvSource, ProcessEnv};
 
 /// Execute configuration management commands
 pub async fn execute(action: ConfigAction) -> Result<()> {
@@ -79,9 +79,8 @@ async fn show_config_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<
             features.join(", ")
         }
     );
-    let storage_path =
-        env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
-    println!("  Path:         {storage_path}");
+    let storage_path = nestgate_core::config::storage_paths::get_storage_base_path();
+    println!("  Path:         {}", storage_path.display());
 
     // Environment
     println!("\nEnvironment:");
@@ -171,9 +170,9 @@ async fn get_config_from_env_source(env: &(impl EnvSource + ?Sized), key: &str) 
             let cfg = nestgate_core::config::runtime::get_config();
             cfg.network.api_host.to_string()
         }
-        "storage_path" => {
-            env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage")
-        }
+        "storage_path" => nestgate_core::config::storage_paths::get_storage_base_path()
+            .to_string_lossy()
+            .into_owned(),
         "family_id" => env
             .get("NESTGATE_FAMILY_ID")
             .unwrap_or_else(|| "(not set)".into()),
@@ -246,12 +245,14 @@ async fn validate_config_from_env_source(env: &(impl EnvSource + ?Sized)) -> Res
     }
 
     // Check storage path
-    let storage_path =
-        env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
-    if std::path::Path::new(&storage_path).exists() {
-        println!("  Storage path exists: {storage_path}");
+    let storage_path = nestgate_core::config::storage_paths::get_storage_base_path();
+    if storage_path.exists() {
+        println!("  Storage path exists: {}", storage_path.display());
     } else {
-        println!("  Storage path missing: {storage_path} (will be created on first use)");
+        println!(
+            "  Storage path missing: {} (will be created on first use)",
+            storage_path.display()
+        );
         issues += 1;
     }
 

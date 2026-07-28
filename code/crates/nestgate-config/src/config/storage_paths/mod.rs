@@ -30,3 +30,9 @@ pub use global::{
     get_storage_base_path, get_storage_paths, get_temp_dir,
 };
 pub use paths::StoragePaths;
+pub use resolve::{
+    resolve_cache_dir_from_env_source, resolve_config_dir_from_env_source,
+    resolve_data_dir_from_env_source, resolve_log_dir_from_env_source,
+    resolve_runtime_dir_from_env_source, resolve_state_dir_from_env_source,
+    resolve_temp_dir_from_env_source,
+};

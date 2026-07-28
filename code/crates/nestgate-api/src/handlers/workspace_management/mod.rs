@@ -59,6 +59,9 @@ pub use crud::{
     create_workspace, delete_workspace, get_workspace, get_workspaces, update_workspace_config,
 };
 
+#[cfg(test)]
+pub use crud::{get_workspaces_from_env_source, parse_size};
+
 // Team management
 
 // Collaboration and template exports removed until those modules are implemented.

@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)  
+**Last Updated**: Jul 28, 2026 (Wave 155g)  
 **Version**: 0.5.0
 
 Paths linked below exist in this repository as of July 2026.
@@ -76,6 +76,6 @@ Crate-level benchmarks: `code/crates/nestgate-core/benches/`, `code/crates/nestg
 
 ---
 
-**Status**: Documentation updated Jul 26, 2026 (Wave 151c — Session 126).  
+**Status**: Documentation updated Jul 28, 2026 (Wave 155g).  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
+**Last Updated**: Jul 28, 2026 (Wave 155g)

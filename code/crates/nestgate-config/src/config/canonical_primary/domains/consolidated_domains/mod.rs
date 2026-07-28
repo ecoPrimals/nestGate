@@ -46,8 +46,8 @@ pub mod zfs;
 // Re-export commonly used types
 pub use api::{ApiDomainConfig, ApiServerConfig, ConsolidatedApiHandlersConfig};
 pub use integration::{
-    CapabilityRoutingConfig, ConsolidatedIntegrationConfigs, EcosystemPlatformConfig,
-    EcosystemConfig, ExternalServiceConfig, PrimalEcosystemConfig, ProtocolConfigs,
+    CapabilityRoutingConfig, ConsolidatedIntegrationConfigs, EcosystemConfig,
+    EcosystemPlatformConfig, ExternalServiceConfig, PrimalEcosystemConfig, ProtocolConfigs,
     ServiceDiscoveryConfig,
 };
 pub use mcp::{McpDomainConfig, McpMessageFormat, McpProtocolConfig};

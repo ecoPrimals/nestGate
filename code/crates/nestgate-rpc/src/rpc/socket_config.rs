@@ -281,12 +281,12 @@ impl StorageCapabilityMarkerGuard {
             "family_id": family_id,
             "pid": std::process::id(),
         });
-        match std::fs::write(&marker_path, serde_json::to_string_pretty(&content).unwrap_or_default()) {
+        match std::fs::write(
+            &marker_path,
+            serde_json::to_string_pretty(&content).unwrap_or_default(),
+        ) {
             Ok(()) => {
-                info!(
-                    "storage capability marker: {}",
-                    marker_path.display()
-                );
+                info!("storage capability marker: {}", marker_path.display());
                 Self {
                     marker_path: Some(marker_path),
                 }

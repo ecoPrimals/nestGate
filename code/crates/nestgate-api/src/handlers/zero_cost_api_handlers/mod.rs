@@ -13,7 +13,21 @@ mod serde_helpers;
 mod types;
 
 #[cfg(test)]
-pub use migration::ApiHandlerBenchmark;
+pub use dataset_handler::ZeroCostDatasetHandler;
+#[cfg(test)]
+pub use migration::{ApiHandlerBenchmark, ApiHandlerMigrationGuide};
+#[cfg(test)]
+pub use pool_handler::{
+    DevelopmentPoolHandler, EnterprisePoolHandler, HighThroughputPoolHandler,
+    ProductionPoolHandler, ZeroCostPoolHandler,
+};
+#[cfg(test)]
+pub use router::ZeroCostRouterBuilder;
+#[cfg(test)]
+pub use types::{
+    ApiError, ApiStatus, DatasetConfig, DatasetInfo, DatasetType, ZeroCostApiError,
+    ZeroCostApiHandler, ZeroCostApiRequest, ZeroCostApiResponse,
+};
 
 #[cfg(test)]
 mod zero_cost_api_handlers_unit_tests {

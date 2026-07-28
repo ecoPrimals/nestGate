@@ -6,7 +6,7 @@
 // `NESTGATE_WORKSPACE_TEMPLATES_DIR`. Applying to live ZFS datasets remains orchestration.
 
 use axum::{Json, extract::Path, http::StatusCode};
-use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::info;
@@ -57,12 +57,13 @@ pub fn create_workspace_template_from_env_source(
         );
     };
 
-    let base = env_var_or_default(
-        env,
-        "NESTGATE_WORKSPACE_TEMPLATES_DIR",
-        "/var/lib/nestgate/workspace_templates",
+    let dir = env.get("NESTGATE_WORKSPACE_TEMPLATES_DIR").map_or_else(
+        || {
+            nestgate_core::config::storage_paths::resolve_data_dir_from_env_source(env)
+                .join("workspace_templates")
+        },
+        PathBuf::from,
     );
-    let dir = PathBuf::from(base);
 
     if let Err(e) = std::fs::create_dir_all(&dir) {
         return (

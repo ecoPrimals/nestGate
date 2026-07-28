@@ -150,8 +150,7 @@ async fn push_to_remote_without_remote_fails_gracefully() {
 
 #[tokio::test]
 async fn send_jsonrpc_uds_nonexistent_socket_errors() {
-    let result =
-        send_jsonrpc("/tmp/nonexistent-socket-xyz.sock", "test.method", json!({})).await;
+    let result = send_jsonrpc("/tmp/nonexistent-socket-xyz.sock", "test.method", json!({})).await;
     assert!(result.is_err());
 }
 

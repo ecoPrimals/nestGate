@@ -5,7 +5,7 @@ edition = "2024"
 authors = ["ecoPrimals Collective"]
 description = "ZFS storage management for NestGate with intelligent automation"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 homepage = "https://ecoprimals.org"
 keywords = ["zfs", "storage", "nas", "automation"]
 categories = ["filesystem"]
@@ -25,6 +25,7 @@ benchmark = []
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
+nestgate-config = { path = "../nestgate-config" }
 nestgate-platform = { path = "../nestgate-platform" }
 nestgate-types = { path = "../nestgate-types" }
 

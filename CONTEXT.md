@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
+**Last Updated**: Jul 28, 2026 (Wave 155g)
 
 ## What This Is
 
@@ -24,10 +24,10 @@ than by importing this crate graph.
 | **Version** | 0.5.0 |
 | **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
-| **Tests** | 1,630 passed, 80 ignored (1,710 total) (1 pre-existing env-specific) |
+| **Tests** | 12,973 passed, 0 failed (~80 ignored) |
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
-| **Architecture** | 22 workspace packages: 20 `code/crates/*` + fuzz + root |
-| **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
+| **Architecture** | 20 workspace crates under `code/crates/` |
+| **Binary** | Single self-contained release binary |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
 | **TLS/crypto** | `ureq` + `oxitls-rustcrypto-provider` (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl eliminated; installer uses system `curl` |
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
@@ -76,8 +76,8 @@ networking, and service lifecycle across the adapter stack.
 
 ## Related Repositories
 
-- [wateringHole](https://github.com/ecoPrimals/wateringHole) — standards, registry, `PUBLIC_SURFACE_STANDARD.md`, `STANDARDS_AND_EXPECTATIONS.md`
-- [ecoPrimals org](https://github.com/ecoPrimals) — sibling primals and springs (security, network, device, compute, visualization, and other capability providers)
+- [wateringHole](https://git.primals.eco/ecoPrimals/wateringHole) — standards, registry, `PUBLIC_SURFACE_STANDARD.md`, `STANDARDS_AND_EXPECTATIONS.md`
+- [ecoPrimals org](https://git.primals.eco/ecoPrimals) — sibling primals and springs (security, network, device, compute, visualization, and other capability providers)
 
 ## Design Philosophy
 

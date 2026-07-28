@@ -5,7 +5,7 @@ edition = "2024"
 authors = ["ecoPrimals Collective"]
 description = "Advanced performance optimization modules for NestGate - SIMD, zero-copy networking, lock-free structures, and adaptive optimization"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 keywords = ["performance", "simd", "zero-copy", "lock-free", "optimization"]
 categories = ["concurrency", "network-programming"]
 

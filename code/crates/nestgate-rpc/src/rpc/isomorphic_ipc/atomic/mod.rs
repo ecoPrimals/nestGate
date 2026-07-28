@@ -191,17 +191,16 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
     debug!("Connecting to {} at {}", primal_name, socket.display());
 
     let endpoint = nestgate_types::TransportEndpoint::uds(&socket);
-    let mut client =
-        crate::rpc::JsonRpcClient::connect_btsp_aware(&endpoint)
-            .await
-            .map_err(|e| {
-                anyhow::anyhow!(
-                    "{} not reachable at {}: {}",
-                    primal_name,
-                    socket.display(),
-                    e
-                )
-            })?;
+    let mut client = crate::rpc::JsonRpcClient::connect_btsp_aware(&endpoint)
+        .await
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "{} not reachable at {}: {}",
+                primal_name,
+                socket.display(),
+                e
+            )
+        })?;
 
     match client.call("health", serde_json::json!({})).await {
         Ok(_) => {

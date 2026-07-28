@@ -23,6 +23,8 @@ pub mod tarpc_service;
 pub mod types;
 
 // Re-export all public items
+#[cfg(test)]
+pub use config::NestGateRpcConfig;
 pub use manager::*;
 pub use types::*;
 

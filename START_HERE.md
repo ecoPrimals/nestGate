@@ -3,17 +3,12 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of Wave 151c)
-Tests:       PASS — 1,630 passed, 80 ignored (1,710 total) (1 pre-existing env-specific) (STATUS.md)
-Coverage:    84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-targets -- -D warnings (as of Wave 151c)
-Docs:        cargo doc --workspace --no-deps — clean in routine runs
-Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
-Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
-sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
-Serial:      #[serial]: scoped to ZFS stub tests; temp_env elsewhere
-Debt markers: none in production library sources (wateringHole; see STATUS.md)
-Binary:      ~4.7MB musl static
+Build:       PASS — cargo check --workspace --all-features (as of Wave 155g)
+Tests:       PASS — 12,973 passed, 0 failed, ~80 ignored
+Clippy:      PASS — cargo clippy --all-features -- -D warnings (zero warnings, pedantic+nursery)
+Unsafe:      #![forbid(unsafe_code)] on ALL 20 crate roots (zero exceptions)
+Crypto:      Delegated to security capability provider via IPC; BLAKE3 internal
+External:    Pure Rust — zero C build deps, no OpenSSL/ring
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
 
@@ -181,4 +176,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
+**Last Updated**: Jul 28, 2026 (Wave 155g)

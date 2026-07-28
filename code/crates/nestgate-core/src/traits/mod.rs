@@ -56,8 +56,8 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 pub use health_checks::{HealthCheck, HealthMonitor, HealthState, HealthStatus};
 pub use load_balancing::{
     HealthAwareLoadBalancer, LeastConnectionsLoadBalancer, LoadBalancer, LoadBalancerStats,
-    LoadBalancingAlgorithm, RandomLoadBalancer, RoundRobinLoadBalancer, ServiceStats,
-    WeightedRandomLoadBalancer, WeightedRoundRobinLoadBalancer,
+    LoadBalancingAlgorithm, RandomLoadBalancer, ResourceBasedLoadBalancer, RoundRobinLoadBalancer,
+    ServiceStats, WeightedRandomLoadBalancer, WeightedRoundRobinLoadBalancer,
 };
 pub use native_async::{
     NativeAsyncApiHandler, NativeAsyncAutomationService, NativeAsyncMcpService,

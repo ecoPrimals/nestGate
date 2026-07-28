@@ -3,61 +3,29 @@
 
 /// Security and access control configuration - extracted from monolithic config
 /// Handles access control, encryption, audit logging, authentication, and authorization
+use nestgate_config::config::storage_paths::{
+    resolve_config_dir_from_env_source, resolve_log_dir_from_env_source,
+};
+use nestgate_types::ProcessEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
-/// XDG-compliant config directory for key storage.
-///
-/// Checks `$NESTGATE_CONFIG_DIR`, then `$XDG_CONFIG_HOME/nestgate/keys`,
-/// then `$HOME/.config/nestgate/keys`, and falls back to FHS.
+/// Config directory for key storage via [`resolve_config_dir_from_env_source`].
 fn default_key_storage_path() -> String {
-    if let Ok(dir) = std::env::var("NESTGATE_CONFIG_DIR") {
-        return PathBuf::from(dir)
-            .join("keys")
-            .to_string_lossy()
-            .into_owned();
-    }
-    if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
-        return PathBuf::from(xdg)
-            .join("nestgate/keys")
-            .to_string_lossy()
-            .into_owned();
-    }
-    if let Ok(home) = std::env::var("HOME") {
-        return PathBuf::from(home)
-            .join(".config/nestgate/keys")
-            .to_string_lossy()
-            .into_owned();
-    }
-    "/etc/nestgate/keys".into()
+    resolve_config_dir_from_env_source(&ProcessEnv)
+        .join("keys")
+        .to_string_lossy()
+        .into_owned()
 }
 
-/// XDG-compliant state directory for audit logs.
-///
-/// Checks `$NESTGATE_LOG_DIR`, then `$XDG_STATE_HOME/nestgate`,
-/// then `$HOME/.local/state/nestgate`, and falls back to FHS.
+/// Log directory for audit logs via [`resolve_log_dir_from_env_source`].
 fn default_audit_log_path() -> String {
-    if let Ok(dir) = std::env::var("NESTGATE_LOG_DIR") {
-        return PathBuf::from(dir)
-            .join("audit.log")
-            .to_string_lossy()
-            .into_owned();
-    }
-    if let Ok(xdg) = std::env::var("XDG_STATE_HOME") {
-        return PathBuf::from(xdg)
-            .join("nestgate/audit.log")
-            .to_string_lossy()
-            .into_owned();
-    }
-    if let Ok(home) = std::env::var("HOME") {
-        return PathBuf::from(home)
-            .join(".local/state/nestgate/audit.log")
-            .to_string_lossy()
-            .into_owned();
-    }
-    "/var/log/nestgate/audit.log".into()
+    resolve_log_dir_from_env_source(&ProcessEnv)
+        .join("audit.log")
+        .to_string_lossy()
+        .into_owned()
 }
 /// Security and access control settings
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -123,11 +123,13 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
         ))
     })?;
 
-    tokio::fs::rename(&tmp_meta, &meta_path).await.map_err(|e| {
-        NestGateError::io_error(format!(
-            "Failed to finalize content metadata {blake3_hex}: {e}"
-        ))
-    })?;
+    tokio::fs::rename(&tmp_meta, &meta_path)
+        .await
+        .map_err(|e| {
+            NestGateError::io_error(format!(
+                "Failed to finalize content metadata {blake3_hex}: {e}"
+            ))
+        })?;
     tokio::fs::rename(&tmp_content, &object_path)
         .await
         .map_err(|e| {

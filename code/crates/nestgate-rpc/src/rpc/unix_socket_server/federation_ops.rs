@@ -244,11 +244,7 @@ pub(super) async fn connect_federation(target: &str) -> Result<JsonRpcClient> {
 /// Convenience wrapper: connects (with BTSP when required), calls `method`
 /// with `params`, and returns the result.
 #[cfg(test)]
-pub(super) async fn send_jsonrpc(
-    target: &str,
-    method: &str,
-    params: Value,
-) -> Result<Value> {
+pub(super) async fn send_jsonrpc(target: &str, method: &str, params: Value) -> Result<Value> {
     let mut client = connect_federation(target).await?;
     client.call(method, params).await
 }
@@ -265,9 +261,7 @@ fn parse_federation_target(target: &str) -> Result<TransportEndpoint> {
             ))
         })?;
         let port: u16 = port_str.parse().map_err(|_| {
-            NestGateError::internal(format!(
-                "invalid port in federation target: {port_str}"
-            ))
+            NestGateError::internal(format!("invalid port in federation target: {port_str}"))
         })?;
         Ok(TransportEndpoint::tcp(host, port))
     } else {
@@ -403,7 +397,6 @@ async fn resolve_best_remote(repo_path: &str) -> String {
         _ => "origin".into(),
     }
 }
-
 
 #[cfg(test)]
 #[path = "federation_ops_tests.rs"]

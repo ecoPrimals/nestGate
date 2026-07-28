@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2024"
 description = "File system monitoring for NestGate"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 keywords = ["filesystem", "monitoring", "rust", "nestgate"]
 categories = ["filesystem", "monitoring"]
 
@@ -13,6 +13,8 @@ workspace = true
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
+nestgate-config = { path = "../nestgate-config" }
+nestgate-types = { path = "../nestgate-types" }
 
 notify = "6.1"
 tokio = { workspace = true }

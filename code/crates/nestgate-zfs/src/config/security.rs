@@ -4,21 +4,14 @@
 //
 // Configuration for ZFS security, encryption metadata tracking, and access control.
 
+use nestgate_config::config::storage_paths::resolve_config_dir_from_env_source;
+use nestgate_types::ProcessEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 fn nestgate_config_dir() -> PathBuf {
-    if let Ok(v) = std::env::var("NESTGATE_CONFIG_DIR") {
-        return PathBuf::from(v);
-    }
-    if let Ok(v) = std::env::var("XDG_CONFIG_HOME") {
-        return PathBuf::from(v).join("nestgate");
-    }
-    if let Ok(home) = std::env::var("HOME") {
-        return PathBuf::from(home).join(".config").join("nestgate");
-    }
-    PathBuf::from("/etc/nestgate")
+    resolve_config_dir_from_env_source(&ProcessEnv)
 }
 
 /// Security configuration

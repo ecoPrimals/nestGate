@@ -52,19 +52,7 @@ pub fn default_metadata_base_dir() -> PathBuf {
 /// Like [`default_metadata_base_dir`], but reads `XDG_DATA_HOME` / `HOME` from an injectable [`EnvSource`].
 #[must_use]
 pub fn default_metadata_base_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
-    use etcetera::BaseStrategy;
-
-    if let Ok(strategy) = etcetera::base_strategy::choose_base_strategy() {
-        return strategy.data_dir().join("nestgate").join("metadata");
-    }
-
-    env.get("XDG_DATA_HOME")
-        .map(|p| PathBuf::from(p).join("nestgate").join("metadata"))
-        .or_else(|| {
-            env.get("HOME")
-                .map(|h| PathBuf::from(h).join(".local/share/nestgate/metadata"))
-        })
-        .unwrap_or_else(|| PathBuf::from("/var/lib/nestgate/metadata"))
+    nestgate_config::config::storage_paths::resolve_data_dir_from_env_source(env).join("metadata")
 }
 
 /// Pluggable metadata backend for the semantic router.

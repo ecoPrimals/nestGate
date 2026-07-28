@@ -2,16 +2,15 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-07-26, Wave 151c)**  
-- **Build**: `cargo check --workspace --all-features --all-targets` — PASS  
-- **Clippy**: `cargo clippy --workspace -- -D warnings` — PASS (zero warnings)  
-- **Tests**: 1,630 passed, 80 ignored (1,710 total)  
+**Verification (as of 2026-07-28, Wave 155g)**  
+- **Build**: `cargo check --workspace --all-features` — PASS  
+- **Clippy**: `cargo clippy --all-features -- -D warnings` — PASS (zero warnings, pedantic+nursery)  
+- **Tests**: 12,973 passed, 0 failed (~80 ignored)  
 - **Format**: `cargo fmt --check` — PASS  
-- **Docs**: `cargo doc --workspace --no-deps` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 1,630 passed, 80 ignored (1,710 total)
+- **Tests (last recorded)**: 12,973 passed, 0 failed (~80 ignored)
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -56,7 +55,7 @@
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Jul 26, 2026 (Wave 151c — Session 126)
+**Last Updated**: Jul 28, 2026 (Wave 155g — westGate code team deep debt sweep)
 
 ---
 
@@ -159,14 +158,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-26 (Wave 151c).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-07-28 (Wave 155g).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 1,630 passed, 80 ignored (1,710 total) |
+| Tests | 12,973 passed, 0 failed (~80 ignored) |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
@@ -314,4 +313,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: Jul 26, 2026 (Wave 151c — Session 126)
+**Latest**: Jul 28, 2026 (Wave 155g)

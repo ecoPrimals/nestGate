@@ -288,7 +288,7 @@ pub struct LogEntry {
     pub thread: String,
 }
 /// Generate sample log entry
-fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
+pub fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();

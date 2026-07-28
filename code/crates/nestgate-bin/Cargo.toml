@@ -9,7 +9,7 @@ version.workspace = true
 edition = "2024"
 description = "Main binary for NestGate NAS system - standalone distributed service"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 keywords = ["rust", "nestgate", "core", "async"]
 categories = ["development-tools"]
 

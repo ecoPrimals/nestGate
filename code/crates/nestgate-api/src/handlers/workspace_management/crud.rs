@@ -14,8 +14,15 @@ mod crud_list;
 #[path = "crud_properties.rs"]
 mod crud_properties;
 
+#[cfg(not(test))]
 use crud_helpers::parse_size;
+
 pub use crud_list::get_workspaces;
+
+#[cfg(test)]
+pub use crud_helpers::parse_size;
+#[cfg(test)]
+pub use crud_list::get_workspaces_from_env_source;
 
 use axum::{
     extract::{Json, Path},

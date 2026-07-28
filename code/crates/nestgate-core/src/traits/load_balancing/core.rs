@@ -78,6 +78,8 @@ pub enum LoadBalancingAlgorithm {
     WeightedRandom,
     /// Healthaware
     HealthAware,
+    /// Resourcebased
+    ResourceBased,
 }
 
 /// Load balancer statistics

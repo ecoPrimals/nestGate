@@ -24,6 +24,7 @@ pub mod policies;
 /// Test utilities for automation
 pub mod tests;
 pub mod tier_evaluation;
+pub mod tier_migration;
 pub mod types;
 
 #[cfg(test)]

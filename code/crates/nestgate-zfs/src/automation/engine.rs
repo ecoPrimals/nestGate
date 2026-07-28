@@ -24,7 +24,7 @@ use tracing::warn;
 // Removed unused tracing import
 
 use super::{
-    actions, lifecycle, tier_evaluation,
+    actions, lifecycle, tier_evaluation, tier_migration,
     types::{
         AutomationPolicy, AutomationStatus, DatasetLifecycle, DatasetMetadata, PolicyConditions,
         PolicyPriority,
@@ -34,7 +34,6 @@ use crate::config::DatasetAutomationConfig;
 use crate::error::ZfsResult as Result;
 use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
-use nestgate_core::NestGateError;
 use nestgate_core::error::NestGateUnifiedError;
 // Migration engine placeholder - not yet implemented
 
@@ -359,15 +358,23 @@ impl DatasetAutomation {
             })
     }
 
-    /// Reserved for orchestrated tier migration; the migration engine is not wired yet.
+    /// Migrate a dataset to the requested storage tier (dry-run by default).
     pub async fn migrate_dataset_to_tier(
         &self,
-        _dataset_name: &str,
-        _target_tier: crate::types::StorageTier,
+        dataset_name: &str,
+        target_tier: crate::types::StorageTier,
     ) -> Result<()> {
-        Err(NestGateError::not_implemented(
-            "ZFS tier migration engine not yet wired; coordinate with migration IPC or use native ZFS tooling",
-        ))
+        let source_tier = {
+            let lifecycle_tracker = self.lifecycle_tracker.read().await;
+            lifecycle_tracker.get(dataset_name).map_or_else(
+                || tier_migration::infer_tier_from_dataset_name(dataset_name),
+                |lifecycle| lifecycle.current_tier.clone(),
+            )
+        };
+
+        let tiers = tier_migration::tier_configuration_for_dataset(dataset_name);
+        let plan = tier_migration::plan_migration(dataset_name, source_tier, target_tier, &tiers)?;
+        tier_migration::migrate_dataset(&plan)
     }
 }
 
@@ -426,14 +433,12 @@ mod internal_tests {
     }
 
     #[tokio::test]
-    async fn migrate_dataset_to_tier_returns_not_implemented() {
+    async fn migrate_dataset_to_tier_dry_run_succeeds() {
         let automation = test_engine().await;
-        let err = automation
-            .migrate_dataset_to_tier("pool/ds", StorageTier::Cold)
-            .await
-            .expect_err("expected not implemented");
-        let msg = err.to_string().to_lowercase();
-        assert!(msg.contains("not") && msg.contains("implement"), "{err}");
+        let result = automation
+            .migrate_dataset_to_tier("mypool/hot/data", StorageTier::Cold)
+            .await;
+        assert!(result.is_ok(), "{result:?}");
     }
 
     #[tokio::test]

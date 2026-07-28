@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2024"
 license = "AGPL-3.0-or-later"
 description = "Platform-specific utilities, environment handling, and system metrics for NestGate"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 
 [lints]
 workspace = true

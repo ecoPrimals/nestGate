@@ -15,6 +15,8 @@ pub mod handlers;
 /// Axum JSON handlers backed by the same `/proc` logic as [`handlers::RealHardwareTuningHandler`].
 #[cfg(feature = "dev-stubs")]
 pub mod handlers_production;
+/// `/hardware/config` and `/hardware/tune` HTTP entry points (always available).
+pub mod http_routes;
 /// `/proc`-based resource helpers (production hardware tuning shims and dev-stubs).
 pub(crate) mod linux_proc;
 /// Best-effort hardware snapshots from procfs/sysfs (shared by dev stubs and tooling).
@@ -35,4 +37,5 @@ mod strategic_coverage_tests;
 pub use handlers::*;
 #[cfg(feature = "dev-stubs")]
 pub use handlers_production::*;
+pub use http_routes::{get_hardware_config, post_hardware_tune};
 pub use types::*;

@@ -9,7 +9,7 @@ edition = "2024"
 description = "NestGate Installation and Configuration Tool"
 authors = ["ecoPrimals Collective"]
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 keywords = ["installer", "deployment", "rust", "nestgate"]
 categories = ["development-tools", "deployment"]
 

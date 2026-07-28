@@ -43,6 +43,8 @@ pub mod storage;
 // Re-export all types for backward compatibility
 pub use datasets::*;
 pub use snapshots::*;
+#[cfg(test)]
+pub use storage::{BenchmarkScenario, PerformanceRequirements, StorageTier};
 pub use types::{
     Alert, AlertCondition, AlertSeverity, AlertStatus, ChecksumType, ComparisonOperator,
     CompressionType, DatasetStatus, DatasetType, DiskIoMetrics, NetworkIoMetrics,

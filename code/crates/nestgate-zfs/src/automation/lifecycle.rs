@@ -304,9 +304,7 @@ mod tests {
     fn stage_ordinal_ordering() {
         assert!(stage_ordinal(&LifecycleStage::New) < stage_ordinal(&LifecycleStage::Active));
         assert!(stage_ordinal(&LifecycleStage::Active) < stage_ordinal(&LifecycleStage::Aging));
-        assert!(
-            stage_ordinal(&LifecycleStage::Aging) < stage_ordinal(&LifecycleStage::Archived)
-        );
+        assert!(stage_ordinal(&LifecycleStage::Aging) < stage_ordinal(&LifecycleStage::Archived));
         assert!(
             stage_ordinal(&LifecycleStage::Archived) < stage_ordinal(&LifecycleStage::Obsolete)
         );

@@ -14,4 +14,15 @@ mod restore;
 mod types;
 
 #[cfg(test)]
+pub use backup::backup_workspace;
+#[cfg(test)]
+pub use list::list_workspace_backups;
+#[cfg(test)]
+pub use migration::migrate_workspace;
+#[cfg(test)]
+pub use restore::restore_workspace;
+#[cfg(test)]
+pub use types::{BackupConfig, MigrationConfig, MigrationStrategy, RestoreConfig};
+
+#[cfg(test)]
 mod tests;

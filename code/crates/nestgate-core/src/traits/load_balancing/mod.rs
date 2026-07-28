@@ -16,7 +16,10 @@ pub mod health_aware;
 pub mod weighted;
 
 // Re-export all public items for convenient access
-pub use algorithms::{LeastConnectionsLoadBalancer, RandomLoadBalancer, RoundRobinLoadBalancer};
+pub use algorithms::{
+    LeastConnectionsLoadBalancer, RandomLoadBalancer, ResourceBasedLoadBalancer,
+    RoundRobinLoadBalancer,
+};
 pub use core::{LoadBalancer, LoadBalancerStats, LoadBalancingAlgorithm, ServiceStats};
 pub use health_aware::HealthAwareLoadBalancer;
 pub use weighted::{WeightedRandomLoadBalancer, WeightedRoundRobinLoadBalancer};

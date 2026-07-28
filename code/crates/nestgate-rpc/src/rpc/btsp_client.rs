@@ -45,11 +45,8 @@ fn resolve_runtime_base() -> String {
     }
     #[cfg(not(unix))]
     {
-        std::env::var("TEMP").unwrap_or_else(|_| {
-            std::env::temp_dir()
-                .to_string_lossy()
-                .into_owned()
-        })
+        std::env::var("TEMP")
+            .unwrap_or_else(|_| std::env::temp_dir().to_string_lossy().into_owned())
     }
 }
 

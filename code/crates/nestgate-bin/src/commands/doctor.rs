@@ -50,9 +50,8 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
 
     // Check 3: Storage directory
     println!("Storage Directory Check:");
-    let storage_base = std::env::var("NESTGATE_STORAGE_PATH")
-        .unwrap_or_else(|_| "/var/lib/nestgate/storage".into());
-    let storage_path = std::path::PathBuf::from(&storage_base);
+    let storage_path = nestgate_core::config::storage_paths::get_storage_base_path();
+    let storage_base = storage_path.to_string_lossy();
 
     if storage_path.exists() {
         println!("   Path: {storage_base}");

@@ -7,7 +7,7 @@ version.workspace = true
 edition = "2021"
 license = "AGPL-3.0-or-later"
 description = "Rust 2021 std::env set_var/remove_var for use from Rust 2024 without unsafe"
-repository = "https://github.com/ecoprimals/nestgate"
+repository = "https://git.primals.eco/ecoPrimals/nestGate"
 
 [dev-dependencies]
 temp-env = { workspace = true }

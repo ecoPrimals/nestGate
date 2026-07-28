@@ -8,13 +8,15 @@
 //! On non-Linux hosts, or when `/proc` is unreadable, these helpers fall back to safe defaults
 //! (zeros or minimal resource counts) without panicking.
 
+use super::types::ComputeResources;
+#[cfg(any(test, feature = "dev-stubs"))]
+use super::types::{BenchmarkResult, ComputeAllocation, LiveHardwareMetrics, TuningResult};
+
 use super::linux_proc;
-use super::types::{
-    BenchmarkResult, ComputeAllocation, ComputeResources, CpuInfo, LiveHardwareMetrics,
-    SystemProfile, TuningResult,
-};
+use super::types::{CpuInfo, SystemProfile};
 
 /// Live hardware metrics from `/proc` (CPU, memory, disk, network) when available; otherwise zeros.
+#[cfg(any(test, feature = "dev-stubs"))]
 #[must_use]
 pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
     linux_proc::live_hardware_metrics_best_effort()
@@ -31,6 +33,7 @@ pub fn snapshot_compute_resources() -> ComputeResources {
 }
 
 /// Allocation matching the current host snapshot (full available resources).
+#[cfg(any(test, feature = "dev-stubs"))]
 #[must_use]
 pub fn snapshot_compute_allocation() -> ComputeAllocation {
     let r = snapshot_compute_resources();
@@ -55,6 +58,7 @@ pub fn snapshot_system_profile() -> SystemProfile {
 }
 
 /// Observational tuning report using live metrics before/after sampling (no privileged changes).
+#[cfg(any(test, feature = "dev-stubs"))]
 #[must_use]
 pub fn snapshot_tuning_result() -> TuningResult {
     let before_metrics = linux_proc::live_hardware_metrics_best_effort();
@@ -75,6 +79,7 @@ pub fn snapshot_tuning_result() -> TuningResult {
 }
 
 /// Benchmark envelope carrying a live metrics snapshot from procfs.
+#[cfg(any(test, feature = "dev-stubs"))]
 #[must_use]
 pub fn snapshot_benchmark_result(
     benchmark_type: &str,

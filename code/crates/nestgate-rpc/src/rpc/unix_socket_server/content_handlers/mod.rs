@@ -60,7 +60,10 @@ pub fn merge_sidecar_fields(resp: &mut Value, sidecar: &Value) {
 /// case-insensitive filesystems (NTFS, APFS-default). All CAS writes produce
 /// lowercase via [`blake3::Hash::to_hex`]; reads must match.
 pub fn validate_blake3_hex(hash: &str) -> Result<()> {
-    if hash.len() != 64 || !hash.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    if hash.len() != 64
+        || !hash
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
     {
         return Err(NestGateError::invalid_input_with_field(
             "hash",

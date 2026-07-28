@@ -11,9 +11,9 @@
 
 //! Actions module
 
+use super::tier_migration::{self, tier_configuration_for_dataset};
 use super::types::{DatasetLifecycle, LifecycleStage};
 use crate::types::StorageTier;
-use nestgate_core::NestGateError;
 use nestgate_core::error::CanonicalResult as Result;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, info, warn};
@@ -48,9 +48,21 @@ pub fn execute_lifecycle_action(
 
     match action {
         "compress" => execute_compression_action(dataset_name),
-        "migrate_to_cold" => execute_migration_action(dataset_name, StorageTier::Cold),
-        "migrate_to_warm" => execute_migration_action(dataset_name, StorageTier::Warm),
-        "migrate_to_hot" => execute_migration_action(dataset_name, StorageTier::Hot),
+        "migrate_to_cold" => execute_migration_action(
+            dataset_name,
+            lifecycle.current_tier.clone(),
+            StorageTier::Cold,
+        ),
+        "migrate_to_warm" => execute_migration_action(
+            dataset_name,
+            lifecycle.current_tier.clone(),
+            StorageTier::Warm,
+        ),
+        "migrate_to_hot" => execute_migration_action(
+            dataset_name,
+            lifecycle.current_tier.clone(),
+            StorageTier::Hot,
+        ),
         "create_snapshot" => execute_snapshot_action(dataset_name),
         "optimize_properties" => execute_optimization_action(dataset_name, lifecycle),
         "update_access_time" => execute_access_time_update(dataset_name),
@@ -147,15 +159,41 @@ fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
 }
 
 /// Execute Migration Action
-fn execute_migration_action(dataset_name: &str, target_tier: StorageTier) -> Result<ActionResult> {
+fn execute_migration_action(
+    dataset_name: &str,
+    source_tier: StorageTier,
+    target_tier: StorageTier,
+) -> Result<ActionResult> {
     info!(
-        "Migrating dataset '{}' to {:?} tier (not wired)",
-        dataset_name, target_tier
+        "Planning tier migration for dataset '{}' from {:?} to {:?}",
+        dataset_name, source_tier, target_tier
     );
 
-    Err(NestGateError::not_implemented(
-        "ZFS tier migration engine not yet wired; use zfs send/recv or native pool tools until automation coordinates with the migration IPC",
-    ))
+    let timestamp = SystemTime::now();
+    let tiers = tier_configuration_for_dataset(dataset_name);
+
+    match tier_migration::plan_migration(dataset_name, source_tier, target_tier, &tiers) {
+        Ok(plan) => match tier_migration::execute_migration_plan(&plan) {
+            Ok(message) => Ok(ActionResult {
+                action: "migrate".into(),
+                success: true,
+                message,
+                timestamp,
+            }),
+            Err(error) => Ok(ActionResult {
+                action: "migrate".into(),
+                success: false,
+                message: error.to_string(),
+                timestamp,
+            }),
+        },
+        Err(error) => Ok(ActionResult {
+            action: "migrate".into(),
+            success: false,
+            message: error.to_string(),
+            timestamp,
+        }),
+    }
 }
 
 /// Execute Snapshot Action
@@ -241,11 +279,14 @@ fn execute_cleanup_action(dataset_name: &str) -> Result<ActionResult> {
 fn apply_new_dataset_rules(dataset_name: &str) -> Result<()> {
     debug!("Applying rules for new dataset: {}", dataset_name);
 
-    // For new datasets, ensure hot tier placement and optimal properties
-    if let Err(e) = execute_migration_action(dataset_name, StorageTier::Hot) {
+    let current_tier = tier_migration::infer_tier_from_dataset_name(dataset_name);
+    if current_tier != StorageTier::Hot
+        && let Ok(result) = execute_migration_action(dataset_name, current_tier, StorageTier::Hot)
+        && !result.success
+    {
         warn!(
-            "Skipping tier migration for new dataset {} (not implemented): {}",
-            dataset_name, e
+            "Tier migration for new dataset {} did not succeed: {}",
+            dataset_name, result.message
         );
     }
     execute_optimization_action(
@@ -273,11 +314,16 @@ fn apply_active_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) 
     // For active datasets, monitor performance and maintain optimal tier
     if lifecycle.current_tier != StorageTier::Hot
         && lifecycle.access_count > 100
-        && let Err(e) = execute_migration_action(dataset_name, StorageTier::Hot)
+        && let Ok(result) = execute_migration_action(
+            dataset_name,
+            lifecycle.current_tier.clone(),
+            StorageTier::Hot,
+        )
+        && !result.success
     {
         warn!(
-            "Skipping tier migration for active dataset {} (not implemented): {}",
-            dataset_name, e
+            "Tier migration for active dataset {} did not succeed: {}",
+            dataset_name, result.message
         );
     }
 
@@ -293,11 +339,16 @@ async fn apply_aging_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecy
 
     // For aging datasets, prepare for migration to cold storage
     if lifecycle.current_tier == StorageTier::Hot
-        && let Err(e) = execute_migration_action(dataset_name, StorageTier::Warm)
+        && let Ok(result) = execute_migration_action(
+            dataset_name,
+            lifecycle.current_tier.clone(),
+            StorageTier::Warm,
+        )
+        && !result.success
     {
         warn!(
-            "Skipping tier migration for aging dataset {} (not implemented): {}",
-            dataset_name, e
+            "Tier migration for aging dataset {} did not succeed: {}",
+            dataset_name, result.message
         );
     }
 
@@ -312,10 +363,15 @@ async fn apply_archived_dataset_rules(dataset_name: &str) -> Result<()> {
     debug!("Applying rules for archived dataset: {}", dataset_name);
 
     // For archived datasets, ensure cold storage and maximum compression
-    if let Err(e) = execute_migration_action(dataset_name, StorageTier::Cold) {
+    if let Ok(result) = execute_migration_action(
+        dataset_name,
+        tier_migration::infer_tier_from_dataset_name(dataset_name),
+        StorageTier::Cold,
+    ) && !result.success
+    {
         warn!(
-            "Skipping tier migration for archived dataset {} (not implemented): {}",
-            dataset_name, e
+            "Tier migration for archived dataset {} did not succeed: {}",
+            dataset_name, result.message
         );
     }
     execute_compression_action(dataset_name)?;
@@ -338,7 +394,6 @@ mod tests {
     use super::*;
     use crate::automation::types::DatasetLifecycle;
     use crate::types::StorageTier;
-    use nestgate_core::NestGateError;
     use std::time::SystemTime;
 
     fn lifecycle(
@@ -399,16 +454,27 @@ mod tests {
     }
 
     #[test]
-    fn execute_lifecycle_action_migration_returns_not_implemented() {
-        let ds = "tank/data/app";
+    fn execute_lifecycle_action_migration_returns_dry_run_plan() {
+        let ds = "mypool/hot/app";
         let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 0);
-        for action in ["migrate_to_cold", "migrate_to_warm", "migrate_to_hot"] {
-            let err = execute_lifecycle_action(ds, &lc, action).expect_err("migration not wired");
+
+        for action in ["migrate_to_cold", "migrate_to_warm"] {
+            let result = execute_lifecycle_action(ds, &lc, action).expect("migration should plan");
+            assert!(result.success, "action={action} msg={}", result.message);
             assert!(
-                matches!(err, NestGateError::NotImplemented(_)),
-                "action={action} err={err:?}"
+                result.message.contains("Dry-run"),
+                "action={action} msg={}",
+                result.message
             );
         }
+
+        let same_tier = execute_lifecycle_action(ds, &lc, "migrate_to_hot").expect("same tier");
+        assert!(!same_tier.success);
+        assert!(
+            same_tier.message.to_lowercase().contains("already"),
+            "msg={}",
+            same_tier.message
+        );
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 27, 2026 (Wave 155b — Session 129: Dep evolution + stub evolution + fabricated fallback cleanup)
+**Last Updated**: Jul 28, 2026 (Wave 155g — westGate code team deep debt sweep)
 **Version**: 0.5.0
 
 ---
@@ -8,40 +8,30 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors)
-Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings in nestgate crates)
-Format:             CLEAN (cargo fmt --all -- --check passes)
-Docs:               PASS — RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features (zero errors/warnings)
-Tests:              1,630 passed, 80 ignored — cargo test --workspace (1,710 total)
-Coverage:           84%+ line (cargo llvm-cov --workspace; CI floor 80%) — 90% target pending
-Files > 800 lines:  ZERO in production src/ (content_handlers.rs split → 4-file directory module; all files with inline tests extracted to siblings)
-Unwrap/Expect:      0 .unwrap(), 10 .expect() in production — AUDITED across all 20 crates (OnceLock init ×5, pool invariant ×4, const timestamp ×1; all #[expect(clippy::expect_used)] annotated)
-Inline markers:     none in committed production `.rs` (wateringHole policy)
+Build:              PASS — cargo check --workspace --all-features (0 errors)
+Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings, pedantic+nursery)
+Format:             CLEAN — cargo fmt --check passes
+Tests:              12,973 passed, 0 failed, ~80 ignored
+Files > 800 lines:  ZERO in production src/
+Unwrap/Expect:      deny(unwrap_used), deny(expect_used) in workspace lints — zero in production
+Inline markers:     none in committed production .rs (deny(todo), deny(unimplemented))
 Unsafe code:        #![forbid(unsafe_code)] on ALL 20 crate roots (zero exceptions)
-println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
-Dead code:          ZERO #[allow(dead_code)]; stub modules use #[expect(dead_code, reason=...)] per ecosystem standard
-Box<dyn Error>:     ZERO in production library code
-async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
-Mocks in prod:      ZERO fabricated metrics — 11 ZFS handlers honest not_implemented; `get_all_pool_metrics` + `get_cache_metrics` evolved to live; disk I/O + ARC fallbacks zeroed (no magic numbers); dev_environment gated behind `dev-stubs` feature
-Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
-TLS/crypto:         ureq + oxitls-rustcrypto-provider (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl/native-tls ELIMINATED
+println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX
+Dead code:          ZERO #[allow(dead_code)]; stubs use #[expect(dead_code, reason=...)]
+Mocks in prod:      ZERO fabricated metrics; all stubs honest not_implemented; dev_environment gated behind dev-stubs feature
+TLS/crypto:         ureq + oxitls-rustcrypto-provider (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
-Auth mode:          NESTGATE_AUTH_MODE=delegated|external — auth delegated to security capability provider
-Discovery:          Environment variables + capability IPC; 6-tier security socket discovery (XDG-based + ecosystem path segment, zero hardcoded FHS paths)
-Env aliases:        Legacy BEARDOG_* aliases REMOVED — canonical SECURITY_PROVIDER_SOCKET / FAMILY_SEED only
+External deps:      Pure Rust — zero C build deps, no OpenSSL/ring, no cloud SDKs, 13 top-level runtime deps
+Discovery:          Environment variables + capability IPC; XDG-compliant path resolution via etcetera; zero hardcoded FHS paths in consumers
+CLI health/status:  Live UDS probe via JsonRpcClient — resolves socket, sends health.check JSON-RPC
+Path resolution:    EnvSource injection works correctly (injected HOME > etcetera auto-detect > system fallback)
 IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 90 methods
-IPC routes (HTTP):  Aligned with UDS namespace (storage.store not storage.object.store); legacy aliases warn
-IPC routes (tarpc): storage.*, content.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.*, lifecycle.* — 52 semantic-routed methods
-content.* parity:   ALL transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API
-Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope, protocol: "jsonrpc-2.0", transport: ["uds", "tcp", "http"]
-BTSP:               Phase 1-3 PASS — family-scoped sockets, server+client handshake, BTSP wired into CAS federation (S127), ChaCha20-Poly1305 encrypted channel
-MethodGate:         Public/Protected method classification; NESTGATE_AUTH_MODE=enforced rejects unauthed protected calls
-TCP JSON-RPC:       Functional — --port, --listen, NESTGATE_API_PORT activates alongside UDS
-Constants:          Runtime-configurable via LazyLock + env vars (NESTGATE_ZFS_*, NESTGATE_FALLBACK_PORT_*)
-Serial tests:       #[serial]: env-var-sensitive tests in nestgate-rpc (55), nestgate-config (20), ZFS stubs
-Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok; ring ELIMINATED
-Workspace:          20 crates, 100% hoisted deps, Rust 2024 edition
-Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
+IPC routes (HTTP):  Aligned with UDS namespace; legacy aliases warn
+IPC routes (tarpc): 52 semantic-routed methods
+Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope
+BTSP:               Phase 1-3 PASS — family-scoped sockets, encrypted channel, CAS federation wired
+Workspace:          20 crates, Rust 2024 edition, 100% hoisted deps
+Repository:         https://git.primals.eco/ecoPrimals/nestGate
 Registry:           capability_registry.toml — machine-readable self-knowledge (20 capability domains)
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```

@@ -346,37 +346,36 @@ mod tests {
     }
 
     // ==================== HANDLER TESTS ====================
-    // Handlers return 501 until an observability capability is wired.
 
     #[tokio::test]
     async fn test_get_performance_metrics_handler() {
         let result = get_performance_metrics().await;
-        assert!(result.is_err());
-        let (status, _) = result.unwrap_err();
-        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
+        assert!(result.is_ok(), "metrics handler should succeed: {result:?}");
+        let response = result.expect("metrics handler should succeed");
+        assert!(response.0.metrics.contains_key("cpu_usage"));
+        assert!(response.0.metrics.contains_key("memory_usage"));
     }
 
     #[tokio::test]
     async fn test_get_performance_alerts_handler() {
         let result = get_performance_alerts().await;
-        assert!(result.is_err());
-        let (status, _) = result.unwrap_err();
-        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
+        assert!(result.is_ok(), "alerts handler should succeed: {result:?}");
     }
 
     #[tokio::test]
     async fn test_get_performance_recommendations_handler() {
         let result = get_performance_recommendations().await;
-        assert!(result.is_err());
-        let (status, _) = result.unwrap_err();
-        assert_eq!(status, axum::http::StatusCode::NOT_IMPLEMENTED);
+        assert!(
+            result.is_ok(),
+            "recommendations handler should succeed: {result:?}"
+        );
     }
 
     #[tokio::test]
     async fn test_metrics_handler_consistency() {
         for _ in 0..3 {
             let result = get_performance_metrics().await;
-            assert!(result.is_err());
+            assert!(result.is_ok());
         }
     }
 
@@ -384,7 +383,7 @@ mod tests {
     async fn test_alerts_handler_consistency() {
         for _ in 0..3 {
             let result = get_performance_alerts().await;
-            assert!(result.is_err());
+            assert!(result.is_ok());
         }
     }
 
@@ -392,7 +391,7 @@ mod tests {
     async fn test_recommendations_handler_consistency() {
         for _ in 0..3 {
             let result = get_performance_recommendations().await;
-            assert!(result.is_err());
+            assert!(result.is_ok());
         }
     }
 
@@ -403,9 +402,9 @@ mod tests {
         let metrics = get_performance_metrics().await;
         let alerts = get_performance_alerts().await;
         let recs = get_performance_recommendations().await;
-        assert!(metrics.is_err());
-        assert!(alerts.is_err());
-        assert!(recs.is_err());
+        assert!(metrics.is_ok());
+        assert!(alerts.is_ok());
+        assert!(recs.is_ok());
     }
 
     // ==================== EDGE CASE TESTS ====================

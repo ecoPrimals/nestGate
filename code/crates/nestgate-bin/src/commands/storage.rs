@@ -32,7 +32,7 @@ async fn list_backends() -> Result<()> {
     list_backends_from_env_source(&ProcessEnv).await
 }
 
-async fn list_backends_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<()> {
+async fn list_backends_from_env_source(_env: &(impl EnvSource + ?Sized)) -> Result<()> {
     println!("NestGate Storage Backends");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -60,9 +60,9 @@ async fn list_backends_from_env_source(env: &(impl EnvSource + ?Sized)) -> Resul
         println!("    basic_operations");
     }
 
-    // Storage path
-    let storage_path =
-        env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
+    let storage_path = nestgate_core::config::storage_paths::get_storage_base_path()
+        .to_string_lossy()
+        .into_owned();
     println!("\nStorage Path: {storage_path}");
 
     if std::path::Path::new(&storage_path).exists() {
@@ -248,7 +248,7 @@ async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
 }
 
 async fn configure_storage_from_env_source(
-    env: &(impl EnvSource + ?Sized),
+    _env: &(impl EnvSource + ?Sized),
     backend: &str,
     settings: &[String],
 ) -> Result<()> {
@@ -264,9 +264,8 @@ async fn configure_storage_from_env_source(
             nestgate_core::services::storage::capabilities::detect_backend().backend_type
         );
 
-        let storage_path =
-            env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
-        println!("  Storage:     {storage_path}");
+        let storage_path = nestgate_core::config::storage_paths::get_storage_base_path();
+        println!("  Storage:     {}", storage_path.display());
 
         println!("\nUse --set key=value to modify settings:");
         println!("  nestgate storage configure {backend} --set storage_path=/data/nestgate");

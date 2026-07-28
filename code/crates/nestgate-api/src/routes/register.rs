@@ -9,6 +9,7 @@ use axum::{
 };
 
 use crate::handlers::content_serve::serve_content_by_hash;
+use crate::handlers::hardware_tuning::{get_hardware_config, post_hardware_tune};
 use crate::handlers::load_testing::{
     get_load_test_history, get_load_test_results, get_performance_baselines, start_load_test,
 };
@@ -36,30 +37,8 @@ use super::streaming::{sse_events, sse_health, sse_storage, websocket_handler};
 fn attach_core_routes(router: Router<AppState>) -> Router<AppState> {
     router
         .route("/health", get(health_check))
-        .route(
-            "/hardware/tune",
-            post(|| async {
-                (
-                    axum::http::StatusCode::NOT_IMPLEMENTED,
-                    axum::response::Json(serde_json::json!({
-                        "error": "not_implemented",
-                        "message": "Hardware tuning is not yet available"
-                    })),
-                )
-            }),
-        )
-        .route(
-            "/hardware/config",
-            get(|| async {
-                (
-                    axum::http::StatusCode::NOT_IMPLEMENTED,
-                    axum::response::Json(serde_json::json!({
-                        "error": "not_implemented",
-                        "message": "Hardware configuration is not yet available"
-                    })),
-                )
-            }),
-        )
+        .route("/hardware/tune", post(post_hardware_tune))
+        .route("/hardware/config", get(get_hardware_config))
         .route("/api/v1/communication/stats", get(get_communication_stats))
         .route("/api/v1/events", get(get_events))
         .route(

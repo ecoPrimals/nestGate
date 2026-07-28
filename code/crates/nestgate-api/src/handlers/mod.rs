@@ -111,7 +111,6 @@ mod dashboard_types_tests;
 /// **HARDWARE TUNING MODULE**
 ///
 /// Hardware performance tuning and optimization.
-#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
 pub mod hardware_tuning;
 
 /// **HEALTH MODULE**

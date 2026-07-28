@@ -513,9 +513,10 @@ async fn replicate_blob_to_remote(
         }
     }
 
-    client.call("content.put", put_params).await.map_err(|e| {
-        NestGateError::internal(format!("remote content.put failed: {e}"))
-    })?;
+    client
+        .call("content.put", put_params)
+        .await
+        .map_err(|e| NestGateError::internal(format!("remote content.put failed: {e}")))?;
 
     Ok(size)
 }

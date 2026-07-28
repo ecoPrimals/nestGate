@@ -3,6 +3,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::config::storage_paths;
+
 /// **ML PREDICTION CONFIGURATION**
 ///
 /// Machine learning-specific prediction settings.
@@ -42,9 +44,15 @@ impl MlPredictionConfig {
     /// training datasets suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
+        let model_path =
+            storage_paths::resolve_data_dir_from_env_source(&nestgate_types::ProcessEnv)
+                .join("models")
+                .join("default")
+                .to_string_lossy()
+                .into_owned();
         Self {
-            enabled: false, // Disabled in dev by default
-            model_path: "/opt/nestgate/models/default".into(),
+            enabled: false,
+            model_path,
             model_update_interval_hours: 24,
             training_data_size: 1000,
             auto_retrain: false,
@@ -58,10 +66,16 @@ impl MlPredictionConfig {
     /// and strict confidence thresholds for production workloads.
     #[must_use]
     pub fn production() -> Self {
+        let model_path =
+            storage_paths::resolve_data_dir_from_env_source(&nestgate_types::ProcessEnv)
+                .join("models")
+                .join("production")
+                .to_string_lossy()
+                .into_owned();
         Self {
             enabled: true,
-            model_path: "/opt/nestgate/models/production".into(),
-            model_update_interval_hours: 168, // Weekly
+            model_path,
+            model_update_interval_hours: 168,
             training_data_size: 10000,
             auto_retrain: true,
             confidence_threshold: 0.8,

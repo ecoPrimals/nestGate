@@ -313,8 +313,8 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
             .stderr(std::process::Stdio::null())
             .status()
             .is_ok();
-        let hardware_tuning = cfg!(target_os = "linux")
-            && std::path::Path::new("/proc/meminfo").exists();
+        let hardware_tuning =
+            cfg!(target_os = "linux") && std::path::Path::new("/proc/meminfo").exists();
 
         Ok(serde_json::json!({
             "storage": self.storage.is_some(),

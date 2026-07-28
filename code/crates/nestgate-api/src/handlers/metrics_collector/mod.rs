@@ -7,6 +7,7 @@
 //! Metrics Collector module
 
 mod collector;
+mod history;
 mod linux_proc;
 mod state;
 mod types;

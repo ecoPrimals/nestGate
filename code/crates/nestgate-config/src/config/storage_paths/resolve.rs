@@ -4,11 +4,18 @@
 //! Environment and XDG fallback resolution for each path kind.
 //!
 //! Resolution order (same on all platforms):
-//! 1. `NESTGATE_*` explicit env var
-//! 2. `XDG_*` standard (available on Linux, can be set on Windows/macOS)
-//! 3. User home directory (`HOME` on Unix, `USERPROFILE` on Windows)
-//! 4. Platform-specific system fallback (FHS on Linux, `%ProgramData%`/`%LOCALAPPDATA%` on Windows)
+//! 1. `NESTGATE_*` explicit env var from the injectable [`EnvSource`]
+//! 2. `XDG_*` standard from the injectable [`EnvSource`]
+//! 3. User home directory (`HOME`/`USERPROFILE`) from the injectable [`EnvSource`]
+//! 4. [`etcetera::base_strategy::choose_base_strategy`] for XDG-compliant defaults (reads real process env)
+//! 5. Platform-specific system fallback (FHS on Linux, Application Support on macOS, `%APPDATA%` on Windows)
+//!
+//! The injected [`EnvSource`] always takes priority over `etcetera` (which reads
+//! the real process environment). This ensures test isolation via [`nestgate_types::MapEnv`]
+//! and correct behavior in containerized or namespaced environments where the
+//! caller provides a custom env source.
 
+use etcetera::BaseStrategy;
 use nestgate_types::EnvSource;
 use std::path::PathBuf;
 use tracing::{debug, warn};
@@ -21,15 +28,48 @@ fn resolve_home(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
+/// XDG-compliant path via `etcetera` when the process environment allows it.
+fn etcetera_data_dir() -> Option<PathBuf> {
+    etcetera::base_strategy::choose_base_strategy()
+        .ok()
+        .map(|strategy| strategy.data_dir().join("nestgate"))
+}
+
+fn etcetera_config_dir() -> Option<PathBuf> {
+    etcetera::base_strategy::choose_base_strategy()
+        .ok()
+        .map(|strategy| strategy.config_dir().join("nestgate"))
+}
+
+fn etcetera_cache_dir() -> Option<PathBuf> {
+    etcetera::base_strategy::choose_base_strategy()
+        .ok()
+        .map(|strategy| strategy.cache_dir().join("nestgate"))
+}
+
+fn etcetera_state_dir() -> Option<PathBuf> {
+    etcetera::base_strategy::choose_base_strategy()
+        .ok()
+        .and_then(|strategy| strategy.state_dir())
+        .map(|dir| dir.join("nestgate"))
+}
+
 /// Platform-appropriate system fallback for data storage.
 fn system_data_fallback() -> PathBuf {
     #[cfg(windows)]
     {
-        std::env::var("ProgramData")
+        std::env::var("APPDATA")
             .map(|p| PathBuf::from(p).join("nestgate"))
+            .or_else(|_| std::env::var("ProgramData").map(|p| PathBuf::from(p).join("nestgate")))
             .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate"))
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        resolve_home(&nestgate_types::ProcessEnv)
+            .map(|home| home.join("Library/Application Support/nestgate"))
+            .unwrap_or_else(|| PathBuf::from("/Library/Application Support/nestgate"))
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         PathBuf::from("/var/lib/nestgate")
     }
@@ -39,11 +79,20 @@ fn system_data_fallback() -> PathBuf {
 fn system_config_fallback() -> PathBuf {
     #[cfg(windows)]
     {
-        std::env::var("ProgramData")
-            .map(|p| PathBuf::from(p).join("nestgate\\config"))
+        std::env::var("APPDATA")
+            .map(|p| PathBuf::from(p).join("nestgate"))
+            .or_else(|_| {
+                std::env::var("ProgramData").map(|p| PathBuf::from(p).join("nestgate\\config"))
+            })
             .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\config"))
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        resolve_home(&nestgate_types::ProcessEnv)
+            .map(|home| home.join("Library/Application Support/nestgate"))
+            .unwrap_or_else(|| PathBuf::from("/Library/Application Support/nestgate"))
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         PathBuf::from("/etc/nestgate")
     }
@@ -55,9 +104,16 @@ fn system_cache_fallback() -> PathBuf {
     {
         std::env::var("LOCALAPPDATA")
             .map(|p| PathBuf::from(p).join("nestgate\\cache"))
+            .or_else(|_| std::env::var("APPDATA").map(|p| PathBuf::from(p).join("nestgate\\cache")))
             .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\cache"))
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        resolve_home(&nestgate_types::ProcessEnv)
+            .map(|home| home.join("Library/Caches/nestgate"))
+            .unwrap_or_else(|| PathBuf::from("/Library/Caches/nestgate"))
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         PathBuf::from("/var/cache/nestgate")
     }
@@ -67,11 +123,20 @@ fn system_cache_fallback() -> PathBuf {
 fn system_state_fallback() -> PathBuf {
     #[cfg(windows)]
     {
-        std::env::var("ProgramData")
+        std::env::var("APPDATA")
             .map(|p| PathBuf::from(p).join("nestgate\\state"))
+            .or_else(|_| {
+                std::env::var("ProgramData").map(|p| PathBuf::from(p).join("nestgate\\state"))
+            })
             .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\state"))
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        resolve_home(&nestgate_types::ProcessEnv)
+            .map(|home| home.join("Library/Application Support/nestgate/state"))
+            .unwrap_or_else(|| PathBuf::from("/Library/Application Support/nestgate/state"))
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         PathBuf::from("/var/lib/nestgate/state")
     }
@@ -81,17 +146,33 @@ fn system_state_fallback() -> PathBuf {
 fn system_log_fallback() -> PathBuf {
     #[cfg(windows)]
     {
-        std::env::var("ProgramData")
+        std::env::var("APPDATA")
             .map(|p| PathBuf::from(p).join("nestgate\\logs"))
+            .or_else(|_| {
+                std::env::var("ProgramData").map(|p| PathBuf::from(p).join("nestgate\\logs"))
+            })
             .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData\nestgate\logs"))
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        resolve_home(&nestgate_types::ProcessEnv)
+            .map(|home| home.join("Library/Logs/nestgate"))
+            .unwrap_or_else(|| PathBuf::from("/Library/Logs/nestgate"))
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         PathBuf::from("/var/log/nestgate")
     }
 }
 
 /// Resolve data directory from an injectable [`EnvSource`] (e.g. [`nestgate_types::MapEnv`] in tests).
+///
+/// Resolution order:
+/// 1. `NESTGATE_DATA_DIR` from `env`
+/// 2. `XDG_DATA_HOME` from `env` + `/nestgate`
+/// 3. `HOME`/`USERPROFILE` from `env` + `/.local/share/nestgate`
+/// 4. `etcetera` XDG defaults (reads real process env — last-resort auto-detect)
+/// 5. Platform system fallback (FHS on Linux, Application Support on macOS, `AppData` on Windows)
 #[must_use]
 pub fn resolve_data_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_DATA_DIR") {
@@ -108,6 +189,11 @@ pub fn resolve_data_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Path
     if let Some(home) = resolve_home(env) {
         let path = home.join(".local").join("share").join("nestgate");
         debug!("Data dir from HOME: {}", path.display());
+        return path;
+    }
+
+    if let Some(path) = etcetera_data_dir() {
+        debug!("Data dir from etcetera: {}", path.display());
         return path;
     }
 
@@ -139,6 +225,11 @@ pub fn resolve_config_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Pa
         return path;
     }
 
+    if let Some(path) = etcetera_config_dir() {
+        debug!("Config dir from etcetera: {}", path.display());
+        return path;
+    }
+
     let fallback = system_config_fallback();
     warn!(
         "Config dir using system fallback (requires permissions): {}",
@@ -167,6 +258,11 @@ pub fn resolve_cache_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Pat
         return path;
     }
 
+    if let Some(path) = etcetera_cache_dir() {
+        debug!("Cache dir from etcetera: {}", path.display());
+        return path;
+    }
+
     let fallback = system_cache_fallback();
     warn!("Cache dir using system fallback: {}", fallback.display());
     fallback
@@ -189,6 +285,11 @@ pub fn resolve_state_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> Pat
     if let Some(home) = resolve_home(env) {
         let path = home.join(".local").join("state").join("nestgate");
         debug!("State dir from HOME: {}", path.display());
+        return path;
+    }
+
+    if let Some(path) = etcetera_state_dir() {
+        debug!("State dir from etcetera: {}", path.display());
         return path;
     }
 
@@ -218,6 +319,12 @@ pub fn resolve_log_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathB
             .join("nestgate")
             .join("logs");
         debug!("Log dir from HOME: {}", path.display());
+        return path;
+    }
+
+    if let Some(state_dir) = etcetera_state_dir() {
+        let path = state_dir.join("logs");
+        debug!("Log dir from etcetera state dir: {}", path.display());
         return path;
     }
 
@@ -376,5 +483,26 @@ mod tests {
                 || runtime_str.starts_with(&*std::env::temp_dir().to_string_lossy()),
             "runtime path should use std::env::temp_dir(), not hardcoded /tmp"
         );
+    }
+
+    #[test]
+    fn config_dir_uses_xdg_config_home_from_env_source() {
+        let env = MapEnv::from([("XDG_CONFIG_HOME", "/tmp/xdg-config")]);
+        let got = resolve_config_dir_from_env_source(&env);
+        assert_eq!(got, PathBuf::from("/tmp/xdg-config/nestgate"));
+    }
+
+    #[test]
+    fn cache_dir_uses_xdg_cache_home_from_env_source() {
+        let env = MapEnv::from([("XDG_CACHE_HOME", "/tmp/xdg-cache")]);
+        let got = resolve_cache_dir_from_env_source(&env);
+        assert_eq!(got, PathBuf::from("/tmp/xdg-cache/nestgate"));
+    }
+
+    #[test]
+    fn cache_dir_from_home_dot_cache_when_xdg_unset() {
+        let env = MapEnv::from([("HOME", "/home/testuser")]);
+        let got = resolve_cache_dir_from_env_source(&env);
+        assert_eq!(got, PathBuf::from("/home/testuser/.cache/nestgate"));
     }
 }

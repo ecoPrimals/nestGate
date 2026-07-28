@@ -4,22 +4,23 @@
 //! Unified Fsmonitor Config module.
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as StandardDomainConfig;
+use nestgate_config::config::storage_paths::resolve_data_dir_from_env_source;
+use nestgate_types::ProcessEnv;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// XDG-compliant data directory for fsmonitor persistence.
 ///
-/// Returns `$XDG_DATA_HOME/nestgate/fsmonitor` when set,
-/// otherwise `$HOME/.local/share/nestgate/fsmonitor`.
+/// Honors `NESTGATE_FSMONITOR_DATA_DIR`, then `NESTGATE_DATA_DIR`, then
+/// [`resolve_data_dir_from_env_source`] with a `fsmonitor` suffix.
 pub(crate) fn fsmonitor_data_dir() -> PathBuf {
-    if let Ok(xdg) = std::env::var("XDG_DATA_HOME") {
-        return PathBuf::from(xdg).join("nestgate").join("fsmonitor");
+    if let Ok(path) = std::env::var("NESTGATE_FSMONITOR_DATA_DIR") {
+        return PathBuf::from(path);
     }
-    if let Ok(home) = std::env::var("HOME") {
-        return PathBuf::from(home)
-            .join(".local/share/nestgate/fsmonitor");
+    if let Ok(path) = std::env::var("NESTGATE_DATA_DIR") {
+        return PathBuf::from(path).join("fsmonitor");
     }
-    PathBuf::from("/var/lib/nestgate/fsmonitor")
+    resolve_data_dir_from_env_source(&ProcessEnv).join("fsmonitor")
 }
 
 // Re-export types from config.rs for backward compatibility

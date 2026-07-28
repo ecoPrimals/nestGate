@@ -171,9 +171,7 @@ impl JsonRpcClient {
     /// # Errors
     ///
     /// Returns error if the connection or BTSP handshake fails.
-    pub async fn connect_btsp_aware(
-        endpoint: &nestgate_types::TransportEndpoint,
-    ) -> Result<Self> {
+    pub async fn connect_btsp_aware(endpoint: &nestgate_types::TransportEndpoint) -> Result<Self> {
         super::btsp_client_handshake::connect_with_btsp(endpoint).await
     }
 

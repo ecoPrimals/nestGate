@@ -117,7 +117,8 @@ impl StoragePaths {
     /// mount on westGate), then `{data_dir}/storage` default.
     #[must_use]
     pub fn storage_base_path(&self) -> PathBuf {
-        env::var("NESTGATE_STORAGE_BASE_PATH")
+        env::var("NESTGATE_STORAGE_PATH")
+            .or_else(|_| env::var("NESTGATE_STORAGE_BASE_PATH"))
             .map_or_else(|_| self.data_dir.join("storage"), PathBuf::from)
     }
 
