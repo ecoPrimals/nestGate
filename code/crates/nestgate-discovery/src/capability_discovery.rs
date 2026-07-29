@@ -346,9 +346,9 @@ impl CapabilityDiscovery {
             .unwrap_or_else(|| {
                 tracing::warn!(
                     "Orchestration TCP bootstrap: ORCHESTRATION_HOST, NESTGATE_DEV_HOST, \
-                     and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`."
+                     and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using loopback."
                 );
-                "localhost".into()
+                nestgate_config::constants::hardcoding::addresses::LOCALHOST_NAME.into()
             });
         let port = env
             .get("ORCHESTRATION_PORT")

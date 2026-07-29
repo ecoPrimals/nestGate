@@ -13,5 +13,6 @@ pub mod doctor;
 pub(crate) mod env;
 pub mod monitor;
 pub mod service;
+pub mod service_probe;
 pub mod storage;
 pub mod zfs;

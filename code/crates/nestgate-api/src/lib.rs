@@ -132,7 +132,7 @@ pub mod transport;
 ///
 /// **Consolidated**: November 10, 2025
 /// - Replaces: `handlers/zfs_stub.rs`
-/// - Replaces: `handlers/hardware_tuning/stub_helpers.rs`
+/// - Replaces: `handlers/hardware_tuning/procfs_helpers.rs` (formerly `stub_helpers.rs`)
 #[cfg(any(test, feature = "dev-stubs"))]
 pub mod dev_stubs;
 

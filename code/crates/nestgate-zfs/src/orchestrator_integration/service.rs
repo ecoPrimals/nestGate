@@ -320,10 +320,10 @@ mod tests {
     fn endpoints_and_capabilities_and_registration() {
         let s = ZfsService::new(sample_config());
         assert_eq!(s.endpoints(), vec!["127.0.0.1:9000"]);
-        assert_eq!(s.capabilities(), &["pool".into()]);
+        assert_eq!(s.capabilities(), &[String::from("pool")]);
         let reg = s.create_registration();
         assert_eq!(reg.service_type, "zfs-storage");
-        assert_eq!(reg.capabilities, vec!["pool".into()]);
+        assert_eq!(reg.capabilities, vec![String::from("pool")]);
         assert!(reg.endpoints.iter().any(|e| e.contains(':')));
     }
 

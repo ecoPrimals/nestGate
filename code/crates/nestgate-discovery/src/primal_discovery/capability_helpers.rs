@@ -62,10 +62,11 @@ fn fallback_host_for_capability_from_env(
     env: &(impl EnvSource + ?Sized),
     capability: &str,
 ) -> String {
+    use nestgate_config::constants::hardcoding::addresses;
     let specific = format!("NESTGATE_{}_HOST", capability.to_uppercase());
     env.get(&specific)
         .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
-        .unwrap_or_else(|| "127.0.0.1".into())
+        .unwrap_or_else(|| addresses::LOCALHOST_IPV4.into())
 }
 
 fn default_port_compute_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {

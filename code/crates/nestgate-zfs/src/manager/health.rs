@@ -251,19 +251,23 @@ mod tests {
 
     #[tokio::test]
     async fn get_service_status_matches_zfs_availability() {
+        let zfs_present = crate::native::is_zfs_available().await;
         let m = ZfsManager::mock();
         let out = m.get_service_status().await;
-        if crate::native::is_zfs_available().await {
-            assert!(out.is_ok());
+        if zfs_present {
+            assert!(out.is_ok(), "expected Ok when ZFS is available: {out:?}");
         } else {
-            assert!(out.is_err());
+            assert!(
+                out.is_err(),
+                "expected Err when ZFS is unavailable: {out:?}"
+            );
         }
     }
 
     #[tokio::test]
     async fn get_zfs_health_matches_service_status() {
-        let m = ZfsManager::mock();
         let zfs_present = crate::native::is_zfs_available().await;
+        let m = ZfsManager::mock();
         let health = m.get_zfs_health().await;
         if zfs_present {
             assert!(health.is_ok(), "expected Ok when ZFS is available");
@@ -274,12 +278,13 @@ mod tests {
 
     #[tokio::test]
     async fn initialize_system_errors_when_zfs_not_available() {
+        let zfs_present = crate::native::is_zfs_available().await;
         let m = ZfsManager::mock();
         let r = m.initialize_system().await;
-        if crate::native::is_zfs_available().await {
-            assert!(r.is_ok());
+        if zfs_present {
+            assert!(r.is_ok(), "expected Ok when ZFS is available: {r:?}");
         } else {
-            assert!(r.is_err());
+            assert!(r.is_err(), "expected Err when ZFS is unavailable: {r:?}");
         }
     }
 }

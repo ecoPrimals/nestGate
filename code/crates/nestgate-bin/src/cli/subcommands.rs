@@ -8,6 +8,10 @@ use clap::Subcommand;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
+fn storage_path_default() -> PathBuf {
+    std::env::var("NESTGATE_STORAGE_PATH").map_or_else(|_| PathBuf::from("."), PathBuf::from)
+}
+
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Run `NestGate` as a server (primary mode) - `UniBin` pattern.
@@ -173,8 +177,8 @@ pub enum StorageAction {
     List,
     /// Scan for available storage
     Scan {
-        /// Path to scan
-        #[arg(short, long, default_value = ".")]
+        /// Path to scan (defaults to `NESTGATE_STORAGE_PATH` or `.`)
+        #[arg(short, long, default_value_os_t = storage_path_default())]
         path: PathBuf,
         /// Include cloud storage
         #[arg(long)]

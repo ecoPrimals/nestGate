@@ -17,16 +17,16 @@ pub mod handlers;
 pub mod handlers_production;
 /// `/hardware/config` and `/hardware/tune` HTTP entry points (always available).
 pub mod http_routes;
-/// `/proc`-based resource helpers (production hardware tuning shims and dev-stubs).
+/// `/proc`-based resource helpers (production hardware tuning and dev-stubs).
 pub(crate) mod linux_proc;
-/// Best-effort hardware snapshots from procfs/sysfs (shared by dev stubs and tooling).
-pub(crate) mod stub_helpers;
+/// Best-effort hardware snapshots from procfs/sysfs (shared by production and tooling).
+pub(crate) mod procfs_helpers;
 
-// Production: Placeholder handlers
+/// Production handlers: read-only endpoints backed by `/proc` and ZFS kstat.
 #[cfg(not(feature = "dev-stubs"))]
-pub mod production_placeholders;
+pub mod native_handlers;
 #[cfg(not(feature = "dev-stubs"))]
-pub use production_placeholders as handlers;
+pub use native_handlers as handlers;
 
 pub mod types;
 

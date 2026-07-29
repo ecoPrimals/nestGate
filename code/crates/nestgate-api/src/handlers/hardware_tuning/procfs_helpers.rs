@@ -22,7 +22,7 @@ pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
     linux_proc::live_hardware_metrics_best_effort()
 }
 
-/// Compute resources discovered via [`linux_proc::compute_resources_from_proc`], with fallbacks.
+/// Compute resources discovered via `linux_proc::compute_resources_from_proc`, with fallbacks.
 #[must_use]
 pub fn snapshot_compute_resources() -> ComputeResources {
     linux_proc::compute_resources_from_proc().unwrap_or(ComputeResources {

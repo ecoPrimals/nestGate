@@ -49,7 +49,7 @@
 //! **Consolidated**: November 10, 2025
 //! - Replaced scattered stub files with organized module structure
 //! - All stubs now in centralized location for easier maintenance
-//! - Deprecated: Individual stub files (zfs_stub.rs, stub_helpers.rs)
+//! - Deprecated: Individual stub files (zfs_stub.rs, formerly stub_helpers.rs → procfs_helpers.rs)
 
 pub mod hardware;
 pub mod testing;

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 28, 2026 (Wave 155g — westGate code team deep debt sweep)
+**Last Updated**: Jul 29, 2026 (Wave 155i — CAS on ZFS configured, deep debt complete)
 **Version**: 0.5.0
 
 ---
@@ -11,7 +11,7 @@
 Build:              PASS — cargo check --workspace --all-features (0 errors)
 Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings, pedantic+nursery)
 Format:             CLEAN — cargo fmt --check passes
-Tests:              12,973 passed, 0 failed, ~80 ignored
+Tests:              13,095+ passed, 0 failed, ~430 ignored
 Files > 800 lines:  ZERO in production src/
 Unwrap/Expect:      deny(unwrap_used), deny(expect_used) in workspace lints — zero in production
 Inline markers:     none in committed production .rs (deny(todo), deny(unimplemented))
@@ -40,9 +40,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–126) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–129) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Wave 155i** (Jul 29): CAS on ZFS configured, deep debt sweep complete. CLI probe commands evolved (bypass JWT). Flaky test fixed. File renames for naming accuracy. P1 ghost methods resolved. Live composition verified (8 services, 1,704 capabilities). 113.7 GiB `cargo clean`.
 - **Session 126** (Wave 151c): BTSP ClientHello shipped — `btsp_client_handshake.rs` implements full outbound wire handshake (P1 Nest Atomic blocker resolved); dead `BtspClient` stub removed from `btsp_client.rs`; `JsonRpcClient::from_btsp_stream` + `connect_with_btsp` integration hook; 8 dep bumps (cc, clap, either, libc, rustls-pki-types, syn, tokio-stream)
 - **Session 125** (Wave 150t): Procfs consolidation phase 3 — 17 `/proc` callsites in nestgate-api consolidated to `linux_proc` delegates (hardware_tuning, metrics_collector, performance_dashboard); 6 dep bumps (tokio, libc, tokio-util, zerocopy); clippy cleanup; wave stamps → 150t
 - **Session 124** (Wave 150q): Vendor elimination + BLAKE3 crypto consolidation — replaced vendored TLS crates with `oxitls-rustcrypto-provider 0.2.1`; all internal crypto (auth tokens, BTSP KDF, checksums, cert fingerprints) consolidated to BLAKE3; `sha2`/`hmac`/`hkdf` removed as direct deps (sha2/hmac optional behind `s3-backend` in nestgate-zfs); `vendor/` + `[patch.crates-io]` removed; 27 TODOs + 4 >800L gone; wave stamps → 150q

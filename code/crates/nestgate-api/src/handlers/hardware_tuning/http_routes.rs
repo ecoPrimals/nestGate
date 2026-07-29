@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use super::linux_proc as tuning_proc;
-use super::stub_helpers;
+use super::procfs_helpers;
 use super::types::{ComputeResources, HardwareTuningConfig, SystemCapabilities, SystemProfile};
 
 /// Hardware snapshot captured once at first access (startup detection).
@@ -100,7 +100,7 @@ fn derive_tuning_config(
 
 fn detect_hardware_config() -> HardwareStartupConfig {
     let compute = tuning_proc::compute_resources_from_proc()
-        .unwrap_or_else(|_| stub_helpers::snapshot_compute_resources());
+        .unwrap_or_else(|_| procfs_helpers::snapshot_compute_resources());
     let capabilities =
         tuning_proc::system_capabilities_from_proc().unwrap_or_else(|_| SystemCapabilities {
             cpu_cores: usize::try_from(compute.available_cpu.max(1)).unwrap_or(1),
@@ -109,7 +109,7 @@ fn detect_hardware_config() -> HardwareStartupConfig {
             gpu_available: compute.available_gpu > 0,
             gpu_info: None,
         });
-    let profiles = stub_helpers::snapshot_system_profile();
+    let profiles = procfs_helpers::snapshot_system_profile();
     let tuning_config = derive_tuning_config(&compute, &capabilities);
 
     HardwareStartupConfig {
@@ -245,7 +245,7 @@ pub async fn post_hardware_tune() -> Result<Json<serde_json::Value>, StatusCode>
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let capabilities = tuning_proc::system_capabilities_from_proc()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let profiles = stub_helpers::snapshot_system_profile();
+    let profiles = procfs_helpers::snapshot_system_profile();
     let disk = root_disk_summary();
     let live_metrics = tuning_proc::live_hardware_metrics_best_effort();
     let recommendations = build_tuning_recommendations(&compute, &capabilities, &profiles, &disk);

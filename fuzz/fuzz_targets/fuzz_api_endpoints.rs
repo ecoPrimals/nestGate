@@ -7,9 +7,6 @@ use arbitrary::Arbitrary;
 use libfuzzer_sys::fuzz_target;
 use std::collections::HashMap;
 
-// Import API-related functionality
-// use nestgate_api::{routes, Config as ApiConfig}; // Currently unused
-
 /// Fuzzable HTTP request structure
 #[derive(Arbitrary, Debug)]
 struct FuzzHttpRequest {

@@ -44,22 +44,26 @@ impl Cli {
         // Setup logging
         setup_logging(self.verbose);
 
-        let auth_mode = std::env::var("NESTGATE_AUTH_MODE").unwrap_or_default();
-        let delegated = auth_mode.eq_ignore_ascii_case("delegated")
-            || auth_mode.eq_ignore_ascii_case("external");
-        let btsp_composition = nestgate_core::rpc::btsp_server_handshake::is_btsp_required();
-        if delegated {
-            tracing::info!(
-                "Auth mode: delegated — JWT validation skipped, \
-                 auth delegated to security capability provider"
-            );
-        } else if btsp_composition {
-            tracing::info!(
-                "BTSP composition detected (FAMILY_ID set) — JWT validation \
-                 skipped, auth delegated to security capability provider via BTSP"
-            );
-        } else {
-            nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
+        let requires_server = matches!(self.command, Commands::Server { .. });
+
+        if requires_server {
+            let auth_mode = std::env::var("NESTGATE_AUTH_MODE").unwrap_or_default();
+            let delegated = auth_mode.eq_ignore_ascii_case("delegated")
+                || auth_mode.eq_ignore_ascii_case("external");
+            let btsp_composition = nestgate_core::rpc::btsp_server_handshake::is_btsp_required();
+            if delegated {
+                tracing::info!(
+                    "Auth mode: delegated — JWT validation skipped, \
+                     auth delegated to security capability provider"
+                );
+            } else if btsp_composition {
+                tracing::info!(
+                    "BTSP composition detected (FAMILY_ID set) — JWT validation \
+                     skipped, auth delegated to security capability provider via BTSP"
+                );
+            } else {
+                nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
+            }
         }
 
         // Print banner

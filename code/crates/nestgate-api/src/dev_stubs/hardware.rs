@@ -3,10 +3,10 @@
 
 //! **HARDWARE TUNING — DEV STUB RE-EXPORTS**
 //!
-//! Re-exports procfs-backed helpers from [`crate::handlers::hardware_tuning::stub_helpers`].
-//! Prefer importing [`crate::handlers::hardware_tuning::stub_helpers`] directly in new code.
+//! Re-exports procfs-backed helpers from `crate::handlers::hardware_tuning::procfs_helpers`.
+//! Prefer importing that module directly in new code.
 
-pub use crate::handlers::hardware_tuning::stub_helpers::*;
+pub use crate::handlers::hardware_tuning::procfs_helpers::*;
 
 #[cfg(test)]
 mod tests {

@@ -3,7 +3,7 @@
 
 //! Compile-time configured pool handler with request caching.
 //!
-//! Pool CRUD operations delegate to the ZFS REST API (`production_placeholders`).
+//! Pool CRUD operations delegate to the ZFS REST API (`native_handlers`).
 //! This handler focuses on the request pipeline (caching, timeouts, rate limits).
 
 use axum::http::StatusCode;

@@ -8,7 +8,7 @@ use crate::handlers::hardware_tuning::HardwareTuningConfig;
 #[cfg(feature = "dev-stubs")]
 use crate::handlers::zfs::basic::ZfsHandlerImpl;
 #[cfg(not(feature = "dev-stubs"))]
-use crate::handlers::zfs::production_placeholders::ZfsHandlerImpl;
+use crate::handlers::zfs::native_handlers::ZfsHandlerImpl;
 use axum::Router;
 
 /// AI-First handler for intelligent operations

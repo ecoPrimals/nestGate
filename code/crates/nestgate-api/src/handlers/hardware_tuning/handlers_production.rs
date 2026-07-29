@@ -3,8 +3,8 @@
 
 //! **HARDWARE TUNING — PRODUCTION-STYLE AXUM HANDLERS**
 //!
-//! JSON endpoints that share `/proc` discovery with [`RealHardwareTuningHandler`](crate::handlers::hardware_tuning::handlers::RealHardwareTuningHandler)
-//! via [`linux_proc`](crate::handlers::hardware_tuning::linux_proc) (no `sysinfo`).
+//! JSON endpoints that share `/proc` discovery with `RealHardwareTuningHandler`
+//! via the `linux_proc` module (no `sysinfo`).
 
 use axum::response::Json;
 use chrono::Utc;

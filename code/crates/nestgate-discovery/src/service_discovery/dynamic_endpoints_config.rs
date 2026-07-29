@@ -55,7 +55,7 @@ impl DynamicEndpointsConfig {
     pub fn new() -> Self {
         Self {
             endpoints: HashMap::new(),
-            hostname: "localhost".into(),
+            hostname: nestgate_config::constants::hardcoding::addresses::LOCALHOST_NAME.into(),
             port_base: 8000,
         }
     }

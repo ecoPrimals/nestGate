@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Wave 155i: Deep Debt Sweep + CAS on ZFS + CLI Evolution (Jul 29, 2026)
+
+- **CAS on ZFS configured**: Live composition verified — 3,119 CAS objects on ZFS cold tier (25.4TB, 1.56x compression). `.env.westgate` + `ops/nestgate.service` created for production deployment.
+- **CLI evolved**: `storage scan` defaults to `NESTGATE_STORAGE_PATH`; probe commands (`health`/`status`/`version`) bypass JWT validation — only `server` requires auth.
+- **Flaky test fixed**: `get_service_status_matches_zfs_availability` race eliminated — ZFS availability checked before mock creation.
+- **File renames for accuracy**: `production_placeholders.rs` → `native_handlers.rs`, `stub_helpers.rs` → `procfs_helpers.rs` (ZFS + hardware_tuning modules).
+- **P1 ghost methods resolved**: `content.repo.*`/`content.mirror.*` removed from `capability_registry.toml` (belonged to cellMembrane).
+- **Codebase audit**: Zero unsafe, zero production unwrap/expect/todo, zero files >800L, all deps pure Rust, clippy clean, 13K+ tests passing.
+
 ### Session 129: Dep Evolution + Stub Evolution + Fabricated Fallback Cleanup (Jul 27, 2026)
 
 - **Dep trim: `serde/rc` feature removed** — no `serde(rc)` usage found; unnecessary compile cost eliminated.

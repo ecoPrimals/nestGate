@@ -55,12 +55,9 @@ pub mod zero_cost_factory;
 #[cfg(feature = "dev-stubs")]
 pub mod native_async;
 
-/// **PRODUCTION PLACEHOLDERS**
-///
-/// Placeholder handlers for production builds without dev-stubs.
-/// Return helpful error messages directing to real ZFS integration.
+/// Native ZFS handlers for production builds (calls `nestgate_zfs` directly).
 #[cfg(not(feature = "dev-stubs"))]
-pub mod production_placeholders;
+pub mod native_handlers;
 
 // Re-export from basic module (avoiding ambiguous types)
 #[cfg(feature = "dev-stubs")]
@@ -77,9 +74,9 @@ pub use types::*;
 #[cfg(feature = "dev-stubs")]
 pub use universal_pools::*;
 
-// Production placeholders - same names, return "not implemented" messages
+/// Production native ZFS handler exports.
 #[cfg(not(feature = "dev-stubs"))]
-pub use production_placeholders::*;
+pub use native_handlers::*;
 
 pub use zero_cost_factory::*;
 

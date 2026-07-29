@@ -3,7 +3,7 @@
 
 //! **HARDWARE TUNING — PRODUCTION (no `dev-stubs`)**
 //!
-//! Read-only endpoints use [`super::linux_proc`] (`/proc`, best-effort `nvidia-smi`) and, when the
+//! Read-only endpoints use the `linux_proc` module (`/proc`, best-effort `nvidia-smi`) and, when the
 //! `OpenZFS` kstat interface is present, a lightweight ARC snapshot from
 //! `/proc/spl/kstat/zfs/arcstats`. Service registration remains `501` with an explicit JSON body.
 

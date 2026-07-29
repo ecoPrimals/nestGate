@@ -17,20 +17,20 @@ use crate::error::{BinResult, NestGateBinError};
 
 use super::bind::{resolve_socket_only_tcp_listen_port, resolve_standalone_http_bind};
 
+pub use super::service_probe::{show_health, show_status, show_version};
+
 /// Service manager for CLI lifecycle operations.
 pub struct ServiceManager {
-    // Shutdown signal for graceful service termination
     shutdown_tx: Option<tokio::sync::broadcast::Sender<()>>,
 }
 
 impl ServiceManager {
-    // Create a new service manager
     #[must_use]
     pub const fn new() -> Self {
         Self { shutdown_tx: None }
     }
 
-    // Execute a service action
+    /// Execute a service action from the CLI dispatch.
     pub async fn execute(&mut self, action: ServiceAction) -> BinResult<()> {
         match action {
             ServiceAction::Start {
@@ -62,7 +62,6 @@ impl ServiceManager {
         }
     }
 
-    // Start NestGate service
     async fn start_service(
         &self,
         port: Option<u16>,
@@ -90,133 +89,20 @@ impl ServiceManager {
         }
 
         if socket_requested {
-            // Propagate FAMILY_ID → NESTGATE_FAMILY_ID so SocketConfig resolves consistently
             if std::env::var("NESTGATE_FAMILY_ID").is_err()
                 && let Ok(fid) = std::env::var("FAMILY_ID")
             {
                 nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", &fid);
             }
 
-            let tcp_addr = Self::resolve_composition_tcp(port, bind, listen)?;
-            self.start_unix_socket_mode(tcp_addr).await
+            let tcp_addr = resolve_composition_tcp(port, bind, listen)?;
+            start_socket_server(tcp_addr).await
         } else {
             self.start_http_mode(port, bind, listen, config).await
         }
     }
 
-    /// Derive an optional TCP JSON-RPC bind address from the `service start` flags so UDS mode
-    /// can run TCP alongside the Unix socket (same newline JSON-RPC, no HTTP).
-    fn resolve_composition_tcp(
-        port: Option<u16>,
-        bind: Option<&str>,
-        listen: Option<SocketAddr>,
-    ) -> BinResult<Option<SocketAddr>> {
-        if let Some(addr) = listen {
-            return Ok(Some(addr));
-        }
-        let Some(p) = port else {
-            return Ok(None);
-        };
-        let host = bind.unwrap_or("127.0.0.1");
-        let addr: SocketAddr = format!("{host}:{p}").parse().map_err(|e| {
-            NestGateBinError::service_init_error(
-                format!("Invalid TCP bind address: {e}"),
-                Some("tcp-addr".into()),
-            )
-        })?;
-        Ok(Some(addr))
-    }
-
-    /// Unix socket JSON-RPC server via [`nestgate_core::rpc::IsomorphicIpcServer`] and the
-    /// full ecosystem [`nestgate_core::rpc::legacy_ecosystem_rpc_handler`] dispatch table.
-    ///
-    /// When `tcp_addr` is `Some`, a TCP JSON-RPC listener (same newline-delimited protocol)
-    /// runs alongside the Unix socket so `service start --port` in a composition still
-    /// provides UDS as the primary transport.
-    async fn start_unix_socket_mode(&self, tcp_addr: Option<SocketAddr>) -> BinResult<()> {
-        use nestgate_core::rpc::{
-            IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
-        };
-
-        info!("Starting in ECOSYSTEM MODE (Unix socket)");
-
-        let socket_config = SocketConfig::from_environment().map_err(|e| {
-            crate::error::NestGateBinError::service_init_error(
-                format!("Failed to get socket configuration: {e}"),
-                Some("socket-config".into()),
-            )
-        })?;
-
-        socket_config.log_summary();
-
-        info!("Configuration validated");
-        info!("Socket path: {}", socket_config.socket_path.display());
-        info!("Family ID: {}", socket_config.family_id);
-        info!("Node ID: {}", socket_config.node_id);
-        info!(
-            "Source: {}",
-            match socket_config.source {
-                nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
-                nestgate_core::rpc::SocketConfigSource::EcosystemDirectory =>
-                    "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
-                nestgate_core::rpc::SocketConfigSource::XdgRuntime => "XDG runtime directory",
-                nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",
-            }
-        );
-        if let Some(addr) = tcp_addr {
-            info!("TCP JSON-RPC also listening on {addr}");
-        }
-
-        let encryption = nestgate_core::rpc::storage_encryption::StorageEncryption::resolve(Some(
-            socket_config.family_id.as_str(),
-        ))
-        .await;
-        let encryption = encryption.map(std::sync::Arc::new);
-        if encryption.is_some() {
-            info!("Storage encrypt-at-rest: enabled (chacha20-poly1305)");
-        }
-
-        let handler =
-            legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
-                crate::error::NestGateBinError::service_init_error(
-                    format!("Failed to create JSON-RPC handler: {e}"),
-                    Some("unix-socket-handler".into()),
-                )
-            })?;
-        let server = Arc::new(IsomorphicIpcServer::new(
-            socket_config.family_id.clone(),
-            handler.clone(),
-        ));
-
-        if let Some(addr) = tcp_addr {
-            let tcp = Arc::new(TcpFallbackServer::new(
-                socket_config.family_id.clone(),
-                handler,
-            ));
-            tokio::spawn(async move {
-                if let Err(e) = tcp.start_bound(addr).await {
-                    tracing::error!("TCP JSON-RPC listener exited: {e}");
-                }
-            });
-        }
-
-        info!("JSON-RPC Unix Socket Server ready (isomorphic IPC)");
-        info!("Mode: Ecosystem (atomic architecture)");
-        info!("Press Ctrl+C to stop\n");
-
-        server.start().await.map_err(|e| {
-            crate::error::NestGateBinError::runtime_error(
-                format!("Unix socket server error: {e}"),
-                Some("unix-socket-serve".into()),
-            )
-        })?;
-
-        Ok(())
-    }
-
     /// Start HTTP mode — **default** per STARTUP-NG-01 (guideStone Stream 1).
-    ///
-    /// Binds the HTTP/REST + JSON-RPC surface. Use `--socket-only` to opt out.
     async fn start_http_mode(
         &self,
         port: Option<u16>,
@@ -226,13 +112,9 @@ impl ServiceManager {
     ) -> BinResult<()> {
         info!("Starting in STANDALONE MODE (HTTP)");
 
-        // Runtime configuration (no hardcoded host/port defaults here)
         let runtime_config = nestgate_core::config::runtime::get_config();
-
-        // tarpc port from runtime config
         let tarpc_port = runtime_config.network.tarpc_port;
 
-        // `--listen` (UniBin v1.2) takes precedence over `--bind` + `--port` / runtime defaults
         let bind_all_ipv4 = nestgate_core::constants::hardcoding::addresses::BIND_ALL_IPV4;
         let api_host_str = runtime_config.network.api_host.to_string();
         let (bind_addr, http_port, bind_host) = resolve_standalone_http_bind(
@@ -253,50 +135,16 @@ impl ServiceManager {
 
         let app = create_router_with_state();
 
-        // Create HTTP TCP listener
         let listener = tokio::net::TcpListener::bind(&bind_addr)
             .await
             .map_err(|e| {
-                crate::error::NestGateBinError::service_init_error(
+                NestGateBinError::service_init_error(
                     format!("Failed to bind to {bind_addr}: {e}"),
                     Some("http-server".into()),
                 )
             })?;
 
-        // tarpc high-performance RPC server (primal-to-primal communication)
-        #[cfg(feature = "tarpc-server")]
-        {
-            let tarpc_bind_addr: std::net::SocketAddr =
-                format!("{bind_host}:{tarpc_port}").parse().map_err(|e| {
-                    crate::error::NestGateBinError::service_init_error(
-                        format!("Invalid tarpc bind address: {e}"),
-                        Some("tarpc-server".into()),
-                    )
-                })?;
-
-            // Spawn tarpc server alongside HTTP server
-            tokio::spawn(async move {
-                let service = match nestgate_core::rpc::NestGateRpcService::new() {
-                    Ok(s) => s,
-                    Err(e) => {
-                        tracing::error!("Failed to create tarpc service: {}", e);
-                        return;
-                    }
-                };
-                tracing::info!("tarpc server starting on {}", tarpc_bind_addr);
-                if let Err(e) = nestgate_core::rpc::serve_tarpc(tarpc_bind_addr, service).await {
-                    tracing::error!("tarpc server error: {}", e);
-                }
-            });
-        }
-
-        #[cfg(not(feature = "tarpc-server"))]
-        {
-            tracing::info!(
-                "tarpc server available via `tarpc-server` feature (port {} reserved)",
-                tarpc_port
-            );
-        }
+        start_tarpc_server(tarpc_port, &bind_host);
 
         info!("Service started successfully");
         let display_host = if bind_host == bind_all_ipv4 {
@@ -316,64 +164,39 @@ impl ServiceManager {
         info!("Mode: Standalone (development/testing)");
         info!("Press Ctrl+C to stop");
 
-        // Start the HTTP server
         axum::serve(listener, app).await.map_err(|e| {
-            crate::error::NestGateBinError::runtime_error(
-                format!("Server error: {e}"),
-                Some("http-serve".into()),
-            )
+            NestGateBinError::runtime_error(format!("Server error: {e}"), Some("http-serve".into()))
         })?;
 
         Ok(())
     }
 
-    // Stop NestGate service
     async fn stop_service(&mut self) -> BinResult<()> {
         info!("Stopping NestGate service");
 
-        // Event-driven shutdown (no blocking sleep)
         if let Some(tx) = &self.shutdown_tx {
-            // Send shutdown signal to all subscribers
             let _ = tx.send(());
             info!("Shutdown signal sent to service");
 
-            // Wait for graceful shutdown with timeout
-            // Service should acknowledge shutdown within reasonable time
             tokio::time::timeout(std::time::Duration::from_secs(5), async {
-                // In production: wait for service to confirm shutdown
-                // For now: immediate return after signal
                 tokio::task::yield_now().await;
             })
             .await
             .ok();
         }
 
-        // Clean up shutdown channel
         self.shutdown_tx = None;
-
         info!("NestGate service stopped successfully");
-
         Ok(())
     }
 
-    // Restart NestGate service
     async fn restart_service(&mut self, port: Option<u16>, config: Option<&str>) -> BinResult<()> {
         info!("Restarting NestGate service");
-
-        // Event-driven coordination for restart
-        // Stop service and wait for graceful shutdown
         self.stop_service().await?;
-
-        // Stop is event-driven; `stop_service` already waited for graceful shutdown
-
-        // Start service with new configuration
         self.start_service(port, None, None, config).await?;
-
         Ok(())
     }
 
-    // Show service status
-    // Status from runtime config and socket probes (not placeholders)
     async fn show_status(&self) -> BinResult<()> {
         info!("Checking NestGate service status");
 
@@ -423,10 +246,95 @@ impl ServiceManager {
 }
 
 impl Default for ServiceManager {
-    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Socket Server — shared between ServiceManager and daemon mode
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Start the isomorphic IPC socket server with optional TCP JSON-RPC alongside.
+///
+/// This is the shared implementation used by both `ServiceManager::start_service`
+/// (ecosystem mode) and `run_socket_only_daemon`. Deduplicates socket config
+/// resolution, encryption setup, handler creation, and TCP fallback spawning.
+async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
+    use nestgate_core::rpc::{
+        IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
+    };
+
+    let socket_config = SocketConfig::from_environment().map_err(|e| {
+        NestGateBinError::service_init_error(
+            format!("Failed to get socket configuration: {e}"),
+            Some("socket-config".into()),
+        )
+    })?;
+
+    socket_config.log_summary();
+    info!("Configuration validated");
+    info!("Socket path: {}", socket_config.socket_path.display());
+    info!("Family ID: {}", socket_config.family_id);
+    info!("Node ID: {}", socket_config.node_id);
+    info!(
+        "Source: {}",
+        match socket_config.source {
+            nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
+            nestgate_core::rpc::SocketConfigSource::EcosystemDirectory =>
+                "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
+            nestgate_core::rpc::SocketConfigSource::XdgRuntime => "XDG runtime directory",
+            nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",
+        }
+    );
+    if let Some(addr) = tcp_addr {
+        info!("TCP JSON-RPC also listening on {addr}");
+    }
+
+    let encryption = nestgate_core::rpc::storage_encryption::StorageEncryption::resolve(Some(
+        socket_config.family_id.as_str(),
+    ))
+    .await;
+    let encryption = encryption.map(Arc::new);
+    if encryption.is_some() {
+        info!("Storage encrypt-at-rest: enabled (chacha20-poly1305)");
+    }
+
+    let handler =
+        legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
+            NestGateBinError::service_init_error(
+                format!("Failed to create JSON-RPC handler: {e}"),
+                Some("unix-socket-handler".into()),
+            )
+        })?;
+    let server = Arc::new(IsomorphicIpcServer::new(
+        socket_config.family_id.clone(),
+        handler.clone(),
+    ));
+
+    if let Some(addr) = tcp_addr {
+        let tcp = Arc::new(TcpFallbackServer::new(
+            socket_config.family_id.clone(),
+            handler,
+        ));
+        tokio::spawn(async move {
+            if let Err(e) = tcp.start_bound(addr).await {
+                tracing::error!("TCP JSON-RPC listener exited: {e}");
+            }
+        });
+    }
+
+    info!("JSON-RPC Unix Socket Server ready (isomorphic IPC)");
+    info!("Press Ctrl+C to stop\n");
+
+    server.start().await.map_err(|e| {
+        NestGateBinError::runtime_error(
+            format!("Unix socket server error: {e}"),
+            Some("unix-socket-serve".into()),
+        )
+    })?;
+
+    Ok(())
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -448,7 +356,6 @@ pub async fn run_daemon(
     enable_http: bool,
     family_id: Option<&str>,
 ) -> BinResult<()> {
-    // Set family_id in environment for downstream socket config resolution
     if let Some(fid) = family_id {
         nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", fid);
         info!("Multi-family mode: family_id='{}'", fid);
@@ -469,12 +376,11 @@ pub async fn run_daemon(
         info!("Starting NestGate in socket-only mode (NUCLEUS integration)");
         let tcp_addr =
             resolve_socket_only_tcp_listen_port(port, listen, bind, &nestgate_types::ProcessEnv)?;
-        run_socket_only_daemon(tcp_addr).await
+        start_socket_server(tcp_addr).await
     }
 }
 
-/// Log `TRANSPORT_ENDPOINT` status at startup. When set, outbound IPC uses
-/// the ecosystem-standard transport layer instead of raw socket discovery.
+/// Log `TRANSPORT_ENDPOINT` status at startup.
 fn log_transport_endpoint() {
     match nestgate_types::TransportEndpoint::from_env() {
         Ok(ep) => {
@@ -496,237 +402,60 @@ fn log_transport_endpoint() {
     }
 }
 
-/// Run `NestGate` in socket-only mode (opt-in via `--socket-only`, no HTTP REST).
-///
-/// Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler
-/// (same surface as the legacy Unix server; optional fixed-port TCP via [`nestgate_core::rpc::TcpFallbackServer::start_bound`]).
-async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResult<()> {
-    use nestgate_core::rpc::{
-        IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
+/// Derive an optional TCP JSON-RPC bind address from the `service start` flags.
+fn resolve_composition_tcp(
+    port: Option<u16>,
+    bind: Option<&str>,
+    listen: Option<SocketAddr>,
+) -> BinResult<Option<SocketAddr>> {
+    if let Some(addr) = listen {
+        return Ok(Some(addr));
+    }
+    let Some(p) = port else {
+        return Ok(None);
+    };
+    let host = bind.unwrap_or("127.0.0.1");
+    let addr: SocketAddr = format!("{host}:{p}").parse().map_err(|e| {
+        NestGateBinError::service_init_error(
+            format!("Invalid TCP bind address: {e}"),
+            Some("tcp-addr".into()),
+        )
+    })?;
+    Ok(Some(addr))
+}
+
+/// Spawn tarpc server if the feature is enabled.
+#[cfg(feature = "tarpc-server")]
+fn start_tarpc_server(tarpc_port: u16, bind_host: &str) {
+    let tarpc_bind_addr: std::net::SocketAddr = match format!("{bind_host}:{tarpc_port}").parse() {
+        Ok(addr) => addr,
+        Err(e) => {
+            tracing::error!("Invalid tarpc bind address: {e}");
+            return;
+        }
     };
 
-    info!("NestGate socket-only mode (NUCLEUS integration)");
-
-    // Get socket configuration with 4-tier fallback (ecosystem socket layout; BIOMEOS_SOCKET_DIR tier)
-    let socket_config = SocketConfig::from_environment().map_err(|e| {
-        crate::error::NestGateBinError::service_init_error(
-            format!("Failed to get socket configuration: {e}"),
-            Some("socket-config".into()),
-        )
-    })?;
-
-    info!("Socket-only mode activated (no HTTP REST)");
-    info!("  Primary: Unix socket JSON-RPC");
-    if let Some(addr) = tcp_jsonrpc_addr {
-        info!("  Also: TCP JSON-RPC on {addr} (newline-delimited)");
-    }
-
-    // Log socket configuration
-    socket_config.log_summary();
-
-    info!("Initializing persistent storage backend");
-    let encryption = nestgate_core::rpc::storage_encryption::StorageEncryption::resolve(Some(
-        socket_config.family_id.as_str(),
-    ))
-    .await;
-    let encryption = encryption.map(std::sync::Arc::new);
-    if encryption.is_some() {
-        info!("Storage encrypt-at-rest: enabled (chacha20-poly1305)");
-    }
-
-    let handler =
-        legacy_ecosystem_rpc_handler(&socket_config.family_id, encryption).map_err(|e| {
-            crate::error::NestGateBinError::service_init_error(
-                format!("Failed to create JSON-RPC handler: {e}"),
-                Some("unix-socket-handler".into()),
-            )
-        })?;
-    let server = Arc::new(IsomorphicIpcServer::new(
-        socket_config.family_id.clone(),
-        handler.clone(),
-    ));
-    info!("Storage backend initialized");
-
-    if let Some(addr) = tcp_jsonrpc_addr {
-        let tcp = Arc::new(TcpFallbackServer::new(
-            socket_config.family_id.clone(),
-            handler,
-        ));
-        tokio::spawn(async move {
-            if let Err(e) = tcp.start_bound(addr).await {
-                tracing::error!("TCP JSON-RPC listener exited: {e}");
+    tokio::spawn(async move {
+        let service = match nestgate_core::rpc::NestGateRpcService::new() {
+            Ok(s) => s,
+            Err(e) => {
+                tracing::error!("Failed to create tarpc service: {}", e);
+                return;
             }
-        });
-    }
+        };
+        tracing::info!("tarpc server starting on {}", tarpc_bind_addr);
+        if let Err(e) = nestgate_core::rpc::serve_tarpc(tarpc_bind_addr, service).await {
+            tracing::error!("tarpc server error: {}", e);
+        }
+    });
+}
 
-    info!("Mode: NUCLEUS integration (socket-only + optional TCP JSON-RPC)");
-    info!(
-        "Methods: storage.*, model.*, templates.*, audit.*, health.*, capabilities.*, session.*, discovery.*"
+#[cfg(not(feature = "tarpc-server"))]
+fn start_tarpc_server(tarpc_port: u16, _bind_host: &str) {
+    tracing::info!(
+        "tarpc server available via `tarpc-server` feature (port {} reserved)",
+        tarpc_port
     );
-    if tcp_jsonrpc_addr.is_some() {
-        info!("Security: Unix socket + TCP JSON-RPC");
-    } else {
-        info!("Security: Local Unix socket only");
-    }
-    info!("Press Ctrl+C to stop");
-
-    server.start().await.map_err(|e| {
-        crate::error::NestGateBinError::runtime_error(
-            format!("Unix socket server error: {e}"),
-            Some("unix-socket-serve".into()),
-        )
-    })?;
-
-    Ok(())
-}
-
-/// Show daemon status (`UniBin` CLI command)
-///
-/// Resolves the ecosystem socket path, probes the daemon, and displays live
-/// status when reachable. Falls back to static info when the daemon is offline.
-pub async fn show_status() -> BinResult<()> {
-    println!("NestGate Status");
-    println!("---");
-    println!("  Version:  {}", env!("CARGO_PKG_VERSION"));
-    println!("  Rust:     100% application code");
-    println!("  Unsafe:   forbidden (all crate roots)");
-
-    match probe_daemon("health.check").await {
-        Ok((socket_path, response)) => {
-            println!("  Socket:   {socket_path}");
-            let status_str = response
-                .get("status")
-                .and_then(serde_json::Value::as_str)
-                .unwrap_or("unknown");
-            println!("  Daemon:   ONLINE ({status_str})");
-        }
-        Err(DaemonProbeError::NoSocket(reason)) => {
-            println!("  Socket:   not configured ({reason})");
-            println!("  Daemon:   OFFLINE");
-        }
-        Err(DaemonProbeError::NotRunning(path)) => {
-            println!("  Socket:   {path} (not listening)");
-            println!("  Daemon:   OFFLINE");
-        }
-        Err(DaemonProbeError::RpcError(path, err)) => {
-            println!("  Socket:   {path}");
-            println!("  Daemon:   ERROR ({err})");
-        }
-    }
-
-    println!();
-    Ok(())
-}
-
-/// Show health check (`UniBin` CLI command)
-///
-/// Connects to the running daemon via the ecosystem socket and issues a
-/// `health.check` JSON-RPC call. Displays component-level health when
-/// available, or clear guidance when the daemon is unreachable.
-pub async fn show_health() -> BinResult<()> {
-    println!("NestGate Health Check");
-    println!("---");
-
-    match probe_daemon("health.check").await {
-        Ok((socket_path, response)) => {
-            println!("  Socket:  {socket_path}");
-            let status = response
-                .get("status")
-                .and_then(serde_json::Value::as_str)
-                .unwrap_or("unknown");
-            println!("  Status:  {status}");
-
-            if let Some(components) = response
-                .get("components")
-                .and_then(serde_json::Value::as_object)
-            {
-                for (name, val) in components {
-                    let comp_status = val
-                        .as_str()
-                        .or_else(|| val.get("status").and_then(serde_json::Value::as_str))
-                        .unwrap_or("unknown");
-                    println!("    {name}: {comp_status}");
-                }
-            }
-
-            if let Some(uptime) = response
-                .get("uptime_seconds")
-                .and_then(serde_json::Value::as_u64)
-            {
-                let hours = uptime / 3600;
-                let mins = (uptime % 3600) / 60;
-                let secs = uptime % 60;
-                println!("  Uptime:  {hours}h {mins}m {secs}s");
-            }
-        }
-        Err(DaemonProbeError::NoSocket(reason)) => {
-            println!("  Daemon not configured: {reason}");
-            println!("  Start with: nestgate service start");
-        }
-        Err(DaemonProbeError::NotRunning(path)) => {
-            println!("  Daemon not running (socket {path} unreachable)");
-            println!("  Start with: nestgate service start");
-        }
-        Err(DaemonProbeError::RpcError(path, err)) => {
-            println!("  Socket:  {path}");
-            println!("  Error:   {err}");
-        }
-    }
-
-    println!();
-    Ok(())
-}
-
-enum DaemonProbeError {
-    NoSocket(String),
-    NotRunning(String),
-    RpcError(String, String),
-}
-
-/// Probe the running daemon by resolving the socket and calling a JSON-RPC method.
-async fn probe_daemon(
-    method: &str,
-) -> std::result::Result<(String, serde_json::Value), DaemonProbeError> {
-    let socket_config = nestgate_core::rpc::SocketConfig::from_environment()
-        .map_err(|e| DaemonProbeError::NoSocket(e.to_string()))?;
-
-    let path_display = socket_config.socket_path.display().to_string();
-
-    if !socket_config.socket_path.exists() {
-        return Err(DaemonProbeError::NotRunning(path_display));
-    }
-
-    let endpoint = nestgate_types::TransportEndpoint::uds(&socket_config.socket_path);
-    let mut client = nestgate_core::rpc::JsonRpcClient::connect_transport(&endpoint)
-        .await
-        .map_err(|e| DaemonProbeError::NotRunning(format!("{path_display} ({e})")))?;
-
-    let result = client
-        .call(method, serde_json::json!({}))
-        .await
-        .map_err(|e| DaemonProbeError::RpcError(path_display.clone(), e.to_string()))?;
-
-    Ok((path_display, result))
-}
-
-/// Show version information (`UniBin` CLI command)
-pub async fn show_version() -> BinResult<()> {
-    println!("NestGate");
-    println!("---");
-    println!("  Version:       {}", env!("CARGO_PKG_VERSION"));
-    println!(
-        "  Build:         {}",
-        if cfg!(debug_assertions) {
-            "debug"
-        } else {
-            "release"
-        }
-    );
-    println!("  Architecture:  UniBin (one binary, multiple modes)");
-    println!("  Unsafe:        forbidden (all crate roots)");
-    println!("  IPC:           UDS JSON-RPC (default), TCP fallback, optional HTTP");
-    println!();
-    Ok(())
 }
 
 #[cfg(test)]

@@ -3,7 +3,7 @@
 
 //! Hardware tuning handlers.
 //!
-//! Resource discovery uses Linux `/proc` via [`super::linux_proc`] (no `sysinfo`).
+//! Resource discovery uses Linux `/proc` via the `linux_proc` module (no `sysinfo`).
 //! Benchmarks report live system metrics rather than synthetic scores.
 //!
 //! **Production JSON routes**: see [`super::handlers_production`].
