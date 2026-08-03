@@ -108,8 +108,6 @@ impl ZfsManager {
             Arc::clone(&pool_manager),
         ));
 
-        // Initialize dataset analyzer
-        // Placeholder for FileAnalyzer until available in automation crate
         let _dataset_analyzer =
             Arc::new(crate::manager::dataset_operations::DatasetAnalyzer::new());
 

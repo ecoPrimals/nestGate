@@ -2288,7 +2288,6 @@ dependencies = [
  "tokio",
  "tokio-serde",
  "tokio-test",
- "tokio-util",
  "tracing",
  "ureq",
  "url",

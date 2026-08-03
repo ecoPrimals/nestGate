@@ -72,75 +72,79 @@ impl PerformanceDashboard {
         // Get current metrics
         let current_metrics = self.metrics_collector.get_current_metrics().await?;
 
-        // Create basic time range
         let now = SystemTime::now();
         let one_hour_ago = now - Duration::from_secs(3600);
-        let _time_range = TimeRange {
-            start: one_hour_ago,
-            end: now,
-            granularity: Duration::from_secs(60),
-        };
 
-        // Collect current metrics (simplified for demo)
         let health_score: f32 =
             ((100.0 - current_metrics.cpu_usage - current_metrics.memory_usage) / 2.0) as f32;
         let health_score = health_score.clamp(0.0, 100.0);
 
+        let disk_usage_percent = nestgate_platform::linux_proc::statvfs_space(
+            std::path::Path::new("/"),
+        )
+        .map(|(total, avail)| {
+            if total > 0 {
+                let used = total.saturating_sub(avail);
+                (used as f64 / total as f64) * 100.0
+            } else {
+                0.0
+            }
+        })
+        .unwrap_or(0.0);
+
+        let network_bytes = current_metrics.network_throughput as u64;
+
+        let usage_avg = f64::midpoint(current_metrics.cpu_usage, current_metrics.memory_usage);
+
         let dashboard_overview = DashboardOverview {
             timestamp: SystemTime::now(),
             time_range: TimeRange {
-                start: SystemTime::now() - Duration::from_secs(3600), // Last hour
-                end: SystemTime::now(),
-                granularity: Duration::from_secs(60), // 1 minute granularity
+                start: one_hour_ago,
+                end: now,
+                granularity: Duration::from_secs(60),
             },
             health_score: f64::from(health_score),
             current_metrics: SystemPerformanceSnapshot {
                 timestamp: SystemTime::now(),
                 cpu_usage_percent: current_metrics.cpu_usage,
                 memory_usage_percent: current_metrics.memory_usage,
-                disk_usage_percent: 45.0,
-                network_throughput_bps: 1_000_000,
-                active_connections: 25,
-                response_time_ms: 150.0,
-                error_rate_percent: 0.1,
+                disk_usage_percent,
+                network_throughput_bps: network_bytes,
+                active_connections: 0,
+                response_time_ms: 0.0,
+                error_rate_percent: 0.0,
             },
             performance_analysis: PerformanceTrendAnalysis {
                 cpu_trend: TrendData {
-                    data_points: vec![80.0, 82.0, 85.0],
+                    data_points: vec![current_metrics.cpu_usage],
                     direction: TrendDirection::Stable,
-                    change_rate: 0.5,
+                    change_rate: 0.0,
                 },
                 memory_trend: TrendData {
-                    data_points: vec![75.0, 77.0, 78.0],
+                    data_points: vec![current_metrics.memory_usage],
                     direction: TrendDirection::Stable,
-                    change_rate: 0.3,
+                    change_rate: 0.0,
                 },
                 disk_io_trend: TrendData {
-                    data_points: vec![40.0, 42.0, 45.0],
+                    data_points: vec![disk_usage_percent],
                     direction: TrendDirection::Stable,
-                    change_rate: 1.2,
+                    change_rate: 0.0,
                 },
                 network_io_trend: TrendData {
-                    data_points: vec![85.0, 87.0, 88.0],
+                    data_points: vec![network_bytes as f64],
                     direction: TrendDirection::Stable,
-                    change_rate: 0.8,
+                    change_rate: 0.0,
                 },
                 overall_trend: TrendDirection::Stable,
             },
-            optimization_recommendations: vec![
-                "Consider monitoring CPU usage trends".into(),
-                "Review memory utilization patterns".into(),
-            ],
-            insights: vec![], // Simplified for now
+            optimization_recommendations: vec![],
+            insights: vec![],
             capacity_forecast: CapacityForecast {
-                current_usage_percentage: f64::midpoint(
-                    current_metrics.cpu_usage,
-                    current_metrics.memory_usage,
-                ),
-                projected_usage_in_30_days: 65.0,
-                projected_usage_in_90_days: 75.0,
+                current_usage_percentage: usage_avg,
+                projected_usage_in_30_days: 0.0,
+                projected_usage_in_90_days: 0.0,
                 growth_points: vec![],
-                recommendations: vec!["Monitor growth trends".into()],
+                recommendations: vec![],
             },
             alert_summary: AlertSummary {
                 critical_alerts: 0,
@@ -153,12 +157,15 @@ impl PerformanceDashboard {
         Ok(dashboard_overview)
     }
 
-    /// Stream real-time metrics
+    /// Stream real-time metrics via SSE.
+    ///
+    /// Currently returns a single `metrics_update` event. Background
+    /// collection is not yet wired — callers should poll `get_overview()`
+    /// for point-in-time snapshots until the ring-buffer collector is live.
     pub fn stream_dashboard_metrics(
         _dashboard: Arc<Self>,
     ) -> Sse<impl Stream<Item = Result<Event>>> {
         use nestgate_core::NestGateError;
-        // Create a simple stream for demo purposes
         let stream = tokio_stream::iter(vec![Ok::<Event, NestGateError>(
             Event::default().data("metrics_update"),
         )]);
@@ -186,12 +193,11 @@ pub async fn get_dashboard_overview(
     Ok(Json(ApiResponse::success(overview)))
 }
 
-/// Stream real-time metrics
+/// Stream real-time metrics via SSE.
 pub fn stream_dashboard_metrics(
     _dashboard: Arc<PerformanceDashboard>,
 ) -> Sse<impl Stream<Item = Result<Event>>> {
     use nestgate_core::NestGateError;
-    // Create a simple stream for demo purposes
     let stream = tokio_stream::iter(vec![Ok::<Event, NestGateError>(
         Event::default().data("metrics_update"),
     )]);

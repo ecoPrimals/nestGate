@@ -12,14 +12,12 @@
 //! Health module
 
 use super::types::{
-    AiIntegrationStatus, CurrentMetrics, EnhancedServiceStatus, HealthState, MigrationStatus,
-    PoolOverallStatus, SnapshotStatus, TierOverallStatus,
+    CurrentMetrics, EnhancedServiceStatus, HealthState, MigrationStatus, PoolOverallStatus,
+    SnapshotStatus, TierOverallStatus,
 };
 use crate::command::ZfsOperations;
 use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::Result;
-use std::time::SystemTime;
-// Removed unused tracing import
 
 use super::ZfsManager;
 use tracing::debug;
@@ -85,14 +83,7 @@ impl ZfsManager {
             error_rate: metrics_snapshot.error_rate,
         };
 
-        // Get AI integration status
-        let ai_status = Some(AiIntegrationStatus {
-            enabled: false, // AI integration has been sunset
-            models_deployed: 0,
-            optimization_active: false,
-            last_optimization: SystemTime::now(),
-            prediction_accuracy: 0.0,
-        });
+        let ai_status = None;
 
         let migration_status = MigrationStatus {
             active_jobs: self.get_active_migration_jobs().unwrap_or(0),

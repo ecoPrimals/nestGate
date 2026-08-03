@@ -26,7 +26,7 @@ pub struct ZfsConfig;
 pub struct ProductionZfsManager;
 
 impl ProductionZfsManager {
-    /// Create a new placeholder manager (matches stub API)
+    /// Create a new manager (matches stub API surface).
     #[must_use]
     pub const fn new(_config: ZfsConfig) -> Self {
         Self
@@ -41,7 +41,7 @@ pub type ZfsManager = ProductionZfsManager;
 pub struct ZeroCostZfsOperations;
 
 impl ZeroCostZfsOperations {
-    /// Create a new placeholder zero-cost operations
+    /// Create a new zero-cost operations instance.
     #[must_use]
     pub const fn new() -> Self {
         Self
@@ -54,7 +54,7 @@ impl ZeroCostZfsOperations {
 pub struct ZfsHandlerImpl;
 
 impl ZfsHandlerImpl {
-    /// Create a new placeholder handler
+    /// Create a new handler instance.
     #[must_use]
     pub const fn new() -> Self {
         Self

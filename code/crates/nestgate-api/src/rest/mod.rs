@@ -50,7 +50,7 @@ use nestgate_core::universal_storage::{AutoConfigurator, StorageDetector};
 #[derive(Clone)]
 /// Apistate
 pub struct ApiState {
-    /// ZFS engines for different datasets (placeholder)
+    /// ZFS engines for different datasets
     pub zfs_engines: Arc<DashMap<String, String>>,
     /// Storage detector for discovering available storage
     pub storage_detector: Arc<RwLock<StorageDetector>>,

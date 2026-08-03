@@ -35,7 +35,6 @@ use crate::error::ZfsResult as Result;
 use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::error::NestGateUnifiedError;
-// Migration engine placeholder - not yet implemented
 
 /// Intelligent dataset automation engine
 #[derive(Debug)]
@@ -45,8 +44,6 @@ pub struct DatasetAutomation {
     pool_manager: Arc<ZfsPoolManager>,
     /// Dataset management
     dataset_manager: Arc<ZfsDatasetManager>,
-    /// Migration engine for tier movement (placeholder - not yet implemented)
-    // migration_engine: Arc<RwLock<MigrationEngine>>,
     /// Active automation policies
     policies: PolicyMap,
     /// Lifecycle tracking

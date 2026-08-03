@@ -186,7 +186,7 @@ tower = "0.5"
 tower-http = { version = "0.5", features = ["cors", "trace"] }
 
 # Streaming and async utilities
-tokio-util = { version = "0.7", features = ["codec"] }
+tokio-util = { version = "0.7" }
 tokio-serde = { version = "0.8", features = ["json"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 

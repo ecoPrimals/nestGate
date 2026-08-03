@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Aug 3, 2026 (Wave 155n — Session 130: CAS federation streaming + size guard + remote decoupling)
+**Last Updated**: Aug 3, 2026 (Session 131: Deep debt — fabricated metrics purge + dep hygiene)
 **Version**: 0.5.0
 
 ---

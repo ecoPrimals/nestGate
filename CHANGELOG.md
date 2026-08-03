@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 131: Deep Debt — Fabricated Metrics Purge + Dep Hygiene (Aug 3, 2026)
+
+- **Dashboard metrics evolved to live data**: `get_overview()` now reads real disk usage via `statvfs_space("/")`, network throughput from live collector, and honest zeroes for active connections / response time / error rate (previously fabricated `45.0`, `1_000_000`, `25`, `150.0`, `0.1`). Capacity forecast and trend analysis use single-point live readings instead of hardcoded series.
+- **Metrics cache write-path wired**: `start_collection()` in `performance_dashboard/metrics/mod.rs` now persists each sample to `metrics_cache`, enabling `get_current_metrics()` to serve cached values without re-sampling.
+- **Hardware tuning deltas computed**: `estimated_power_increase` and `performance_improvement` now derive from actual before/after metric deltas instead of hardcoded `0.0` (handlers.rs, native_handlers.rs, procfs_helpers.rs).
+- **ZFS AI field sunset**: `AiIntegrationStatus` in `health.rs` set to `None` (was fabricating `prediction_accuracy: 0.0` for sunset feature). Unused import and `SystemTime` cleaned.
+- **`tokio-util` dependency pruned**: Removed direct `tokio-util` dep from `nestgate-rpc` (zero `tokio_util::` imports in production code). Dropped `codec` feature from workspace declaration.
+- **Stale comments purged**: Removed "demo purposes", "placeholder", and "simplified for demo" comments from production code across 10+ files (engine.rs, initialization.rs, native_handlers.rs, providers.rs, rest/mod.rs, zero_cost_factory.rs, download.rs, monitoring/metrics.rs).
+- **Tests updated**: Dashboard tests evolved to assert honest values (empty recommendations, single-point trends, zero connections).
+
 ### Session 130: CAS Federation Streaming + Size Guard + Remote Decoupling (Aug 3, 2026)
 
 - **Federation streaming for large blobs**: `content.replicate` and `content.replicate.pull` now use chunked streaming (`content.store_stream` / `content.retrieve_stream`) for blobs > 16 MiB. Below threshold: inline base64 `content.put`/`content.get` (single call). Above: 4 MiB chunks via session-based streaming. Enables cross-gate replication of 293 GB+ datasets without loading entire payload into memory.

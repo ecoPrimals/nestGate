@@ -325,7 +325,7 @@ impl DownloadManager {
         Ok(())
     }
 
-    /// Placeholder hook for configuration-driven downloads; currently a no-op.
+    /// Hook for configuration-driven downloads; currently a no-op.
     pub const fn download_components(&self, _config: &crate::config::InstallerConfig) {}
 }
 

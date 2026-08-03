@@ -170,8 +170,8 @@ async fn test_get_overview_has_recommendations() {
 
     let overview = dashboard.get_overview().await.unwrap();
 
-    // Should have at least some optimization recommendations
-    assert!(!overview.optimization_recommendations.is_empty());
+    // Recommendations are empty until trend analysis is wired
+    assert!(overview.optimization_recommendations.is_empty());
 }
 
 #[tokio::test]
@@ -288,11 +288,11 @@ async fn test_get_overview_trend_data_points() {
 
     let overview = dashboard.get_overview().await.unwrap();
 
-    // Each trend should have 3 data points as per implementation
-    assert_eq!(overview.performance_analysis.cpu_trend.data_points.len(), 3);
+    // Each trend carries the current reading (1 data point)
+    assert_eq!(overview.performance_analysis.cpu_trend.data_points.len(), 1);
     assert_eq!(
         overview.performance_analysis.memory_trend.data_points.len(),
-        3
+        1
     );
     assert_eq!(
         overview
@@ -300,7 +300,7 @@ async fn test_get_overview_trend_data_points() {
             .disk_io_trend
             .data_points
             .len(),
-        3
+        1
     );
     assert_eq!(
         overview
@@ -308,7 +308,7 @@ async fn test_get_overview_trend_data_points() {
             .network_io_trend
             .data_points
             .len(),
-        3
+        1
     );
 }
 
@@ -319,11 +319,12 @@ async fn test_get_overview_metric_snapshot_fields() {
     let overview = dashboard.get_overview().await.unwrap();
     let snapshot = &overview.current_metrics;
 
-    // Verify all snapshot fields are present and reasonable
-    assert!(snapshot.active_connections > 0);
-    assert!(snapshot.response_time_ms > 0.0);
-    assert!(snapshot.error_rate_percent >= 0.0);
-    assert!(snapshot.network_throughput_bps > 0);
+    // Fields reflect honest live values (zero when not yet measured)
+    assert_eq!(snapshot.active_connections, 0);
+    assert_eq!(snapshot.response_time_ms, 0.0);
+    assert_eq!(snapshot.error_rate_percent, 0.0);
+    // network_throughput_bps may be 0 or non-zero depending on live traffic
+    let _ = snapshot.network_throughput_bps;
 }
 
 #[tokio::test]
@@ -360,5 +361,5 @@ async fn test_get_dashboard_overview_handler_none_query() {
     assert!(body.success);
     let overview = body.data.expect("overview data");
     let cap = &overview.capacity_forecast;
-    assert!(cap.projected_usage_in_30_days > 0.0);
+    assert!(cap.projected_usage_in_30_days >= 0.0);
 }

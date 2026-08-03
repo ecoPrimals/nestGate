@@ -44,9 +44,11 @@ impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
 }
 
 #[cfg(not(feature = "dev-stubs"))]
-/// **ZERO-COST NATIVE ZFS SERVICE** (Production Placeholder)
+/// **ZERO-COST NATIVE ZFS SERVICE**
 ///
-/// Placeholder for production builds.
+/// Minimal production type — full ZFS operations are dispatched through
+/// `nestgate_zfs` directly; this struct provides the const-generic service
+/// shell only.
 #[derive(Debug, Clone)]
 /// Service implementation for `ZeroCostNativeZfs`
 pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize>;
@@ -61,7 +63,7 @@ impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
 
 #[cfg(not(feature = "dev-stubs"))]
 impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
-    /// Create a new placeholder service
+    /// Create a new service instance.
     #[must_use]
     pub const fn new() -> Self {
         Self

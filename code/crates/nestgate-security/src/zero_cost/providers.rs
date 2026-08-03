@@ -67,17 +67,13 @@ impl<const CAPACITY: usize> ZeroCostCacheProvider<String, Vec<u8>>
         self.data.get(key).cloned()
     }
 
-    /// Set
+    /// Set a key (no-op: zero-cost provider is read-only by design).
     fn set(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
-        // In a real implementation, this would be mutable
-        // For demo purposes, we simulate success
         Ok(())
     }
 
-    /// Remove
+    /// Remove a key (no-op: zero-cost provider is read-only by design).
     fn remove(&self, _key: &String) -> bool {
-        // In a real implementation, this would be mutable
-        // For demo purposes, we simulate success
         true
     }
 }

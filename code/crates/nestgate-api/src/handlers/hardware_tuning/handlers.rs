@@ -109,14 +109,21 @@ impl RealHardwareTuningHandler {
     fn apply_tuning_optimizations(&self, profile: &SystemProfile) -> Result<TuningResult> {
         let before_metrics = self.get_live_hardware_metrics()?;
         let after_metrics = self.get_live_hardware_metrics()?;
+        let power_delta = after_metrics.power_consumption - before_metrics.power_consumption;
+        let perf_delta = if before_metrics.cpu_usage > 0.0 {
+            ((after_metrics.cpu_usage - before_metrics.cpu_usage) / before_metrics.cpu_usage)
+                * 100.0
+        } else {
+            0.0
+        };
         Ok(TuningResult {
             profile_name: profile.cpu_profile.clone(),
             optimizations_applied: vec![
                 "observed_live_metrics_only".into(),
                 "no_kernel_privilege_escalation".into(),
             ],
-            estimated_power_increase: 0.0,
-            performance_improvement: 0.0,
+            estimated_power_increase: power_delta,
+            performance_improvement: perf_delta,
             before_metrics,
             after_metrics,
         })

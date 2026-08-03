@@ -38,8 +38,13 @@ impl RealTimeMetricsCollector {
         }
     }
 
-    /// Start collecting metrics and broadcasting updates
+    /// Start collecting metrics and broadcasting updates.
+    ///
+    /// Each tick stores the latest snapshot in `metrics_cache` so
+    /// `get_current_metrics()` can return a recent value without
+    /// re-sampling.
     pub async fn start_collection(&self, broadcaster: Arc<broadcast::Sender<String>>) {
+        let cache = Arc::clone(&self.metrics_cache);
         let mut interval = tokio::time::interval(Duration::from_secs(1));
 
         loop {
@@ -47,7 +52,11 @@ impl RealTimeMetricsCollector {
 
             match Self::collect_all_metrics().await {
                 Ok(metrics) => {
-                    // Broadcast simple metrics update
+                    {
+                        let mut w = cache.write().await;
+                        w.insert("latest".into(), metrics.clone());
+                    }
+
                     let message = format!(
                         "metrics_update:{}",
                         serde_json::to_string(&metrics).unwrap_or_default()
@@ -127,8 +136,8 @@ impl RealTimeMetricsCollector {
                 * 100.0,
             disk_io: system_metrics.disk_usage_percent,
             network_throughput: system_metrics.network_io_bps as f64,
-            active_connections: 25,  // Default value
-            response_time_ms: 150.0, // Default value
+            active_connections: 0,
+            response_time_ms: 0.0,
         };
 
         Ok(current_metrics)

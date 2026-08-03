@@ -119,7 +119,7 @@ pub async fn get_metrics_history(
     Query(query): Query<MetricsHistoryQuery>,
 ) -> Result<Json<DataResponse<Vec<SystemMetrics>>>, Json<DataError>> {
     debug!("Getting historical metrics data: {:?}", query);
-    // Parse time range (simplified for demo)
+    // Parse time range from query parameters
     let start_time = query
         .start
         .as_deref()

@@ -34,7 +34,6 @@ tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-serde = { workspace = true, features = ["bincode"] }
-tokio-util = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
