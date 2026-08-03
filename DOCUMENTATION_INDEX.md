@@ -1,9 +1,9 @@
 # NestGate Documentation Index
 
-**Last Updated**: Jul 28, 2026 (Wave 155g)  
+**Last Updated**: Aug 3, 2026 (Session 131)  
 **Version**: 0.5.0
 
-Paths linked below exist in this repository as of July 2026.
+Paths linked below exist in this repository as of August 2026.
 
 ---
 
@@ -41,6 +41,10 @@ Paths linked below exist in this repository as of July 2026.
 Session archives, planning docs, stale examples, old specs, and historical reports are preserved in
 `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`. Git history retains the full record.
 
+`WATERINGHOLE_AUDIT_BUNDLE.md` and `WATERINGHOLE_KEYWORD_INDEX.md` (generated ecosystem snapshots)
+were removed from the repo root in Session 131. The ecosystem-wide audit lives in
+`ecoPrimals/infra/wateringHole/`; git history retains prior versions.
+
 Historical guides and architecture docs live in:
 - `ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026/` (Jun 21 cleanup)
 - `ecoPrimals/infra/fossilRecord/nestgate/historical-docs-jun2026-wave128b/` (Jun 28: COMMON_TASKS, TROUBLESHOOTING, ZERO_COPY_OPTIMIZATIONS, DEVELOPER_ONBOARDING)
@@ -76,6 +80,6 @@ Crate-level benchmarks: `code/crates/nestgate-core/benches/`, `code/crates/nestg
 
 ---
 
-**Status**: Documentation updated Jul 28, 2026 (Wave 155g).  
+**Status**: Documentation updated Aug 3, 2026 (Session 131).  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: Jul 28, 2026 (Wave 155g)
+**Last Updated**: Aug 3, 2026 (Session 131)

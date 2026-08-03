@@ -40,9 +40,14 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–129) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–131) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 131** (Aug 3): Fabricated metrics purge — dashboard `get_overview()` evolved from 7 hardcoded values to live `/proc`+`statvfs`; hw-tuning deltas computed from before/after; ZFS AI field `None` (sunset); `tokio-util` dep pruned; stale "demo"/"placeholder" comments cleaned across 10+ files.
+- **Session 130** (Aug 3, Wave 155n): CAS federation streaming — chunked transfer for >16 MiB blobs via `content.store_stream`/`content.retrieve_stream`; `content.get` 64 MiB inline guard; `NESTGATE_PREFERRED_REMOTE` remote decoupling; atomic writes for pull.
+- **Session 129** (Jul 27): Dep evolution (`serde/rc`, `tower-http/fs` pruned) + stub evolution (`should_transition_to_stage`, `get_all_pool_metrics`, `get_cache_metrics` → live) + fabricated fallback cleanup (disk I/O + ARC magic numbers → honest zeroes).
+- **Session 128** (Jul 27): G3 BTSP peer wiring (3 sites → `connect_btsp_aware`) + G4 NTFS CAS safety (`validate_path_segment`, atomic writes, Windows marker guard) + biomeOS → Ecosystem rename.
+- **Session 127** (Jul 27): G3 BTSP→CAS wiring (federation ops → `JsonRpcClient`) + G4 cross-platform paths (Windows named pipe, `USERPROFILE`, PATH lookup).
 - **Wave 155i** (Jul 29): CAS on ZFS configured, deep debt sweep complete. CLI probe commands evolved (bypass JWT). Flaky test fixed. File renames for naming accuracy. P1 ghost methods resolved. Live composition verified (8 services, 1,704 capabilities). 113.7 GiB `cargo clean`.
 - **Session 126** (Wave 151c): BTSP ClientHello shipped — `btsp_client_handshake.rs` implements full outbound wire handshake (P1 Nest Atomic blocker resolved); dead `BtspClient` stub removed from `btsp_client.rs`; `JsonRpcClient::from_btsp_stream` + `connect_with_btsp` integration hook; 8 dep bumps (cc, clap, either, libc, rustls-pki-types, syn, tokio-stream)
 - **Session 125** (Wave 150t): Procfs consolidation phase 3 — 17 `/proc` callsites in nestgate-api consolidated to `linux_proc` delegates (hardware_tuning, metrics_collector, performance_dashboard); 6 dep bumps (tokio, libc, tokio-util, zerocopy); clippy cleanup; wave stamps → 150t

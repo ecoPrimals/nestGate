@@ -1,11 +1,11 @@
 # NestGate - Quick Reference
 
 **Version**: 0.5.0  
-**Tests**: 12,973 passed, 0 failed (~80 ignored) (see STATUS.md)  
+**Tests**: 13,095+ passed, 0 failed (~430 ignored) (see STATUS.md)  
 **Coverage**: 84%+ line (llvm-cov); target 90%  
 **Clippy**: PASS — `cargo clippy --all-features -- -D warnings` (zero warnings, pedantic+nursery)  
 **Crates**: 20 workspace crates (under `code/crates/`)  
-**Last Updated**: Jul 28, 2026 (Wave 155g)
+**Last Updated**: Aug 3, 2026 (Session 131)
 
 ---
 
@@ -228,4 +228,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: Jul 28, 2026 (Wave 155g)
+**Last Updated**: Aug 3, 2026 (Session 131)
