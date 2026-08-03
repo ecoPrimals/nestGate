@@ -19,10 +19,12 @@
 //! canonical artifact provenance query (no separate method needed).
 
 mod cas;
+mod fetch;
 mod manifest;
 mod raw;
 
 pub use cas::{content_exists, content_get, content_list, content_put};
+pub use fetch::content_fetch;
 pub use manifest::{content_collections, content_promote, content_publish, content_resolve};
 pub use raw::{RawContent, content_get_raw};
 

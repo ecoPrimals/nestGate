@@ -84,6 +84,7 @@ stability = "stable"
 description = "Content-addressed storage with versioned manifests — BLAKE3 hash-as-key, automatic dedup, atomic deploys"
 methods = [
     "content.put", "content.get", "content.exists", "content.list",
+    "content.fetch",
     "content.publish", "content.resolve", "content.promote", "content.collections",
     "content.fetch_heads", "content.push", "content.replicate", "content.replicate.pull", "content.sync",
     "content.store_stream", "content.store_stream_chunk",
@@ -99,6 +100,12 @@ methods = [
 # content.list:   {family_id?} → {hashes: [{hash, size}], count}
 # hash is the 64-char lowercase hex BLAKE3 digest of the raw (pre-base64) bytes.
 # Filesystem: {base}/datasets/{family}/_content/{hex[..2]}/{hex}
+#
+# ── Content fetch (data federation) ─────────────────────────────────
+# content.fetch: {url, rate_limit_mbps?, timeout_secs?, allow_http?, expected_hash?} → {hash, size, url, content_type, stored, deduplicated, fetched_at}
+#   HTTP(S) GET → BLAKE3 hash → CAS store in one atomic step.
+#   Rate-limited via chunked reads. Deduplicates against existing CAS.
+#   Signal graphs call topology.bandwidth.request before dispatching.
 #
 # ── Content manifests (NG-2) ────────────────────────────────────────
 # content.publish:     {collection, manifest: {path: hash, ...}, family_id?} → {collection, entry_count, stored}
