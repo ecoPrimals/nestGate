@@ -378,7 +378,14 @@ async fn count_commits(repo_path: &str, from: &str, to: &str) -> u64 {
     }
 }
 
+/// Resolve the best git remote for federation sync.
+///
+/// Prefers the remote named by `NESTGATE_PREFERRED_REMOTE` (default: the first
+/// available among the repo's configured remotes). Falls back to `"origin"` if
+/// no preference is set or the preferred remote doesn't exist.
 async fn resolve_best_remote(repo_path: &str) -> String {
+    let preferred = std::env::var("NESTGATE_PREFERRED_REMOTE").ok();
+
     let output = Command::new("git")
         .args(["remote"])
         .current_dir(repo_path)
@@ -388,13 +395,19 @@ async fn resolve_best_remote(repo_path: &str) -> String {
     match output {
         Ok(o) if o.status.success() => {
             let remotes = String::from_utf8_lossy(&o.stdout);
-            if remotes.lines().any(|r| r.trim() == "forgejo") {
-                "forgejo".into()
-            } else {
-                "origin".into()
+            let remote_list: Vec<&str> = remotes.lines().map(str::trim).collect();
+
+            if let Some(ref pref) = preferred
+                && remote_list.iter().any(|r| r == pref)
+            {
+                return pref.clone();
             }
+
+            remote_list
+                .first()
+                .map_or_else(|| "origin".into(), |r| (*r).to_owned())
         }
-        _ => "origin".into(),
+        _ => preferred.unwrap_or_else(|| "origin".into()),
     }
 }
 

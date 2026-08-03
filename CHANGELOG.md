@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-06-05
 
+### Session 130: CAS Federation Streaming + Size Guard + Remote Decoupling (Aug 3, 2026)
+
+- **Federation streaming for large blobs**: `content.replicate` and `content.replicate.pull` now use chunked streaming (`content.store_stream` / `content.retrieve_stream`) for blobs > 16 MiB. Below threshold: inline base64 `content.put`/`content.get` (single call). Above: 4 MiB chunks via session-based streaming. Enables cross-gate replication of 293 GB+ datasets without loading entire payload into memory.
+- **`content.get` inline size guard**: Blobs > 64 MiB return `use_streaming: true` with size metadata instead of the full base64 payload. Callers switch to `content.retrieve_stream` for chunked download. Prevents unbounded memory growth on multi-GB objects.
+- **`pull_blob_from_remote` streaming-aware**: Now probes `content.exists` first for size. If remote returns `use_streaming: true` from `content.get`, transparently falls back to chunked retrieve. Both inline and streamed paths verify BLAKE3 integrity.
+- **Federation remote decoupling**: Removed hardcoded `"forgejo"` remote preference from `resolve_best_remote` and `content.push`. Now configurable via `NESTGATE_PREFERRED_REMOTE` env var. Falls back to first available git remote, then `"origin"`.
+- **Test extraction**: `content_federation_handlers.rs` tests extracted to `content_federation_handlers_tests.rs` — production file from 980 → 797 lines (under 800 limit).
+- **Atomic writes in pull**: `verify_and_write` uses temp-file-then-rename pattern for integrity during write.
+
 ### Wave 155i: Deep Debt Sweep + CAS on ZFS + CLI Evolution (Jul 29, 2026)
 
 - **CAS on ZFS configured**: Live composition verified — 3,119 CAS objects on ZFS cold tier (25.4TB, 1.56x compression). `.env.westgate` + `ops/nestgate.service` created for production deployment.

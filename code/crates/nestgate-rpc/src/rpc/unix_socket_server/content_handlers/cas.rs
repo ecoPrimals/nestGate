@@ -152,7 +152,16 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     }))
 }
 
+/// Blobs larger than this threshold are not returned inline by `content.get`.
+/// Callers should use `content.retrieve_stream` for large objects.
+const INLINE_MAX_BYTES: u64 = 64 * 1024 * 1024;
+
 /// `content.get` — retrieve content by BLAKE3 hash.
+///
+/// For blobs up to 64 MiB, returns the base64-encoded payload inline.
+/// For larger blobs, returns `use_streaming: true` with the blob `size`
+/// so the caller can switch to `content.retrieve_stream` for chunked
+/// download. This prevents unbounded memory growth on multi-GB objects.
 ///
 /// Response includes `retrieved_in_ms` for shadow-run latency measurement.
 pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result<Value> {
@@ -170,6 +179,29 @@ pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result
     let object_path = content_key_path(family_id, hash);
     if !object_path.exists() {
         return Ok(json!({"data": null, "hash": hash, "family_id": family_id}));
+    }
+
+    let file_meta = tokio::fs::metadata(&object_path)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("Failed to stat content {hash}: {e}")))?;
+
+    if file_meta.len() > INLINE_MAX_BYTES {
+        let mut resp = json!({
+            "data": null,
+            "hash": hash,
+            "size": file_meta.len(),
+            "family_id": family_id,
+            "use_streaming": true,
+            "streaming_method": "content.retrieve_stream",
+            "retrieved_in_ms": t0.elapsed().as_secs_f64() * 1000.0
+        });
+        let meta_path = object_path.with_extension("meta.json");
+        if let Ok(raw) = tokio::fs::read(&meta_path).await
+            && let Ok(sidecar) = serde_json::from_slice::<Value>(&raw)
+        {
+            merge_sidecar_fields(&mut resp, &sidecar);
+        }
+        return Ok(resp);
     }
 
     let raw_data = tokio::fs::read(&object_path)

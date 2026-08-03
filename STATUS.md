@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Jul 29, 2026 (Wave 155i — CAS on ZFS configured, deep debt complete)
+**Last Updated**: Aug 3, 2026 (Wave 155n — Session 130: CAS federation streaming + size guard + remote decoupling)
 **Version**: 0.5.0
 
 ---
