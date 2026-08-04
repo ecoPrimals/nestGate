@@ -1,7 +1,7 @@
 # NestGate Testing Guide
 
-**Last Updated**: Jul 21, 2026  
-**Full suite (`cargo test --workspace`)**: 3,790 passed, 73 ignored (1 pre-existing env-specific)  
+**Last Updated**: Aug 4, 2026 (Session 134)  
+**Full suite (`cargo test --workspace`)**: 1,630+ passed, ~80 ignored  
 **Coverage**: 84%+ line (workspace, all features)  
 **Goal**: Maintain high coverage with clean, maintainable tests  
 
@@ -18,8 +18,8 @@ cargo test --workspace
 ## Quick Stats
 
 ```
-Tests passing:           3,790
-Failures:                1 (pre-existing env-specific)
+Tests passing:           1,630+
+Failures:                0
 Ignored:                    73 (see tests/DISABLED_TESTS_REFERENCE.md)
 Crates with tests:       Workspace-wide (22 members)
 Clippy:                  cargo clippy --workspace --all-targets --all-features -- -D warnings PASS
@@ -75,7 +75,6 @@ cargo llvm-cov --workspace --all-features --html
 tests/
 ├── chaos/                   # Chaos / resilience scenarios (#[ignore])
 ├── common/                  # Shared utilities (config, mocks, test doubles)
-├── integration_test_suite/  # Comprehensive integration scenarios (+ main entry helpers)
 ├── unit/                    # Focused unit-style tests
 ├── e2e*.rs                  # End-to-end scenario binaries (Cargo test roots)
 ├── integration_*.rs         # Integration-style Cargo test binaries

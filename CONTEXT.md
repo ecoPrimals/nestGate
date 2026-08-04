@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Aug 3, 2026 (Session 131)
+**Last Updated**: Aug 4, 2026 (Session 134)
 
 ## What This Is
 
@@ -24,9 +24,9 @@ than by importing this crate graph.
 | **Version** | 0.5.0 |
 | **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
-| **Tests** | 13,095+ passed, 0 failed (~430 ignored) |
+| **Tests** | 1,630+ passed, 0 failed (~80 ignored) |
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
-| **Architecture** | 20 workspace crates under `code/crates/` |
+| **Architecture** | 18 workspace crates under `code/crates/` (2 quarantined) |
 | **Binary** | Single self-contained release binary |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
 | **TLS/crypto** | `ureq` + `oxitls-rustcrypto-provider` (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl eliminated; installer uses system `curl` |

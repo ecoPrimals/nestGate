@@ -5,7 +5,7 @@
 NestGate is in active development. Current metrics:
 
 - **Build**: 22/22 workspace packages, 0 errors (`cargo check --workspace --all-features --all-targets`)
-- **Tests**: 13,095+ passed, 0 failed (~430 ignored) (see STATUS.md)
+- **Tests**: 1,630+ passed, 0 failed (~80 ignored) (see STATUS.md)
 - **Coverage**: 84%+ line (llvm-cov); 90% org target pending
 - **Clippy**: `cargo clippy --workspace -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
 - **Safety**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)

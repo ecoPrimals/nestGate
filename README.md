@@ -2,15 +2,15 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-08-03, Session 131)**  
+**Verification (as of 2026-08-04, Session 134)**  
 - **Build**: `cargo check --workspace --all-features` — PASS  
 - **Clippy**: `cargo clippy --all-features -- -D warnings` — PASS (zero warnings, pedantic+nursery)  
-- **Tests**: 13,095+ passed, 0 failed (~430 ignored)  
+- **Tests**: 1,630+ passed, 0 failed (~80 ignored)  
 - **Format**: `cargo fmt --check` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 13,095+ passed, 0 failed (~430 ignored)
+- **Tests (last recorded)**: 1,630+ passed, 0 failed (~80 ignored)
 - **Coverage**: 84%+ line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
@@ -23,7 +23,7 @@
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 - **File size**: All `.rs` files under 800 lines (`content_handlers.rs` split → 4-file directory module Wave 128b)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
-- **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
+- **Dead code**: zero unwired modules (auth_production + zero_cost_api_handlers purged Session 134), zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **BTSP Phase 2**: server-side + client-side handshake; client `ClientHello` shipped Session 126 (Wave 151c — Nest Atomic unblocked); JSON-line + length-prefixed dual framing; 6-tier security socket discovery; security provider wire contract aligned (`family_seed`, `session_token`, `btsp.session.verify` params); mode-aware error frames; `SECURITY_FAMILY_SEED` canonical env var  
 - **BTSP Phase 3**: `btsp.negotiate` server-side encrypted channel (ChaCha20-Poly1305 AEAD, BLAKE3 KDF key derivation, length-prefixed framing); wired into both UDS and isomorphic IPC listeners; transport hardened (decrypt/read errors propagate as Err, not silent Ok)
 - **JWT NUCLEUS bypass**: BTSP composition auto-detected via `is_btsp_required()` — skips `NESTGATE_JWT_SECRET` validation when FAMILY_ID signals a NUCLEUS stack
@@ -165,7 +165,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-03 (Se
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | 13,095+ passed, 0 failed (~430 ignored) |
+| Tests | 1,630+ passed, 0 failed (~80 ignored) |
 | Coverage | 84%+ line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w) |
