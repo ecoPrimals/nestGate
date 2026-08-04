@@ -20,7 +20,7 @@ use super::storage_paths::{content_hash_hex, ensure_parent_dirs};
 
 /// Blobs above this threshold use chunked streaming for federation transfer.
 /// Below this, the inline base64 JSON-RPC path is used (simpler, single-call).
-pub(super) const FEDERATION_STREAM_THRESHOLD: u64 = 16 * 1024 * 1024;
+pub const FEDERATION_STREAM_THRESHOLD: u64 = 16 * 1024 * 1024;
 
 /// Chunk size for federation streaming (4 MiB, matching `MAX_STREAM_CHUNK`).
 const FEDERATION_CHUNK_SIZE: u64 = 4 * 1024 * 1024;

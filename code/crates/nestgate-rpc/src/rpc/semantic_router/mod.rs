@@ -251,6 +251,7 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "content.get" => content::content_get(self, params).await,
             "content.exists" => content::content_exists(self, params).await,
             "content.list" => content::content_list(self, params).await,
+            "content.query" => content::content_query(self, params).await,
             "content.publish" => content::content_publish(self, params).await,
             "content.resolve" => content::content_resolve(self, params).await,
             "content.promote" => content::content_promote(self, params).await,

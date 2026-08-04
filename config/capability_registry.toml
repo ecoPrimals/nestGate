@@ -83,7 +83,7 @@ domain = "content"
 stability = "stable"
 description = "Content-addressed storage with versioned manifests — BLAKE3 hash-as-key, automatic dedup, atomic deploys"
 methods = [
-    "content.put", "content.get", "content.exists", "content.list",
+    "content.put", "content.get", "content.exists", "content.list", "content.query",
     "content.fetch",
     "content.publish", "content.resolve", "content.promote", "content.collections",
     "content.fetch_heads", "content.push", "content.replicate", "content.replicate.pull", "content.sync",
@@ -98,6 +98,7 @@ methods = [
 # content.get:    {hash: "<blake3_hex>", family_id?} → {data: "<base64>", hash, size, content_type?, retrieved_in_ms}
 # content.exists: {hash: "<blake3_hex>", family_id?} → {exists, hash, size?}
 # content.list:   {family_id?} → {hashes: [{hash, size}], count}
+# content.query:  {content_type?, source?, pipeline?, stored_by?, parent_hash?, limit?, offset?, family_id?} → {results: [{hash, size, ...sidecar}], count, scanned}
 # hash is the 64-char lowercase hex BLAKE3 digest of the raw (pre-base64) bytes.
 # Filesystem: {base}/datasets/{family}/_content/{hex[..2]}/{hex}
 #

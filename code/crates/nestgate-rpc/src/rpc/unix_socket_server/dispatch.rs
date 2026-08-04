@@ -181,6 +181,7 @@ pub(super) async fn handle_request(
         "content.get" => content_handlers::content_get(request.params.as_ref(), state).await,
         "content.exists" => content_handlers::content_exists(request.params.as_ref(), state).await,
         "content.list" => content_handlers::content_list(request.params.as_ref(), state).await,
+        "content.query" => content_handlers::content_query(request.params.as_ref(), state).await,
         // Content fetch — HTTP(S) GET → BLAKE3 → CAS in one step (data federation)
         "content.fetch" => {
             content_handlers::content_fetch(request.params.as_ref(), state).await

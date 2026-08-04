@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
+use crate::rpc::unix_socket_server::federation_blob_transfer::FEDERATION_STREAM_THRESHOLD;
 use serde_json::json;
 
 fn mock_state() -> StorageState {

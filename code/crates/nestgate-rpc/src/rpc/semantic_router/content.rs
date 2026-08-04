@@ -66,6 +66,14 @@ pub(super) async fn content_list(
     content_handlers::content_list(Some(&params), shared_state()).await
 }
 
+/// Route `content.query` → filter CAS objects by sidecar metadata.
+pub(super) async fn content_query(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_handlers::content_query(Some(&params), shared_state()).await
+}
+
 /// Route `content.publish` → store a manifest mapping paths to content hashes.
 pub(super) async fn content_publish(
     _router: &SemanticRouter<impl MetadataBackend>,
