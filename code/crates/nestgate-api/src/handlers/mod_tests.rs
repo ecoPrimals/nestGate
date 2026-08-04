@@ -90,12 +90,6 @@ mod handlers_module_tests {
     }
 
     #[test]
-    fn test_zero_cost_api_handlers_module_accessible() {
-        // Verify zero-cost API handlers module is accessible
-        // Test passes if this compiles
-    }
-
-    #[test]
     fn test_zfs_module_accessible() {
         // Verify ZFS module is accessible - compilation of this test proves the import works
         let module_name = "zfs";
@@ -124,14 +118,12 @@ mod handlers_module_tests {
             "status",
             "storage",
             "workspace_management",
-            "zero_cost_api_handlers",
             "zfs",
         ];
 
-        // Verify we have a reasonable number of modules
         assert!(
-            modules.len() >= 15,
-            "Should have at least 15 handler modules"
+            modules.len() >= 14,
+            "Should have at least 14 handler modules"
         );
     }
 
@@ -148,7 +140,6 @@ mod handlers_module_tests {
             "performance_analyzer",
             "performance_dashboard",
             "workspace_management",
-            "zero_cost_api_handlers",
         ];
 
         for name in module_names {

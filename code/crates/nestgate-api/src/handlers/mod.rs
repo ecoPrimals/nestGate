@@ -64,14 +64,6 @@
 /// Authentication handlers delegate to `nestgate-security` (`HybridAuthenticationManager`).
 pub mod auth;
 
-/// **PRODUCTION AUTH HANDLERS**
-///
-/// Production authentication using `nestgate-core` security (`AuthManager`).
-#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
-pub(crate) mod auth_production;
-#[cfg(test)]
-mod auth_production_tests;
-
 /// **AI-FIRST EXAMPLE MODULE**
 ///
 /// Demo/example handlers — gated behind `dev-stubs` to keep production binary lean.
@@ -190,14 +182,6 @@ mod api_error_path_tests; // Dec 10, 2025 - Comprehensive API error path tests
 
 #[cfg(test)]
 mod mod_tests;
-
-/// **ZERO-COST API HANDLERS MODULE**
-///
-/// High-performance zero-cost abstraction API handlers.
-#[expect(dead_code, reason = "Stub APIs awaiting route wiring")]
-pub(crate) mod zero_cost_api_handlers;
-#[cfg(test)]
-mod zero_cost_api_handlers_tests;
 
 /// **ZFS HANDLERS MODULE**
 ///

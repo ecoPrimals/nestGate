@@ -85,12 +85,6 @@ pub mod error;
 /// hardware tuning, workspace management, and zero-cost operations.
 pub mod handlers;
 
-/// **MODELS MODULE**
-///
-/// Data models and structures used throughout the API for requests, responses,
-/// and internal data representation.
-pub(crate) mod models;
-
 /// **REST MODULE**
 ///
 /// REST API implementation including routing, middleware, and HTTP handlers.

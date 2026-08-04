@@ -115,10 +115,9 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
     /// Health Update
     async fn health_update(&self, service_id: &str, status: Self::HealthStatus) -> Result<()> {
         {
-            let mut services = self.services.write().await;
-            if let Some(_service) = services.get_mut(service_id) {
-                // Update service health (assuming ServiceInfo has health field)
-                // service.health = status.clone();
+            let services = self.services.read().await;
+            if !services.contains_key(service_id) {
+                tracing::debug!(service_id, ?status, "health update for unknown service");
             }
         }
 
@@ -193,9 +192,9 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         service_id: &str,
         _metadata: HashMap<String, String>,
     ) -> Result<()> {
-        if let Some(_service) = self.services.write().await.get_mut(service_id) {
-            // Update service metadata (assuming ServiceInfo has metadata field)
-            // service.metadata.extend(metadata);
+        let services = self.services.read().await;
+        if !services.contains_key(service_id) {
+            tracing::debug!(service_id, "metadata update for unknown service");
         }
         Ok(())
     }

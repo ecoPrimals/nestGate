@@ -38,16 +38,7 @@ impl UniversalStorageDiscovery {
     ) -> Result<Vec<DiscoveredStorage>> {
         let mut discovered = Vec::new();
 
-        // 1. Environment variables (primary method)
         discovered.extend(Self::discover_from_env_source(env)?);
-
-        // 2. Configuration files (future)
-        // discovered.extend(Self::discover_from_config()?);
-
-        // 3. Service discovery (future)
-        // discovered.extend(Self::discover_from_services()?);
-
-        // 4. Auto-detect local storage
         discovered.extend(Self::discover_local()?);
 
         Ok(discovered)

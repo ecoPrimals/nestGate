@@ -67,10 +67,7 @@ members = [
     "code/crates/nestgate-discovery",
     "code/crates/nestgate-env-process-shim",
     "code/crates/nestgate-core",
-    "code/crates/nestgate-fsmonitor",
     "code/crates/nestgate-installer",
-
-    "code/crates/nestgate-middleware",
     "code/crates/nestgate-nas",
     "code/crates/nestgate-observe",
     "code/crates/nestgate-performance",
@@ -148,7 +145,7 @@ bytes = "1.7"
 # System utilities (100% Pure Rust!)
 # uzers removed — uid/gid now via rustix::process (already in dep tree, fewer total deps)
 sysinfo = "0.30"
-rustix = { version = "0.38", default-features = false, features = ["std", "fs", "process", "system"] }
+rustix = { version = "1.1", default-features = false, features = ["std", "fs", "process", "system"] }
 etcetera = "0.8"
 
 # Content-addressing (BLAKE3 for fetch_external provenance)
