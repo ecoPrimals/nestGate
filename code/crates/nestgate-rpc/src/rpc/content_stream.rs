@@ -59,17 +59,36 @@ pub async fn content_store_stream_begin(
         let empty_hash = content_hash_hex(&[]);
         let final_path = content_cas_path(family_id, &empty_hash);
         ensure_parent(&final_path).await?;
-        if !final_path.exists() {
+        let dedup = final_path.exists();
+        if !dedup {
             tokio::fs::write(&final_path, [])
                 .await
                 .io_ctx("write empty content")?;
+        }
+        let sidecar_path = final_path.with_extension("meta.json");
+        if !sidecar_path.exists() {
+            let mut meta = json!({
+                "hash": empty_hash,
+                "size": 0,
+                "stored_at": chrono::Utc::now().to_rfc3339(),
+                "pipeline": "content.store_stream",
+                "stored_by": "nestgate",
+            });
+            if let Some(ref ct) = content_type {
+                meta["content_type"] = Value::String(ct.clone());
+            }
+            let meta_bytes = serde_json::to_vec_pretty(&meta)
+                .map_err(|e| NestGateError::internal_error(e.to_string(), "sidecar-serialize"))?;
+            tokio::fs::write(&sidecar_path, meta_bytes)
+                .await
+                .io_ctx("write content stream sidecar")?;
         }
         return Ok(json!({
             "stream_id": stream_id,
             "hash": empty_hash,
             "size": 0,
             "stored": true,
-            "deduplicated": final_path.exists(),
+            "deduplicated": dedup,
             "family_id": family_id,
             "content_type": content_type,
             "chunk_size": MAX_STREAM_CHUNK,
@@ -220,6 +239,25 @@ pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
         tokio::fs::rename(&upload.temp_path, &final_path)
             .await
             .io_ctx("rename to CAS")?;
+    }
+
+    let sidecar_path = final_path.with_extension("meta.json");
+    if !sidecar_path.exists() {
+        let mut meta = json!({
+            "hash": blake3_hex,
+            "size": upload.total_size,
+            "stored_at": chrono::Utc::now().to_rfc3339(),
+            "pipeline": "content.store_stream",
+            "stored_by": "nestgate",
+        });
+        if let Some(ref ct) = upload.content_type {
+            meta["content_type"] = Value::String(ct.clone());
+        }
+        let meta_bytes = serde_json::to_vec_pretty(&meta)
+            .map_err(|e| NestGateError::internal_error(e.to_string(), "sidecar-serialize"))?;
+        tokio::fs::write(&sidecar_path, meta_bytes)
+            .await
+            .io_ctx("write content stream sidecar")?;
     }
 
     Ok(json!({
