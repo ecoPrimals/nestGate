@@ -184,11 +184,11 @@ tower-http = { version = "0.5", features = ["cors", "trace"] }
 
 # Streaming and async utilities
 tokio-util = { version = "0.7" }
-tokio-serde = { version = "0.8", features = ["json"] }
+tokio-serde = { version = "0.9", features = ["json"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 
 # RPC and serialization
-tarpc = { version = "0.34", features = ["tokio1", "serde-transport"] }
+tarpc = { version = "0.37", features = ["tokio1", "serde-transport"] }
 bincode = "1.3"
 jsonrpsee = { version = "0.26.0", features = ["server"] }
 # Testing utilities
