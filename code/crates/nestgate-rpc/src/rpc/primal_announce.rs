@@ -59,7 +59,10 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
         "uds": own_socket.to_string_lossy(),
     });
     if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
-        endpoints["tcp"] = Value::String(format!("tcp://127.0.0.1:{port}"));
+        let host = std::env::var("NESTGATE_API_HOST")
+            .or_else(|_| std::env::var("NESTGATE_BIND_ADDRESS"))
+            .unwrap_or_else(|_| nestgate_config::constants::system::bind_host());
+        endpoints["tcp"] = Value::String(format!("tcp://{host}:{port}"));
     }
 
     let storage_backend = std::env::var("NESTGATE_ZFS_CAS_DATASET").map_or_else(

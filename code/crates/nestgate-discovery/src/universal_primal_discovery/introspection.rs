@@ -29,6 +29,17 @@ use super::introspection_config::{IntrospectionConfig, SharedIntrospectionConfig
 /// - Optimal configuration recommendations
 use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;
+
+/// Saturating conversion from non-negative `f64` to `usize`.
+fn saturating_f64_to_usize(v: f64) -> usize {
+    if v <= 0.0 {
+        0
+    } else if v >= usize::MAX as f64 {
+        usize::MAX
+    } else {
+        v as usize
+    }
+}
 use std::sync::Arc;
 
 /// System capabilities profile
@@ -127,27 +138,22 @@ impl SystemIntrospection {
 
         match resource_type {
             "connections" => {
-                // Base on memory and CPU cores
                 let base_connections = capabilities.logical_cores * 100;
-                let memory_factor = (capabilities.memory_gb * 50.0) as usize;
+                let memory_factor = saturating_f64_to_usize(capabilities.memory_gb * 50.0);
                 Ok(base_connections.max(memory_factor).min(10000))
             }
             "threads" => {
-                // Optimal thread count based on workload type
                 Ok((capabilities.logical_cores * 2).clamp(4, 64))
             }
             "memory_buffer" => {
-                // Buffer size based on available memory
-                let buffer_mb = (capabilities.memory_gb * 0.1) as usize; // 10% of memory
-                Ok((buffer_mb * 1024 * 1024).clamp(4096, 64 * 1024 * 1024)) // 4KB to 64MB
+                let buffer_mb = saturating_f64_to_usize(capabilities.memory_gb * 0.1);
+                Ok((buffer_mb * 1024 * 1024).clamp(4096, 64 * 1024 * 1024))
             }
             "file_handles" => {
-                // File handles based on system limits
                 Ok(self.get_system_file_limit().unwrap_or(1024))
             }
             "queue_size" => {
-                // Queue size based on memory and expected load
-                let base_queue = (capabilities.memory_gb * 1000.0) as usize;
+                let base_queue = saturating_f64_to_usize(capabilities.memory_gb * 1000.0);
                 Ok(base_queue.clamp(1000, 100_000))
             }
             _ => {
@@ -211,15 +217,16 @@ impl SystemIntrospection {
         let mut recommended_limits = HashMap::new();
         recommended_limits.insert(
             "max_connections".into(),
-            ((overall_score * 5000.0) as usize).clamp(100, 10000),
+            saturating_f64_to_usize(overall_score * 5000.0).clamp(100, 10000),
         );
         recommended_limits.insert(
             "worker_threads".into(),
-            ((cpu_score * capabilities.logical_cores as f64 * 2.0) as usize).clamp(2, 32),
+            saturating_f64_to_usize(cpu_score * capabilities.logical_cores as f64 * 2.0)
+                .clamp(2, 32),
         );
         recommended_limits.insert(
             "buffer_size".into(),
-            ((memory_score * 32768.0) as usize).clamp(4096, 65536),
+            saturating_f64_to_usize(memory_score * 32768.0).clamp(4096, 65536),
         );
 
         Ok(HardwareProfile {

@@ -17,7 +17,8 @@ use crate::rest::models::{
 use nestgate_core::error::{NestGateError, Result};
 
 fn default_mount_path_for_dataset(name: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(format!("/mnt/{name}"))
+    let base = std::env::var("NESTGATE_SUBSTRATE_BASE").unwrap_or_else(|_| "/mnt".into());
+    std::path::PathBuf::from(base).join(name)
 }
 
 /// Build [`DatasetStats`] for a registered dataset name using filesystem space when the mount exists.

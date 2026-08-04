@@ -414,7 +414,10 @@ fn resolve_composition_tcp(
     let Some(p) = port else {
         return Ok(None);
     };
-    let host = bind.unwrap_or("127.0.0.1");
+    let env_host = std::env::var("NESTGATE_API_HOST").ok();
+    let host = bind
+        .or(env_host.as_deref())
+        .unwrap_or("127.0.0.1");
     let addr: SocketAddr = format!("{host}:{p}").parse().map_err(|e| {
         NestGateBinError::service_init_error(
             format!("Invalid TCP bind address: {e}"),

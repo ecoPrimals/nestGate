@@ -14,7 +14,8 @@ use axum::{
     response::Response,
 };
 use serde::Deserialize;
-use std::hash::{DefaultHasher, Hash, Hasher};
+#[cfg(test)]
+use std::hash::{DefaultHasher, Hash};
 use tokio::time::{Duration, interval};
 use tracing::{debug, error, info};
 
@@ -108,63 +109,42 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
     info!("Metrics WebSocket connection terminated");
 }
 
-/// Handle logs WebSocket connection
-async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: WebSocketQuery) {
-    info!("Logs WebSocket connection established");
-    let level_filter = query.level.unwrap_or_else(|| "info".into());
-    let update_interval = Duration::from_secs(query.interval.unwrap_or(1));
-    let mut ticker = interval(update_interval);
-
-    loop {
-        ticker.tick().await;
-
-        // Generate sample log entries (in production, would stream real logs)
-        let log_entry = generate_sample_log_entry(&level_filter);
-
-        let message = match serde_json::to_string(&log_entry) {
-            Ok(json) => Message::Text(json),
-            Err(e) => {
-                error!("Failed to serialize log entry: {}", e);
-                continue;
-            }
-        };
-
-        if socket.send(message).await.is_err() {
-            debug!("Logs WebSocket connection closed");
-            break;
-        }
-    }
-
-    info!("Logs WebSocket connection terminated");
+/// Handle logs WebSocket connection.
+///
+/// Log streaming is not yet wired to real observability (`nestgate-observe`).
+/// Sends an honest status message and closes the connection.
+async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, _query: WebSocketQuery) {
+    info!("Logs WebSocket connection established (not_implemented — no real log stream)");
+    let msg = serde_json::json!({
+        "status": "not_implemented",
+        "message": "Log streaming not yet wired to nestgate-observe. Use RUST_LOG + journal."
+    });
+    let _ = socket
+        .send(Message::Text(serde_json::to_string(&msg).unwrap_or_default()))
+        .await;
+    let _ = socket.close().await;
+    info!("Logs WebSocket connection closed (not_implemented)");
 }
 
-/// Handle events WebSocket connection
-async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: WebSocketQuery) {
-    info!("Events WebSocket connection established");
-    let update_interval = Duration::from_secs(query.interval.unwrap_or(10));
-    let mut ticker = interval(update_interval);
-
-    loop {
-        ticker.tick().await;
-
-        // Generate sample system events (in production, would stream real events)
-        let event = generate_sample_system_event(&state).await;
-
-        let message = match serde_json::to_string(&event) {
-            Ok(json) => Message::Text(json),
-            Err(e) => {
-                error!("Failed to serialize event: {}", e);
-                continue;
-            }
-        };
-
-        if socket.send(message).await.is_err() {
-            debug!("Events WebSocket connection closed");
-            break;
-        }
-    }
-
-    info!("Events WebSocket connection terminated");
+/// Handle events WebSocket connection.
+///
+/// Event streaming is not yet wired to real observability (`nestgate-observe`).
+/// Sends an honest status message and closes the connection.
+async fn handle_events_websocket(
+    mut socket: WebSocket,
+    _state: ApiState,
+    _query: WebSocketQuery,
+) {
+    info!("Events WebSocket connection established (not_implemented — no real event bus)");
+    let msg = serde_json::json!({
+        "status": "not_implemented",
+        "message": "Event streaming not yet wired to nestgate-observe."
+    });
+    let _ = socket
+        .send(Message::Text(serde_json::to_string(&msg).unwrap_or_default()))
+        .await;
+    let _ = socket.close().await;
+    info!("Events WebSocket connection closed (not_implemented)");
 }
 
 // ==================== SECTION ====================
@@ -287,57 +267,8 @@ pub struct LogEntry {
     /// Thread that generated the log entry
     pub thread: String,
 }
-/// Generate sample log entry
-pub fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let mut hasher = DefaultHasher::new();
-    chrono::Utc::now().timestamp_millis().hash(&mut hasher);
-    let seed = hasher.finish();
-
-    let levels = match level_filter {
-        "debug" => vec!["DEBUG", "INFO", "WARN", "ERROR"],
-        "info" => vec!["INFO", "WARN", "ERROR"],
-        "warn" => vec!["WARN", "ERROR"],
-        "error" => vec!["ERROR"],
-        _ => vec!["INFO", "WARN"],
-    };
-
-    let level = levels[(seed % levels.len() as u64) as usize];
-
-    let messages = [
-        "ZFS dataset operation completed successfully",
-        "Storage backend health check passed",
-        "Snapshot created for dataset tank/data",
-        "Compression ratio improved to 0.72",
-        "Auto-configurator detected new storage",
-        "Metrics collection interval updated",
-        "WebSocket connection established",
-        "System resources within normal limits",
-        "Cache hit ratio: 94.2%",
-        "Background cleanup task finished",
-    ];
-
-    let modules = [
-        "nestgate::zfs",
-        "nestgate::storage",
-        "nestgate::monitoring",
-        "nestgate::api",
-        "nestgate::websocket",
-    ];
-
-    LogEntry {
-        timestamp: chrono::Utc::now(),
-        level: level.to_string(),
-        message: messages[(seed % messages.len() as u64) as usize].to_string(),
-        module: modules[((seed >> 8) % modules.len() as u64) as usize].to_string(),
-        thread: format!("worker-{}", ((seed >> 16) % 8) + 1),
-    }
-}
-
-/// System event structure for WebSocket streaming
+/// System event structure for WebSocket streaming.
 #[derive(Debug, serde::Serialize)]
-/// Systemevent
 pub struct SystemEvent {
     /// Unique identifier for the event
     pub id: String,
@@ -352,86 +283,46 @@ pub struct SystemEvent {
     /// Event severity level
     pub severity: String,
 }
-/// Generate sample system event
-#[expect(
-    clippy::unused_async,
-    reason = "cfg(test) awaits this helper; event construction is synchronous"
-)]
-async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
+
+/// Generate sample log entry (test-only, used by tests below and by test modules elsewhere).
+#[cfg(test)]
+pub fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
 
-    let dataset_count = state.zfs_engines.len();
-
-    let event_types = [
-        ("dataset_created", "info"),
-        ("snapshot_taken", "info"),
-        ("storage_scanned", "info"),
-        ("metrics_updated", "debug"),
-        ("threshold_exceeded", "warning"),
-        ("system_startup", "info"),
-    ];
-
-    let (event_type, severity) = &event_types[(seed % event_types.len() as u64) as usize];
-
-    let (description, data) = match *event_type {
-        "dataset_created" => (
-            "New ZFS dataset created".into(),
-            serde_json::json!({
-                "dataset_name": format!("tank/data_{}", ((seed >> 8) % 100)),
-                "backend": "filesystem",
-                "compression": true
-            }),
-        ),
-        "snapshot_taken" => (
-            "Automatic snapshot created".into(),
-            serde_json::json!({
-                "dataset": "tank/data",
-                "snapshot_name": format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
-                "size_bytes": (seed % 1_000_000) + 1_000_000
-            }),
-        ),
-        "storage_scanned" => (
-            "Storage scan completed".into(),
-            serde_json::json!({
-                "backends_found": (seed % 5) + 2,
-                "scan_duration_ms": (seed % 5000) + 1000
-            }),
-        ),
-        "metrics_updated" => (
-            "System metrics refreshed".into(),
-            serde_json::json!({
-                "datasets": dataset_count,
-                "cpu_usage": nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0),
-                "memory_usage": nestgate_core::linux_proc::memory_usage_percent().unwrap_or(0.0)
-            }),
-        ),
-        "threshold_exceeded" => (
-            "Performance threshold exceeded".into(),
-            serde_json::json!({
-                "metric": "cpu_usage_percent",
-                "threshold": 80.0,
-                "currentvalue": nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0)
-            }),
-        ),
-        _ => (
-            "System event occurred".into(),
-            serde_json::json!({"info": "Generic system event"}),
-        ),
+    let levels = match level_filter {
+        "debug" => vec!["DEBUG", "INFO", "WARN", "ERROR"],
+        "info" => vec!["INFO", "WARN", "ERROR"],
+        "warn" => vec!["WARN", "ERROR"],
+        "error" => vec!["ERROR"],
+        _ => vec!["INFO", "WARN"],
     };
 
-    SystemEvent {
-        id: format!("event_{seed}"),
+    #[expect(clippy::cast_possible_truncation, reason = "index bounded by slice len")]
+    let level = levels[(seed % levels.len() as u64) as usize];
+
+    let messages = [
+        "ZFS dataset operation completed",
+        "Storage backend health check passed",
+        "Snapshot created for dataset tank/data",
+    ];
+    let modules = ["nestgate::zfs", "nestgate::storage", "nestgate::api"];
+
+    #[expect(clippy::cast_possible_truncation, reason = "index bounded by slice len")]
+    let msg_idx = (seed % messages.len() as u64) as usize;
+    #[expect(clippy::cast_possible_truncation, reason = "index bounded by slice len")]
+    let mod_idx = ((seed >> 8) % modules.len() as u64) as usize;
+
+    LogEntry {
         timestamp: chrono::Utc::now(),
-        event_type: (*event_type).to_string(),
-        description,
-        data,
-        severity: (*severity).to_string(),
+        level: level.to_string(),
+        message: messages[msg_idx].to_string(),
+        module: modules[mod_idx].to_string(),
+        thread: format!("worker-{}", ((seed >> 16) % 8) + 1),
     }
 }
 
-// Test-only hash-based generators (production WebSocket metrics use `/proc` + `linux_proc`).
 #[cfg(test)]
 pub(crate) fn generate_realtimecpu_usage() -> f64 {
     let mut hasher = DefaultHasher::new();
@@ -603,13 +494,17 @@ mod tests {
         assert!(!entry.module.is_empty());
     }
 
-    #[tokio::test]
-    async fn test_generate_sample_system_event() {
-        let state = create_test_api_state();
-        let event = generate_sample_system_event(&state).await;
-        assert!(!event.id.is_empty());
-        assert!(!event.event_type.is_empty());
-        assert!(!event.description.is_empty());
+    #[test]
+    fn system_event_serializes() {
+        let event = SystemEvent {
+            id: "evt_1".into(),
+            timestamp: chrono::Utc::now(),
+            event_type: "test".into(),
+            description: "test event".into(),
+            data: serde_json::json!({}),
+            severity: "info".into(),
+        };
+        assert!(serde_json::to_string(&event).is_ok());
     }
 
     #[tokio::test]
@@ -634,14 +529,20 @@ mod tests {
         assert!(["INFO", "WARN"].contains(&o.level.as_str()));
     }
 
-    #[tokio::test]
-    async fn generate_sample_system_event_covers_event_variants() {
-        let state = create_test_api_state();
-        for _ in 0..48 {
-            let ev = generate_sample_system_event(&state).await;
-            assert!(!ev.id.is_empty());
-            assert!(!ev.event_type.is_empty());
-        }
+    #[test]
+    fn system_event_fields_serialize_correctly() {
+        let event = SystemEvent {
+            id: "evt_42".into(),
+            timestamp: chrono::Utc::now(),
+            event_type: "dataset_created".into(),
+            description: "New ZFS dataset".into(),
+            data: serde_json::json!({"dataset": "tank/data"}),
+            severity: "info".into(),
+        };
+        let json = serde_json::to_string(&event).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["event_type"], "dataset_created");
+        assert_eq!(parsed["severity"], "info");
     }
 
     #[cfg(target_os = "linux")]
