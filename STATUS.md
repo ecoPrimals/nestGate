@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Aug 4, 2026 (Session 134: Dead module purge + rustix 1.x + federation extraction + content.fetch fix)
+**Last Updated**: Aug 4, 2026 (Session 135: content.query, ZFS REST wiring, tarpc 0.37, sidecar gap, quarantine cleanup)
 **Version**: 0.5.0
 
 ---
@@ -15,7 +15,7 @@ Tests:              1,630+ passed, 0 failed, ~80 ignored
 Files > 800 lines:  ZERO in production src/
 Unwrap/Expect:      deny(unwrap_used), deny(expect_used) in workspace lints — zero in production
 Inline markers:     none in committed production .rs (deny(todo), deny(unimplemented))
-Unsafe code:        #![forbid(unsafe_code)] on ALL 18 crate roots (zero exceptions; 2 quarantined)
+Unsafe code:        #![forbid(unsafe_code)] on ALL 18 crate roots (zero exceptions; quarantined crates deleted)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX
 Dead code:          ZERO #[allow(dead_code)]; auth_production + zero_cost_api_handlers purged (3,573 LOC)
 Mocks in prod:      ZERO fabricated metrics; all stubs honest not_implemented; dev_environment gated behind dev-stubs feature
@@ -25,12 +25,12 @@ External deps:      Pure Rust — zero C build deps, no OpenSSL/ring, no cloud S
 Discovery:          Environment variables + capability IPC; XDG-compliant path resolution via etcetera; zero hardcoded FHS paths in consumers
 CLI health/status:  Live UDS probe via JsonRpcClient — resolves socket, sends health.check JSON-RPC
 Path resolution:    EnvSource injection works correctly (injected HOME > etcetera auto-detect > system fallback)
-IPC routes (UDS):   storage.*, content.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 90 methods
+IPC routes (UDS):   storage.*, content.* (incl. content.query), session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 91 methods
 IPC routes (HTTP):  Aligned with UDS namespace; legacy aliases warn
 IPC routes (tarpc): 52 semantic-routed methods
 Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope
 BTSP:               Phase 1-3 PASS — family-scoped sockets, encrypted channel, CAS federation wired
-Workspace:          18 crates (fsmonitor/middleware quarantined), Rust 2024 edition, 100% hoisted deps
+Workspace:          18 crates, Rust 2024 edition, 100% hoisted deps
 Repository:         https://git.primals.eco/ecoPrimals/nestGate
 Registry:           capability_registry.toml — machine-readable self-knowledge (20 capability domains)
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
@@ -40,9 +40,10 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ## Session History
 
-Per-session detail (Sessions 43–134) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
+Per-session detail (Sessions 43–135) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 135** (Aug 4): `content.query` JSON-RPC method (sidecar-scanning CAS metadata filter). ZFS REST snapshot handlers wired to `ZfsOperations` (5 endpoints, 501→real). `tarpc` 0.34→0.37 + `tokio-serde` 0.8→0.9 (eliminates opentelemetry thiserror 1.x chain). `content.store_stream` sidecar gap fixed. WebSocket synthetic data purged. Hardcoded bind/mount evolved to env-based. Quarantined crates (`nestgate-fsmonitor`, `nestgate-middleware`) deleted.
 - **Session 134** (Aug 4): Dead module purge — `auth_production` (8 files), `zero_cost_api_handlers` (7 files), `models.rs` removed (3,573 LOC compiled but unreachable). `rustix` 0.38→1.1 (unified with tempfile, eliminated duplicate). `nestgate-fsmonitor`+`nestgate-middleware` quarantined from workspace (unwired). Commented-out code removed.
 - **Session 133** (Aug 4): `content.fetch` streaming fix (ureq 3.x `as_reader()`, stream-to-disk instead of in-RAM buffering). Federation blob helpers extracted from `content_federation_handlers.rs` (802→420 lines). HTTP client deduplication (`validate_fetch_url`, `build_http_agent`, `http_user_agent` shared from `storage_paths.rs`). All clippy-pedantic issues resolved.
 - **Session 131** (Aug 3): Fabricated metrics purge — dashboard `get_overview()` evolved from 7 hardcoded values to live `/proc`+`statvfs`; hw-tuning deltas computed from before/after; ZFS AI field `None` (sunset); `tokio-util` dep pruned; stale "demo"/"placeholder" comments cleaned across 10+ files.

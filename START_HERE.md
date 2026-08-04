@@ -3,7 +3,7 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features (as of Session 134)
+Build:       PASS — cargo check --workspace --all-features (as of Session 135)
 Tests:       PASS — 1,630+ passed, 0 failed, ~80 ignored
 Clippy:      PASS — cargo clippy --all-features -- -D warnings (zero warnings, pedantic+nursery)
 Unsafe:      #![forbid(unsafe_code)] on ALL 18 crate roots (zero exceptions)
@@ -98,9 +98,7 @@ nestgate/ (22 workspace packages — see README Architecture)
 ├── nestgate-zfs        ZFS integration (adaptive)
 ├── nestgate-installer  Platform installer (system curl, ecoBin compliant)
 ├── nestgate-canonical  Canonical types
-├── nestgate-middleware Middleware stack
 ├── nestgate-nas        NAS integration
-├── nestgate-fsmonitor  Filesystem monitoring
 ├── nestgate-performance Performance monitoring
 └── fuzz (workspace)
 Note: nestgate-network, nestgate-automation, nestgate-mcp, tools/unwrap-migrator are deprecated/shed (removed from workspace).
@@ -176,4 +174,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Aug 3, 2026 (Session 131)
+**Last Updated**: Aug 4, 2026 (Session 135)

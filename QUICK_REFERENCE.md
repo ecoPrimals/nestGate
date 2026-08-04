@@ -5,7 +5,7 @@
 **Coverage**: 84%+ line (llvm-cov); target 90%  
 **Clippy**: PASS — `cargo clippy --all-features -- -D warnings` (zero warnings, pedantic+nursery)  
 **Crates**: 18 workspace crates (under `code/crates/`)  
-**Last Updated**: Aug 4, 2026 (Session 134)
+**Last Updated**: Aug 4, 2026 (Session 135)
 
 ---
 
@@ -228,4 +228,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: Aug 4, 2026 (Session 134)
+**Last Updated**: Aug 4, 2026 (Session 135)

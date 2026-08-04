@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Aug 4, 2026 (Session 134)
+**Last Updated**: Aug 4, 2026 (Session 135)
 
 ## What This Is
 
@@ -41,8 +41,8 @@ than by importing this crate graph.
 `nestgate-types`, `nestgate-config`, `nestgate-core`, `nestgate-api`, `nestgate-rpc`,
 `nestgate-zfs`, `nestgate-discovery`, `nestgate-security`,
 `nestgate-cache`, `nestgate-observe`, `nestgate-storage`, `nestgate-performance`,
-`nestgate-canonical`, `nestgate-fsmonitor`,
-`nestgate-installer`, `nestgate-middleware`, `nestgate-nas`,
+`nestgate-canonical`,
+`nestgate-installer`, `nestgate-nas`,
 `nestgate-platform`, `nestgate-bin`, `nestgate-env-process-shim`.
 
 Deprecated/shed (removed from workspace): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
@@ -63,7 +63,7 @@ networking, and service lifecycle across the adapter stack.
 
 - Expose storage and workspace lifecycle operations over JSON-RPC (and optionally tarpc).
 - Discover and advertise capabilities at runtime without hard-wiring peer primals.
-- Integrate observability, caching, ZFS-specific paths, and NAS/middleware surfaces
+- Integrate observability, caching, ZFS-specific paths, and NAS surfaces
   as named workspace crates (see crate list above). MCP is delegated to the
   orchestration layer via `capability.call`.
 

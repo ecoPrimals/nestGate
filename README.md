@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-08-04, Session 134)**  
+**Verification (as of 2026-08-04, Session 135)**  
 - **Build**: `cargo check --workspace --all-features` — PASS  
 - **Clippy**: `cargo clippy --all-features -- -D warnings` — PASS (zero warnings, pedantic+nursery)  
 - **Tests**: 1,630+ passed, 0 failed (~80 ignored)  
@@ -128,9 +128,7 @@ nestgate/ (22 workspace packages: 20 code/crates + fuzz + root)
 ├── nestgate-bin         CLI binary (UniBin)
 ├── nestgate-zfs         ZFS integration (adaptive)
 ├── nestgate-installer   Platform installer (system curl, ecoBin compliant)
-├── nestgate-middleware  Middleware stack
 ├── nestgate-nas         NAS integration
-├── nestgate-fsmonitor   Filesystem monitoring
 └── nestgate-performance Performance monitoring
 ```
 Deprecated/shed (removed from workspace): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`, `tools/unwrap-migrator`.
