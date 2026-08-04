@@ -91,7 +91,7 @@ async fn show_config_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<
         "NESTGATE_FAMILY_ID",
         "NESTGATE_JWT_SECRET",
         "NESTGATE_SOCKET",
-        "BIOMEOS_SOCKET_DIR",
+        "ECOSYSTEM_SOCKET_DIR",
         "XDG_RUNTIME_DIR",
     ];
     for var in &env_vars {

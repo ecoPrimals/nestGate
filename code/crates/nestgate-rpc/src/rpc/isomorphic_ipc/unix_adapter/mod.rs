@@ -93,6 +93,7 @@ pub(super) struct StorageState {
 fn resolve_family_id() -> String {
     std::env::var("NESTGATE_FAMILY_ID")
         .or_else(|_| std::env::var("FAMILY_ID"))
+        .or_else(|_| std::env::var("ECOSYSTEM_FAMILY_ID"))
         .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
         .unwrap_or_else(|_| "default".into())
 }

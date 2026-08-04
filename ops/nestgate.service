@@ -1,29 +1,30 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (c) 2025-2026 ecoPrimals Collective
 #
-# nestGate systemd user service — westGate Nest Atomic deployment
+# nestGate systemd user service — template for any gate
 # Install: systemctl --user link $PWD/ops/nestgate.service && systemctl --user enable nestgate
-# Requires: ZFS pool 'nestgate' online, /mnt/nestgate/cold/zfs mounted
+#
+# Override paths per gate via drop-in or EnvironmentFile:
+#   systemctl --user edit nestgate  →  [Service] EnvironmentFile=...
 
 [Unit]
-Description=NestGate Storage & Discovery Primal (westGate)
+Description=NestGate Storage & Discovery Primal
 Documentation=https://sporeprint.primals.eco/nestgate
-After=zfs-mount.service network-online.target
+After=network-online.target
 Wants=network-online.target
-ConditionPathIsMountPoint=/mnt/nestgate/cold/zfs
 
 [Service]
 Type=exec
-ExecStart=%h/Development/ecoPrimals/primals/nestGate/target/release/nestgate server --socket-only
-EnvironmentFile=%h/Development/ecoPrimals/primals/nestGate/.env.westgate
+ExecStart=%h/.local/bin/nestgate server --socket-only
+EnvironmentFile=-%h/.config/nestgate/env
 Restart=on-failure
 RestartSec=5
 WatchdogSec=30
 
 # Hardening
 ProtectSystem=strict
-ReadWritePaths=/mnt/nestgate
-ReadWritePaths=/run/user/1000/biomeos
+ReadWritePaths=%h/.local/share/nestgate
+ReadWritePaths=%t
 PrivateTmp=yes
 NoNewPrivileges=yes
 ProtectKernelTunables=yes

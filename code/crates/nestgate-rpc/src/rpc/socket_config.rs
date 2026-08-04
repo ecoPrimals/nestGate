@@ -393,12 +393,12 @@ impl SocketConfig {
             });
         }
 
-        // Tier 2: `BIOMEOS_SOCKET_DIR` (ecosystem standard shared-socket directory)
+        // Tier 2: `ECOSYSTEM_SOCKET_DIR` (ecosystem standard shared-socket directory)
         if let Some(biomeos_dir) = biomeos_socket_dir {
             let socket_path = PathBuf::from(biomeos_dir).join(socket_file_name(&family_id));
 
             info!(
-                "Using ecosystem socket directory (BIOMEOS_SOCKET_DIR): {} (family: {}, node: {})",
+                "Using ecosystem socket directory (ECOSYSTEM_SOCKET_DIR): {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
@@ -459,12 +459,13 @@ impl SocketConfig {
     /// Get socket configuration from environment variables
     ///
     /// Reads `NESTGATE_SOCKET`, `NESTGATE_FAMILY_ID`, `NESTGATE_NODE_ID`,
-    /// `BIOMEOS_SOCKET_DIR`, and `XDG_RUNTIME_DIR` from the environment and delegates to `resolve()`.
+    /// `ECOSYSTEM_SOCKET_DIR` / `BIOMEOS_SOCKET_DIR`, and `XDG_RUNTIME_DIR` from the
+    /// environment and delegates to `resolve()`.
     ///
     /// # Environment Variables
     ///
     /// - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
-    /// - `BIOMEOS_SOCKET_DIR`: ecosystem shared socket directory (optional; standard wateringHole path)
+    /// - `ECOSYSTEM_SOCKET_DIR` / `BIOMEOS_SOCKET_DIR`: ecosystem shared socket directory
     /// - `NESTGATE_FAMILY_ID`: Family identifier (defaults to `standalone` per wateringHole)
     /// - `NESTGATE_NODE_ID`: Node identifier (defaults to system hostname)
     ///
@@ -633,7 +634,7 @@ impl SocketConfig {
             match self.source {
                 SocketConfigSource::Environment => "NESTGATE_SOCKET env var (explicit)",
                 SocketConfigSource::EcosystemDirectory =>
-                    "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
+                    "ECOSYSTEM_SOCKET_DIR (ecosystem standard layout)",
                 SocketConfigSource::XdgRuntime => xdg_layout.as_str(),
                 SocketConfigSource::TempDirectory => "temp dir fallback (insecure)",
             }

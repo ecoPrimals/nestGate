@@ -324,10 +324,10 @@ methods = [
 # footprint.history: {project_id, limit?} → {revisions: [{hash, message, saved_at, parent, size}]}
 #   Lists revision history for a project (newest first).
 
-# Neural API announce — self-registration with biomeOS (Wave 43, extended Wave 73)
+# Neural API announce — self-registration with ecosystem coordinator
 [announce]
 method = "primal.announce"
-target = "biomeos"
+target = "ecosystem-coordinator"
 signal_tiers = ["nest"]
 capabilities = ["storage", "content", "coordination", "footprint"]
 federation_methods = ["content.replicate", "content.replicate.pull", "content.fetch_heads", "content.push", "content.sync"]

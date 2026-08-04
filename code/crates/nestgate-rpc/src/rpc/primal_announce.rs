@@ -97,23 +97,27 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
 /// env, defaulting to `"biomeos"`.
 ///
 /// Search order:
-/// 1. `BIOMEOS_IPC_SOCKET` (explicit override; protocol-level name, kept for compat)
-/// 2. `BIOMEOS_SOCKET_DIR/{ecosystem}.sock` (protocol-level name, kept for compat)
+/// 1. `ECOSYSTEM_IPC_SOCKET` / `BIOMEOS_IPC_SOCKET` (explicit override)
+/// 2. `ECOSYSTEM_SOCKET_DIR` / `BIOMEOS_SOCKET_DIR` + `{ecosystem}.sock`
 /// 3. `$XDG_RUNTIME_DIR/{ecosystem}/{ecosystem}.sock` or `neural-api.sock`
 /// 4. `temp_dir()/{ecosystem}.sock`
 fn discover_coordinator_socket(env: &(impl EnvSource + ?Sized)) -> Option<PathBuf> {
     let eco = nestgate_config::constants::system::ecosystem_name(env);
 
-    // Protocol-level env var name; kept for backward compatibility.
-    if let Some(explicit) = env.get("BIOMEOS_IPC_SOCKET") {
+    if let Some(explicit) = env
+        .get("ECOSYSTEM_IPC_SOCKET")
+        .or_else(|| env.get("BIOMEOS_IPC_SOCKET"))
+    {
         let p = PathBuf::from(explicit);
         if p.exists() {
             return Some(p);
         }
     }
 
-    // Protocol-level env var name; kept for backward compatibility.
-    if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
+    if let Some(dir) = env
+        .get("ECOSYSTEM_SOCKET_DIR")
+        .or_else(|| env.get("BIOMEOS_SOCKET_DIR"))
+    {
         let p = PathBuf::from(dir).join(format!("{eco}.sock"));
         if p.exists() {
             return Some(p);

@@ -69,7 +69,7 @@ async fn discover_primals_from_env_source(env: &(impl EnvSource + ?Sized)) -> Bi
     } else {
         println!();
         println!("   No socket directory configured");
-        println!("   Set NESTGATE_SOCKET or BIOMEOS_SOCKET_DIR to enable discovery");
+        println!("   Set NESTGATE_SOCKET or ECOSYSTEM_SOCKET_DIR to enable discovery");
     }
 
     println!();
@@ -186,8 +186,10 @@ fn discover_socket_dir_from_env_source(
         return path.parent().map(std::path::Path::to_path_buf);
     }
 
-    // Ecosystem shared socket directory (`BIOMEOS_SOCKET_DIR`; standard wateringHole path name)
-    if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
+    if let Some(dir) = env
+        .get("ECOSYSTEM_SOCKET_DIR")
+        .or_else(|| env.get("BIOMEOS_SOCKET_DIR"))
+    {
         return Some(std::path::PathBuf::from(dir));
     }
 

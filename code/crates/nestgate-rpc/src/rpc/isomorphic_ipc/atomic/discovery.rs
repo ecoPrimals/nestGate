@@ -27,7 +27,10 @@ pub(super) fn discover_primal_socket_from_env(
     env: &(impl EnvSource + ?Sized),
     primal_name: &str,
 ) -> Option<PathBuf> {
-    if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
+    if let Some(dir) = env
+        .get("ECOSYSTEM_SOCKET_DIR")
+        .or_else(|| env.get("BIOMEOS_SOCKET_DIR"))
+    {
         let path = PathBuf::from(dir).join(format!("{primal_name}.sock"));
         if path.exists() {
             return Some(path);

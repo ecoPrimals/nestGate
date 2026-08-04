@@ -146,8 +146,9 @@ impl SemanticRouter {
             Ok(b) => DefaultMetadataBackend::File(b),
             Err(e) => {
                 let is_production = std::env::var("FAMILY_ID")
-                    .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
                     .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+                    .or_else(|_| std::env::var("ECOSYSTEM_FAMILY_ID"))
+                    .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
                     .is_ok_and(|fid| !matches!(fid.as_str(), "" | "default" | "standalone"));
 
                 if is_production {

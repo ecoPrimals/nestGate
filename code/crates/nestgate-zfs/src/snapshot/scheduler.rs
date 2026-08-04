@@ -1,74 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//
-// Handles scheduling and execution of snapshot policies including
-// retention management and automated snapshot creation.
-
-//! Scheduler module
+//! Snapshot policy scheduler.
+//!
+//! Handles automated snapshot creation based on time-based policies.
+//! Retention logic lives in [`super::retention`].
 
 use chrono::{Datelike, Timelike};
-// Removed unused HashMap import
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
-// Removed unused tracing import
 
 use crate::dataset::ZfsDatasetManager;
 use crate::performance::types::SnapshotPolicyMap;
 use nestgate_core::{NestGateError, Result as CoreResult};
 
 use super::operations::SnapshotOperationType;
-use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
-use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus};
+use super::policy::{ScheduleFrequency, SnapshotPolicy};
+use super::retention;
+use super::types::{SnapshotOperation, SnapshotOperationStatus};
 use std::time::Duration;
-use tracing::debug;
-use tracing::error;
-use tracing::info;
-use tracing::warn;
+use tracing::{debug, error, info, warn};
 
-fn select_snapshots_to_delete_for_retention(
-    scheduler: &PolicyScheduler,
-    snapshots: Vec<SnapshotInfo>,
-    retention: &RetentionPolicy,
-) -> Vec<SnapshotInfo> {
-    match retention {
-        RetentionPolicy::Duration(duration) => {
-            let cutoff = SystemTime::now() - *duration;
-            snapshots
-                .into_iter()
-                .filter(|s| s.created_at < cutoff)
-                .collect()
-        }
-        RetentionPolicy::Count(count) => {
-            if snapshots.len() > *count as usize {
-                let mut sorted_snapshots = snapshots;
-                sorted_snapshots.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-                sorted_snapshots.into_iter().skip(*count as usize).collect()
-            } else {
-                Vec::new()
-            }
-        }
-        RetentionPolicy::Custom {
-            hourly_hours,
-            daily_days,
-            weekly_weeks,
-            monthly_months,
-            yearly_years,
-        } => scheduler.apply_custom_retention(
-            snapshots,
-            *hourly_hours,
-            *daily_days,
-            *weekly_weeks,
-            *monthly_months,
-            *yearly_years,
-        ),
-    }
-}
-
-/// Policy scheduler for managing automated snapshot creation
+/// Policy scheduler for managing automated snapshot creation.
 #[derive(Debug)]
-/// Policyscheduler
 pub struct PolicyScheduler {
     dataset_manager: Arc<ZfsDatasetManager>,
     policies: SnapshotPolicyMap,
@@ -314,13 +269,12 @@ impl PolicyScheduler {
     async fn apply_retention_policy_for_dataset(
         &self,
         dataset: &str,
-        retention: &RetentionPolicy,
+        retention: &super::policy::RetentionPolicy,
     ) -> CoreResult<()> {
         debug!("Applying retention policy for dataset: {}", dataset);
 
         let snapshots = self.dataset_manager.list_snapshots(dataset).await?;
-        let snapshots_to_delete =
-            select_snapshots_to_delete_for_retention(self, snapshots, retention);
+        let snapshots_to_delete = retention::select_for_deletion(snapshots, retention);
 
         // Queue deletion operations
         let delete_operations: Vec<SnapshotOperation> = snapshots_to_delete
@@ -350,33 +304,6 @@ impl PolicyScheduler {
         Ok(())
     }
 
-    /// Apply custom retention policy
-    fn apply_custom_retention(
-        &self,
-        snapshots: Vec<SnapshotInfo>,
-        hourly_hours: u32,
-        daily_days: u32,
-        weekly_weeks: u32,
-        monthly_months: u32,
-        yearly_years: u32,
-    ) -> Vec<SnapshotInfo> {
-        // This is a simplified implementation
-        // A full implementation would categorize snapshots by time period
-        // and keep only the required number from each category
-
-        let now = SystemTime::now();
-        let _hour_cutoff = now - Duration::from_secs(u64::from(hourly_hours) * 3600);
-        let _day_cutoff = now - Duration::from_secs(u64::from(daily_days) * 86400);
-        let _week_cutoff = now - Duration::from_secs(u64::from(weekly_weeks) * 604800);
-        let _month_cutoff = now - Duration::from_secs(u64::from(monthly_months) * 2629746); // ~30.44 days
-        let year_cutoff = now - Duration::from_secs(u64::from(yearly_years) * 31556952); // ~365.25 days
-
-        snapshots
-            .into_iter()
-            .filter(|s| s.created_at < year_cutoff)
-            .collect()
-    }
-
     /// Parse schedule frequency to duration for next execution
     pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
         match schedule {
@@ -397,15 +324,11 @@ impl PolicyScheduler {
 
 #[cfg(test)]
 mod tests {
-    use super::select_snapshots_to_delete_for_retention;
     use super::*;
     use crate::dataset::ZfsDatasetManager;
     use crate::performance::types::SnapshotPolicyMap;
-    use crate::snapshot::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
-    use crate::snapshot::types::SnapshotInfo;
-    use crate::types::StorageTier;
+    use crate::snapshot::policy::{ScheduleFrequency, SnapshotPolicy};
     use std::collections::HashMap;
-    use std::time::{SystemTime, UNIX_EPOCH};
 
     fn test_scheduler() -> PolicyScheduler {
         let dm = Arc::new(ZfsDatasetManager::new_for_testing());
@@ -501,146 +424,6 @@ mod tests {
         p.frequency = ScheduleFrequency::Custom("x".into());
         let n6 = s.generate_snapshot_name(&p, "z/a");
         assert!(n6.contains("pre"));
-    }
-
-    #[test]
-    fn apply_custom_retention_marks_old_snapshots() {
-        let s = test_scheduler();
-        let old = SnapshotInfo {
-            name: "s1".into(),
-            full_name: "ds@s1".into(),
-            dataset: "ds".into(),
-            created_at: UNIX_EPOCH,
-            size: 1,
-            referenced_size: 1,
-            written_size: 1,
-            compression_ratio: 1.0,
-            properties: HashMap::new(),
-            policy: None,
-            tier: StorageTier::Warm,
-            protected: false,
-            tags: Vec::new(),
-        };
-        let to_delete = s.apply_custom_retention(vec![old.clone()], 0, 0, 0, 0, 1);
-        assert!(
-            to_delete.iter().any(|x| x.full_name == old.full_name),
-            "expected old snapshot beyond yearly cutoff to be selected"
-        );
-    }
-
-    #[test]
-    fn apply_custom_retention_empty_input() {
-        let s = test_scheduler();
-        let out = s.apply_custom_retention(Vec::new(), 1, 1, 1, 1, 1);
-        assert!(out.is_empty());
-    }
-
-    #[test]
-    fn retention_count_keeps_newest_only() {
-        use std::time::{Duration, UNIX_EPOCH};
-        let s = test_scheduler();
-        let snaps = vec![
-            SnapshotInfo {
-                name: "a".into(),
-                full_name: "ds@a".into(),
-                dataset: "ds".into(),
-                created_at: UNIX_EPOCH + Duration::from_secs(10),
-                size: 1,
-                referenced_size: 1,
-                written_size: 1,
-                compression_ratio: 1.0,
-                properties: HashMap::new(),
-                policy: None,
-                tier: StorageTier::Warm,
-                protected: false,
-                tags: Vec::new(),
-            },
-            SnapshotInfo {
-                name: "b".into(),
-                full_name: "ds@b".into(),
-                dataset: "ds".into(),
-                created_at: UNIX_EPOCH + Duration::from_secs(20),
-                size: 1,
-                referenced_size: 1,
-                written_size: 1,
-                compression_ratio: 1.0,
-                properties: HashMap::new(),
-                policy: None,
-                tier: StorageTier::Warm,
-                protected: false,
-                tags: Vec::new(),
-            },
-        ];
-        let to_delete =
-            select_snapshots_to_delete_for_retention(&s, snaps, &RetentionPolicy::Count(1));
-        assert_eq!(to_delete.len(), 1);
-        assert_eq!(to_delete[0].name, "a");
-    }
-
-    #[test]
-    fn select_snapshots_count_retention_empty_when_within_limit() {
-        let s = test_scheduler();
-        let snap = SnapshotInfo {
-            name: "only".into(),
-            full_name: "ds@only".into(),
-            dataset: "ds".into(),
-            created_at: UNIX_EPOCH,
-            size: 1,
-            referenced_size: 1,
-            written_size: 1,
-            compression_ratio: 1.0,
-            properties: HashMap::new(),
-            policy: None,
-            tier: StorageTier::Warm,
-            protected: false,
-            tags: Vec::new(),
-        };
-        let out =
-            select_snapshots_to_delete_for_retention(&s, vec![snap], &RetentionPolicy::Count(5));
-        assert!(out.is_empty());
-    }
-
-    #[test]
-    fn select_snapshots_duration_retention_keeps_recent() {
-        use std::time::Duration;
-        let s = test_scheduler();
-        let recent = SnapshotInfo {
-            name: "new".into(),
-            full_name: "ds@new".into(),
-            dataset: "ds".into(),
-            created_at: SystemTime::now(),
-            size: 1,
-            referenced_size: 1,
-            written_size: 1,
-            compression_ratio: 1.0,
-            properties: HashMap::new(),
-            policy: None,
-            tier: StorageTier::Warm,
-            protected: false,
-            tags: Vec::new(),
-        };
-        let old = SnapshotInfo {
-            name: "old".into(),
-            full_name: "ds@old".into(),
-            dataset: "ds".into(),
-            created_at: UNIX_EPOCH,
-            size: 1,
-            referenced_size: 1,
-            written_size: 1,
-            compression_ratio: 1.0,
-            properties: HashMap::new(),
-            policy: None,
-            tier: StorageTier::Warm,
-            protected: false,
-            tags: Vec::new(),
-        };
-        let out = select_snapshots_to_delete_for_retention(
-            &s,
-            vec![recent, old],
-            &RetentionPolicy::Duration(Duration::from_secs(3600)),
-        );
-        assert_eq!(out.len(), 1);
-        assert_eq!(out[0].name, "old");
     }
 
     #[tokio::test]

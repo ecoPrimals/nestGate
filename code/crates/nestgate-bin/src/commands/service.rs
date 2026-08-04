@@ -282,7 +282,7 @@ async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
         match socket_config.source {
             nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
             nestgate_core::rpc::SocketConfigSource::EcosystemDirectory =>
-                "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
+                "ECOSYSTEM_SOCKET_DIR (ecosystem standard layout)",
             nestgate_core::rpc::SocketConfigSource::XdgRuntime => "XDG runtime directory",
             nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",
         }

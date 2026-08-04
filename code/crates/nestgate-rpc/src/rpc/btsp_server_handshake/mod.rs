@@ -224,19 +224,22 @@ pub(crate) fn resolve_family_seed() -> Result<String> {
 /// Returns `true` when BTSP handshake is required on the server socket.
 ///
 /// Production mode = `FAMILY_ID` (or variant) is set to a non-default value
-/// AND `BIOMEOS_INSECURE` is not `"1"`.
+/// AND `ECOSYSTEM_INSECURE` / `BIOMEOS_INSECURE` is not `"1"`.
 #[must_use]
 pub fn is_btsp_required() -> bool {
     let fid = std::env::var("FAMILY_ID")
-        .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
         .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+        .or_else(|_| std::env::var("ECOSYSTEM_FAMILY_ID"))
+        .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
         .unwrap_or_default();
 
     if fid.is_empty() || fid == "default" || fid == "standalone" {
         return false;
     }
 
-    !matches!(std::env::var("BIOMEOS_INSECURE").as_deref(), Ok("1"))
+    let insecure = std::env::var("ECOSYSTEM_INSECURE")
+        .or_else(|_| std::env::var("BIOMEOS_INSECURE"));
+    !matches!(insecure.as_deref(), Ok("1"))
 }
 
 /// Perform the BTSP server-side handshake on an accepted connection.

@@ -11,6 +11,7 @@ mod events;
 mod manager;
 mod operations;
 mod policy;
+mod retention;
 mod scheduler;
 mod types;
 
