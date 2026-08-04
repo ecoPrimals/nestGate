@@ -11,8 +11,8 @@ use tracing::debug;
 
 use super::StorageState;
 use super::storage_paths::{
-    blob_key_path, content_hash_hex, dataset_key_path, ensure_parent_dirs, extract_namespace,
-    resolve_family_id,
+    blob_key_path, build_http_agent, content_hash_hex, dataset_key_path, ensure_parent_dirs,
+    extract_namespace, http_user_agent, resolve_family_id, validate_fetch_url,
 };
 
 /// `storage.object.size` — get size of a stored object without reading its content.
@@ -96,23 +96,6 @@ fn external_meta_path(family_id: &str, cache_key: &str) -> PathBuf {
         .join(format!("{cache_key}.meta.json"))
 }
 
-/// Validate the URL scheme for external fetch — only HTTPS unless HTTP is explicitly allowed.
-fn validate_fetch_url(url: &str, allow_http: bool) -> Result<()> {
-    let parsed = url::Url::parse(url)
-        .map_err(|e| NestGateError::invalid_input_with_field("url", format!("invalid URL: {e}")))?;
-    match parsed.scheme() {
-        "https" => Ok(()),
-        "http" if allow_http => {
-            tracing::warn!("storage.fetch_external: HTTP (insecure) requested for {url}");
-            Ok(())
-        }
-        scheme => Err(NestGateError::invalid_input_with_field(
-            "url",
-            format!("scheme '{scheme}' not allowed — use https"),
-        )),
-    }
-}
-
 /// Return a cached external-fetch response if both payload and metadata exist on disk.
 async fn try_cached_external(url: &str, cache_key: &str, family_id: &str) -> Result<Option<Value>> {
     let cache_path = external_cache_path(family_id, cache_key);
@@ -152,16 +135,10 @@ async fn do_external_fetch(
 
     let url_owned = url.to_owned();
     let timeout = std::time::Duration::from_secs(timeout_secs);
-    let user_agent = format!("NestGate/{}", env!("CARGO_PKG_VERSION"));
+    let user_agent = http_user_agent();
 
     let (content_type, payload_bytes) = tokio::task::spawn_blocking(move || -> Result<_> {
-        let _ = rustls_rustcrypto::provider().install_default();
-
-        let config = ureq::Agent::config_builder()
-            .timeout_global(Some(timeout))
-            .https_only(false)
-            .build();
-        let agent = ureq::Agent::new_with_config(config);
+        let agent = build_http_agent(timeout, true);
 
         let mut response = agent
             .get(&url_owned)

@@ -98,6 +98,7 @@ pub(crate) mod content_handlers;
 pub(crate) mod coord_handlers;
 mod dispatch;
 pub(crate) mod external_handlers;
+mod federation_blob_transfer;
 mod federation_ops;
 pub(crate) mod footprint_handlers;
 mod nat_handlers;

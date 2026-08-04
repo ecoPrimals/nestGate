@@ -36,17 +36,21 @@
 //! }
 //! ```
 
-use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
-use std::io::Read;
+use std::io::{Read, Write};
 use tracing::debug;
 
 use super::super::StorageState;
-use super::super::storage_paths::{content_key_path, ensure_parent_dirs, resolve_family_id};
+use super::super::storage_paths::{
+    build_http_agent, content_key_path, http_user_agent, resolve_family_id, validate_fetch_url,
+};
 
 /// Chunk size for rate-limited reads (64 KB).
 const CHUNK_SIZE: usize = 64 * 1024;
+
+/// Megabits-per-second → bytes-per-second conversion factor.
+const MBPS_TO_BYTES: f64 = 125_000.0;
 
 /// `content.fetch` — fetch URL, BLAKE3 hash, store to CAS atomically.
 pub async fn content_fetch(params: Option<&Value>, state: &StorageState) -> Result<Value> {
@@ -68,7 +72,7 @@ pub async fn content_fetch(params: Option<&Value>, state: &StorageState) -> Resu
     let url_owned = url.to_owned();
     let family_owned = family_id.to_owned();
 
-    let result = tokio::task::spawn_blocking(move || {
+    tokio::task::spawn_blocking(move || {
         do_fetch_to_cas(
             &url_owned,
             &family_owned,
@@ -78,25 +82,7 @@ pub async fn content_fetch(params: Option<&Value>, state: &StorageState) -> Resu
         )
     })
     .await
-    .map_err(|e| NestGateError::io_error(format!("Fetch task panicked: {e}")))?;
-
-    result
-}
-
-fn validate_fetch_url(url: &str, allow_http: bool) -> Result<()> {
-    let parsed = url::Url::parse(url)
-        .map_err(|e| NestGateError::invalid_input_with_field("url", format!("invalid URL: {e}")))?;
-    match parsed.scheme() {
-        "https" => Ok(()),
-        "http" if allow_http => {
-            tracing::warn!("content.fetch: HTTP (insecure) for {url}");
-            Ok(())
-        }
-        scheme => Err(NestGateError::invalid_input_with_field(
-            "url",
-            format!("scheme '{scheme}' not allowed — use https"),
-        )),
-    }
+    .map_err(|e| NestGateError::io_error(format!("Fetch task panicked: {e}")))?
 }
 
 fn do_fetch_to_cas(
@@ -108,16 +94,10 @@ fn do_fetch_to_cas(
 ) -> Result<Value> {
     debug!("content.fetch: GET {url} (family={family_id})");
 
-    let _ = rustls_rustcrypto::provider().install_default();
-
     let timeout = std::time::Duration::from_secs(timeout_secs);
-    let user_agent = format!("NestGate/{}", env!("CARGO_PKG_VERSION"));
-
-    let config = ureq::Agent::config_builder()
-        .timeout_global(Some(timeout))
-        .https_only(false)
-        .build();
-    let agent = ureq::Agent::new_with_config(config);
+    let allow_http = url.starts_with("http://");
+    let agent = build_http_agent(timeout, allow_http);
+    let user_agent = http_user_agent();
 
     let mut response = agent
         .get(url)
@@ -132,66 +112,87 @@ fn do_fetch_to_cas(
         .unwrap_or("application/octet-stream")
         .to_owned();
 
-    let rate_bytes_per_sec = rate_limit_mbps.map(|mbps| (mbps * 125_000.0) as u64);
+    let rate_bytes_per_sec = rate_limit_mbps.map(|mbps| {
+        #[expect(
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation,
+            reason = "mbps is user-supplied and validated non-negative; f64→u64 intentional"
+        )]
+        let bytes = mbps.max(0.0).mul_add(MBPS_TO_BYTES, 0.0) as u64;
+        bytes
+    });
 
-    let body = response.body_mut();
+    let cas_temp_dir = content_key_path(family_id, "00");
+    let cas_temp_dir = cas_temp_dir.parent().and_then(std::path::Path::parent).ok_or_else(|| {
+        NestGateError::io_error("content.fetch: cannot determine CAS base directory")
+    })?;
+    std::fs::create_dir_all(cas_temp_dir).map_err(|e| {
+        NestGateError::io_error(format!("content.fetch: mkdir failed: {e}"))
+    })?;
+
+    let part_path = cas_temp_dir.join(format!("_fetch_{}.part", std::process::id()));
+    let mut part_file = std::fs::File::create(&part_path).map_err(|e| {
+        NestGateError::io_error(format!("content.fetch: create .part failed: {e}"))
+    })?;
+
+    let mut reader = response.body_mut().as_reader();
     let mut hasher = blake3::Hasher::new();
-    let mut all_bytes: Vec<u8> = Vec::new();
     let mut chunk = vec![0u8; CHUNK_SIZE];
+    let mut total_bytes: u64 = 0;
     let mut bytes_this_second: u64 = 0;
     let mut second_start = std::time::Instant::now();
 
     loop {
-        let n = body
+        let n = reader
             .read(&mut chunk)
             .map_err(|e| NestGateError::io_error(format!("content.fetch read error: {e}")))?;
         if n == 0 {
             break;
         }
         hasher.update(&chunk[..n]);
-        all_bytes.extend_from_slice(&chunk[..n]);
+        part_file.write_all(&chunk[..n]).map_err(|e| {
+            NestGateError::io_error(format!("content.fetch: write error: {e}"))
+        })?;
+        total_bytes += n as u64;
 
         if let Some(limit) = rate_bytes_per_sec {
             bytes_this_second += n as u64;
             if bytes_this_second >= limit {
                 let elapsed = second_start.elapsed();
-                if elapsed < std::time::Duration::from_secs(1) {
-                    std::thread::sleep(std::time::Duration::from_secs(1) - elapsed);
+                if let Some(remaining) =
+                    std::time::Duration::from_secs(1).checked_sub(elapsed)
+                {
+                    std::thread::sleep(remaining);
                 }
                 bytes_this_second = 0;
                 second_start = std::time::Instant::now();
             }
         }
     }
+    drop(part_file);
 
-    let hash = hasher.finalize();
-    let hash_hex = hash.to_hex().to_string();
-    let size = all_bytes.len() as u64;
+    let hash_hex = hasher.finalize().to_hex().to_string();
 
-    debug!("content.fetch: {size} bytes, blake3={hash_hex}");
+    debug!("content.fetch: {total_bytes} bytes, blake3={hash_hex}");
 
-    if let Some(expected) = expected_hash {
-        if hash_hex != expected {
-            return Err(NestGateError::invalid_input_with_field(
-                "expected_hash",
-                format!("BLAKE3 mismatch: expected {expected}, got {hash_hex}"),
-            ));
-        }
+    if let Some(expected) = expected_hash
+        && hash_hex != expected
+    {
+        let _ = std::fs::remove_file(&part_path);
+        return Err(NestGateError::invalid_input_with_field(
+            "expected_hash",
+            format!("BLAKE3 mismatch: expected {expected}, got {hash_hex}"),
+        ));
     }
 
     let cas_path = content_key_path(family_id, &hash_hex);
-    let meta_path = {
-        let mut p = cas_path.clone();
-        let fname = p.file_name().unwrap().to_string_lossy().to_string();
-        p.set_file_name(format!("{fname}.meta.json"));
-        p
-    };
 
     if cas_path.exists() {
+        let _ = std::fs::remove_file(&part_path);
         debug!("content.fetch: deduplicated — {hash_hex} already in CAS");
         return Ok(json!({
             "hash": hash_hex,
-            "size": size,
+            "size": total_bytes,
             "url": url,
             "content_type": content_type,
             "stored": true,
@@ -201,21 +202,17 @@ fn do_fetch_to_cas(
         }));
     }
 
-    let parent = cas_path.parent().ok_or_else(|| {
-        NestGateError::io_error("content.fetch: cannot determine CAS parent directory")
-    })?;
-    std::fs::create_dir_all(parent).map_err(|e| {
-        NestGateError::io_error(format!("content.fetch: mkdir failed: {e}"))
-    })?;
+    if let Some(parent) = cas_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| {
+            NestGateError::io_error(format!("content.fetch: mkdir failed: {e}"))
+        })?;
+    }
 
-    let part_path = cas_path.with_extension("part");
-    std::fs::write(&part_path, &all_bytes).map_err(|e| {
-        NestGateError::io_error(format!("content.fetch: write .part failed: {e}"))
-    })?;
     std::fs::rename(&part_path, &cas_path).map_err(|e| {
         NestGateError::io_error(format!("content.fetch: rename to CAS failed: {e}"))
     })?;
 
+    let meta_path = cas_path.with_file_name(format!("{hash_hex}.meta.json"));
     let meta = json!({
         "content_type": content_type,
         "stored_at": chrono::Utc::now().to_rfc3339(),
@@ -223,11 +220,17 @@ fn do_fetch_to_cas(
         "pipeline": "content.fetch",
         "stored_by": "nestgate",
     });
-    let _ = std::fs::write(&meta_path, serde_json::to_vec_pretty(&meta).unwrap_or_default());
+    std::fs::write(
+        &meta_path,
+        serde_json::to_vec_pretty(&meta).unwrap_or_default(),
+    )
+    .map_err(|e| {
+        NestGateError::io_error(format!("content.fetch: meta write failed: {e}"))
+    })?;
 
     Ok(json!({
         "hash": hash_hex,
-        "size": size,
+        "size": total_bytes,
         "url": url,
         "content_type": content_type,
         "stored": true,

@@ -213,6 +213,51 @@ pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
     ))
 }
 
+/// Validate that a URL has an allowed scheme (HTTPS by default, HTTP if permitted).
+///
+/// Shared between `content.fetch` and `storage.fetch_external` to enforce
+/// consistent URL-scheme policy.
+pub(in crate::rpc::unix_socket_server) fn validate_fetch_url(
+    url: &str,
+    allow_http: bool,
+) -> Result<()> {
+    let parsed = url::Url::parse(url)
+        .map_err(|e| NestGateError::invalid_input_with_field("url", format!("invalid URL: {e}")))?;
+    match parsed.scheme() {
+        "https" => Ok(()),
+        "http" if allow_http => {
+            tracing::warn!("HTTP (insecure) requested for {url}");
+            Ok(())
+        }
+        scheme => Err(NestGateError::invalid_input_with_field(
+            "url",
+            format!("scheme '{scheme}' not allowed — use https"),
+        )),
+    }
+}
+
+/// Build a `ureq::Agent` with the standard `NestGate` configuration.
+///
+/// Uses `rustls-rustcrypto` (pure Rust TLS) and the standard `NestGate/<version>`
+/// user agent. Shared between `content.fetch` and `storage.fetch_external`.
+pub(in crate::rpc::unix_socket_server) fn build_http_agent(
+    timeout: std::time::Duration,
+    allow_http: bool,
+) -> ureq::Agent {
+    let _ = rustls_rustcrypto::provider().install_default();
+    let config = ureq::Agent::config_builder()
+        .timeout_global(Some(timeout))
+        .https_only(!allow_http)
+        .build();
+    ureq::Agent::new_with_config(config)
+}
+
+/// Standard `NestGate` HTTP User-Agent header value.
+#[must_use]
+pub(in crate::rpc::unix_socket_server) fn http_user_agent() -> String {
+    format!("NestGate/{}", env!("CARGO_PKG_VERSION"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
