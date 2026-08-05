@@ -2,10 +2,10 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-08-05, Session 136)**  
+**Verification (as of 2026-08-05, Session 137)**  
 - **Build**: `cargo check --workspace --all-features` — PASS  
 - **Clippy**: `cargo clippy --all-features -- -D warnings` — PASS (zero warnings, pedantic+nursery)  
-- **Tests**: 1,650+ passed, 0 failed (~80 ignored)  
+- **Tests**: 1,630+ passed, 0 failed (~80 ignored)  
 - **Format**: `cargo fmt --check` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 
@@ -48,14 +48,15 @@
 - **content.* transport parity**: All 8 content-addressed methods routed through all transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API (Session 60)
 - **lifecycle.status**: Public primal status probe on all transport paths, BTSP-exempt (Session 60)
 - **Dep hygiene**: 3 unused deps removed from nestgate-api, `"biomeos"` socket-dir literal replaced with canonical `ecosystem_path_segment()` (Session 61)  
-- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup — `capabilities`, `methods`, `signal_tiers`, `cost_hints`, `latency_estimates` (Session 70, Wave 43)
+- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup — `capabilities` (5 domains), `methods`, `signal_tiers`, `cost_hints`, `latency_estimates`, `federation_methods` (Session 70, Wave 43; O8 wiring Session 137)
+- **Nest Atomic participant**: Full Neural API wiring — `dataset` domain announced, `dataset.convergence` as federation method, `route.register` writes manifests for all 5 capability domains, remote capability router forwards through coordinator `capability.call` instead of returning `not_implemented`, `MeshRelay` transport resolves through coordinator socket (Session 137)
 - **`--socket PATH` CLI flag**: Uniform launcher convergence — sets `NESTGATE_SOCKET` env (Session 71, Wave 47)
 - **`health.liveness` normalized**: `{"status":"alive","primal":"nestgate"}` across all 5 transport surfaces (Session 71, Wave 47)
 - **`btsp.capabilities`**: New method wired on all transport paths (Session 69)
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Aug 3, 2026 (Session 131 — fabricated metrics purge + dep hygiene)
+**Last Updated**: Aug 5, 2026 (Session 137 — O8 Neural API wiring, Nest Atomic completion)
 
 ---
 
@@ -156,7 +157,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-03 (Session 131).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-05 (Session 137).
 
 | Area | Status |
 |------|--------|
@@ -181,7 +182,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-03 (Se
 | ecoBin | Pass — pure Rust application code, HTTP default (guideStone), `--socket-only` for NUCLEUS IPC, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass — Wire Standard L3 (Composable): `{primal, version, capabilities}` envelope, `provided_capabilities`, `consumed_capabilities` |
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
-| Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*`, `btsp.*` |
+| Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `dataset.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*`, `btsp.*`, `coord.*`, `footprint.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — 84%+ line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 800 LOC (4 largest files refactored Sessions 43–43p) |
@@ -311,4 +312,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: Aug 3, 2026 (Session 131)
+**Latest**: Aug 5, 2026 (Session 137)

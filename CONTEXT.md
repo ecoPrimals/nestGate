@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Aug 4, 2026 (Session 135)
+**Last Updated**: Aug 5, 2026 (Session 137)
 
 ## What This Is
 
@@ -26,7 +26,7 @@ than by importing this crate graph.
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
 | **Tests** | 1,630+ passed, 0 failed (~80 ignored) |
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
-| **Architecture** | 18 workspace crates under `code/crates/` (2 quarantined) |
+| **Architecture** | 18 workspace crates under `code/crates/` |
 | **Binary** | Single self-contained release binary |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
 | **TLS/crypto** | `ureq` + `oxitls-rustcrypto-provider` (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl eliminated; installer uses system `curl` |
@@ -34,7 +34,7 @@ than by importing this crate graph.
 | **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean with `-D warnings` |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
-| **Registry** | `config/capability_registry.toml` — 20 capability domains, machine-readable self-knowledge |
+| **Registry** | `config/capability_registry.toml` — 21 capability domains, machine-readable self-knowledge |
 
 ### Workspace crates (authoritative list)
 

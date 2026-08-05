@@ -353,8 +353,8 @@ methods = [
 method = "primal.announce"
 target = "ecosystem-coordinator"
 signal_tiers = ["nest"]
-capabilities = ["storage", "content", "coordination", "footprint"]
-federation_methods = ["content.replicate", "content.replicate.pull", "content.fetch_heads", "content.push", "content.sync"]
+capabilities = ["storage", "content", "dataset", "coordination", "footprint"]
+federation_methods = ["content.replicate", "content.replicate.pull", "content.fetch_heads", "content.push", "content.sync", "dataset.convergence"]
 cost_hints = { storage = 10.0, content = 15.0 }
 latency_estimates = { storage = 50, content = 20 }
 wire_schema = "WAVE42_NEURAL_API_DEPLOYMENT_GUIDE.md"

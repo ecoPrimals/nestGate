@@ -236,12 +236,24 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_transport_mesh_relay_not_supported() {
-        let ep = nestgate_types::TransportEndpoint::mesh_relay("peer1", "security");
-        let result = connect_transport(&ep).await;
-        let err_msg = result.unwrap_err().to_string();
-        assert!(err_msg.contains("MeshRelay"));
-        assert!(err_msg.contains("relay negotiation"));
+    async fn connect_transport_mesh_relay_no_coordinator() {
+        temp_env::with_vars(
+            [
+                ("ECOSYSTEM_IPC_SOCKET", None::<&str>),
+                ("BIOMEOS_IPC_SOCKET", None::<&str>),
+                ("ECOSYSTEM_SOCKET_DIR", None::<&str>),
+                ("BIOMEOS_SOCKET_DIR", None::<&str>),
+            ],
+            || {
+                let rt = tokio::runtime::Handle::current();
+                let ep = nestgate_types::TransportEndpoint::mesh_relay("peer1", "security");
+                let err = rt.block_on(connect_transport(&ep)).unwrap_err().to_string();
+                assert!(
+                    err.contains("coordinator"),
+                    "expected coordinator discovery error, got: {err}"
+                );
+            },
+        );
     }
 
     #[test]

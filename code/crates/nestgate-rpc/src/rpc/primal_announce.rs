@@ -19,7 +19,8 @@ use tracing::{debug, info, warn};
 use super::model_cache_handlers::UNIX_SOCKET_SUPPORTED_METHODS;
 
 /// Capability domains `NestGate` provides to the ecosystem.
-const ANNOUNCED_CAPABILITIES: &[&str] = &["storage", "content", "coordination", "footprint"];
+const ANNOUNCED_CAPABILITIES: &[&str] =
+    &["storage", "content", "dataset", "coordination", "footprint"];
 
 /// Signal tier — `NestGate` participates in the Nest Atomic composition.
 const SIGNAL_TIERS: &[&str] = &["nest"];
@@ -31,6 +32,7 @@ const FEDERATION_METHODS: &[&str] = &[
     "content.fetch_heads",
     "content.push",
     "content.sync",
+    "dataset.convergence",
 ];
 
 /// Build the `primal.announce` JSON-RPC params payload.
@@ -45,6 +47,7 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
         .filter(|m| {
             m.starts_with("storage.")
                 || m.starts_with("content.")
+                || m.starts_with("dataset.")
                 || m.starts_with("coord.")
                 || m.starts_with("footprint.")
         })
@@ -215,7 +218,10 @@ mod tests {
             .iter()
             .filter_map(Value::as_str)
             .collect();
-        assert_eq!(caps, &["storage", "content", "coordination", "footprint"]);
+        assert_eq!(
+            caps,
+            &["storage", "content", "dataset", "coordination", "footprint"]
+        );
     }
 
     #[test]
@@ -231,12 +237,15 @@ mod tests {
         assert!(
             methods.iter().all(|m| m.starts_with("storage.")
                 || m.starts_with("content.")
+                || m.starts_with("dataset.")
                 || m.starts_with("coord.")
                 || m.starts_with("footprint.")),
-            "all methods should be storage.*, content.*, coord.*, or footprint.*"
+            "all methods should be storage.*, content.*, dataset.*, coord.*, or footprint.*"
         );
         assert!(methods.contains(&"storage.store"));
         assert!(methods.contains(&"content.put"));
+        assert!(methods.contains(&"content.ingest"));
+        assert!(methods.contains(&"dataset.convergence"));
         assert!(methods.contains(&"content.resolve"));
         assert!(methods.contains(&"coord.blurbs.current"));
         assert!(
@@ -296,6 +305,7 @@ mod tests {
         assert!(fed.contains(&"content.replicate"));
         assert!(fed.contains(&"content.replicate.pull"));
         assert!(fed.contains(&"content.sync"));
+        assert!(fed.contains(&"dataset.convergence"));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 +++
 title = "NestGate Validation Summary"
-description = "Content-addressed storage primal v0.5.0 — 1,630+ tests, 18 crates, 20 capability domains, 4 transport surfaces, Session 135 (content.query CAS filter; ZFS REST snapshot wiring; tarpc 0.37; stream sidecar fix; WebSocket synthetic purge; quarantined crates deleted; deep debt sweep), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
-date = 2026-08-04
+description = "Content-addressed storage primal v0.5.0 — 1,630+ tests, 18 crates, 21 capability domains, 5 announced, 4 transport surfaces, Session 137 (O8 Nest Atomic Neural API wiring; O1 content.ingest; O3 dataset.convergence; O4 dual-path CAS; capability.call coordinator routing; MeshRelay transport; route.register dynamic), CI-DIV-03, NESTGATE-ANDROID-01, STARTUP-NG-01, riboCipher, BTSP auth"
+date = 2026-08-05
 
 [taxonomies]
 primals = ["nestgate"]
@@ -11,6 +11,8 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 ## Status
 
 - **1,630+ tests**, **0 failures** (serial and parallel), 0 clippy warnings
+- **Session 137 O8 Nest Atomic Neural API wiring**: `ANNOUNCED_CAPABILITIES` expanded to 5 domains (+`dataset`). `FEDERATION_METHODS` expanded (+`dataset.convergence`). `route.register` dynamic for all announced capabilities. Remote `CapabilityRouter` forwards through coordinator `capability.call`. `MeshRelay` transport resolves through coordinator socket. `capability_registry.toml` `[announce]` updated.
+- **Session 136 O1/O3/O4**: `content.ingest` (bulk directory→CAS, 9 tests). `dataset.convergence` (provenance state per dataset, 10 tests). Dual-path CAS (`NESTGATE_WARM_PATHS`/`NESTGATE_COLD_PATHS` hot/cold tier). `content.fetch`+`content.ingest` wired into semantic router. `dataset` capability domain registered.
 - **Session 135 content.query + ZFS wiring + tarpc 0.37 + cleanup**: `content.query` JSON-RPC method (sidecar-scanning CAS metadata filter). 5 ZFS REST snapshot endpoints wired from 501 stubs to real `ZfsOperations`. `tarpc` 0.34→0.37 + `tokio-serde` 0.8→0.9 (eliminates opentelemetry thiserror 1.x chain). `content.store_stream` sidecar gap fixed. WebSocket synthetic data purged. Hardcoded bind/mount → env-based. Quarantined crates (`nestgate-fsmonitor`, `nestgate-middleware`) deleted from tree.
 - **Session 134 Dead module purge + dep unification**: `auth_production` (8 files), `zero_cost_api_handlers` (7 files), `models.rs` purged — 3,573 LOC compiled but never routed. `rustix` 0.38→1.1 unified with tempfile. Commented-out code removed.
 - **Session 133 content.fetch streaming fix + federation extraction**: Fixed ureq 3.x compile error (`body.as_reader()`); rewrote to stream HTTP response to `.part` file while BLAKE3 hashing (O(1) memory); removed `unwrap()` from production path; propagated meta write errors. Extracted federation blob transfer helpers (`content_federation_handlers.rs` 802→420 lines). Deduplicated `validate_fetch_url` + ureq agent builder into shared `storage_paths.rs`.
@@ -67,7 +69,7 @@ springs = ["airspring", "neuralspring", "wetspring", "groundspring"]
 - **Content federation (Wave 60)**: `content.fetch_heads`, `content.push`, `content.replicate`, `content.sync` — 4 new methods enabling waterFall / rootPulse signal graphs to graduate from bash to Neural API
 - **v0.5.0**: Unified version across all 22 workspace crates (was `4.7.0-dev` internal / `0.1.0` workspace / `2.1.0` binary)
 - **22 workspace packages** (nestgate-rpc, nestgate-api, nestgate-core, nestgate-config, nestgate-types, nestgate-storage, nestgate-security, nestgate-zfs, nestgate-cache, nestgate-discovery, nestgate-bin, and 11 more)
-- **16 capability domains** registered in `capability_registry.toml` — storage, content, model, templates, session, audit, nat, beacon, bonding, zfs, health, identity, discovery, lifecycle, auth, btsp
+- **21 capability domains** registered in `capability_registry.toml` — storage, content, dataset, model, templates, session, audit, nat, beacon, bonding, zfs, health, identity, discovery, lifecycle, auth, btsp, coordination, footprint, crypto, primal
 - **4 transport surfaces** with full parity: SemanticRouter, isomorphic IPC (UDS), primary UDS dispatch, HTTP JSON-RPC
 - **Content-addressed storage** (NG-1): BLAKE3 hash-as-key, automatic dedup, optional encrypt-at-rest, provenance metadata sidecars
 - **Content manifests** (NG-2): versioned path→hash manifests, atomic deploy via `content.promote` aliases, index.html path normalization

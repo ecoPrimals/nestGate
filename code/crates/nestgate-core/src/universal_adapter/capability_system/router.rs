@@ -155,8 +155,8 @@ impl CapabilityRouter {
                 })?
         };
 
-        // Generic capability request - works with any primal
         self.send_universal_request(&endpoint, &service.endpoint, request)
+            .await
     }
 
     /// Handle capability locally (NestGate's own capabilities)
@@ -185,22 +185,82 @@ impl CapabilityRouter {
         )))
     }
 
-    /// Send a capability request to a remote primal.
+    /// Send a capability request to a remote primal via the Neural API coordinator.
     ///
-    /// Cross-primal requests require runtime discovery and IPC
-    /// (`capability.call` / `route.register`). Returns an explicit error
-    /// until the mesh relay transport is wired.
-    fn send_universal_request(
+    /// Instead of connecting directly to the remote endpoint, forwards the
+    /// request as a `capability.call` JSON-RPC to the ecosystem coordinator.
+    /// The coordinator (biomeOS Neural API) handles scoring, routing, and
+    /// cross-gate mesh relay — nestGate never needs to know the consumer.
+    async fn send_universal_request(
         &self,
-        endpoint: &str,
+        _endpoint: &str,
         _capability_endpoint: &str,
         request: CapabilityRequest,
     ) -> Result<CapabilityResponse> {
-        Err(crate::NestGateError::not_implemented(format!(
-            "Remote capability dispatch to `{endpoint}` for operation `{}` \
-             requires mesh relay transport (not yet wired)",
-            request.operation
-        )))
+        use nestgate_types::TransportEndpoint;
+        use serde_json::json;
+        use tracing::{debug, warn};
+
+        let coordinator_socket = discover_coordinator_for_routing();
+
+        let Some(coordinator_path) = coordinator_socket else {
+            return Err(crate::NestGateError::not_implemented(format!(
+                "Remote capability dispatch for operation `{}` requires the ecosystem \
+                 coordinator (Neural API), but no coordinator socket was discovered",
+                request.operation
+            )));
+        };
+
+        debug!(
+            "Forwarding capability.call for {:?}::{} via coordinator at {}",
+            request.category,
+            request.operation,
+            coordinator_path.display()
+        );
+
+        let endpoint = TransportEndpoint::uds(&coordinator_path);
+        let Ok(mut client) =
+            crate::rpc::JsonRpcClient::connect_btsp_aware(&endpoint).await
+        else {
+            warn!(
+                "Could not connect to ecosystem coordinator at {} for capability.call",
+                coordinator_path.display()
+            );
+            return Err(crate::NestGateError::internal_error(
+                format!(
+                    "Coordinator unreachable at {} — cannot route {:?}::{}",
+                    coordinator_path.display(),
+                    request.category,
+                    request.operation
+                ),
+                "capability_routing",
+            ));
+        };
+
+        let call_params = json!({
+            "capability": format!("{:?}", request.category).to_lowercase(),
+            "operation": request.operation,
+            "parameters": request.parameters,
+            "timeout_seconds": request.timeout_seconds,
+        });
+
+        match client.call("capability.call", call_params).await {
+            Ok(resp) => {
+                debug!("capability.call response: {resp}");
+                Ok(CapabilityResponse {
+                    request_id: request.request_id,
+                    success: true,
+                    data: resp,
+                    error: None,
+                    metadata: std::collections::HashMap::new(),
+                    execution_time_ms: 0,
+                })
+            }
+            Err(e) => Err(crate::NestGateError::internal_error(
+                format!("capability.call failed: {e}"),
+                "capability_routing",
+            )),
+        }
     }
 }
 
@@ -209,6 +269,51 @@ impl Default for CapabilityRouter {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Discover the ecosystem coordinator socket for `capability.call` routing.
+///
+/// Mirrors the discovery logic in `primal_announce` but is available to the
+/// in-process capability router. Returns `None` when no coordinator is found
+/// (the caller should degrade gracefully or return a descriptive error).
+fn discover_coordinator_for_routing() -> Option<std::path::PathBuf> {
+    use std::path::PathBuf;
+
+    let eco = nestgate_config::constants::system::ecosystem_name(&nestgate_types::ProcessEnv);
+
+    if let Ok(explicit) = std::env::var("ECOSYSTEM_IPC_SOCKET") {
+        let p = PathBuf::from(explicit);
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    if let Ok(explicit) = std::env::var("BIOMEOS_IPC_SOCKET") {
+        let p = PathBuf::from(explicit);
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    if let Ok(dir) = std::env::var("ECOSYSTEM_SOCKET_DIR")
+        .or_else(|_| std::env::var("BIOMEOS_SOCKET_DIR"))
+    {
+        let p = PathBuf::from(dir).join(format!("{eco}.sock"));
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        for name in [format!("{eco}.sock"), format!("{eco}-coordinator.sock")] {
+            let p = PathBuf::from(&xdg).join(&eco).join(&name);
+            if p.exists() {
+                return Some(p);
+            }
+        }
+    }
+    let tmp = std::env::temp_dir().join(format!("{eco}.sock"));
+    if tmp.exists() {
+        return Some(tmp);
+    }
+    None
 }
 
 #[cfg(test)]
@@ -303,5 +408,20 @@ mod tests {
         let req = storage_request("list_datasets");
         let err = r.handle_locally(req).unwrap_err();
         assert!(err.to_string().contains("list_datasets"));
+    }
+
+    #[test]
+    fn coordinator_discovery_returns_none_without_sockets() {
+        temp_env::with_vars(
+            [
+                ("ECOSYSTEM_IPC_SOCKET", None::<&str>),
+                ("BIOMEOS_IPC_SOCKET", None::<&str>),
+                ("ECOSYSTEM_SOCKET_DIR", None::<&str>),
+                ("BIOMEOS_SOCKET_DIR", None::<&str>),
+            ],
+            || {
+                assert!(discover_coordinator_for_routing().is_none());
+            },
+        );
     }
 }

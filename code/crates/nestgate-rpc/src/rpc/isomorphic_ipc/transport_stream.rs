@@ -214,10 +214,15 @@ impl fmt::Display for TransportListener {
 ///
 /// This is the ecosystem-standard outbound connect function.
 ///
+/// For `MeshRelay` endpoints, the coordinator socket is resolved via standard
+/// discovery env vars and the connection is established to the coordinator,
+/// which proxies the mesh-relayed traffic. Callers should send an `ipc.relay`
+/// handshake after connecting to bind the stream to the target peer/capability.
+///
 /// # Errors
 ///
-/// Returns an error when the connection fails or when the transport variant
-/// (e.g. `MeshRelay`) is not yet supported for direct connection.
+/// Returns an error when the connection fails or when the coordinator cannot
+/// be discovered for `MeshRelay` transport.
 pub async fn connect_transport(
     endpoint: &nestgate_types::TransportEndpoint,
 ) -> anyhow::Result<TransportStream> {
@@ -249,10 +254,77 @@ pub async fn connect_transport(
         EP::MeshRelay {
             peer_id,
             capability,
-        } => Err(anyhow::anyhow!(
-            "MeshRelay transport ({peer_id}/{capability}) requires relay negotiation"
-        )),
+        } => {
+            debug!("MeshRelay connect: resolving coordinator for {peer_id}/{capability}");
+            let coordinator = discover_coordinator_socket_for_relay()
+                .ok_or_else(|| anyhow::anyhow!(
+                    "MeshRelay transport ({peer_id}/{capability}) requires the ecosystem \
+                     coordinator, but no coordinator socket was discovered"
+                ))?;
+
+            debug!(
+                "MeshRelay: connecting to coordinator at {} for relay to {peer_id}/{capability}",
+                coordinator.display()
+            );
+
+            #[cfg(unix)]
+            {
+                let stream = UnixStream::connect(&coordinator)
+                    .await
+                    .map_err(|e| anyhow::anyhow!(
+                        "MeshRelay coordinator connect to {}: {e}",
+                        coordinator.display()
+                    ))?;
+                Ok(TransportStream::Unix(stream))
+            }
+            #[cfg(not(unix))]
+            {
+                Err(anyhow::anyhow!(
+                    "MeshRelay coordinator connection requires UDS (not available on this platform)"
+                ))
+            }
+        }
     }
+}
+
+/// Discover the ecosystem coordinator socket for mesh relay connections.
+///
+/// Same discovery logic as `primal_announce` and the capability router, adapted
+/// for the transport layer.
+fn discover_coordinator_socket_for_relay() -> Option<std::path::PathBuf> {
+    use std::path::PathBuf;
+
+    let eco = nestgate_config::constants::system::ecosystem_name(&nestgate_types::ProcessEnv);
+
+    for var in ["ECOSYSTEM_IPC_SOCKET", "BIOMEOS_IPC_SOCKET"] {
+        if let Ok(val) = std::env::var(var) {
+            let p = PathBuf::from(val);
+            if p.exists() {
+                return Some(p);
+            }
+        }
+    }
+    if let Ok(dir) = std::env::var("ECOSYSTEM_SOCKET_DIR")
+        .or_else(|_| std::env::var("BIOMEOS_SOCKET_DIR"))
+    {
+        let p = PathBuf::from(dir).join(format!("{eco}.sock"));
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        for name in [format!("{eco}.sock"), format!("{eco}-coordinator.sock")] {
+            let p = PathBuf::from(&xdg).join(&eco).join(&name);
+            if p.exists() {
+                return Some(p);
+            }
+        }
+    }
+    let tmp = std::env::temp_dir().join(format!("{eco}.sock"));
+    if tmp.exists() {
+        return Some(tmp);
+    }
+    None
 }
 
 #[cfg(test)]
@@ -332,10 +404,24 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_transport_mesh_relay_errors() {
-        let ep = nestgate_types::TransportEndpoint::mesh_relay("peer1", "security");
-        let result = connect_transport(&ep).await;
-        assert!(result.unwrap_err().to_string().contains("MeshRelay"));
+    async fn connect_transport_mesh_relay_no_coordinator() {
+        temp_env::with_vars(
+            [
+                ("ECOSYSTEM_IPC_SOCKET", None::<&str>),
+                ("BIOMEOS_IPC_SOCKET", None::<&str>),
+                ("ECOSYSTEM_SOCKET_DIR", None::<&str>),
+                ("BIOMEOS_SOCKET_DIR", None::<&str>),
+            ],
+            || {
+                let rt = tokio::runtime::Handle::current();
+                let ep = nestgate_types::TransportEndpoint::mesh_relay("peer1", "security");
+                let err = rt.block_on(connect_transport(&ep)).unwrap_err().to_string();
+                assert!(
+                    err.contains("coordinator"),
+                    "expected coordinator discovery error, got: {err}"
+                );
+            },
+        );
     }
 
     #[tokio::test]

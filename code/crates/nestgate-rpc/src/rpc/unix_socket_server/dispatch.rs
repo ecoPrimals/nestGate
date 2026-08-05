@@ -430,13 +430,13 @@ pub(super) fn discovery_capability_register(
     }))
 }
 
-/// Handle `route.register` — register `NestGate`'s storage capabilities with
+/// Handle `route.register` — register all announced capability domains with
 /// the ecosystem mesh for cross-gate routing.
 ///
 /// This builds the full announce payload (including gate identity, federation
-/// endpoints, and storage backend info) and writes it to the local route
-/// manifest. An external mesh coordinator or orchestrator can consume this
-/// manifest to route cross-gate `content.*` and `storage.*` requests.
+/// endpoints, and storage backend info) and writes local route manifests for
+/// every capability domain `NestGate` provides. An external mesh coordinator
+/// or the Neural API can consume these manifests for `capability.call` routing.
 ///
 /// Optional params:
 /// - `gate_id`: Override gate identity (default: `NESTGATE_GATE_ID` env)
@@ -471,21 +471,24 @@ pub(super) fn route_register(
         .unwrap_or(300);
 
     let endpoint = payload["socket"].as_str().unwrap_or_default();
-    nestgate_config::config::capability_discovery::announce_capability(
-        "storage",
-        endpoint,
-        std::time::Duration::from_secs(ttl),
-    )?;
-    nestgate_config::config::capability_discovery::announce_capability(
-        "content",
-        endpoint,
-        std::time::Duration::from_secs(ttl),
-    )?;
+    let ttl_dur = std::time::Duration::from_secs(ttl);
+
+    let announced: Vec<&str> = payload["capabilities"]
+        .as_array()
+        .map_or_else(Vec::new, |arr| {
+            arr.iter().filter_map(Value::as_str).collect()
+        });
+
+    for cap in &announced {
+        nestgate_config::config::capability_discovery::announce_capability(
+            cap, endpoint, ttl_dur,
+        )?;
+    }
 
     Ok(json!({
         "registered": true,
         "gate_id": gate_id,
-        "capabilities": ["storage", "content"],
+        "capabilities": announced,
         "federation_methods": payload["federation_methods"],
         "endpoints": payload["endpoints"],
         "storage_backend": payload["storage_backend"],

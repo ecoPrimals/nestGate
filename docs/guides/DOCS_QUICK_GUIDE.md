@@ -1,6 +1,6 @@
 # Documentation Quick Guide
 
-**Last Updated**: Aug 4, 2026 (Session 134)
+**Last Updated**: Aug 5, 2026 (Session 137)
 
 ---
 
@@ -34,7 +34,7 @@ nestgate/
 ├── README.md, STATUS.md, START_HERE.md    Root docs (ground truth)
 ├── CAPABILITY_MAPPINGS.md                 Wire standard compliance
 ├── config/capability_registry.toml        Machine-readable self-knowledge
-├── code/crates/                           18 active crates (+ root + fuzz; 2 quarantined)
+├── code/crates/                           18 active crates (+ root + fuzz)
 ├── tests/                                 Integration, chaos, e2e tests
 └── docs/
     └── guides/                            Environment variables, this guide
@@ -52,4 +52,4 @@ These are not in the nestgate repository — they live in the shared infra tree.
 
 ---
 
-**Last Updated**: Aug 4, 2026 (Session 134)
+**Last Updated**: Aug 5, 2026 (Session 137)
