@@ -6,7 +6,6 @@
 //! Scans `_content/{prefix}/` directories and reads `.meta.json` sidecars,
 //! returning objects whose metadata matches the requested filters.
 
-use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use tracing::debug;
@@ -49,102 +48,105 @@ pub async fn content_query(params: Option<&Value>, state: &StorageState) -> Resu
         .unwrap_or(100);
     let offset = usize::try_from(params["offset"].as_u64().unwrap_or(0)).unwrap_or(0);
 
-    let content_dir = get_storage_base_path()
-        .join("datasets")
-        .join(family_id)
-        .join("_content");
+    let content_dirs = super::super::storage_paths::cas_content_dirs(family_id);
 
     let mut matches: Vec<Value> = Vec::new();
     let mut scanned: usize = 0;
     let mut skipped: usize = 0;
+    let mut seen_hashes = std::collections::HashSet::new();
+    let mut done = false;
 
-    if !content_dir.exists() {
-        return Ok(json!({
-            "results": [],
-            "count": 0,
-            "scanned": 0,
-            "family_id": family_id,
-        }));
-    }
-
-    let mut prefix_dirs = tokio::fs::read_dir(&content_dir).await.map_err(|e| {
-        NestGateError::io_error(format!("Failed to list content for {family_id}: {e}"))
-    })?;
-
-    'outer: while let Ok(Some(prefix_entry)) = prefix_dirs.next_entry().await {
-        if !prefix_entry
-            .file_type()
-            .await
-            .map(|ft| ft.is_dir())
-            .unwrap_or(false)
-        {
+    for content_dir in &content_dirs {
+        if done || !content_dir.exists() {
             continue;
         }
 
-        let mut entries = tokio::fs::read_dir(prefix_entry.path())
-            .await
-            .map_err(|e| {
-                NestGateError::io_error(format!("Failed to read content prefix dir: {e}"))
-            })?;
+        let mut prefix_dirs = tokio::fs::read_dir(content_dir).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to list content for {family_id}: {e}"))
+        })?;
 
-        while let Ok(Some(entry)) = entries.next_entry().await {
-            let name = entry.file_name();
-            let name_str = name.to_string_lossy();
-            if name_str.ends_with(".meta.json") || name_str.starts_with('.') {
-                continue;
+        while let Ok(Some(prefix_entry)) = prefix_dirs.next_entry().await {
+            if done {
+                break;
             }
-
-            let meta_path = entry.path().with_extension("meta.json");
-            let blob_name = format!("{name_str}.meta.json");
-            let meta_path_alt = entry.path().parent().map(|p| p.join(&blob_name));
-
-            let sidecar_path = if meta_path.exists() {
-                meta_path
-            } else if let Some(ref alt) = meta_path_alt
-                && alt.exists()
+            if !prefix_entry
+                .file_type()
+                .await
+                .map(|ft| ft.is_dir())
+                .unwrap_or(false)
             {
-                alt.clone()
-            } else {
-                continue;
-            };
-
-            scanned += 1;
-
-            let sidecar_bytes = match tokio::fs::read(&sidecar_path).await {
-                Ok(b) => b,
-                Err(e) => {
-                    debug!(hash = %name_str, error = %e, "skipping unreadable sidecar");
-                    continue;
-                }
-            };
-
-            let sidecar: Value = match serde_json::from_slice(&sidecar_bytes) {
-                Ok(v) => v,
-                Err(e) => {
-                    debug!(hash = %name_str, error = %e, "skipping malformed sidecar");
-                    continue;
-                }
-            };
-
-            if !matches_filters(&sidecar, &filters) {
                 continue;
             }
 
-            if skipped < offset {
-                skipped += 1;
-                continue;
-            }
+            let mut entries = tokio::fs::read_dir(prefix_entry.path())
+                .await
+                .map_err(|e| {
+                    NestGateError::io_error(format!("Failed to read content prefix dir: {e}"))
+                })?;
 
-            let size = entry.metadata().await.map(|m| m.len()).unwrap_or(0);
-            let mut result = json!({
-                "hash": &*name_str,
-                "size": size,
-            });
-            merge_sidecar_fields(&mut result, &sidecar);
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                let name = entry.file_name();
+                let name_str = name.to_string_lossy();
+                if name_str.ends_with(".meta.json") || name_str.starts_with('.') {
+                    continue;
+                }
+                if !seen_hashes.insert(name_str.to_string()) {
+                    continue;
+                }
 
-            matches.push(result);
-            if matches.len() >= limit {
-                break 'outer;
+                let meta_path = entry.path().with_extension("meta.json");
+                let blob_name = format!("{name_str}.meta.json");
+                let meta_path_alt = entry.path().parent().map(|p| p.join(&blob_name));
+
+                let sidecar_path = if meta_path.exists() {
+                    meta_path
+                } else if let Some(ref alt) = meta_path_alt
+                    && alt.exists()
+                {
+                    alt.clone()
+                } else {
+                    continue;
+                };
+
+                scanned += 1;
+
+                let sidecar_bytes = match tokio::fs::read(&sidecar_path).await {
+                    Ok(b) => b,
+                    Err(e) => {
+                        debug!(hash = %name_str, error = %e, "skipping unreadable sidecar");
+                        continue;
+                    }
+                };
+
+                let sidecar: Value = match serde_json::from_slice(&sidecar_bytes) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        debug!(hash = %name_str, error = %e, "skipping malformed sidecar");
+                        continue;
+                    }
+                };
+
+                if !matches_filters(&sidecar, &filters) {
+                    continue;
+                }
+
+                if skipped < offset {
+                    skipped += 1;
+                    continue;
+                }
+
+                let size = entry.metadata().await.map(|m| m.len()).unwrap_or(0);
+                let mut result = json!({
+                    "hash": &*name_str,
+                    "size": size,
+                });
+                merge_sidecar_fields(&mut result, &sidecar);
+
+                matches.push(result);
+                if matches.len() >= limit {
+                    done = true;
+                    break;
+                }
             }
         }
     }

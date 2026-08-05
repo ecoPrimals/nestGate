@@ -43,7 +43,8 @@ use tracing::debug;
 
 use super::super::StorageState;
 use super::super::storage_paths::{
-    build_http_agent, content_key_path, http_user_agent, resolve_family_id, validate_fetch_url,
+    build_http_agent, content_key_path, http_user_agent, resolve_cas_object, resolve_family_id,
+    validate_fetch_url,
 };
 
 /// Chunk size for rate-limited reads (64 KB).
@@ -187,7 +188,7 @@ fn do_fetch_to_cas(
 
     let cas_path = content_key_path(family_id, &hash_hex);
 
-    if cas_path.exists() {
+    if resolve_cas_object(family_id, &hash_hex).is_some() {
         let _ = std::fs::remove_file(&part_path);
         debug!("content.fetch: deduplicated — {hash_hex} already in CAS");
         return Ok(json!({

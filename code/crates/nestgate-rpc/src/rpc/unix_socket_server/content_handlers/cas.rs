@@ -5,14 +5,13 @@
 //! `content.exists`, `content.list`.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
-use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use tracing::debug;
 
 use super::super::StorageState;
 use super::super::storage_paths::{
-    content_hash_hex, content_key_path, ensure_parent_dirs, resolve_family_id,
+    content_hash_hex, content_key_path, ensure_parent_dirs, resolve_cas_object, resolve_family_id,
 };
 use super::{maybe_decrypt, merge_sidecar_fields, validate_blake3_hex};
 
@@ -60,7 +59,7 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     let blake3_hex = content_hash_hex(&raw);
     let object_path = content_key_path(family_id, &blake3_hex);
 
-    if object_path.exists() {
+    if resolve_cas_object(family_id, &blake3_hex).is_some() {
         debug!(
             "content.put: dedup hit family_id='{}', hash={blake3_hex}, size={}",
             family_id,
@@ -176,7 +175,8 @@ pub async fn content_get(params: Option<&Value>, state: &StorageState) -> Result
     validate_blake3_hex(hash)?;
     let family_id = resolve_family_id(params, state)?;
 
-    let object_path = content_key_path(family_id, hash);
+    let object_path = resolve_cas_object(family_id, hash)
+        .unwrap_or_else(|| content_key_path(family_id, hash));
     if !object_path.exists() {
         return Ok(json!({"data": null, "hash": hash, "family_id": family_id}));
     }
@@ -244,8 +244,7 @@ pub async fn content_exists(params: Option<&Value>, state: &StorageState) -> Res
     validate_blake3_hex(hash)?;
     let family_id = resolve_family_id(params, state)?;
 
-    let object_path = content_key_path(family_id, hash);
-    if object_path.exists() {
+    if let Some(object_path) = resolve_cas_object(family_id, hash) {
         let file_meta = tokio::fs::metadata(&object_path)
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to stat content {hash}: {e}")))?;
@@ -264,19 +263,19 @@ pub async fn content_exists(params: Option<&Value>, state: &StorageState) -> Res
     }
 }
 
-/// `content.list` — enumerate content-addressed objects.
+/// `content.list` — enumerate content-addressed objects across all tiers.
 pub async fn content_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let empty = json!({});
     let params = params.unwrap_or(&empty);
     let family_id = resolve_family_id(params, state)?;
 
-    let content_dir = get_storage_base_path()
-        .join("datasets")
-        .join(family_id)
-        .join("_content");
-
+    let mut seen = std::collections::HashSet::new();
     let mut hashes: Vec<Value> = Vec::new();
-    if content_dir.exists() {
+
+    for content_dir in super::super::storage_paths::cas_content_dirs(family_id) {
+        if !content_dir.exists() {
+            continue;
+        }
         let mut prefix_dirs = tokio::fs::read_dir(&content_dir).await.map_err(|e| {
             NestGateError::io_error(format!("Failed to list content for {family_id}: {e}"))
         })?;
@@ -298,6 +297,9 @@ pub async fn content_list(params: Option<&Value>, state: &StorageState) -> Resul
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
                 if name.ends_with(".meta.json") {
+                    continue;
+                }
+                if !seen.insert(name.to_string()) {
                     continue;
                 }
                 let size = entry.metadata().await.map(|m| m.len()).unwrap_or(0);

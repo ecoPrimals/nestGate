@@ -20,12 +20,14 @@
 
 mod cas;
 mod fetch;
+mod ingest;
 mod manifest;
 mod query;
 mod raw;
 
 pub use cas::{content_exists, content_get, content_list, content_put};
 pub use fetch::content_fetch;
+pub use ingest::content_ingest;
 pub use manifest::{content_collections, content_promote, content_publish, content_resolve};
 pub use query::content_query;
 pub use raw::{RawContent, content_get_raw};

@@ -74,6 +74,22 @@ pub(super) async fn content_query(
     content_handlers::content_query(Some(&params), shared_state()).await
 }
 
+/// Route `content.ingest` → bulk directory scan → hash → CAS store.
+pub(super) async fn content_ingest(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_handlers::content_ingest(Some(&params), shared_state()).await
+}
+
+/// Route `content.fetch` → download URL directly into CAS.
+pub(super) async fn content_fetch(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    content_handlers::content_fetch(Some(&params), shared_state()).await
+}
+
 /// Route `content.publish` → store a manifest mapping paths to content hashes.
 pub(super) async fn content_publish(
     _router: &SemanticRouter<impl MetadataBackend>,

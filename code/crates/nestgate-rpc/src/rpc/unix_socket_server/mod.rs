@@ -96,6 +96,7 @@ mod connection;
 pub(crate) mod content_federation_handlers;
 pub(crate) mod content_handlers;
 pub(crate) mod coord_handlers;
+pub(crate) mod dataset_handlers;
 mod dispatch;
 pub(crate) mod external_handlers;
 mod federation_blob_transfer;

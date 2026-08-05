@@ -104,6 +104,7 @@ use tracing::{debug, warn};
 pub mod capabilities;
 pub mod content;
 pub mod crypto;
+pub mod dataset;
 pub mod discovery;
 pub mod health;
 pub mod metadata;
@@ -252,6 +253,8 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "content.exists" => content::content_exists(self, params).await,
             "content.list" => content::content_list(self, params).await,
             "content.query" => content::content_query(self, params).await,
+            "content.ingest" => content::content_ingest(self, params).await,
+            "content.fetch" => content::content_fetch(self, params).await,
             "content.publish" => content::content_publish(self, params).await,
             "content.resolve" => content::content_resolve(self, params).await,
             "content.promote" => content::content_promote(self, params).await,
@@ -260,6 +263,9 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "content.push" => content::content_push(self, params).await,
             "content.replicate" => content::content_replicate(self, params).await,
             "content.sync" => content::content_sync(self, params).await,
+
+            // ==================== DATASET DOMAIN ====================
+            "dataset.convergence" => dataset::dataset_convergence(self, params).await,
 
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, &params),

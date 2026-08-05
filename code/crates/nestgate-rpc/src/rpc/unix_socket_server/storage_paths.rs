@@ -8,9 +8,11 @@
 //! [`super::bonding_handlers`], and [`super::session_handlers`].
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
+use nestgate_config::config::substrate_tiers::SubstrateTiers;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use tracing::debug;
 
 use super::StorageState;
@@ -29,13 +31,120 @@ pub fn content_hash_hex(data: &[u8]) -> String {
 ///
 /// Layout: `{base}/datasets/{family}/_content/{hex[..2]}/{hex}`
 /// The 2-char prefix directory prevents flat-directory blowup at scale.
+///
+/// Uses the hot (warm) tier when `NESTGATE_WARM_PATHS` is configured,
+/// otherwise falls back to `get_storage_base_path()`.
 pub fn content_cas_path(family_id: &str, blake3_hex: &str) -> PathBuf {
-    get_storage_base_path()
-        .join("datasets")
+    cas_content_layout(&cas_hot_root(), family_id, blake3_hex)
+}
+
+/// Resolve a CAS object path for **reads**, checking hot tier first, then cold
+/// tiers, then the legacy single-path root.
+///
+/// Returns `Some(path)` if the object exists on any tier, `None` otherwise.
+/// When `NESTGATE_WARM_PATHS`/`NESTGATE_COLD_PATHS` are not configured,
+/// only the legacy `get_storage_base_path()` is checked — zero overhead.
+#[must_use]
+pub fn resolve_cas_object(family_id: &str, blake3_hex: &str) -> Option<PathBuf> {
+    let tiers = cached_tiers();
+    let hot = cas_content_layout(&cas_hot_root(), family_id, blake3_hex);
+    if hot.exists() {
+        return Some(hot);
+    }
+    for cold_mount in &tiers.cold {
+        let cold_path = cas_content_layout(&cold_mount.path, family_id, blake3_hex);
+        if cold_path.exists() {
+            return Some(cold_path);
+        }
+    }
+    let legacy = cas_content_layout(&get_storage_base_path(), family_id, blake3_hex);
+    if legacy != hot && legacy.exists() {
+        return Some(legacy);
+    }
+    None
+}
+
+/// Build CAS content path under a given root.
+fn cas_content_layout(root: &Path, family_id: &str, blake3_hex: &str) -> PathBuf {
+    root.join("datasets")
         .join(family_id)
         .join("_content")
         .join(&blake3_hex[..2])
         .join(blake3_hex)
+}
+
+/// Hot tier root for CAS writes.
+///
+/// When `NESTGATE_WARM_PATHS` is explicitly set, uses the first warm path.
+/// Otherwise defers to `get_storage_base_path()` which reads env per call,
+/// ensuring tests that modify `NESTGATE_STORAGE_PATH` work correctly.
+fn cas_hot_root() -> PathBuf {
+    if let Ok(warm) = std::env::var("NESTGATE_WARM_PATHS")
+        && let Some(first) = warm.split(':').find(|s| !s.is_empty())
+    {
+        let p = PathBuf::from(first);
+        if p.exists() {
+            return p;
+        }
+    }
+    get_storage_base_path()
+}
+
+/// Cached `SubstrateTiers` (discovered once from environment).
+fn cached_tiers() -> &'static SubstrateTiers {
+    static TIERS: OnceLock<SubstrateTiers> = OnceLock::new();
+    TIERS.get_or_init(SubstrateTiers::from_environment)
+}
+
+/// Check whether dual-path CAS is active (i.e. cold tiers are configured).
+#[cfg(test)]
+fn is_dual_path_active() -> bool {
+    !cached_tiers().cold.is_empty()
+}
+
+/// Hot tier root path — exposed for diagnostics.
+#[cfg(test)]
+fn cas_hot_root_path() -> PathBuf {
+    cas_hot_root()
+}
+
+/// Return all `_content/` directories for a family across hot, cold, and legacy tiers.
+///
+/// Used by `content.list` and `content.query` to enumerate objects across
+/// all physical storage tiers. Deduplicates paths that resolve to the same root.
+#[must_use]
+pub fn cas_content_dirs(family_id: &str) -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    let hot = cas_hot_root()
+        .join("datasets")
+        .join(family_id)
+        .join("_content");
+    // Note: hot is computed from cas_hot_root() which re-evaluates per call
+    seen.insert(hot.clone());
+    dirs.push(hot);
+
+    for cold_mount in &cached_tiers().cold {
+        let cold = cold_mount
+            .path
+            .join("datasets")
+            .join(family_id)
+            .join("_content");
+        if seen.insert(cold.clone()) {
+            dirs.push(cold);
+        }
+    }
+
+    let legacy = get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join("_content");
+    if seen.insert(legacy.clone()) {
+        dirs.push(legacy);
+    }
+
+    dirs
 }
 
 /// Build the filesystem path for a key in a family's dataset.
@@ -397,5 +506,19 @@ mod tests {
     #[test]
     fn validate_path_segment_rejects_empty() {
         assert!(validate_path_segment("", "test").is_err());
+    }
+
+    #[test]
+    fn dual_path_helpers_do_not_panic() {
+        let _active = is_dual_path_active();
+        let _hot = cas_hot_root_path();
+        let dirs = cas_content_dirs("test-family");
+        assert!(!dirs.is_empty(), "should return at least one content dir");
+    }
+
+    #[test]
+    fn resolve_cas_object_returns_none_for_missing() {
+        let hash = "a".repeat(64);
+        assert!(resolve_cas_object("nonexistent-family-xyzzy", &hash).is_none());
     }
 }

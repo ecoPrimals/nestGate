@@ -2,10 +2,10 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-08-04, Session 135)**  
+**Verification (as of 2026-08-05, Session 136)**  
 - **Build**: `cargo check --workspace --all-features` — PASS  
 - **Clippy**: `cargo clippy --all-features -- -D warnings` — PASS (zero warnings, pedantic+nursery)  
-- **Tests**: 1,630+ passed, 0 failed (~80 ignored)  
+- **Tests**: 1,650+ passed, 0 failed (~80 ignored)  
 - **Format**: `cargo fmt --check` — PASS  
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
 

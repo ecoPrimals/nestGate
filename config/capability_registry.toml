@@ -84,7 +84,7 @@ stability = "stable"
 description = "Content-addressed storage with versioned manifests — BLAKE3 hash-as-key, automatic dedup, atomic deploys"
 methods = [
     "content.put", "content.get", "content.exists", "content.list", "content.query",
-    "content.fetch",
+    "content.ingest", "content.fetch",
     "content.publish", "content.resolve", "content.promote", "content.collections",
     "content.fetch_heads", "content.push", "content.replicate", "content.replicate.pull", "content.sync",
     "content.store_stream", "content.store_stream_chunk",
@@ -101,6 +101,14 @@ methods = [
 # content.query:  {content_type?, source?, pipeline?, stored_by?, parent_hash?, limit?, offset?, family_id?} → {results: [{hash, size, ...sidecar}], count, scanned}
 # hash is the 64-char lowercase hex BLAKE3 digest of the raw (pre-base64) bytes.
 # Filesystem: {base}/datasets/{family}/_content/{hex[..2]}/{hex}
+#
+# ── Content ingest (bulk directory → CAS) ────────────────────────────
+# content.ingest: {directory, family_id?, source?, pipeline?, stored_by?, follow_symlinks?, collection?}
+#                 → {manifest: {path: hash, ...}, count, bytes_total, bytes_stored, deduplicated, errors, directory, ingested_at}
+#   Recursively scan a local directory, BLAKE3 hash every regular file, and
+#   store to CAS with automatic dedup. Files >256 MiB are skipped (use
+#   content.store_stream). If `collection` is set, publishes the manifest
+#   as a named collection via content.publish. Eliminates revalidate_data.py.
 #
 # ── Content fetch (data federation) ─────────────────────────────────
 # content.fetch: {url, rate_limit_mbps?, timeout_secs?, allow_http?, expected_hash?} → {hash, size, url, content_type, stored, deduplicated, fetched_at}
@@ -153,6 +161,21 @@ methods = [
 # to cellMembrane's capability surface, not ours. Advertising methods
 # we cannot fulfill violates self-knowledge-only (PRIMAL_IPC v3.1 §Discovery).
 # Removed to resolve P1 ghost method audit finding.
+
+[capabilities.dataset]
+domain = "dataset"
+stability = "provisional"
+description = "Dataset provenance state — convergence scanning, CAS coverage reporting"
+methods = ["dataset.convergence"]
+
+# ── Dataset convergence protocol ─────────────────────────────────────
+# dataset.convergence: {path, family_id?, include_details?, sample_limit?}
+#   → {state, path, total_files, total_bytes, cas_files, cas_bytes,
+#      missing_files, convergence_pct, family_id, scanned_at,
+#      converged_files?, unconverged_files?}
+#   Walk a filesystem dataset path, BLAKE3 hash every regular file, and
+#   check CAS presence. Reports classification: CONVERGED | PARTIAL |
+#   PRIMORDIAL | EMPTY | MISSING. Trust gate for spring data consumption.
 
 [capabilities.model]
 domain = "model"

@@ -17,8 +17,8 @@ use crate::rpc::protocol::{normalize_method, warn_legacy_method_alias};
 use super::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, StorageState, audit_handlers, blob_handlers,
     bonding_handlers, content_federation_handlers, content_handlers, coord_handlers,
-    external_handlers, footprint_handlers, nat_handlers, session_handlers, storage_handlers,
-    template_handlers, zfs_handlers,
+    dataset_handlers, external_handlers, footprint_handlers, nat_handlers, session_handlers,
+    storage_handlers, template_handlers, zfs_handlers,
 };
 
 /// Extract owned params from a request, defaulting to `{}`.
@@ -182,6 +182,10 @@ pub(super) async fn handle_request(
         "content.exists" => content_handlers::content_exists(request.params.as_ref(), state).await,
         "content.list" => content_handlers::content_list(request.params.as_ref(), state).await,
         "content.query" => content_handlers::content_query(request.params.as_ref(), state).await,
+        // Content ingest — bulk directory scan → BLAKE3 → CAS (O1)
+        "content.ingest" => {
+            content_handlers::content_ingest(request.params.as_ref(), state).await
+        }
         // Content fetch — HTTP(S) GET → BLAKE3 → CAS in one step (data federation)
         "content.fetch" => {
             content_handlers::content_fetch(request.params.as_ref(), state).await
@@ -291,6 +295,10 @@ pub(super) async fn handle_request(
             "version": env!("CARGO_PKG_VERSION"),
             "storage_initialized": state.storage_initialized,
         })),
+        // Dataset convergence — CAS provenance state per filesystem path (O3)
+        "dataset.convergence" => {
+            dataset_handlers::dataset_convergence(request.params.as_ref(), state).await
+        }
         "zfs.pool.list" => zfs_handlers::zfs_pool_list(request.params.as_ref()).await,
         "zfs.pool.get" => zfs_handlers::zfs_pool_get(request.params.as_ref()).await,
         "zfs.pool.health" => zfs_handlers::zfs_pool_health(request.params.as_ref()).await,

@@ -7,7 +7,7 @@ use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 
 use super::super::StorageState;
-use super::super::storage_paths::content_key_path;
+use super::super::storage_paths::resolve_cas_object;
 use super::{maybe_decrypt, validate_blake3_hex};
 
 /// Raw content retrieval result for direct HTTP serving (no base64 encoding).
@@ -39,10 +39,9 @@ pub async fn content_get_raw(
 ) -> Result<Option<RawContent>> {
     validate_blake3_hex(hash)?;
 
-    let object_path = content_key_path(family_id, hash);
-    if !object_path.exists() {
+    let Some(object_path) = resolve_cas_object(family_id, hash) else {
         return Ok(None);
-    }
+    };
 
     let raw_data = tokio::fs::read(&object_path)
         .await
