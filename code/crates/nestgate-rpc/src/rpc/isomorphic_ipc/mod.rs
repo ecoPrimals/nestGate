@@ -169,7 +169,7 @@ pub mod launcher;
 // Re-exports for convenience
 pub use discovery::{IpcEndpoint, discover_ipc_endpoint};
 pub use platform_detection::is_platform_constraint;
-pub use server::IsomorphicIpcServer;
+pub use server::{IsomorphicIpcServer, SocketCleanupGuard, write_pid_file};
 pub use streams::{connect_endpoint, transport_to_ipc_endpoint};
 pub use tcp_fallback::{RpcHandler, TcpFallbackServer};
 pub use transport_stream::{TransportListener, TransportStream, connect_transport};

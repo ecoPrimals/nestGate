@@ -119,7 +119,7 @@ pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
 pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
-pub use tarpc_server::{NestGateRpcService, serve_tarpc};
+pub use tarpc_server::{NestGateRpcService, serve_tarpc, serve_tarpc_uds};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
 // Re-export legacy Unix JSON-RPC surface until callers use orchestration IPC.
 pub use unix_socket_server::{
@@ -128,9 +128,9 @@ pub use unix_socket_server::{
 
 // NEW: Isomorphic IPC exports (v0.3.0)
 pub use isomorphic_ipc::{
-    IpcEndpoint, IpcStream, IsomorphicIpcServer, RpcHandler, TcpFallbackServer,
-    UnixSocketRpcHandler, connect_endpoint, connect_transport, discover_ipc_endpoint,
-    is_platform_constraint, transport_to_ipc_endpoint,
+    IpcEndpoint, IpcStream, IsomorphicIpcServer, RpcHandler, SocketCleanupGuard,
+    TcpFallbackServer, UnixSocketRpcHandler, connect_endpoint, connect_transport,
+    discover_ipc_endpoint, is_platform_constraint, transport_to_ipc_endpoint, write_pid_file,
 };
 
 /// Returns `true` if `method` may be served on a BTSP-required socket

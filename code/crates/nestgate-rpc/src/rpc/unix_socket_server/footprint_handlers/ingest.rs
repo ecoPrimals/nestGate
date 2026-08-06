@@ -16,6 +16,7 @@
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use tracing::{debug, info};
@@ -93,7 +94,7 @@ fn store_content_cas(family_id: &str, data: &[u8]) -> Result<String> {
     let meta = json!({
         "content_type": "application/json",
         "source": "footprint.save",
-        "stored_by": "nestgate",
+        "stored_by": DEFAULT_SERVICE_NAME,
         "size": data.len(),
     });
     let meta_path = cas_path.with_extension("meta.json");

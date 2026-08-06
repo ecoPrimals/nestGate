@@ -56,7 +56,7 @@ pub struct ServicesConfig {
     /// Service discovery enabled (default: true)
     pub discovery_enabled: bool,
 
-    /// Service discovery port (default: 8500)
+    /// Service discovery port (default: 8083)
     pub discovery_port: u16,
 }
 

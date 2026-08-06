@@ -30,7 +30,7 @@ rustix = { workspace = true }
 jsonrpsee = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
+tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp", "unix"] }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-serde = { workspace = true, features = ["bincode"] }

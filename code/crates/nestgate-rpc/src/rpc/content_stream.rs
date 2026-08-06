@@ -8,6 +8,7 @@
 //! On finalize, computes BLAKE3 and renames staging → final CAS path.
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{ErrorContextExt, NestGateError, Result};
 use serde_json::{Value, json};
 use std::path::PathBuf;
@@ -72,7 +73,7 @@ pub async fn content_store_stream_begin(
                 "size": 0,
                 "stored_at": chrono::Utc::now().to_rfc3339(),
                 "pipeline": "content.store_stream",
-                "stored_by": "nestgate",
+                "stored_by": DEFAULT_SERVICE_NAME,
             });
             if let Some(ref ct) = content_type {
                 meta["content_type"] = Value::String(ct.clone());
@@ -248,7 +249,7 @@ pub async fn content_store_stream_chunk(params: &Value) -> Result<Value> {
             "size": upload.total_size,
             "stored_at": chrono::Utc::now().to_rfc3339(),
             "pipeline": "content.store_stream",
-            "stored_by": "nestgate",
+            "stored_by": DEFAULT_SERVICE_NAME,
         });
         if let Some(ref ct) = upload.content_type {
             meta["content_type"] = Value::String(ct.clone());

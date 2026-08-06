@@ -20,8 +20,8 @@ domain = "storage"
 version = "0.5.0"
 license = "AGPL-3.0-or-later"
 description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
-transport = ["uds", "tcp", "http"]
-transport_evolution = "phase2"  # TransportEndpoint + TransportStream + TransportListener; server accept via TransportListener; outbound via connect_transport()
+transport = ["uds", "tarpc_uds", "tcp", "http"]
+transport_evolution = "phase3-c2"  # C2 dual-socket: JSON-RPC UDS + tarpc UDS side-by-side; TCP/HTTP for non-NUCLEUS modes
 protocol = "jsonrpc-2.0"
 
 [capabilities.storage]
@@ -362,6 +362,8 @@ trigger = "post-bind"
 # Wave 73 extensions: gate_id, endpoints (uds/tcp), storage_backend (filesystem/zfs), federation_methods
 # gate_id resolved from NESTGATE_GATE_ID → NESTGATE_FAMILY_ID → "standalone"
 # storage_backend.type = "zfs" when NESTGATE_ZFS_CAS_DATASET is set
+# C2 dual-socket (Wave 156h): endpoints.tarpc_uds advertises the tarpc UDS alongside JSON-RPC UDS
+# tarpc socket path: {socket_dir}/nestgate.tarpc.sock (sibling to nestgate.sock)
 
 # Consumed capabilities — what NestGate needs from other primals
 [consumed_capabilities.security]

@@ -10,6 +10,7 @@
 //! The announcement is **best-effort**: if the coordinator is unreachable the
 //! server continues normally. Re-announcement happens on reconnect or version change.
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::EnvSource;
 use nestgate_types::error::Result;
 use serde_json::{Value, json};
@@ -58,8 +59,10 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
         .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
         .unwrap_or_else(|_| "standalone".into());
 
+    let tarpc_socket = own_socket.with_extension("tarpc.sock");
     let mut endpoints = json!({
         "uds": own_socket.to_string_lossy(),
+        "tarpc_uds": tarpc_socket.to_string_lossy(),
     });
     if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
         let host = std::env::var("NESTGATE_API_HOST")
@@ -74,7 +77,7 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
     );
 
     json!({
-        "primal": "nestgate",
+        "primal": DEFAULT_SERVICE_NAME,
         "socket": own_socket.to_string_lossy(),
         "pid": std::process::id(),
         "gate_id": gate_id,
@@ -198,7 +201,7 @@ mod tests {
     fn payload_has_required_fields() {
         let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
 
-        assert_eq!(payload["primal"], "nestgate");
+        assert_eq!(payload["primal"], DEFAULT_SERVICE_NAME);
         assert_eq!(payload["socket"], "/tmp/nestgate.sock");
         assert!(payload["pid"].is_number());
         assert!(payload["capabilities"].is_array());
@@ -291,6 +294,10 @@ mod tests {
         let payload = build_announce_payload(Path::new("/tmp/nestgate.sock"));
         assert!(payload["endpoints"].is_object());
         assert_eq!(payload["endpoints"]["uds"], "/tmp/nestgate.sock");
+        assert_eq!(
+            payload["endpoints"]["tarpc_uds"],
+            "/tmp/nestgate.tarpc.sock"
+        );
     }
 
     #[test]

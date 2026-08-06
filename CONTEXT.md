@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Aug 5, 2026 (Session 137)
+**Last Updated**: Aug 6, 2026 (Session 138)
 
 ## What This Is
 
@@ -28,7 +28,7 @@ than by importing this crate graph.
 | **Coverage** | 84%+ line (`cargo llvm-cov`); 90% target pending |
 | **Architecture** | 18 workspace crates under `code/crates/` |
 | **Binary** | Single self-contained release binary |
-| **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
+| **IPC** | JSON-RPC 2.0 (required); tarpc UDS dual-socket (C2 cephalization — high-performance path) |
 | **TLS/crypto** | `ureq` + `oxitls-rustcrypto-provider` (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl eliminated; installer uses system `curl` |
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |

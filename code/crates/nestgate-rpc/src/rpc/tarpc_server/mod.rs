@@ -36,6 +36,7 @@
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -502,6 +503,68 @@ pub async fn serve_tarpc<S: StorageBackend + 'static>(
                 Ok(conn) => Some(conn),
                 Err(e) => {
                     warn!("Connection error: {}", e);
+                    None
+                }
+            }
+        })
+        .map(move |transport| {
+            let server = tarpc::server::BaseChannel::with_defaults(transport);
+            let service = NestGateRpcService {
+                start_time,
+                backend: Arc::clone(&backend),
+            };
+            server.execute(service.serve())
+        })
+        .flatten()
+        .for_each(|response| async move {
+            tokio::spawn(response);
+        })
+        .await;
+
+    Ok(())
+}
+
+/// Serve `NestGate` tarpc RPC over a Unix domain socket (C2 dual-socket pattern).
+///
+/// Mirrors [`serve_tarpc`] but binds to a UDS path instead of a TCP address,
+/// enabling the NUCLEUS socket-only startup path to expose both JSON-RPC and
+/// tarpc side-by-side without requiring network ports.
+///
+/// # Arguments
+/// * `socket_path` - Path for the Unix domain socket (e.g. `nestgate.tarpc.sock`)
+/// * `service` - `NestGate` RPC service implementation
+///
+/// # Errors
+/// Returns error if the server fails to bind to the socket path.
+pub async fn serve_tarpc_uds<S: StorageBackend + 'static>(
+    socket_path: &Path,
+    service: NestGateRpcService<S>,
+) -> Result<()> {
+    info!("Starting NestGate tarpc UDS server on {}", socket_path.display());
+
+    let listener = tarpc::serde_transport::unix::listen(
+        socket_path,
+        tokio_serde::formats::Bincode::default,
+    )
+    .await
+    .map_err(|e| {
+        NestGateError::network_error(format!(
+            "Failed to bind tarpc UDS to {}: {e}",
+            socket_path.display()
+        ))
+    })?;
+
+    info!("NestGate tarpc UDS server listening on {}", socket_path.display());
+
+    let backend = Arc::clone(&service.backend);
+    let start_time = service.start_time;
+
+    listener
+        .filter_map(|conn| async move {
+            match conn {
+                Ok(conn) => Some(conn),
+                Err(e) => {
+                    warn!("tarpc UDS connection error: {}", e);
                     None
                 }
             }

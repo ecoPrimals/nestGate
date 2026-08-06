@@ -2,7 +2,7 @@
 
 **Version**: 0.5.0  
 
-**Verification (as of 2026-08-05, Session 137)**  
+**Verification (as of 2026-08-06, Session 138)**  
 - **Build**: `cargo check --workspace --all-features` — PASS  
 - **Clippy**: `cargo clippy --all-features -- -D warnings` — PASS (zero warnings, pedantic+nursery)  
 - **Tests**: 1,630+ passed, 0 failed (~80 ignored)  
@@ -15,7 +15,7 @@
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
-- **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
+- **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero `"nestgate"` string literals in production code  
 - **Deprecated APIs**: 0 `#[deprecated]` markers (114 premature deprecations cleaned Session 43w; dead code removed)  
 - **External deps**: Zero unused workspace deps (`lru`/`getrandom` removed Wave 128b; `fastrand` consolidated → `rand`); zero C-FFI `-sys` crates in production; `config` (crates.io) and `urlencoding` removed Session 43z  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions); nestgate-zfs uses unconditional forbid (formerly `cfg`-gated outside tests)  
@@ -48,15 +48,16 @@
 - **content.* transport parity**: All 8 content-addressed methods routed through all transport paths — UDS dispatch, SemanticRouter, isomorphic IPC, HTTP API (Session 60)
 - **lifecycle.status**: Public primal status probe on all transport paths, BTSP-exempt (Session 60)
 - **Dep hygiene**: 3 unused deps removed from nestgate-api, `"biomeos"` socket-dir literal replaced with canonical `ecosystem_path_segment()` (Session 61)  
-- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup — `capabilities` (5 domains), `methods`, `signal_tiers`, `cost_hints`, `latency_estimates`, `federation_methods` (Session 70, Wave 43; O8 wiring Session 137)
+- **`primal.announce`**: JSON-RPC self-registration with biomeOS Neural API on startup — `capabilities` (5 domains), `methods`, `signal_tiers`, `cost_hints`, `latency_estimates`, `federation_methods`, `endpoints.tarpc_uds` (Session 70, Wave 43; O8 wiring Session 137; C2 dual-socket Session 138)
 - **Nest Atomic participant**: Full Neural API wiring — `dataset` domain announced, `dataset.convergence` as federation method, `route.register` writes manifests for all 5 capability domains, remote capability router forwards through coordinator `capability.call` instead of returning `not_implemented`, `MeshRelay` transport resolves through coordinator socket (Session 137)
+- **C2 Dual-Socket (Cephalization)**: NUCLEUS socket-only mode binds both `nestgate.sock` (JSON-RPC UDS) and `nestgate.tarpc.sock` (tarpc UDS) side-by-side; `SocketCleanupGuard` + PID sidecar on both sockets; `primal.announce` advertises `endpoints.tarpc_uds`; transport list: `["uds", "tarpc_uds", "tcp", "http"]` (Session 138, Wave 156j)
 - **`--socket PATH` CLI flag**: Uniform launcher convergence — sets `NESTGATE_SOCKET` env (Session 71, Wave 47)
 - **`health.liveness` normalized**: `{"status":"alive","primal":"nestgate"}` across all 5 transport surfaces (Session 71, Wave 47)
 - **`btsp.capabilities`**: New method wired on all transport paths (Session 69)
 - **Refactored `unix_adapter_handlers`**: 790L split into handlers (440L) + `storage_handlers.rs` (369L) (Session 72)
 - **`primal_sovereignty` honesty**: `execute_capability_request` returns `not_implemented` error instead of fake success (Session 72)
 - **plasmidBin mandate**: Root docs document `plasmidBin` as sole production binary channel; stale `genomeBin` terminology updated; 3 dead fuzz targets removed (Session 74, Wave 49)  
-**Last Updated**: Aug 5, 2026 (Session 137 — O8 Neural API wiring, Nest Atomic completion)
+**Last Updated**: Aug 6, 2026 (Session 138 — C2 dual-socket cephalization, deep debt sweep)
 
 ---
 
@@ -157,7 +158,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-05 (Session 137).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-06 (Session 138).
 
 | Area | Status |
 |------|--------|
@@ -181,7 +182,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-08-05 (Se
 | UniBin | Pass — single `nestgate` binary |
 | ecoBin | Pass — pure Rust application code, HTTP default (guideStone), `--socket-only` for NUCLEUS IPC, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass — Wire Standard L3 (Composable): `{primal, version, capabilities}` envelope, `provided_capabilities`, `consumed_capabilities` |
-| tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
+| tarpc | Pass — C2 dual-socket: `nestgate.tarpc.sock` alongside `nestgate.sock` in NUCLEUS mode; TCP in HTTP mode; `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `content.*`, `dataset.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*`, `bonding.*`, `model.*`, `templates.*`, `audit.*`, `identity.*`, `lifecycle.*`, `auth.*`, `btsp.*`, `coord.*`, `footprint.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — 84%+ line (wateringHole 80% met; 90% target pending) |
@@ -248,7 +249,7 @@ Other workspace crates define their own features (for example `sysinfo`, per-cra
 - **Serialization**: Serde, serde_json
 - **Concurrency**: DashMap, tokio::sync, parking_lot, std::sync::LazyLock, pin-project
 - **Security**: Delegated to security capability provider via IPC; local auth MACs via BLAKE3 (`blake3::keyed_hash`)
-- **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0, storage.sock capability symlink)
+- **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0 + tarpc dual-socket C2, storage.sock capability symlink)
 - **CLI**: Clap 4 (derive mode)
 - **Discovery**: Environment variables + capability IPC (capability-based)
 
@@ -312,4 +313,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: Aug 5, 2026 (Session 137)
+**Latest**: Aug 6, 2026 (Session 138)

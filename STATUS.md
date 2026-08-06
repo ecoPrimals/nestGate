@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Aug 5, 2026 (Session 137: O8 Neural API wiring — Nest Atomic completion)
+**Last Updated**: Aug 6, 2026 (Session 138: C2 dual-socket cephalization + deep debt sweep)
 **Version**: 0.5.0
 
 ---
@@ -27,7 +27,7 @@ CLI health/status:  Live UDS probe via JsonRpcClient — resolves socket, sends 
 Path resolution:    EnvSource injection works correctly (injected HOME > etcetera auto-detect > system fallback)
 IPC routes (UDS):   storage.*, content.* (incl. content.ingest, content.query, content.fetch), dataset.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 94 methods
 IPC routes (HTTP):  Aligned with UDS namespace; legacy aliases warn
-IPC routes (tarpc): 52 semantic-routed methods
+IPC routes (tarpc): 52 semantic-routed methods (C2 dual-socket: nestgate.tarpc.sock alongside nestgate.sock)
 Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope
 BTSP:               Phase 1-3 PASS — family-scoped sockets, encrypted channel, CAS federation wired
 Workspace:          18 crates, Rust 2024 edition, 100% hoisted deps
@@ -43,6 +43,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 Per-session detail (Sessions 43–135) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 138** (Aug 6): C2 Cephalization dual-socket + deep debt sweep. tarpc `unix` feature enabled; `serve_tarpc_uds()` function added using `tarpc::serde_transport::unix::listen`; wired into NUCLEUS `start_socket_server()` — `nestgate.tarpc.sock` spawned alongside `nestgate.sock`; `SocketCleanupGuard` + PID sidecar for tarpc socket (guard + `write_pid_file` made public for reuse); `primal.announce` advertises `endpoints.tarpc_uds`; `capability_registry.toml` transport updated to `["uds", "tarpc_uds", "tcp", "http"]` (phase3-c2). Deep debt: `"nestgate"` string literals replaced with `DEFAULT_SERVICE_NAME` across 7 production files; `discovery_port` doc comment corrected (8500→8083); lint blanket audit confirmed (nestgate-zfs + nestgate-performance `#[expect]` justified). 1,630+ tests pass, 0 clippy warnings.
 - **Session 137** (Aug 5): O8 Neural API wiring — Nest Atomic completion. `ANNOUNCED_CAPABILITIES` expanded to 5 domains (+`dataset`). `FEDERATION_METHODS` expanded (+`dataset.convergence`). Method filter now passes `dataset.*`. `route.register` dynamically writes manifests for all announced capabilities (was hardcoded to storage+content). Remote capability router (`CapabilityRouter::send_universal_request`) evolved from `not_implemented` to coordinator-forwarding via `capability.call` JSON-RPC. `MeshRelay` transport connect resolves through ecosystem coordinator socket. `capability_registry.toml` `[announce]` section updated. 3 new tests (announce assertions + coordinator discovery + mesh relay). 1,630+ tests pass, 0 clippy warnings.
 - **Session 136** (Aug 5): `content.ingest` (O1: bulk directory→CAS scan, 9 tests). `dataset.convergence` (O3: provenance state per dataset, 10 tests). Dual-path CAS (O4: `NESTGATE_WARM_PATHS`/`NESTGATE_COLD_PATHS` for hot/cold tier resolution — writes to hot, reads check hot→cold→legacy). `content.fetch` + `content.ingest` wired into semantic router (gap fix). `dataset` capability domain registered.
 - **Session 135** (Aug 4): `content.query` JSON-RPC method (sidecar-scanning CAS metadata filter). ZFS REST snapshot handlers wired to `ZfsOperations` (5 endpoints, 501→real). `tarpc` 0.34→0.37 + `tokio-serde` 0.8→0.9 (eliminates opentelemetry thiserror 1.x chain). `content.store_stream` sidecar gap fixed. WebSocket synthetic data purged. Hardcoded bind/mount evolved to env-based. Quarantined crates (`nestgate-fsmonitor`, `nestgate-middleware`) deleted.

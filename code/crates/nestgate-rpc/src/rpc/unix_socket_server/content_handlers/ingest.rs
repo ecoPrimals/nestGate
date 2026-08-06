@@ -38,6 +38,7 @@
 //! }
 //! ```
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -89,7 +90,7 @@ pub async fn content_ingest(params: Option<&Value>, state: &StorageState) -> Res
         .to_owned();
     let stored_by = params["stored_by"]
         .as_str()
-        .unwrap_or("nestgate")
+        .unwrap_or(DEFAULT_SERVICE_NAME)
         .to_owned();
     let follow_symlinks = params["follow_symlinks"].as_bool().unwrap_or(false);
     let collection = params["collection"].as_str().map(String::from);

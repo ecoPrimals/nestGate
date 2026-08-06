@@ -19,6 +19,7 @@
 //! the `peer_credentials_unix_socket` API stabilizes. Until then, the gate
 //! operates on bearer tokens and connection origin.
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use serde_json::{Value, json};
 
 /// JSON-RPC error codes for the method gate (server-defined range).
@@ -217,20 +218,20 @@ pub fn auth_introspection(
     match method {
         "auth.mode" => Some(json!({
             "mode": gate.mode().as_str(),
-            "primal": "nestgate",
+            "primal": DEFAULT_SERVICE_NAME,
         })),
         "auth.check" => {
             let has_token = caller.bearer_token.is_some();
             Some(json!({
                 "authenticated": has_token,
                 "origin": format!("{:?}", caller.origin),
-                "primal": "nestgate",
+                "primal": DEFAULT_SERVICE_NAME,
             }))
         }
         "auth.peer_info" => Some(json!({
             "origin": format!("{:?}", caller.origin),
             "peer_credentials": "deferred (SO_PEERCRED API unstable)",
-            "primal": "nestgate",
+            "primal": DEFAULT_SERVICE_NAME,
         })),
         _ => None,
     }

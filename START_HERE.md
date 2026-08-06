@@ -3,7 +3,7 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features (as of Session 137)
+Build:       PASS — cargo check --workspace --all-features (as of Session 138)
 Tests:       PASS — 1,630+ passed, 0 failed, ~80 ignored
 Clippy:      PASS — cargo clippy --all-features -- -D warnings (zero warnings, pedantic+nursery)
 Unsafe:      #![forbid(unsafe_code)] on ALL 18 crate roots (zero exceptions)
@@ -74,7 +74,7 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem. It p
 - **Universal storage** — Works on 6+ platforms out of the box
 - **Capability-based discovery** — Discovers other primals at runtime by capability (storage.sock symlink)
 - **Isomorphic IPC** — Auto-adapts Unix sockets or TCP based on platform
-- **JSON-RPC 2.0 + tarpc** — Dual IPC with semantic method naming (storage.*, session.*, nat.*, beacon.*, zfs.*, bonding.*)
+- **JSON-RPC 2.0 + tarpc** — C2 dual-socket IPC with semantic method naming (storage.*, session.*, nat.*, beacon.*, zfs.*, bonding.*)
 - **ZFS integration** — Adaptive backend, graceful fallback to standard filesystem
 
 ### NEST Atomic Composition
@@ -174,4 +174,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: Aug 5, 2026 (Session 137)
+**Last Updated**: Aug 6, 2026 (Session 138)

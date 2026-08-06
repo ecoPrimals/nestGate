@@ -92,8 +92,9 @@ use super::tcp_fallback::{RpcHandler, TcpFallbackServer};
 ///
 /// Prevents stale sockets from accumulating after crashes or normal shutdown.
 /// See `CAPABILITY_BASED_DISCOVERY_STANDARD.md` v1.3.0 section 6.
-struct SocketCleanupGuard {
-    path: PathBuf,
+pub struct SocketCleanupGuard {
+    /// Socket file path to remove on drop.
+    pub path: PathBuf,
 }
 
 impl Drop for SocketCleanupGuard {
@@ -110,7 +111,7 @@ impl Drop for SocketCleanupGuard {
 }
 
 /// Write a PID file alongside the socket (`{socket}.pid`) for liveness probing.
-fn write_pid_file(socket_path: &std::path::Path) {
+pub fn write_pid_file(socket_path: &std::path::Path) {
     let pid_path = socket_path.with_extension("pid");
     let pid = std::process::id();
     if let Err(e) = std::fs::write(&pid_path, pid.to_string()) {

@@ -324,7 +324,38 @@ async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
         });
     }
 
+    let tarpc_socket_path = socket_config
+        .socket_path
+        .with_extension("tarpc.sock");
+    info!("tarpc UDS socket: {}", tarpc_socket_path.display());
+
+    if tarpc_socket_path.exists() {
+        let _ = std::fs::remove_file(&tarpc_socket_path);
+    }
+
+    nestgate_core::rpc::write_pid_file(&tarpc_socket_path);
+    let _tarpc_socket_guard = nestgate_core::rpc::SocketCleanupGuard {
+        path: tarpc_socket_path.clone(),
+    };
+
+    {
+        let tarpc_path = tarpc_socket_path.clone();
+        tokio::spawn(async move {
+            let service = match nestgate_core::rpc::NestGateRpcService::new() {
+                Ok(s) => s,
+                Err(e) => {
+                    tracing::error!("Failed to create tarpc UDS service: {e}");
+                    return;
+                }
+            };
+            if let Err(e) = nestgate_core::rpc::serve_tarpc_uds(&tarpc_path, service).await {
+                tracing::error!("tarpc UDS server error: {e}");
+            }
+        });
+    }
+
     info!("JSON-RPC Unix Socket Server ready (isomorphic IPC)");
+    info!("tarpc UDS server ready (C2 dual-socket)");
     info!("Press Ctrl+C to stop\n");
 
     server.start().await.map_err(|e| {

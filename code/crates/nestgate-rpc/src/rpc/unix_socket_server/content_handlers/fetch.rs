@@ -36,6 +36,7 @@
 //! }
 //! ```
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use std::io::{Read, Write};
@@ -219,7 +220,7 @@ fn do_fetch_to_cas(
         "stored_at": chrono::Utc::now().to_rfc3339(),
         "source": url,
         "pipeline": "content.fetch",
-        "stored_by": "nestgate",
+        "stored_by": DEFAULT_SERVICE_NAME,
     });
     std::fs::write(
         &meta_path,

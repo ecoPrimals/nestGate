@@ -38,6 +38,7 @@
 //! - **Capability-Based**: Adapts to platform capabilities (Unix vs TCP)
 
 use anyhow::{Context, Result, anyhow};
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::{EnvSource, ProcessEnv};
 use std::path::PathBuf;
 use tokio::time::{Duration, sleep};
@@ -46,8 +47,8 @@ use tracing::{debug, info};
 use super::discovery::{IpcEndpoint, discover_ipc_endpoint};
 use super::streams::{IpcStream, connect_endpoint};
 
-/// Default service name for IPC discovery (`NestGate` primal identity).
-pub const NESTGATE_SERVICE_NAME: &str = "nestgate";
+/// Alias for backward compatibility — use [`DEFAULT_SERVICE_NAME`] directly.
+pub const NESTGATE_SERVICE_NAME: &str = DEFAULT_SERVICE_NAME;
 
 /// Maximum retry attempts for endpoint discovery
 const MAX_DISCOVERY_RETRIES: u32 = 10;
