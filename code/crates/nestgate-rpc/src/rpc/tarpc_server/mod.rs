@@ -586,5 +586,37 @@ pub async fn serve_tarpc_uds<S: StorageBackend + 'static>(
     Ok(())
 }
 
+/// Handle a single tarpc connection on an already-negotiated stream (G65).
+///
+/// Used when G65 protocol negotiation on the main socket selects tarpc.
+/// The stream must have completed the `PROTOCOLS:` / `PROTOCOL:` handshake —
+/// only tarpc bincode frames should follow on the wire.
+///
+/// # Errors
+///
+/// Returns error if the tarpc transport cannot be established or the
+/// service encounters an unrecoverable error.
+pub async fn handle_tarpc_negotiated<S: StorageBackend + 'static>(
+    stream: impl tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
+    service: NestGateRpcService<S>,
+) -> Result<()> {
+    info!("Serving G65-negotiated tarpc connection");
+
+    let transport = tarpc::serde_transport::Transport::from((
+        stream,
+        tokio_serde::formats::Bincode::default(),
+    ));
+
+    let server = tarpc::server::BaseChannel::with_defaults(transport);
+    server
+        .execute(service.serve())
+        .for_each(|response| async move {
+            tokio::spawn(response);
+        })
+        .await;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests;

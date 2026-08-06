@@ -71,6 +71,7 @@ pub mod content_ops;
 pub(crate) mod content_stream;
 pub mod coord_ops;
 pub mod footprint_ops;
+pub mod ipc_protocol;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod metadata_backend;
@@ -79,6 +80,7 @@ pub(crate) mod method_gate;
 pub mod orchestrator_registration;
 pub(crate) mod primal_announce;
 pub(crate) mod protocol;
+pub mod protocol_negotiation;
 pub mod semantic_router;
 pub mod socket_config;
 pub mod storage_backend;
@@ -119,18 +121,25 @@ pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
 pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
-pub use tarpc_server::{NestGateRpcService, serve_tarpc, serve_tarpc_uds};
+pub use tarpc_server::{NestGateRpcService, handle_tarpc_negotiated, serve_tarpc, serve_tarpc_uds};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
 // Re-export legacy Unix JSON-RPC surface until callers use orchestration IPC.
 pub use unix_socket_server::{
     JsonRpcUnixServer, LegacyUnixJsonRpcHandler, legacy_ecosystem_rpc_handler,
 };
 
+// G65 Protocol Negotiation (Phase 3 Cephalization)
+pub use ipc_protocol::IpcProtocol;
+pub use protocol_negotiation::{
+    ProtocolRequest, ProtocolResponse, negotiate_client, select_protocol,
+};
+
 // NEW: Isomorphic IPC exports (v0.3.0)
 pub use isomorphic_ipc::{
     IpcEndpoint, IpcStream, IsomorphicIpcServer, RpcHandler, SocketCleanupGuard,
-    TcpFallbackServer, UnixSocketRpcHandler, connect_endpoint, connect_transport,
-    discover_ipc_endpoint, is_platform_constraint, transport_to_ipc_endpoint, write_pid_file,
+    TarpcStreamHandler, TcpFallbackServer, TransportStream, UnixSocketRpcHandler,
+    connect_endpoint, connect_transport, discover_ipc_endpoint, is_platform_constraint,
+    transport_to_ipc_endpoint, write_pid_file,
 };
 
 /// Returns `true` if `method` may be served on a BTSP-required socket

@@ -145,7 +145,7 @@ bytes = "1.7"
 # System utilities (100% Pure Rust!)
 # uzers removed — uid/gid now via rustix::process (already in dep tree, fewer total deps)
 sysinfo = "0.30"
-rustix = { version = "1.1", default-features = false, features = ["std", "fs", "process", "system"] }
+rustix = { version = "1.1", default-features = false, features = ["std", "fs", "net", "process", "system"] }
 etcetera = "0.8"
 
 # Content-addressing (BLAKE3 for fetch_external provenance)

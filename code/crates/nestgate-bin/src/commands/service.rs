@@ -260,6 +260,26 @@ impl Default for ServiceManager {
 /// This is the shared implementation used by both `ServiceManager::start_service`
 /// (ecosystem mode) and `run_socket_only_daemon`. Deduplicates socket config
 /// resolution, encryption setup, handler creation, and TCP fallback spawning.
+/// G65 tarpc stream handler — delegates negotiated tarpc connections to
+/// `handle_tarpc_negotiated` with a fresh `NestGateRpcService`.
+struct G65TarpcHandler;
+
+impl nestgate_core::rpc::TarpcStreamHandler for G65TarpcHandler {
+    fn handle_tarpc_connection(
+        &self,
+        stream: nestgate_core::rpc::TransportStream,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<()>> + Send>> {
+        Box::pin(async move {
+            let service = nestgate_core::rpc::NestGateRpcService::new().map_err(|e| {
+                anyhow::anyhow!("G65 tarpc service creation failed: {e}")
+            })?;
+            nestgate_core::rpc::handle_tarpc_negotiated(stream, service)
+                .await
+                .map_err(|e| anyhow::anyhow!("G65 tarpc connection error: {e}"))
+        })
+    }
+}
+
 async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
     use nestgate_core::rpc::{
         IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
@@ -307,10 +327,11 @@ async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
                 Some("unix-socket-handler".into()),
             )
         })?;
-    let server = Arc::new(IsomorphicIpcServer::new(
-        socket_config.family_id.clone(),
-        handler.clone(),
-    ));
+
+    let server = Arc::new(
+        IsomorphicIpcServer::new(socket_config.family_id.clone(), handler.clone())
+            .with_tarpc_handler(Arc::new(G65TarpcHandler)),
+    );
 
     if let Some(addr) = tcp_addr {
         let tcp = Arc::new(TcpFallbackServer::new(
@@ -355,7 +376,8 @@ async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
     }
 
     info!("JSON-RPC Unix Socket Server ready (isomorphic IPC)");
-    info!("tarpc UDS server ready (C2 dual-socket)");
+    info!("tarpc UDS server ready (C2 dual-socket, backward compat)");
+    info!("G65 protocol negotiation active on main socket");
     info!("Press Ctrl+C to stop\n");
 
     server.start().await.map_err(|e| {

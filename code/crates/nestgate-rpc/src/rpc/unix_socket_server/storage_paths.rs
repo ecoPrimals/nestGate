@@ -153,14 +153,11 @@ pub fn cas_content_dirs(family_id: &str) -> Vec<PathBuf> {
 /// is nearly full rather than filling the filesystem to 100%.
 pub fn warm_tier_capacity() -> (u64, u64) {
     let hot = cas_hot_root();
-    match rustix::fs::statvfs(&hot) {
-        Ok(st) => {
-            let avail = st.f_bavail * st.f_frsize;
-            let total = st.f_blocks * st.f_frsize;
-            (avail, total)
-        }
-        Err(_) => (u64::MAX, u64::MAX),
-    }
+    rustix::fs::statvfs(&hot).map_or((u64::MAX, u64::MAX), |st| {
+        let avail = st.f_bavail * st.f_frsize;
+        let total = st.f_blocks * st.f_frsize;
+        (avail, total)
+    })
 }
 
 /// Minimum free bytes on the warm tier before `content.put` starts rejecting writes.

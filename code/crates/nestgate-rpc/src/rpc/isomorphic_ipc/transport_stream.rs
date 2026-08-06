@@ -42,6 +42,37 @@ impl TransportStream {
             Self::Tcp(_) => "TCP",
         }
     }
+
+    /// Non-destructive peek at the first bytes without consuming them.
+    ///
+    /// Uses the OS-level `MSG_PEEK` flag so the data remains in the kernel
+    /// receive buffer for subsequent reads. Used by G65 protocol negotiation
+    /// to detect a `PROTOCOLS:` line without committing to a read.
+    ///
+    /// # Errors
+    ///
+    /// Forwards the I/O error from the underlying socket.
+    pub async fn peek(&self, buf: &mut [u8]) -> std::io::Result<usize> {
+        match self {
+            #[cfg(unix)]
+            Self::Unix(s) => {
+                use std::os::fd::AsFd;
+                loop {
+                    s.readable().await?;
+                    match rustix::net::recv(
+                        s.as_fd(),
+                        &mut *buf,
+                        rustix::net::RecvFlags::PEEK,
+                    ) {
+                        Ok((n, _trunc)) => return Ok(n),
+                        Err(rustix::io::Errno::AGAIN) => {}
+                        Err(e) => return Err(std::io::Error::from(e)),
+                    }
+                }
+            }
+            Self::Tcp(s) => s.peek(buf).await,
+        }
+    }
 }
 
 impl AsyncRead for TransportStream {

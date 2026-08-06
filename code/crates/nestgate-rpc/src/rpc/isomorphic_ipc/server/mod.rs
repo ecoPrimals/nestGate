@@ -82,11 +82,29 @@ use anyhow::{Context, Result};
 use bytes::Bytes;
 use serde_json::Value;
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 
 use super::platform_detection::is_platform_constraint;
 use super::tcp_fallback::{RpcHandler, TcpFallbackServer};
+use crate::rpc::ipc_protocol::IpcProtocol;
+use crate::rpc::protocol_negotiation::{
+    ProtocolRequest, ProtocolResponse, read_negotiation_line, select_protocol,
+};
+
+/// Handler for tarpc connections negotiated via G65 protocol.
+///
+/// Implemented at the binary crate level where the concrete
+/// `NestGateRpcService` is available. The isomorphic IPC server
+/// delegates tarpc connections to this handler after negotiation.
+pub trait TarpcStreamHandler: Send + Sync {
+    /// Serve a tarpc connection on an already-negotiated stream.
+    fn handle_tarpc_connection(
+        &self,
+        stream: super::transport_stream::TransportStream,
+    ) -> Pin<Box<dyn std::future::Future<Output = Result<()>> + Send>>;
+}
 
 /// RAII guard that removes a Unix socket file and its PID sidecar on drop.
 ///
@@ -134,13 +152,17 @@ fn remove_pid_file(socket_path: &std::path::Path) {
 /// **Self-adapting** server that automatically chooses transport:
 /// - Tries Unix sockets first (optimal)
 /// - Falls back to TCP if platform constraints detected
-/// - Same protocol (JSON-RPC 2.0) on both transports
+/// - G65 protocol negotiation on each connection (tarpc or JSON-RPC)
 pub struct IsomorphicIpcServer {
     /// Service name (for socket paths and discovery files). `Arc<str>` for
     /// zero-copy cloning when passed to fallback transports.
     service_name: Arc<str>,
-    /// RPC handler (shared between Unix and TCP servers)
+    /// JSON-RPC handler (shared between Unix and TCP servers).
     handler: Arc<dyn RpcHandler>,
+    /// Optional tarpc handler for G65 protocol negotiation.
+    /// When `Some`, the server advertises tarpc as a supported protocol
+    /// during negotiation and delegates matching connections here.
+    tarpc_handler: Option<Arc<dyn TarpcStreamHandler>>,
 }
 
 impl IsomorphicIpcServer {
@@ -168,7 +190,19 @@ impl IsomorphicIpcServer {
         Self {
             service_name: service_name.into(),
             handler,
+            tarpc_handler: None,
         }
+    }
+
+    /// Register a G65 tarpc handler for protocol negotiation.
+    ///
+    /// When set, connections that negotiate tarpc via the `PROTOCOLS:` /
+    /// `PROTOCOL:` handshake are delegated to this handler instead of
+    /// the JSON-RPC path.
+    #[must_use]
+    pub fn with_tarpc_handler(mut self, handler: Arc<dyn TarpcStreamHandler>) -> Self {
+        self.tarpc_handler = Some(handler);
+        self
     }
 
     /// Start isomorphic IPC server (Try→Detect→Adapt→Succeed)
@@ -314,16 +348,23 @@ impl IsomorphicIpcServer {
         let _storage_capability_marker_guard =
             crate::rpc::socket_config::StorageCapabilityMarkerGuard::new(&socket_path, &family_id);
 
-        Self::serve_listener(listener, self.handler.clone()).await
+        Self::serve_listener(
+            listener,
+            self.handler.clone(),
+            self.tarpc_handler.clone(),
+        )
+        .await
     }
 
     /// Transport-agnostic accept loop.
     ///
     /// Runs until Ctrl-C, accepting connections from `listener` and
-    /// spawning `handle_connection` for each.
+    /// spawning `handle_connection` for each. When a G65 `TarpcStreamHandler`
+    /// is registered, each connection first tries protocol negotiation.
     async fn serve_listener(
         listener: super::transport_stream::TransportListener,
         handler: Arc<dyn RpcHandler>,
+        tarpc_handler: Option<Arc<dyn TarpcStreamHandler>>,
     ) -> Result<()> {
         let shutdown = tokio::signal::ctrl_c();
         tokio::pin!(shutdown);
@@ -340,8 +381,9 @@ impl IsomorphicIpcServer {
                         Ok((stream, peer)) => {
                             debug!(peer, transport = stream.transport_type(), "accepted connection");
                             let handler = handler.clone();
+                            let tarpc = tarpc_handler.clone();
                             tokio::spawn(async move {
-                                if let Err(e) = Self::handle_connection(stream, handler).await {
+                                if let Err(e) = Self::handle_connection(stream, handler, tarpc).await {
                                     error!("Connection error ({peer}): {e}");
                                 }
                             });
@@ -359,20 +401,33 @@ impl IsomorphicIpcServer {
 
     /// Handle a transport-agnostic connection (persistent keep-alive).
     ///
-    /// Reads newline-delimited JSON-RPC requests in a loop until the client
-    /// disconnects (EOF). Each response is flushed before reading the next
-    /// request, enabling multi-request sessions on a single connection
-    /// (e.g. `storage.store` then `storage.retrieve`).
+    /// Performs G65 protocol negotiation first: peeks the first byte with a
+    /// 100 ms timeout. If the client sends a `PROTOCOLS:` line, the server
+    /// negotiates and may dispatch to tarpc. Otherwise the connection
+    /// proceeds as JSON-RPC (backward compatible).
     ///
     /// When BTSP is required (production: `FAMILY_ID` set, not `BIOMEOS_INSECURE`),
     /// the 4-step BTSP handshake runs first, delegating crypto to the security
     /// capability provider. Development connections proceed directly.
     pub(crate) async fn handle_connection(
-        stream: super::transport_stream::TransportStream,
+        mut stream: super::transport_stream::TransportStream,
         handler: Arc<dyn RpcHandler>,
+        tarpc_handler: Option<Arc<dyn TarpcStreamHandler>>,
     ) -> Result<()> {
         use tokio::io::BufReader;
 
+        // ── G65 Protocol Negotiation ──────────────────────────────────
+        if let Some(selected) =
+            Self::try_g65_negotiation(&mut stream, tarpc_handler.is_some()).await
+            && selected == IpcProtocol::Tarpc
+        {
+            if let Some(tarpc) = tarpc_handler {
+                return tarpc.handle_tarpc_connection(stream).await;
+            }
+            warn!("G65 negotiated tarpc but no handler registered; falling back to JSON-RPC");
+        }
+
+        // ── JSON-RPC path (existing flow) ─────────────────────────────
         let (reader, writer) = tokio::io::split(stream);
         let mut raw_reader = BufReader::new(reader);
         let mut writer = writer;
@@ -440,8 +495,70 @@ impl IsomorphicIpcServer {
         Self::handle_connection(
             super::transport_stream::TransportStream::Unix(stream),
             handler,
+            None,
         )
         .await
+    }
+
+    /// G65 protocol negotiation: peek at the first byte to detect a
+    /// `PROTOCOLS:` line. If detected, read the line byte-by-byte (no
+    /// `BufReader` so no bytes are buffered past the line), select the
+    /// best protocol, write the `PROTOCOL:` response, and return the
+    /// selected protocol. Returns `None` when no negotiation occurred.
+    async fn try_g65_negotiation(
+        stream: &mut super::transport_stream::TransportStream,
+        tarpc_available: bool,
+    ) -> Option<IpcProtocol> {
+        use crate::rpc::protocol_negotiation::NEGOTIATION_TIMEOUT;
+        use tokio::io::AsyncWriteExt;
+
+        let mut peek_buf = [0u8; 1];
+        let first_byte = match tokio::time::timeout(NEGOTIATION_TIMEOUT, stream.peek(&mut peek_buf))
+            .await
+        {
+            Ok(Ok(n)) if n > 0 => peek_buf[0],
+            _ => return None,
+        };
+
+        if first_byte != b'P' {
+            return None;
+        }
+
+        let line = match read_negotiation_line(stream).await {
+            Ok(l) => l,
+            Err(e) => {
+                warn!("G65 negotiation line read failed: {e}");
+                return None;
+            }
+        };
+
+        let request = match ProtocolRequest::from_wire(&line) {
+            Ok(r) => r,
+            Err(e) => {
+                warn!("Invalid G65 protocol request: {e}");
+                let _ = stream.write_all(b"PROTOCOL: jsonrpc\n").await;
+                let _ = stream.flush().await;
+                return Some(IpcProtocol::JsonRpc);
+            }
+        };
+
+        let server_supported = if tarpc_available {
+            vec![IpcProtocol::Tarpc, IpcProtocol::JsonRpc]
+        } else {
+            vec![IpcProtocol::JsonRpc]
+        };
+
+        let selected = select_protocol(&request.supported, &server_supported);
+        let response = ProtocolResponse::new(selected);
+
+        if let Err(e) = stream.write_all(response.to_wire().as_bytes()).await {
+            warn!("G65 response write failed: {e}");
+            return None;
+        }
+        let _ = stream.flush().await;
+
+        info!("G65 protocol negotiated: {selected}");
+        Some(selected)
     }
 
     /// After Phase 2 handshake, intercept the first message to check for

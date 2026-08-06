@@ -21,8 +21,9 @@ version = "0.5.0"
 license = "AGPL-3.0-or-later"
 description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
 transport = ["uds", "tarpc_uds", "tcp", "http"]
-transport_evolution = "phase3-c2"  # C2 dual-socket: JSON-RPC UDS + tarpc UDS side-by-side; TCP/HTTP for non-NUCLEUS modes
-protocol = "jsonrpc-2.0"
+transport_evolution = "phase3-g65"  # G65 single-socket protocol negotiation; C2 dual-socket retained for backward compat
+protocol = ["jsonrpc-2.0", "tarpc"]
+g65_negotiation = true  # primary UDS socket supports PROTOCOLS: handshake (Phase 3 cephalization)
 
 [capabilities.storage]
 domain = "storage"
