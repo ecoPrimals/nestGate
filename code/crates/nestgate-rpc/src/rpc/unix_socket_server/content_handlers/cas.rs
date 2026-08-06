@@ -12,6 +12,7 @@ use tracing::debug;
 use super::super::StorageState;
 use super::super::storage_paths::{
     content_hash_hex, content_key_path, ensure_parent_dirs, resolve_cas_object, resolve_family_id,
+    warm_tier_capacity, warm_tier_min_free,
 };
 use super::{maybe_decrypt, merge_sidecar_fields, validate_blake3_hex};
 
@@ -57,13 +58,13 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
     })?;
 
     let blake3_hex = content_hash_hex(&raw);
-    let object_path = content_key_path(family_id, &blake3_hex);
 
-    if resolve_cas_object(family_id, &blake3_hex).is_some() {
+    if let Some(existing) = resolve_cas_object(family_id, &blake3_hex) {
         debug!(
-            "content.put: dedup hit family_id='{}', hash={blake3_hex}, size={}",
+            "content.put: dedup hit family_id='{}', hash={blake3_hex}, size={}, tier={}",
             family_id,
-            raw.len()
+            raw.len(),
+            existing.display()
         );
         return Ok(json!({
             "hash": blake3_hex,
@@ -73,6 +74,18 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
             "family_id": family_id
         }));
     }
+
+    let (avail, _total) = warm_tier_capacity();
+    let min_free = warm_tier_min_free();
+    if avail < min_free + raw.len() as u64 {
+        return Err(NestGateError::io_error(format!(
+            "warm tier capacity below threshold: {avail} bytes free, \
+             min_free={min_free}, payload={}",
+            raw.len()
+        )));
+    }
+
+    let object_path = content_key_path(family_id, &blake3_hex);
 
     let write_data: std::borrow::Cow<'_, [u8]> = if let Some(ref enc) = state.encryption {
         std::borrow::Cow::Owned(enc.encrypt(&raw)?)
@@ -136,9 +149,10 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
         })?;
 
     debug!(
-        "content.put: stored family_id='{}', hash={blake3_hex}, size={}",
+        "content.put: stored family_id='{}', hash={blake3_hex}, size={}, path={}",
         family_id,
-        raw.len()
+        raw.len(),
+        object_path.display()
     );
 
     Ok(json!({
@@ -147,7 +161,8 @@ pub async fn content_put(params: Option<&Value>, state: &StorageState) -> Result
         "stored": true,
         "deduplicated": false,
         "content_type": content_type,
-        "family_id": family_id
+        "family_id": family_id,
+        "tier": object_path.to_string_lossy()
     }))
 }
 

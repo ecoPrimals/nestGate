@@ -147,6 +147,31 @@ pub fn cas_content_dirs(family_id: &str) -> Vec<PathBuf> {
     dirs
 }
 
+/// Check available capacity on the warm (hot) tier. Returns `(available_bytes, total_bytes)`.
+///
+/// Used for high-water-mark backpressure: reject writes when the warm tier
+/// is nearly full rather than filling the filesystem to 100%.
+pub fn warm_tier_capacity() -> (u64, u64) {
+    let hot = cas_hot_root();
+    match rustix::fs::statvfs(&hot) {
+        Ok(st) => {
+            let avail = st.f_bavail * st.f_frsize;
+            let total = st.f_blocks * st.f_frsize;
+            (avail, total)
+        }
+        Err(_) => (u64::MAX, u64::MAX),
+    }
+}
+
+/// Minimum free bytes on the warm tier before `content.put` starts rejecting writes.
+/// Default 10 GB; override with `NESTGATE_WARM_MIN_FREE_BYTES`.
+pub fn warm_tier_min_free() -> u64 {
+    std::env::var("NESTGATE_WARM_MIN_FREE_BYTES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(10 * 1024 * 1024 * 1024) // 10 GB
+}
+
 /// Build the filesystem path for a key in a family's dataset.
 ///
 /// When `namespace` is `Some`, uses the isomorphic layout:
