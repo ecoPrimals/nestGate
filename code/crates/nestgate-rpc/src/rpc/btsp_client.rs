@@ -39,15 +39,7 @@ fn resolve_runtime_base() -> String {
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
         return xdg;
     }
-    #[cfg(unix)]
-    {
-        format!("/run/user/{}", rustix::process::getuid().as_raw())
-    }
-    #[cfg(not(unix))]
-    {
-        std::env::var("TEMP")
-            .unwrap_or_else(|_| std::env::temp_dir().to_string_lossy().into_owned())
-    }
+    nestgate_platform::platform::process::runtime_base_dir()
 }
 
 /// Returns `true` when BTSP is mandatory.

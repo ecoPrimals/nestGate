@@ -1,6 +1,6 @@
 # Context — NestGate
 
-**Last Updated**: Aug 6, 2026 (Session 140)
+**Last Updated**: Aug 7, 2026 (Session 141)
 
 ## What This Is
 
@@ -33,7 +33,8 @@ than by importing this crate graph.
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean with `-D warnings` |
-| **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android; Windows cross-arch builds (G66 transport abstraction) |
+| **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android; Windows cross-arch builds (G66 transport, G68 platform substrate) |
+| **Platform substrate** | G68 — `nestgate-platform` owns L1 (links), L2 (permissions), L3 (process/statvfs/hostname); no raw `std::os::unix` in business crates |
 | **Registry** | `config/capability_registry.toml` — 21 capability domains, machine-readable self-knowledge |
 
 ### Workspace crates (authoritative list)

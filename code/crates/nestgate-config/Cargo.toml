@@ -11,6 +11,7 @@ workspace = true
 
 [dependencies]
 nestgate-types = { path = "../nestgate-types" }
+nestgate-platform = { path = "../nestgate-platform" }
 
 anyhow = { workspace = true }
 chrono = { workspace = true }
@@ -28,7 +29,6 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
-nestgate-platform = { path = "../nestgate-platform" }
 temp-env = { workspace = true }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }

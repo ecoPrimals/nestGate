@@ -152,19 +152,8 @@ pub fn cas_content_dirs(family_id: &str) -> Vec<PathBuf> {
 /// Used for high-water-mark backpressure: reject writes when the warm tier
 /// is nearly full rather than filling the filesystem to 100%.
 pub fn warm_tier_capacity() -> (u64, u64) {
-    #[cfg(unix)]
-    {
-        let hot = cas_hot_root();
-        rustix::fs::statvfs(&hot).map_or((u64::MAX, u64::MAX), |st| {
-            let avail = st.f_bavail * st.f_frsize;
-            let total = st.f_blocks * st.f_frsize;
-            (avail, total)
-        })
-    }
-    #[cfg(not(unix))]
-    {
-        (u64::MAX, u64::MAX)
-    }
+    let hot = cas_hot_root();
+    nestgate_platform::linux_proc::statvfs_space(&hot).unwrap_or((u64::MAX, u64::MAX))
 }
 
 /// Minimum free bytes on the warm tier before `content.put` starts rejecting writes.

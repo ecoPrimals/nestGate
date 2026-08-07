@@ -124,36 +124,18 @@ impl StoragePaths {
 
     /// Get ZFS binary path with environment override.
     ///
-    /// Falls back to `/usr/sbin/zfs` on Unix, `zfs` (bare command) on Windows.
+    /// Priority: `NESTGATE_ZFS_BINARY` env → bare `"zfs"` (resolved via `PATH`).
     #[must_use]
     pub fn zfs_binary_path(&self) -> PathBuf {
-        env::var("NESTGATE_ZFS_BINARY").map_or_else(
-            |_| {
-                if cfg!(windows) {
-                    PathBuf::from("zfs")
-                } else {
-                    PathBuf::from("/usr/sbin/zfs")
-                }
-            },
-            PathBuf::from,
-        )
+        env::var("NESTGATE_ZFS_BINARY").map_or_else(|_| PathBuf::from("zfs"), PathBuf::from)
     }
 
     /// Get zpool binary path with environment override.
     ///
-    /// Falls back to `/usr/sbin/zpool` on Unix, `zpool` (bare command) on Windows.
+    /// Priority: `NESTGATE_ZPOOL_BINARY` env → bare `"zpool"` (resolved via `PATH`).
     #[must_use]
     pub fn zpool_binary_path(&self) -> PathBuf {
-        env::var("NESTGATE_ZPOOL_BINARY").map_or_else(
-            |_| {
-                if cfg!(windows) {
-                    PathBuf::from("zpool")
-                } else {
-                    PathBuf::from("/usr/sbin/zpool")
-                }
-            },
-            PathBuf::from,
-        )
+        env::var("NESTGATE_ZPOOL_BINARY").map_or_else(|_| PathBuf::from("zpool"), PathBuf::from)
     }
 
     /// Get PID file path
@@ -261,7 +243,7 @@ mod tests {
     fn zpool_binary_path_falls_back_when_env_unset() {
         let paths = StoragePaths::from_env_source(&MapEnv::new());
         temp_env::with_vars([("NESTGATE_ZPOOL_BINARY", None::<&str>)], || {
-            assert_eq!(paths.zpool_binary_path(), PathBuf::from("/usr/sbin/zpool"));
+            assert_eq!(paths.zpool_binary_path(), PathBuf::from("zpool"));
         });
     }
 

@@ -142,8 +142,8 @@ impl SubstrateMount {
 
         let rotational = Self::detect_rotational(path);
 
-        let capacity = rustix::fs::statvfs(path)
-            .map(|st| st.f_blocks * st.f_frsize)
+        let capacity = nestgate_platform::linux_proc::statvfs_space(path)
+            .map(|(total, _avail)| total)
             .unwrap_or(0);
 
         (fs_type, rotational, capacity)

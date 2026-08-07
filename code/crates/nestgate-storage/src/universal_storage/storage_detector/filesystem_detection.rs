@@ -56,24 +56,9 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use tracing::{debug, warn};
 
-/// Total and available bytes for a mount point via [`rustix::fs::statvfs`] (Linux).
+/// Total and available bytes for a mount point via [`nestgate_platform::linux_proc::statvfs_space`].
 fn statvfs_space(path: &std::path::Path) -> (u64, u64) {
-    #[cfg(target_os = "linux")]
-    {
-        rustix::fs::statvfs(path)
-            .map(|v| {
-                let fr = v.f_frsize;
-                let total = v.f_blocks.saturating_mul(fr);
-                let avail = v.f_bavail.saturating_mul(fr);
-                (total, avail)
-            })
-            .unwrap_or((0, 0))
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        let _ = path;
-        (0, 0)
-    }
+    nestgate_platform::linux_proc::statvfs_space(path).unwrap_or((0, 0))
 }
 
 /// Discovered filesystem information
@@ -276,7 +261,7 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
                     continue;
                 }
 
-                // ecoBin v3.0: disk space from `rustix::fs::statvfs`
+                // G68: disk space via nestgate-platform substrate
                 let mount_path = std::path::Path::new(mount_point);
                 let (total_bytes, available_bytes) = statvfs_space(mount_path);
 

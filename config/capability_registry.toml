@@ -23,6 +23,7 @@ description = "Sovereign storage & permanence primal — filesystem-backed durab
 transport = ["uds", "tarpc_uds", "tcp", "http"]
 transport_evolution = "phase4-g66"  # G66 transport abstraction; G65 on all transports (UDS + TCP); C2 retained for backward compat
 transport_abstraction = true  # TransportEndpoint/TransportStream/TransportListener with platform_default() + from_env_or_default()
+platform_substrate = "g68-l1-l2-l3"  # G68: links (L1), permissions (L2), process/statvfs (L3) via nestgate-platform
 protocol = ["jsonrpc-2.0", "tarpc"]
 g65_negotiation = true  # primary UDS AND TCP sockets support PROTOCOLS: handshake (Phase 3+4 cephalization)
 windows_cross_arch = true  # cargo check --target x86_64-pc-windows-gnu passes (excluding fuzz/installer pre-existing)

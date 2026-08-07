@@ -321,13 +321,10 @@ impl<'a> DetectionEngine<'a> {
             let display = format!("{mount_point} ({fs_type})");
             let mut storage = DetectedStorage::new(id, storage_type.clone(), display);
 
-            #[cfg(unix)]
             {
                 let mount_path = std::path::Path::new(mount_point);
-                if let Ok(stat) = rustix::fs::statvfs(mount_path) {
-                    let block_size = stat.f_frsize;
-                    let total = stat.f_blocks * block_size;
-                    let avail = stat.f_bavail * block_size;
+                if let Ok((total, avail)) = nestgate_platform::linux_proc::statvfs_space(mount_path)
+                {
                     storage.available_space = avail;
                     storage.add_metadata("total_bytes".into(), total.to_string());
                 }

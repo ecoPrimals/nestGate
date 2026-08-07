@@ -340,8 +340,8 @@ mod tests {
         crate::env_process::remove_var("NESTGATE_ZPOOL_BINARY");
 
         let config = ZfsConfig::default();
-        assert_eq!(config.zfs_binary, "/usr/sbin/zfs");
-        assert_eq!(config.zpool_binary, "/usr/sbin/zpool");
+        assert_eq!(config.zfs_binary, "zfs");
+        assert_eq!(config.zpool_binary, "zpool");
         assert!(config.use_sudo);
         assert_eq!(config.command_timeout, Duration::from_secs(30));
 

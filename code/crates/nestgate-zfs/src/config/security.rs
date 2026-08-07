@@ -101,19 +101,32 @@ impl Default for KeyManagementConfig {
 }
 
 impl KeyManagementConfig {
-    /// Create production-optimized key management configuration
+    /// Create production-optimized key management configuration.
+    ///
+    /// Backup locations are resolved from `NESTGATE_KEY_BACKUP_PATHS` (comma-separated)
+    /// with a single-entry fallback to the config directory.
     #[must_use]
     pub fn production() -> Self {
+        let backup_locations = std::env::var("NESTGATE_KEY_BACKUP_PATHS")
+            .ok()
+            .filter(|v| !v.is_empty())
+            .map_or_else(
+                || {
+                    vec![nestgate_config_dir()
+                        .join("zfs")
+                        .join("keys")
+                        .join("backup")]
+                },
+                |v| v.split(',').map(|s| PathBuf::from(s.trim())).collect(),
+            );
+
         Self {
             key_storage_path: nestgate_config_dir()
                 .join("zfs")
                 .join("keys")
                 .join("production"),
             rotation_interval_days: 30,
-            backup_locations: vec![
-                PathBuf::from("/backup/nestgate/keys"),
-                PathBuf::from("/offsite/nestgate/keys"),
-            ],
+            backup_locations,
         }
     }
 }

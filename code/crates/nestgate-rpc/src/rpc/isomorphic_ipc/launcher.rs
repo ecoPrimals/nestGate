@@ -319,23 +319,9 @@ pub fn get_nestgate_socket_path_from_env_source(
     }
 
     // Priority 3: system temp dir with UID (system fallback)
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::MetadataExt;
-        let uid = std::fs::metadata("/proc/self")
-            .ok()
-            .map_or(1000, |m| m.uid());
-        let path = std::env::temp_dir().join(format!("{NESTGATE_SERVICE_NAME}-{uid}.sock"));
-        Ok(path)
-    }
-
-    #[cfg(not(unix))]
-    {
-        // Non-Unix platforms (Windows) - use temp directory
-        let temp_dir = std::env::temp_dir();
-        let path = temp_dir.join(format!("{}.sock", NESTGATE_SERVICE_NAME));
-        Ok(path)
-    }
+    let uid = nestgate_platform::get_current_uid();
+    let path = std::env::temp_dir().join(format!("{NESTGATE_SERVICE_NAME}-{uid}.sock"));
+    Ok(path)
 }
 
 /// Get the XDG-compliant TCP discovery file path for `NestGate`

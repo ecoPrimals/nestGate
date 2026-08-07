@@ -121,12 +121,11 @@ pub(super) fn gather_socket_search_dirs_from_env(env: &(impl EnvSource + ?Sized)
         dirs.push(format!("{xdg}/{}", ecosystem_path_segment()));
     }
 
-    #[cfg(unix)]
     {
-        let uid = rustix::process::getuid().as_raw();
-        let xdg_default = format!("/run/user/{uid}/{}", ecosystem_path_segment());
-        if !dirs.contains(&xdg_default) {
-            dirs.push(xdg_default);
+        let runtime_base = nestgate_platform::platform::process::runtime_base_dir();
+        let runtime_default = format!("{runtime_base}/{}", ecosystem_path_segment());
+        if !dirs.contains(&runtime_default) {
+            dirs.push(runtime_default);
         }
     }
 

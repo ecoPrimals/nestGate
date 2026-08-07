@@ -2151,6 +2151,7 @@ dependencies = [
  "futures-util",
  "jsonrpsee",
  "nestgate-config",
+ "nestgate-platform",
  "nestgate-types",
  "oxitls-rustcrypto-provider",
  "rand 0.9.5",

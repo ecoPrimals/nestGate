@@ -81,25 +81,14 @@ pub(crate) fn is_socket_owned_by_live_process(socket_path: &Path) -> bool {
     if raw_pid == current_pid_i32 {
         return false;
     }
-    let Some(pid) = rustix::process::Pid::from_raw(raw_pid) else {
-        return false;
-    };
-    match rustix::process::test_kill_process(pid) {
-        Ok(()) => {
-            warn!(
-                "Socket {} is owned by live process (PID {raw_pid})",
-                socket_path.display()
-            );
-            true
-        }
-        Err(e) if e == rustix::io::Errno::PERM => {
-            warn!(
-                "Socket {} is owned by live process (PID {raw_pid}, permission denied for probe)",
-                socket_path.display()
-            );
-            true
-        }
-        Err(_) => false,
+    if nestgate_platform::platform::process::is_pid_alive(raw_pid) {
+        warn!(
+            "Socket {} is owned by live process (PID {raw_pid})",
+            socket_path.display()
+        );
+        true
+    } else {
+        false
     }
 }
 
@@ -135,8 +124,6 @@ pub fn socket_parent_is_ecosystem_standard_dir(socket_path: &Path) -> bool {
 /// on shutdown. Failure to create the symlink is logged as a warning and returns `false`.
 #[cfg(unix)]
 pub fn install_storage_capability_symlink(socket_path: &Path, family_id: &str) -> bool {
-    use std::os::unix::fs::symlink;
-
     if !socket_parent_is_ecosystem_standard_dir(socket_path) {
         debug!(
             "storage capability symlink: skipped (socket not under ecosystem standard {}/ parent): {}",
@@ -163,9 +150,7 @@ pub fn install_storage_capability_symlink(socket_path: &Path, family_id: &str) -
 
     let link_name = storage_capability_sock_name(family_id);
     let link_path = parent.join(&link_name);
-    if link_path.exists()
-        && let Err(e) = std::fs::remove_file(&link_path)
-    {
+    if let Err(e) = nestgate_platform::platform::links::remove_link(&link_path) {
         warn!(
             "storage capability symlink: could not remove existing {}: {e}",
             link_path.display()
@@ -173,7 +158,8 @@ pub fn install_storage_capability_symlink(socket_path: &Path, family_id: &str) -
         return false;
     }
 
-    match symlink(target_name, &link_path) {
+    let target_path = std::path::Path::new(target_name);
+    match nestgate_platform::platform::links::create_link(target_path, &link_path) {
         Ok(()) => {
             info!(
                 "storage capability symlink: {} -> {}",
@@ -207,13 +193,7 @@ pub fn remove_storage_capability_symlink(socket_path: &Path, family_id: &str, in
     };
     let link_name = storage_capability_sock_name(family_id);
     let link_path = parent.join(&link_name);
-    if !link_path.exists() {
-        return;
-    }
-    if let Ok(m) = std::fs::symlink_metadata(&link_path)
-        && m.file_type().is_symlink()
-        && let Err(e) = std::fs::remove_file(&link_path)
-    {
+    if let Err(e) = nestgate_platform::platform::links::remove_link(&link_path) {
         warn!(
             "storage capability symlink: failed to remove {}: {e}",
             link_path.display()
@@ -505,19 +485,9 @@ impl SocketConfig {
             .into());
         }
 
-        let node_id = env.get("NESTGATE_NODE_ID").unwrap_or_else(|| {
-            #[cfg(unix)]
-            {
-                rustix::system::uname()
-                    .nodename()
-                    .to_string_lossy()
-                    .into_owned()
-            }
-            #[cfg(not(unix))]
-            {
-                "unknown".into()
-            }
-        });
+        let node_id = env
+            .get("NESTGATE_NODE_ID")
+            .unwrap_or_else(nestgate_platform::platform::process::hostname);
 
         let socket_override = env.get("NESTGATE_SOCKET").filter(|s| !s.is_empty());
         let biomeos_socket_dir = env.get("BIOMEOS_SOCKET_DIR").filter(|s| !s.is_empty());

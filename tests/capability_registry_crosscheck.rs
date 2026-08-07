@@ -90,8 +90,22 @@ fn registry_primal_identity_is_nestgate() {
     let primal = table["primal"].as_table().expect("primal table");
     assert_eq!(primal["name"].as_str().unwrap(), "nestgate");
     assert_eq!(primal["domain"].as_str().unwrap(), "storage");
-    assert_eq!(primal["protocol"].as_str().unwrap(), "jsonrpc-2.0");
     assert_eq!(primal["license"].as_str().unwrap(), "AGPL-3.0-or-later");
+
+    let protocols: Vec<&str> = primal["protocol"]
+        .as_array()
+        .expect("protocol should be an array (C2+ dual-protocol)")
+        .iter()
+        .map(|v| v.as_str().unwrap())
+        .collect();
+    assert!(
+        protocols.contains(&"jsonrpc-2.0"),
+        "protocol array must include jsonrpc-2.0"
+    );
+    assert!(
+        protocols.contains(&"tarpc"),
+        "protocol array must include tarpc (C2 cephalization)"
+    );
 }
 
 #[test]

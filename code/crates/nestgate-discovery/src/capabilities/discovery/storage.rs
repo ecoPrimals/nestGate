@@ -1,57 +1,65 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-/// **STORAGE CAPABILITY DISCOVERY**
-/// Discovery and management of storage-related capabilities
-/// Replaces hardcoded storage configurations with dynamic discovery
+//! Storage capability self-knowledge registry.
+//!
+//! Provides the **static capability manifest** for nestGate's own storage domain.
+//! These are not discovered at runtime from external primals — they are nestGate's
+//! self-knowledge of what it can serve. External primals discover these via
+//! `capabilities.list` / `primal.announce` over IPC.
+
 use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-/// Storage capability types that can be discovered
+
+/// Storage capability types that can be advertised.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-/// Types of StorageCapability
 pub enum StorageCapabilityType {
-    /// ZFS pool management capabilities
+    /// ZFS pool management capabilities.
     ZfsPool,
-    /// Dataset creation and management
+    /// Dataset creation and management.
     Dataset,
-    /// Snapshot management and operations
+    /// Snapshot management and operations.
     Snapshot,
-    /// Backup and restore capabilities
+    /// Backup and restore capabilities.
     Backup,
-    /// Data migration services
+    /// Data migration services.
     Migration,
-    /// Performance monitoring and optimization
+    /// Performance monitoring and optimization.
     Performance,
-    /// Storage health monitoring
+    /// Storage health monitoring.
     Monitoring,
-    /// Encryption at rest capabilities
+    /// Encryption at rest capabilities.
     Encryption,
 }
-/// Storage capability metadata
+
+/// Static metadata for an advertised storage capability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Storagecapabilityinfo
 pub struct StorageCapabilityInfo {
-    /// Type of storage capability provided
+    /// Type of storage capability provided.
     pub capability_type: StorageCapabilityType,
-    /// Service endpoint URL
+    /// Internal capability domain URI (not a network address).
     pub endpoint: String,
-    /// API version string
+    /// API version string.
     pub version: String,
-    /// List of supported operations for this capability
+    /// List of supported operations for this capability.
     pub supported_operations: Vec<String>,
-    /// Additional metadata key-value pairs
+    /// Additional metadata key-value pairs.
     pub metadata: HashMap<String, String>,
 }
-/// Storage capability discovery manager
+
+/// Storage capability self-knowledge registry.
+///
+/// Returns nestGate's own capability manifest. These are internal domain URIs
+/// for routing, not external endpoints discovered at runtime.
 #[derive(Debug)]
-/// Storagecapabilitydiscovery
 pub struct StorageCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<StorageCapabilityType, StorageCapabilityInfo>>,
 }
+
 impl StorageCapabilityDiscovery {
-    /// Create new storage capability discovery manager
+    /// Create new storage capability registry.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -59,29 +67,17 @@ impl StorageCapabilityDiscovery {
         }
     }
 
-    /// Discover available storage capabilities
+    /// Return nestGate's static storage capability manifest.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if the internal cache lock is poisoned.
     pub async fn discover_capabilities(&self) -> Result<Vec<StorageCapabilityInfo>> {
-        // Dynamic discovery logic - replaces hardcoded storage endpoints
-        let mut capabilities = Vec::new();
+        let capabilities = vec![
+            Self::zfs_pool_capability(),
+            Self::dataset_capability(),
+        ];
 
-        // ZFS capability discovery
-        if let Ok(zfs_info) = self.discover_zfs_capability().await {
-            capabilities.push(zfs_info);
-        }
-
-        // Dataset capability discovery
-        if let Ok(dataset_info) = self.discover_dataset_capability().await {
-            capabilities.push(dataset_info);
-        }
-
-        // Update cache
         let mut cache = self.discovered_capabilities.write().await;
         for capability in &capabilities {
             cache.insert(capability.capability_type.clone(), capability.clone());
@@ -90,14 +86,11 @@ impl StorageCapabilityDiscovery {
         Ok(capabilities)
     }
 
-    /// Get specific storage capability by type
+    /// Get specific storage capability by type.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if the internal cache lock is poisoned.
     pub async fn get_capability(
         &self,
         capability_type: &StorageCapabilityType,
@@ -106,12 +99,10 @@ impl StorageCapabilityDiscovery {
         Ok(cache.get(capability_type).cloned())
     }
 
-    /// Discover ZFS capabilities
-    async fn discover_zfs_capability(&self) -> Result<StorageCapabilityInfo> {
-        // Dynamic ZFS discovery - replaces hardcoded ZFS endpoints
-        Ok(StorageCapabilityInfo {
+    fn zfs_pool_capability() -> StorageCapabilityInfo {
+        StorageCapabilityInfo {
             capability_type: StorageCapabilityType::ZfsPool,
-            endpoint: "zfs://pool-management".into(),
+            endpoint: "local://zfs.pool".into(),
             version: "1.0.0".into(),
             supported_operations: vec![
                 "create_pool".into(),
@@ -119,16 +110,14 @@ impl StorageCapabilityDiscovery {
                 "list_pools".into(),
                 "pool_status".into(),
             ],
-            metadata: HashMap::new(),
-        })
+            metadata: HashMap::from([("source".into(), "self-knowledge".into())]),
+        }
     }
 
-    /// Discover dataset capabilities
-    async fn discover_dataset_capability(&self) -> Result<StorageCapabilityInfo> {
-        // Dynamic dataset discovery - replaces hardcoded dataset endpoints
-        Ok(StorageCapabilityInfo {
+    fn dataset_capability() -> StorageCapabilityInfo {
+        StorageCapabilityInfo {
             capability_type: StorageCapabilityType::Dataset,
-            endpoint: "zfs://dataset-management".into(),
+            endpoint: "local://zfs.dataset".into(),
             version: "1.0.0".into(),
             supported_operations: vec![
                 "create_dataset".into(),
@@ -136,31 +125,28 @@ impl StorageCapabilityDiscovery {
                 "list_datasets".into(),
                 "dataset_properties".into(),
             ],
-            metadata: HashMap::new(),
-        })
+            metadata: HashMap::from([("source".into(), "self-knowledge".into())]),
+        }
     }
 }
 
 impl Default for StorageCapabilityDiscovery {
-    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// Get ZFS endpoint for routing compatibility (replaces hardcoded ZFS constants)
+/// Get ZFS endpoint from self-knowledge manifest.
 pub async fn get_zfs_endpoint(
-    #[expect(unused_variables, reason = "adapter reserved for future capability-provider injection")] _adapter: &(),
+    #[expect(unused_variables, reason = "adapter reserved for future capability-provider injection")]
+    _adapter: &(),
 ) -> Result<String> {
     let discovery = StorageCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-    // Find ZFS pool capability
     for capability in capabilities {
         if matches!(capability.capability_type, StorageCapabilityType::ZfsPool) {
             return Ok(capability.endpoint);
         }
     }
-
-    // Default ZFS endpoint if discovery fails
-    Ok("zfs://pool-management".into())
+    Ok("local://zfs.pool".into())
 }

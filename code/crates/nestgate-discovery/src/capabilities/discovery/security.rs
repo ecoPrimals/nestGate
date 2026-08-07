@@ -1,59 +1,65 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-// Removed unused import for pedantic perfection
-// Commented out until available: CapabilityCategory, CapabilityRequest
-/// **SECURITY CAPABILITY DISCOVERY**
-/// Discovery and management of security-related capabilities
-/// Replaces hardcoded security configurations with dynamic discovery
+//! Security capability self-knowledge registry.
+//!
+//! Provides the **static capability manifest** for nestGate's own security domain.
+//! These are not discovered at runtime from external primals — they are nestGate's
+//! self-knowledge of what it can serve. External primals discover these via
+//! `capabilities.list` / `primal.announce` over IPC.
+
 use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-/// Security capability types that can be discovered
+
+/// Security capability types that can be advertised.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-/// Types of SecurityCapability
 pub enum SecurityCapabilityType {
-    /// User authentication services
+    /// User authentication services.
     Authentication,
-    /// Authorization and permission management
+    /// Authorization and permission management.
     Authorization,
-    /// Encryption and cryptographic services
+    /// Encryption and cryptographic services.
     Encryption,
-    /// TLS/SSL certificate management
+    /// TLS/SSL certificate management.
     CertificateManagement,
-    /// Audit logging and compliance
+    /// Audit logging and compliance.
     AuditLogging,
-    /// Threat detection and security monitoring
+    /// Threat detection and security monitoring.
     ThreatDetection,
-    /// Access control and policy enforcement
+    /// Access control and policy enforcement.
     AccessControl,
-    /// Secret and credential management
+    /// Secret and credential management.
     SecretManagement,
 }
-/// Security capability metadata
+
+/// Static metadata for an advertised security capability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Securitycapabilityinfo
 pub struct SecurityCapabilityInfo {
-    /// Type of security capability provided
+    /// Type of security capability provided.
     pub capability_type: SecurityCapabilityType,
-    /// Service endpoint URL
+    /// Internal capability domain URI (not a network address).
     pub endpoint: String,
-    /// API version string
+    /// API version string.
     pub version: String,
-    /// List of supported operations for this capability
+    /// List of supported operations for this capability.
     pub supported_operations: Vec<String>,
-    /// Additional metadata key-value pairs
+    /// Additional metadata key-value pairs.
     pub metadata: HashMap<String, String>,
 }
-/// Security capability discovery manager
+
+/// Security capability self-knowledge registry.
+///
+/// Returns nestGate's own capability manifest. These are internal domain URIs
+/// for routing, not external endpoints discovered at runtime.
 #[derive(Debug)]
-/// Securitycapabilitydiscovery
 pub struct SecurityCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<SecurityCapabilityType, SecurityCapabilityInfo>>,
 }
+
 impl SecurityCapabilityDiscovery {
-    /// Create new security capability discovery manager
+    /// Create new security capability registry.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -61,34 +67,18 @@ impl SecurityCapabilityDiscovery {
         }
     }
 
-    /// Discover available security capabilities
+    /// Return nestGate's static security capability manifest.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if the internal cache lock is poisoned.
     pub async fn discover_capabilities(&self) -> Result<Vec<SecurityCapabilityInfo>> {
-        // Dynamic discovery logic - replaces hardcoded security endpoints
-        let mut capabilities = Vec::new();
+        let capabilities = vec![
+            Self::authentication_capability(),
+            Self::authorization_capability(),
+            Self::encryption_capability(),
+        ];
 
-        // Authentication capability discovery
-        if let Ok(auth_info) = self.discover_authentication_capability().await {
-            capabilities.push(auth_info);
-        }
-
-        // Authorization capability discovery
-        if let Ok(authz_info) = self.discover_authorization_capability().await {
-            capabilities.push(authz_info);
-        }
-
-        // Encryption capability discovery
-        if let Ok(crypto_info) = self.discover_encryption_capability().await {
-            capabilities.push(crypto_info);
-        }
-
-        // Update cache
         let mut cache = self.discovered_capabilities.write().await;
         for capability in &capabilities {
             cache.insert(capability.capability_type.clone(), capability.clone());
@@ -97,14 +87,11 @@ impl SecurityCapabilityDiscovery {
         Ok(capabilities)
     }
 
-    /// Get specific security capability by type
+    /// Get specific security capability by type.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if the internal cache lock is poisoned.
     pub async fn get_capability(
         &self,
         capability_type: &SecurityCapabilityType,
@@ -113,12 +100,10 @@ impl SecurityCapabilityDiscovery {
         Ok(cache.get(capability_type).cloned())
     }
 
-    /// Discover authentication capabilities
-    async fn discover_authentication_capability(&self) -> Result<SecurityCapabilityInfo> {
-        // Dynamic authentication discovery - replaces hardcoded auth endpoints
-        Ok(SecurityCapabilityInfo {
+    fn authentication_capability() -> SecurityCapabilityInfo {
+        SecurityCapabilityInfo {
             capability_type: SecurityCapabilityType::Authentication,
-            endpoint: "security://authentication".into(),
+            endpoint: "local://identity.authenticate".into(),
             version: "1.0.0".into(),
             supported_operations: vec![
                 "authenticate".into(),
@@ -126,16 +111,14 @@ impl SecurityCapabilityDiscovery {
                 "refresh_token".into(),
                 "logout".into(),
             ],
-            metadata: HashMap::new(),
-        })
+            metadata: HashMap::from([("source".into(), "self-knowledge".into())]),
+        }
     }
 
-    /// Discover authorization capabilities
-    async fn discover_authorization_capability(&self) -> Result<SecurityCapabilityInfo> {
-        // Dynamic authorization discovery - replaces hardcoded authz endpoints
-        Ok(SecurityCapabilityInfo {
+    fn authorization_capability() -> SecurityCapabilityInfo {
+        SecurityCapabilityInfo {
             capability_type: SecurityCapabilityType::Authorization,
-            endpoint: "security://authorization".into(),
+            endpoint: "local://identity.authorize".into(),
             version: "1.0.0".into(),
             supported_operations: vec![
                 "check_permission".into(),
@@ -143,16 +126,14 @@ impl SecurityCapabilityDiscovery {
                 "revoke_permission".into(),
                 "list_permissions".into(),
             ],
-            metadata: HashMap::new(),
-        })
+            metadata: HashMap::from([("source".into(), "self-knowledge".into())]),
+        }
     }
 
-    /// Discover encryption capabilities
-    async fn discover_encryption_capability(&self) -> Result<SecurityCapabilityInfo> {
-        // Dynamic encryption discovery - replaces hardcoded crypto endpoints
-        Ok(SecurityCapabilityInfo {
+    fn encryption_capability() -> SecurityCapabilityInfo {
+        SecurityCapabilityInfo {
             capability_type: SecurityCapabilityType::Encryption,
-            endpoint: "security://encryption".into(),
+            endpoint: "local://security.encrypt".into(),
             version: "1.0.0".into(),
             supported_operations: vec![
                 "encrypt_data".into(),
@@ -160,25 +141,24 @@ impl SecurityCapabilityDiscovery {
                 "generate_key".into(),
                 "rotate_keys".into(),
             ],
-            metadata: HashMap::new(),
-        })
+            metadata: HashMap::from([("source".into(), "self-knowledge".into())]),
+        }
     }
 }
 
 impl Default for SecurityCapabilityDiscovery {
-    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// Get authentication endpoint for routing compatibility (replaces hardcoded security)
+/// Get authentication endpoint from self-knowledge manifest.
 pub async fn get_auth_endpoint(
-    #[expect(unused_variables, reason = "adapter reserved for future capability-provider injection")] _adapter: &(),
+    #[expect(unused_variables, reason = "adapter reserved for future capability-provider injection")]
+    _adapter: &(),
 ) -> Result<String> {
     let discovery = SecurityCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-    // Find authentication capability
     for capability in capabilities {
         if matches!(
             capability.capability_type,
@@ -187,7 +167,5 @@ pub async fn get_auth_endpoint(
             return Ok(capability.endpoint);
         }
     }
-
-    // Default auth endpoint if discovery fails
-    Ok("security://authentication".into())
+    Ok("local://identity.authenticate".into())
 }

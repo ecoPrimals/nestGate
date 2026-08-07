@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Aug 6, 2026 (Session 140: G66 transport abstraction)
+**Last Updated**: Aug 7, 2026 (Session 141: G68 platform substrate abstraction)
 **Version**: 0.5.0
 
 ---
@@ -18,7 +18,7 @@ Inline markers:     none in committed production .rs (deny(todo), deny(unimpleme
 Unsafe code:        #![forbid(unsafe_code)] on ALL 18 crate roots (zero exceptions; quarantined crates deleted)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX
 Dead code:          ZERO #[allow(dead_code)]; auth_production + zero_cost_api_handlers purged (3,573 LOC)
-Mocks in prod:      ZERO fabricated metrics; all stubs honest not_implemented; dev_environment gated behind dev-stubs feature
+Mocks in prod:      ZERO fabricated data; discovery endpoints are self-knowledge (local://); dev_environment gated behind dev-stubs feature
 TLS/crypto:         ureq + oxitls-rustcrypto-provider (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
 External deps:      Pure Rust — zero C build deps, no OpenSSL/ring, no cloud SDKs, 13 top-level runtime deps
@@ -28,6 +28,7 @@ Path resolution:    EnvSource injection works correctly (injected HOME > etceter
 IPC routes (UDS):   storage.*, content.* (incl. content.ingest, content.query, content.fetch), dataset.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, coord.*, footprint.*, health.*, capabilities.*, identity.*, discovery.*, auth.*, lifecycle.*, btsp.* — 94 methods
 IPC routes (HTTP):  Aligned with UDS namespace; legacy aliases warn
 IPC routes (tarpc): 52 semantic-routed methods (G65 negotiation on UDS + TCP; G66 transport abstraction; C2 dual-socket retained)
+Platform substrate: G68 — L1 links, L2 permissions, L3 process/statvfs consolidated in nestgate-platform
 Cross-arch:         PASS — cargo check --target x86_64-pc-windows-gnu (excluding fuzz/installer pre-existing)
 Wire Standard:      Level 3 (Composable) — {primal, version, capabilities} envelope
 BTSP:               Phase 1-3 PASS — family-scoped sockets, encrypted channel, CAS federation wired
