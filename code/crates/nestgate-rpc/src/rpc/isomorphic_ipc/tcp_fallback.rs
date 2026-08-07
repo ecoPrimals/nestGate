@@ -71,12 +71,15 @@ pub trait RpcHandler: Send + Sync {
 /// TCP fallback server for isomorphic IPC
 ///
 /// Provides JSON-RPC 2.0 over TCP when Unix sockets are unavailable.
+/// Supports G65 protocol negotiation (transport-agnostic — same as UDS server).
 #[derive(Clone)]
 pub struct TcpFallbackServer {
     /// Service name (for discovery file). `Arc<str>` for zero-copy sharing.
     service_name: Arc<str>,
     /// RPC handler (shared with Unix socket server)
     handler: Arc<dyn RpcHandler>,
+    /// G65 tarpc handler (shared with Unix socket server)
+    tarpc_handler: Option<Arc<dyn super::server::TarpcStreamHandler>>,
 }
 
 impl TcpFallbackServer {
@@ -90,7 +93,18 @@ impl TcpFallbackServer {
         Self {
             service_name: service_name.into(),
             handler,
+            tarpc_handler: None,
         }
+    }
+
+    /// Register a G65 tarpc handler for protocol negotiation on TCP connections.
+    #[must_use]
+    pub fn with_tarpc_handler(
+        mut self,
+        handler: Arc<dyn super::server::TarpcStreamHandler>,
+    ) -> Self {
+        self.tarpc_handler = Some(handler);
+        self
     }
 
     /// Start TCP fallback server
@@ -184,9 +198,12 @@ impl TcpFallbackServer {
                         "TCP client connected"
                     );
                     let handler = self.handler.clone();
+                    let tarpc = self.tarpc_handler.clone();
 
                     tokio::spawn(async move {
-                        if let Err(e) = Self::handle_transport_connection(stream, handler).await {
+                        if let Err(e) =
+                            Self::handle_transport_connection(stream, handler, tarpc).await
+                        {
                             error!("TCP connection error ({peer}): {e}");
                         }
                     });
@@ -202,14 +219,35 @@ impl TcpFallbackServer {
 
     /// Event-driven JSON-RPC keep-alive loop over a [`TransportStream`].
     ///
+    /// Performs G65 protocol negotiation first: if a tarpc handler is
+    /// registered and the client sends `PROTOCOLS:`, tarpc may be selected.
+    /// Otherwise proceeds as JSON-RPC (backward compatible).
+    ///
     /// Uses `tokio::select!` to multiplex between I/O readiness and a
     /// resettable idle timer. Each response is flushed (critical for TCP —
     /// Nagle's algorithm can delay small writes). On idle expiry the client
     /// receives a `connection.closing` notification before teardown.
     async fn handle_transport_connection(
-        stream: super::transport_stream::TransportStream,
+        mut stream: super::transport_stream::TransportStream,
         handler: Arc<dyn RpcHandler>,
+        tarpc_handler: Option<Arc<dyn super::server::TarpcStreamHandler>>,
     ) -> Result<()> {
+        use crate::rpc::ipc_protocol::IpcProtocol;
+
+        if let Some(selected) =
+            crate::rpc::protocol_negotiation::try_g65_server_negotiation(
+                &mut stream,
+                tarpc_handler.is_some(),
+            )
+            .await
+            && selected == IpcProtocol::Tarpc
+        {
+            if let Some(tarpc) = tarpc_handler {
+                return tarpc.handle_tarpc_connection(stream).await;
+            }
+            warn!("G65 negotiated tarpc on TCP but no handler registered; falling back to JSON-RPC");
+        }
+
         let (reader, writer) = tokio::io::split(stream);
         let mut reader = BufReader::new(reader);
         let mut writer = writer;

@@ -110,7 +110,9 @@ mod template_handlers;
 mod zfs_handlers;
 
 use dispatch::handle_request;
-use nestgate_types::error::{NestGateError, Result};
+#[cfg(unix)]
+use nestgate_types::error::NestGateError;
+use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::future::Future;
@@ -121,7 +123,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(unix)]
 use tokio::net::UnixListener;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
+#[cfg(unix)]
+use tracing::error;
 
 /// JSON-RPC 2.0 Request
 #[derive(Debug, Deserialize)]

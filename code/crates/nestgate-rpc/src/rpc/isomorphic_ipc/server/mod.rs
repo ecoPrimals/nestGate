@@ -78,7 +78,9 @@
 //!
 //! Pattern validated in orchestration provider v3.33.0
 
-use anyhow::{Context, Result};
+#[cfg(unix)]
+use anyhow::Context;
+use anyhow::Result;
 use bytes::Bytes;
 use serde_json::Value;
 use std::path::PathBuf;
@@ -86,12 +88,10 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 
+#[cfg(unix)]
 use super::platform_detection::is_platform_constraint;
 use super::tcp_fallback::{RpcHandler, TcpFallbackServer};
 use crate::rpc::ipc_protocol::IpcProtocol;
-use crate::rpc::protocol_negotiation::{
-    ProtocolRequest, ProtocolResponse, read_negotiation_line, select_protocol,
-};
 
 /// Handler for tarpc connections negotiated via G65 protocol.
 ///
@@ -418,7 +418,11 @@ impl IsomorphicIpcServer {
 
         // ── G65 Protocol Negotiation ──────────────────────────────────
         if let Some(selected) =
-            Self::try_g65_negotiation(&mut stream, tarpc_handler.is_some()).await
+            crate::rpc::protocol_negotiation::try_g65_server_negotiation(
+                &mut stream,
+                tarpc_handler.is_some(),
+            )
+            .await
             && selected == IpcProtocol::Tarpc
         {
             if let Some(tarpc) = tarpc_handler {
@@ -498,67 +502,6 @@ impl IsomorphicIpcServer {
             None,
         )
         .await
-    }
-
-    /// G65 protocol negotiation: peek at the first byte to detect a
-    /// `PROTOCOLS:` line. If detected, read the line byte-by-byte (no
-    /// `BufReader` so no bytes are buffered past the line), select the
-    /// best protocol, write the `PROTOCOL:` response, and return the
-    /// selected protocol. Returns `None` when no negotiation occurred.
-    async fn try_g65_negotiation(
-        stream: &mut super::transport_stream::TransportStream,
-        tarpc_available: bool,
-    ) -> Option<IpcProtocol> {
-        use crate::rpc::protocol_negotiation::NEGOTIATION_TIMEOUT;
-        use tokio::io::AsyncWriteExt;
-
-        let mut peek_buf = [0u8; 1];
-        let first_byte = match tokio::time::timeout(NEGOTIATION_TIMEOUT, stream.peek(&mut peek_buf))
-            .await
-        {
-            Ok(Ok(n)) if n > 0 => peek_buf[0],
-            _ => return None,
-        };
-
-        if first_byte != b'P' {
-            return None;
-        }
-
-        let line = match read_negotiation_line(stream).await {
-            Ok(l) => l,
-            Err(e) => {
-                warn!("G65 negotiation line read failed: {e}");
-                return None;
-            }
-        };
-
-        let request = match ProtocolRequest::from_wire(&line) {
-            Ok(r) => r,
-            Err(e) => {
-                warn!("Invalid G65 protocol request: {e}");
-                let _ = stream.write_all(b"PROTOCOL: jsonrpc\n").await;
-                let _ = stream.flush().await;
-                return Some(IpcProtocol::JsonRpc);
-            }
-        };
-
-        let server_supported = if tarpc_available {
-            vec![IpcProtocol::Tarpc, IpcProtocol::JsonRpc]
-        } else {
-            vec![IpcProtocol::JsonRpc]
-        };
-
-        let selected = select_protocol(&request.supported, &server_supported);
-        let response = ProtocolResponse::new(selected);
-
-        if let Err(e) = stream.write_all(response.to_wire().as_bytes()).await {
-            warn!("G65 response write failed: {e}");
-            return None;
-        }
-        let _ = stream.flush().await;
-
-        info!("G65 protocol negotiated: {selected}");
-        Some(selected)
     }
 
     /// After Phase 2 handshake, intercept the first message to check for

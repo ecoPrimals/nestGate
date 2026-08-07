@@ -11,6 +11,7 @@
 use bytes::Bytes;
 use serde_json::{Value, json};
 use std::sync::Arc;
+#[cfg(unix)]
 use tokio::io::BufReader;
 #[cfg(unix)]
 use tokio::net::UnixStream;

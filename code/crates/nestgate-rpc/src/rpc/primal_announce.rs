@@ -64,6 +64,7 @@ pub fn build_announce_payload(own_socket: &Path) -> Value {
         "uds": own_socket.to_string_lossy(),
         "tarpc_uds": tarpc_socket.to_string_lossy(),
         "g65_negotiation": true,
+        "g66_transport_abstraction": true,
     });
     if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
         let host = std::env::var("NESTGATE_API_HOST")
@@ -303,6 +304,11 @@ mod tests {
             payload["endpoints"]["g65_negotiation"],
             true,
             "G65 protocol negotiation flag must be advertised"
+        );
+        assert_eq!(
+            payload["endpoints"]["g66_transport_abstraction"],
+            true,
+            "G66 transport abstraction flag must be advertised"
         );
     }
 

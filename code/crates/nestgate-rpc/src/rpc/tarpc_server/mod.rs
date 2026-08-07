@@ -36,6 +36,7 @@
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
+#[cfg(unix)]
 use std::path::Path;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -529,6 +530,9 @@ pub async fn serve_tarpc<S: StorageBackend + 'static>(
 /// Mirrors [`serve_tarpc`] but binds to a UDS path instead of a TCP address,
 /// enabling the NUCLEUS socket-only startup path to expose both JSON-RPC and
 /// tarpc side-by-side without requiring network ports.
+///
+/// Unix-only: requires `tarpc/unix` feature (not available on Windows).
+#[cfg(unix)]
 ///
 /// # Arguments
 /// * `socket_path` - Path for the Unix domain socket (e.g. `nestgate.tarpc.sock`)

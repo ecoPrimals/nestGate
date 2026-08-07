@@ -192,6 +192,71 @@ pub fn select_protocol(
     IpcProtocol::JsonRpc
 }
 
+/// Server-side G65 protocol negotiation on an accepted [`TransportStream`].
+///
+/// Peeks the first byte (100 ms timeout). If `b'P'`, reads the
+/// `PROTOCOLS:` line byte-by-byte, selects the best mutual protocol, and
+/// writes the `PROTOCOL:` response. Returns `None` when no negotiation
+/// occurred (legacy client or timeout).
+///
+/// `tarpc_available` indicates whether the server can serve tarpc connections.
+/// When `false`, the server will only offer JSON-RPC during negotiation.
+pub async fn try_g65_server_negotiation(
+    stream: &mut super::isomorphic_ipc::TransportStream,
+    tarpc_available: bool,
+) -> Option<IpcProtocol> {
+    use tokio::io::AsyncWriteExt;
+    use tracing::warn;
+
+    let mut peek_buf = [0u8; 1];
+    let first_byte = match tokio::time::timeout(NEGOTIATION_TIMEOUT, stream.peek(&mut peek_buf))
+        .await
+    {
+        Ok(Ok(n)) if n > 0 => peek_buf[0],
+        _ => return None,
+    };
+
+    if first_byte != b'P' {
+        return None;
+    }
+
+    let line = match read_negotiation_line(stream).await {
+        Ok(l) => l,
+        Err(e) => {
+            warn!("G65 negotiation line read failed: {e}");
+            return None;
+        }
+    };
+
+    let request = match ProtocolRequest::from_wire(&line) {
+        Ok(r) => r,
+        Err(e) => {
+            warn!("Invalid G65 protocol request: {e}");
+            let _ = stream.write_all(b"PROTOCOL: jsonrpc\n").await;
+            let _ = stream.flush().await;
+            return Some(IpcProtocol::JsonRpc);
+        }
+    };
+
+    let server_supported = if tarpc_available {
+        vec![IpcProtocol::Tarpc, IpcProtocol::JsonRpc]
+    } else {
+        vec![IpcProtocol::JsonRpc]
+    };
+
+    let selected = select_protocol(&request.supported, &server_supported);
+    let response = ProtocolResponse::new(selected);
+
+    if let Err(e) = stream.write_all(response.to_wire().as_bytes()).await {
+        warn!("G65 response write failed: {e}");
+        return None;
+    }
+    let _ = stream.flush().await;
+
+    info!("G65 protocol negotiated: {selected}");
+    Some(selected)
+}
+
 /// Read a single newline-terminated line **byte-by-byte** from the stream.
 ///
 /// This avoids `BufReader` read-ahead, ensuring no bytes beyond the line

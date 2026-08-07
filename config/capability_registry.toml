@@ -21,9 +21,11 @@ version = "0.5.0"
 license = "AGPL-3.0-or-later"
 description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
 transport = ["uds", "tarpc_uds", "tcp", "http"]
-transport_evolution = "phase3-g65"  # G65 single-socket protocol negotiation; C2 dual-socket retained for backward compat
+transport_evolution = "phase4-g66"  # G66 transport abstraction; G65 on all transports (UDS + TCP); C2 retained for backward compat
+transport_abstraction = true  # TransportEndpoint/TransportStream/TransportListener with platform_default() + from_env_or_default()
 protocol = ["jsonrpc-2.0", "tarpc"]
-g65_negotiation = true  # primary UDS socket supports PROTOCOLS: handshake (Phase 3 cephalization)
+g65_negotiation = true  # primary UDS AND TCP sockets support PROTOCOLS: handshake (Phase 3+4 cephalization)
+windows_cross_arch = true  # cargo check --target x86_64-pc-windows-gnu passes (excluding fuzz/installer pre-existing)
 
 [capabilities.storage]
 domain = "storage"

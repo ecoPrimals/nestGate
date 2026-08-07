@@ -121,7 +121,9 @@ pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
 pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
-pub use tarpc_server::{NestGateRpcService, handle_tarpc_negotiated, serve_tarpc, serve_tarpc_uds};
+pub use tarpc_server::{NestGateRpcService, handle_tarpc_negotiated, serve_tarpc};
+#[cfg(unix)]
+pub use tarpc_server::serve_tarpc_uds;
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
 // Re-export legacy Unix JSON-RPC surface until callers use orchestration IPC.
 pub use unix_socket_server::{
@@ -132,6 +134,7 @@ pub use unix_socket_server::{
 pub use ipc_protocol::IpcProtocol;
 pub use protocol_negotiation::{
     ProtocolRequest, ProtocolResponse, negotiate_client, select_protocol,
+    try_g65_server_negotiation,
 };
 
 // NEW: Isomorphic IPC exports (v0.3.0)

@@ -345,22 +345,23 @@ async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
         });
     }
 
-    let tarpc_socket_path = socket_config
-        .socket_path
-        .with_extension("tarpc.sock");
-    info!("tarpc UDS socket: {}", tarpc_socket_path.display());
+    #[cfg(unix)]
+    let _tarpc_socket_guard = {
+        let tarpc_socket_path = socket_config
+            .socket_path
+            .with_extension("tarpc.sock");
+        info!("tarpc UDS socket: {}", tarpc_socket_path.display());
 
-    if tarpc_socket_path.exists() {
-        let _ = std::fs::remove_file(&tarpc_socket_path);
-    }
+        if tarpc_socket_path.exists() {
+            let _ = std::fs::remove_file(&tarpc_socket_path);
+        }
 
-    nestgate_core::rpc::write_pid_file(&tarpc_socket_path);
-    let _tarpc_socket_guard = nestgate_core::rpc::SocketCleanupGuard {
-        path: tarpc_socket_path.clone(),
-    };
+        nestgate_core::rpc::write_pid_file(&tarpc_socket_path);
+        let guard = nestgate_core::rpc::SocketCleanupGuard {
+            path: tarpc_socket_path.clone(),
+        };
 
-    {
-        let tarpc_path = tarpc_socket_path.clone();
+        let tarpc_path = tarpc_socket_path;
         tokio::spawn(async move {
             let service = match nestgate_core::rpc::NestGateRpcService::new() {
                 Ok(s) => s,
@@ -373,10 +374,12 @@ async fn start_socket_server(tcp_addr: Option<SocketAddr>) -> BinResult<()> {
                 tracing::error!("tarpc UDS server error: {e}");
             }
         });
-    }
 
-    info!("JSON-RPC Unix Socket Server ready (isomorphic IPC)");
-    info!("tarpc UDS server ready (C2 dual-socket, backward compat)");
+        info!("tarpc UDS server ready (C2 dual-socket, backward compat)");
+        guard
+    };
+
+    info!("JSON-RPC Socket Server ready (isomorphic IPC)");
     info!("G65 protocol negotiation active on main socket");
     info!("Press Ctrl+C to stop\n");
 

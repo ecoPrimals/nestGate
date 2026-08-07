@@ -47,10 +47,11 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use tracing::{debug, info};
 
-/// IPC endpoint type (polymorphic)
+/// IPC endpoint type (polymorphic).
 ///
-/// Represents either a Unix socket or TCP endpoint.
-/// Clients use this to connect regardless of transport.
+/// **G66 note:** Prefer [`nestgate_types::TransportEndpoint`] and
+/// [`connect_transport()`](super::transport_stream::connect_transport) for new
+/// code. This type predates the ecosystem-standard transport abstraction.
 #[derive(Debug, Clone)]
 pub enum IpcEndpoint {
     /// Unix socket path (optimal)
