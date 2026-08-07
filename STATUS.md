@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: Aug 7, 2026 (Session 141: G68 platform substrate abstraction)
+**Last Updated**: Aug 7, 2026 (Session 142: Deep debt sweep — test suite green, installer L2, stale deps)
 **Version**: 0.5.0
 
 ---
@@ -11,17 +11,17 @@
 Build:              PASS — cargo check --workspace --all-features (0 errors)
 Clippy:             PASS — cargo clippy --all-features -- -D warnings (zero warnings, pedantic+nursery)
 Format:             CLEAN — cargo fmt --check passes
-Tests:              1,630+ passed, 0 failed, ~80 ignored
+Tests:              FULL GREEN — 0 failed across workspace (including nestgate-api websocket, RPC mesh relay, primal announce, ZFS handler status alignment)
 Files > 800 lines:  ZERO in production src/
 Unwrap/Expect:      deny(unwrap_used), deny(expect_used) in workspace lints — zero in production
 Inline markers:     none in committed production .rs (deny(todo), deny(unimplemented))
 Unsafe code:        #![forbid(unsafe_code)] on ALL 18 crate roots (zero exceptions; quarantined crates deleted)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX
-Dead code:          ZERO #[allow(dead_code)]; auth_production + zero_cost_api_handlers purged (3,573 LOC)
+Dead code:          ZERO #[allow(dead_code)]; auth_production + zero_cost_api_handlers purged (3,573 LOC); stale zero_cost module declarations removed
 Mocks in prod:      ZERO fabricated data; discovery endpoints are self-knowledge (local://); dev_environment gated behind dev-stubs feature
 TLS/crypto:         ureq + oxitls-rustcrypto-provider (pure Rust TLS); internal crypto BLAKE3; ring/reqwest/openssl ELIMINATED
 Encrypt-at-rest:    ChaCha20-Poly1305
-External deps:      Pure Rust — zero C build deps, no OpenSSL/ring, no cloud SDKs, 13 top-level runtime deps
+External deps:      Pure Rust — zero C build deps, no OpenSSL/ring, no cloud SDKs, 13 top-level runtime deps; stale rustix removed from nestgate-config and nestgate-storage
 Discovery:          Environment variables + capability IPC; XDG-compliant path resolution via etcetera; zero hardcoded FHS paths in consumers
 CLI health/status:  Live UDS probe via JsonRpcClient — resolves socket, sends health.check JSON-RPC
 Path resolution:    EnvSource injection works correctly (injected HOME > etcetera auto-detect > system fallback)
@@ -45,6 +45,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 Per-session detail (Sessions 43–135) lives in [`CHANGELOG.md`](CHANGELOG.md) and `docs/handoffs/`.
 
 Recent sessions:
+- **Session 142** (Aug 7): Deep debt sweep — test suite green. Fixed 9 pre-existing test failures that were either masked by compilation errors or stale assertions: (1) `nestgate-api` websocket `Hasher` trait import + ambiguous float annotations (Rust 2024 edition compliance); (2) `connect_transport_mesh_relay_no_coordinator` runtime-within-runtime panic → `temp_env::async_with_vars`; (3) `payload_methods_are_filtered_correctly` → synced `content.ingest`/`content.query`/`content.fetch` into `UNIX_SOCKET_SUPPORTED_METHODS`, moved `dataset.convergence` assertion to `federation_methods`; (4) ZFS REST handler status code alignment (501→503); (5) `dispatch_identity_capabilities` → runtime-probed capability assertions; (6) `universal_storage_bridge` list_pools graceful degradation; (7) stale `zero_cost_*` module declarations removed. Installer L2 migration: all `PermissionsExt` calls in `nestgate-installer` → `nestgate_platform::platform::fs::set_mode()`. Stale `rustix` dep removed from `nestgate-config` and `nestgate-storage` (migrated to transitive via `nestgate-platform` in G68).
 - **Session 140** (Aug 6): G66 Transport Abstraction. `TransportEndpoint` evolved with `platform_default()`, `from_env_or_default()`, `display_uri()`, `transport_name()`, `from_primal_name()`, `is_relayed()`, `tarpc_endpoint()`, accessor methods. Socket path resolution added to `nestgate-types` (`resolve_socket_path`, `socket_path_in`). G65 protocol negotiation wired into `TcpFallbackServer` (transport-agnostic — same negotiation on UDS and TCP). `try_g65_server_negotiation()` extracted as shared function. Silicon deism fixed: `serve_tarpc_uds` → `#[cfg(unix)]`, `rustix::fs::statvfs` → cfg-guarded with non-Unix fallback, C2 tarpc UDS block in `service.rs` → `#[cfg(unix)]`, unused Unix imports guarded. Windows cross-arch PASSES (`cargo check --target x86_64-pc-windows-gnu`). Legacy `IpcEndpoint` documented for G66 migration. 15 new tests (TransportEndpoint G66 methods + socket resolution). Zero clippy warnings.
 - **Session 139** (Aug 6): G65 Protocol Negotiation (Phase 3 cephalization). Single-socket protocol negotiation — `PROTOCOLS: tarpc,jsonrpc\n` handshake on primary UDS; server selects best match, falls back to JSON-RPC for non-negotiating clients. `IpcProtocol` enum, `ProtocolRequest`/`ProtocolResponse` wire types, `negotiate_client`/`select_protocol` functions. `TransportStream::peek` via `rustix::net::recv(PEEK)` for non-destructive first-byte detection. `TarpcStreamHandler` trait + `G65TarpcHandler` wired into NUCLEUS `start_socket_server`. `IsomorphicIpcServer::handle_connection` evolved: peek → G65 negotiation → tarpc delegation or JSON-RPC fallback. `primal.announce` advertises `endpoints.g65_negotiation: true`. `capability_registry.toml` updated to `phase3-g65`. C2 dual-socket retained for backward compatibility. `rustix` `"net"` feature enabled. 6 new unit tests (ipc_protocol + protocol_negotiation).
 - **Session 138** (Aug 6): C2 Cephalization dual-socket + deep debt sweep. tarpc `unix` feature enabled; `serve_tarpc_uds()` function added using `tarpc::serde_transport::unix::listen`; wired into NUCLEUS `start_socket_server()` — `nestgate.tarpc.sock` spawned alongside `nestgate.sock`; `SocketCleanupGuard` + PID sidecar for tarpc socket (guard + `write_pid_file` made public for reuse); `primal.announce` advertises `endpoints.tarpc_uds`; `capability_registry.toml` transport updated to `["uds", "tarpc_uds", "tcp", "http"]` (phase3-c2). Deep debt: `"nestgate"` string literals replaced with `DEFAULT_SERVICE_NAME` across 7 production files; `discovery_port` doc comment corrected (8500→8083); lint blanket audit confirmed (nestgate-zfs + nestgate-performance `#[expect]` justified). 1,630+ tests pass, 0 clippy warnings.

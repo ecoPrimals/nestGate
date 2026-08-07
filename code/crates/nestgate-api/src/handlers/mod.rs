@@ -216,7 +216,3 @@ mod performance_analytics_tests;
 mod status_comprehensive_tests;
 #[cfg(test)]
 mod storage_tests;
-#[cfg(test)]
-mod zero_cost_api_handlers_additional_tests;
-#[cfg(test)]
-mod zero_cost_tests;

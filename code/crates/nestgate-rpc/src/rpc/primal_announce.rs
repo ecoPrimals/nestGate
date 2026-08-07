@@ -250,12 +250,24 @@ mod tests {
         assert!(methods.contains(&"storage.store"));
         assert!(methods.contains(&"content.put"));
         assert!(methods.contains(&"content.ingest"));
-        assert!(methods.contains(&"dataset.convergence"));
+        assert!(methods.contains(&"content.query"));
+        assert!(methods.contains(&"content.fetch"));
         assert!(methods.contains(&"content.resolve"));
         assert!(methods.contains(&"coord.blurbs.current"));
         assert!(
             !methods.contains(&"health.liveness"),
             "health methods should be excluded"
+        );
+
+        let fed_methods: Vec<&str> = payload["federation_methods"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(Value::as_str)
+            .collect();
+        assert!(
+            fed_methods.contains(&"dataset.convergence"),
+            "dataset.convergence should be in federation_methods"
         );
     }
 

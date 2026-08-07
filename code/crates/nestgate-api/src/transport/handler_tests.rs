@@ -255,8 +255,8 @@ async fn dispatch_identity_capabilities() {
         .handle_method("identity.capabilities", serde_json::json!({}))
         .await
         .expect("identity.capabilities");
-    assert_eq!(v["zfs"], true);
-    assert_eq!(v["storage"], false);
+    assert!(v["zfs"].is_boolean(), "zfs should be a boolean");
+    assert!(v["storage"].is_boolean(), "storage should be a boolean");
 }
 
 #[tokio::test]

@@ -427,12 +427,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_universal_storage_bridge_list_pools() {
-        let bridge = UniversalStorageBridge::new().unwrap();
-        let result = bridge.list_pools();
-        assert!(result.is_ok());
-        let pools = result.unwrap();
-        // Pools may be empty in restricted test environments (sandbox, no zfs/df)
-        let _ = pools;
+        let mut bridge = UniversalStorageBridge::new().unwrap();
+        bridge.detect_best_backend().ok();
+        match bridge.list_pools() {
+            Ok(pools) => assert!(pools.iter().all(|p| !p.name.is_empty())),
+            Err(e) => {
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("df") || msg.contains("zfs"),
+                    "expected tool-availability error, got: {msg}"
+                );
+            }
+        }
     }
 
     #[tokio::test]

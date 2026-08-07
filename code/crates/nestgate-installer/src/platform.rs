@@ -255,14 +255,7 @@ Categories=System;
 
         fs::write(&shortcut_path, desktop_entry)?;
 
-        // Make executable
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(&shortcut_path)?.permissions();
-            perms.set_mode(0o755);
-            fs::set_permissions(&shortcut_path, perms)?;
-        }
+        nestgate_platform::platform::fs::set_mode(&shortcut_path, 0o755)?;
 
         // User-facing interactive output — not log
         println!("Created desktop shortcut: {}", shortcut_path.display());

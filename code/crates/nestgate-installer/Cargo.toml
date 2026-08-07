@@ -22,6 +22,7 @@ path = "src/lib.rs"
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
+nestgate-platform = { path = "../nestgate-platform" }
 nestgate-types = { path = "../nestgate-types" }
 
 serde_json = { workspace = true }

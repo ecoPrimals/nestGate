@@ -245,13 +245,7 @@ impl DownloadManager {
             let target_binary = target_dir.join("bin").join("nestgate");
             std::fs::copy(&current_exe, &target_binary).map_err(NestGateError::from)?;
 
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                let mut perms = std::fs::metadata(&target_binary)?.permissions();
-                perms.set_mode(0o755);
-                std::fs::set_permissions(&target_binary, perms)?;
-            }
+            nestgate_platform::platform::fs::set_mode(&target_binary, 0o755)?;
 
             info!("Binary installed to: {}", target_binary.display());
         }
@@ -413,14 +407,11 @@ mod download_url_tests {
             b"#! /bin/sh\nexit 0\n",
         )
         .expect("shim");
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let p = tmp.path().join("bin").join("nestgate");
-            let mut perms = std::fs::metadata(&p).expect("meta").permissions();
-            perms.set_mode(0o755);
-            std::fs::set_permissions(&p, perms).expect("chmod");
-        }
+        nestgate_platform::platform::fs::set_mode(
+            &tmp.path().join("bin").join("nestgate"),
+            0o755,
+        )
+        .expect("chmod");
         let err = dm.verify_installation(tmp.path()).expect_err("no config");
         assert!(
             err.to_string().contains("Configuration not found")
@@ -605,19 +596,9 @@ mod download_url_tests {
         assert_eq!(from_helper, inline);
     }
 
-    #[cfg(unix)]
     fn write_test_script(path: &std::path::Path, content: &[u8]) {
-        use std::io::Write;
-        use std::os::unix::fs::OpenOptionsExt;
-        let mut f = std::fs::OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .mode(0o755)
-            .open(path)
-            .expect("create script");
-        f.write_all(content).expect("write script");
-        f.sync_all().expect("sync script");
+        std::fs::write(path, content).expect("write script");
+        nestgate_platform::platform::fs::set_mode(path, 0o755).expect("chmod script");
     }
 
     #[test]

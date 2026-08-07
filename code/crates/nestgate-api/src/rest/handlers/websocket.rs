@@ -15,7 +15,7 @@ use axum::{
 };
 use serde::Deserialize;
 #[cfg(test)]
-use std::hash::{DefaultHasher, Hash};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use tokio::time::{Duration, interval};
 use tracing::{debug, error, info};
 
@@ -329,8 +329,8 @@ pub(crate) fn generate_realtimecpu_usage() -> f64 {
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
 
-    let base = 25.0;
-    let variation = ((seed % 200) as f64) * 0.3; // More variation for real-time
+    let base: f64 = 25.0;
+    let variation = ((seed % 200) as f64) * 0.3;
     (base + variation).min(95.0)
 }
 
@@ -341,7 +341,7 @@ pub(crate) fn generate_realtime_memory_usage() -> f64 {
     (chrono::Utc::now().timestamp_millis() + 1).hash(&mut hasher);
     let seed = hasher.finish();
 
-    let base = 45.0;
+    let base: f64 = 45.0;
     let variation = ((seed % 150) as f64) * 0.25;
     (base + variation).min(90.0)
 }
@@ -353,7 +353,7 @@ pub(crate) fn generate_realtime_disk_read() -> f64 {
     (chrono::Utc::now().timestamp_millis() + 2).hash(&mut hasher);
     let seed = hasher.finish();
 
-    let base = 100.0;
+    let base: f64 = 100.0;
     let variation = ((seed % 300) as f64) * 1.5;
     base + variation
 }
@@ -365,7 +365,7 @@ pub(crate) fn generate_realtime_disk_write() -> f64 {
     (chrono::Utc::now().timestamp_millis() + 3).hash(&mut hasher);
     let seed = hasher.finish();
 
-    let base = 80.0;
+    let base: f64 = 80.0;
     let variation = ((seed % 250) as f64) * 1.2;
     base + variation
 }
@@ -389,7 +389,7 @@ pub(crate) fn generate_realtime_queue_depth() -> f64 {
     (chrono::Utc::now().timestamp_millis() + 4).hash(&mut hasher);
     let seed = hasher.finish();
 
-    let base = 2.0;
+    let base: f64 = 2.0;
     let variation = ((seed % 200) as f64) * 0.02;
     (base + variation).max(0.1)
 }
@@ -431,8 +431,8 @@ pub(crate) fn generate_realtime_cache_hit_ratio() -> f64 {
     (chrono::Utc::now().timestamp_millis() + 6).hash(&mut hasher);
     let seed = hasher.finish();
 
-    let base = 0.85;
-    let variation = ((seed % 100) as f64) * 0.002; // Small real-time variation
+    let base: f64 = 0.85;
+    let variation = ((seed % 100) as f64) * 0.002;
     (base + variation).min(0.99).max(0.70)
 }
 
